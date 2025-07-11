@@ -1,0 +1,96 @@
+{
+  "navigation": {
+    "home": "Home",
+    "shop": "Shop",
+    "about": "About Us",
+    "contact": "Contact Us",
+    "brandName": "SPIRITHUB ROASTERY"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Welcome to SPIRITHUB ROASTERY",
+      "subtitle": "Premium coffee roasted to perfection",
+      "description": "Discover our carefully selected coffee beans from around the world, roasted with passion and expertise to bring you the perfect cup every time.",
+      "shopNow": "Shop Now",
+      "learnMore": "Learn More"
+    },
+    "features": {
+      "quality": {
+        "title": "Premium Quality",
+        "description": "Carefully selected beans from the finest coffee regions"
+      },
+      "freshness": {
+        "title": "Always Fresh",
+        "description": "Roasted daily to ensure maximum freshness and flavor"
+      },
+      "expertise": {
+        "title": "Expert Roasting",
+        "description": "Years of experience in perfecting the art of coffee roasting"
+      }
+    }
+  },
+  "shop": {
+    "title": "Our Coffee Shop",
+    "subtitle": "Explore our premium coffee collection",
+    "comingSoon": "Coming Soon",
+    "description": "We're preparing an amazing shopping experience for you. Stay tuned!"
+  },
+  "about": {
+    "title": "About SPIRITHUB ROASTERY",
+    "subtitle": "Our passion for perfect coffee",
+    "story": "Founded with a passion for exceptional coffee, SPIRITHUB ROASTERY has been dedicated to bringing you the finest coffee experience. We source our beans from the best coffee-growing regions around the world and roast them with precision and care.",
+    "mission": "Our mission is to provide coffee lovers with the highest quality beans, roasted to perfection, and delivered fresh to your door.",
+    "values": {
+      "quality": "We never compromise on quality",
+      "sustainability": "We support sustainable farming practices",
+      "community": "We believe in building strong relationships with our customers and suppliers"
+    }
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with our team",
+    "getInTouch": "Get in Touch",
+    "info": {
+      "address": "123 Coffee Street, Roastery District",
+      "phone": "+1 (555) 123-4567",
+      "email": "hello@spirithubroastery.com",
+      "hours": "Mon-Fri: 8AM-6PM, Sat-Sun: 9AM-5PM",
+      "addressLabel": "Address",
+      "phoneLabel": "Phone", 
+      "emailLabel": "Email",
+      "hoursLabel": "Hours"
+    },
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send Message"
+    }
+  },
+  "footer": {
+    "description": "Premium coffee roasted with passion and expertise.",
+    "quickLinks": "Quick Links",
+    "followUs": "Follow Us",
+    "copyright": "© 2025 SPIRITHUB ROASTERY. All rights reserved."
+  },
+  "currency": {
+    "USD": "USD",
+    "SAR": "SAR", 
+    "OMR": "OMR",
+    "usd": "US Dollar",
+    "sar": "Saudi Riyal",
+    "omr": "Omani Rial",
+    "symbol": {
+      "USD": "$",
+      "SAR": "ر.س",
+      "OMR": "ر.ع"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "toggleTheme": "Toggle theme",
+    "toggleLanguage": "Toggle language"
+  }
+}
