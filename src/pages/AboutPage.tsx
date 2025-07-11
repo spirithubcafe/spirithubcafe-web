@@ -6,8 +6,9 @@ export function AboutPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl mx-auto space-y-12">
+    <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-5xl mx-auto space-y-12">
         {/* Header */}
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">
@@ -35,7 +36,7 @@ export function AboutPage() {
               <div className="w-12 h-12 bg-red-100 dark:bg-red-950 rounded-lg flex items-center justify-center mb-4">
                 <Heart className="h-6 w-6 text-red-600 no-flip" />
               </div>
-              <CardTitle className="text-lg">Quality</CardTitle>
+              <CardTitle className="text-lg">{t('about.values.qualityTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
@@ -49,7 +50,7 @@ export function AboutPage() {
               <div className="w-12 h-12 bg-green-100 dark:bg-green-950 rounded-lg flex items-center justify-center mb-4">
                 <Leaf className="h-6 w-6 text-green-600 no-flip" />
               </div>
-              <CardTitle className="text-lg">Sustainability</CardTitle>
+              <CardTitle className="text-lg">{t('about.values.sustainabilityTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
@@ -63,7 +64,7 @@ export function AboutPage() {
               <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950 rounded-lg flex items-center justify-center mb-4">
                 <Users className="h-6 w-6 text-blue-600 no-flip" />
               </div>
-              <CardTitle className="text-lg">Community</CardTitle>
+              <CardTitle className="text-lg">{t('about.values.communityTitle')}</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
@@ -71,6 +72,7 @@ export function AboutPage() {
               </CardDescription>
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </div>

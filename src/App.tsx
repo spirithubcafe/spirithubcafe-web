@@ -18,14 +18,14 @@ import './App.css'
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="spirithub-ui-theme">
+    <ThemeProvider defaultTheme="system" storageKey="spirithub-ui-theme">
       <CurrencyProvider defaultCurrency="USD" storageKey="spirithub-currency">
         <AuthProvider>
           <CartProvider>
             <Router>
-              <div className="min-h-screen flex flex-col">
+              <div className="min-h-screen flex flex-col bg-background">
                 <Navigation />
-                <main className="flex-1">
+                <main className="flex-1 relative">
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/shop" element={<ShopPage />} />

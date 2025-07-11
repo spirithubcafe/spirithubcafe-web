@@ -2,6 +2,7 @@
 export interface User {
   id: string
   name: string
+  nameAr?: string
   email: string
   role: 'admin' | 'user'
   avatar?: string
@@ -68,6 +69,7 @@ export const DEMO_USERS: User[] = [
   {
     id: '1',
     name: 'John Smith',
+    nameAr: 'جون سميث',
     email: 'user@demo.com',
     role: 'user',
     avatar: '/avatars/user.jpg',
@@ -78,6 +80,7 @@ export const DEMO_USERS: User[] = [
   {
     id: '2',
     name: 'Admin User',
+    nameAr: 'مستخدم مدير',
     email: 'admin@demo.com',
     role: 'admin',
     avatar: '/avatars/admin.jpg',

@@ -8,7 +8,10 @@
     "login": "Login",
     "register": "Register",
     "dashboard": "Dashboard",
-    "logout": "Logout"
+    "logout": "Logout",
+    "settings": "Settings",
+    "currency": "Currency",
+    "language": "Language"
   },
   "homepage": {
     "hero": {
@@ -63,28 +66,50 @@
     "login": {
       "title": "Login to Your Account",
       "subtitle": "Welcome back! Please enter your details",
+      "description": "Welcome back! Please enter your details",
       "email": "Email Address",
       "password": "Password",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "loginButton": "Login",
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
+      "invalidCredentials": "Invalid email or password",
       "demoUsers": "Demo Users",
+      "demoAccounts": "Demo Accounts",
       "selectDemo": "Select a demo user to login",
       "adminDemo": "Admin Demo",
-      "userDemo": "User Demo"
+      "userDemo": "User Demo",
+      "demoInfo": {
+        "title": "Demo Accounts",
+        "description": "You can try our demo accounts to explore the features:",
+        "password": "Password",
+        "passwordValue": "demo123"
+      }
     },
     "register": {
       "title": "Create Your Account",
       "subtitle": "Join us and start your coffee journey",
+      "description": "Join us and start your coffee journey",
       "name": "Full Name",
       "email": "Email Address",
+      "phone": "Phone Number",
       "password": "Password",
       "confirmPassword": "Confirm Password",
+      "namePlaceholder": "Enter your full name",
+      "emailPlaceholder": "Enter your email",
+      "phonePlaceholder": "Enter your phone number",
+      "passwordPlaceholder": "Enter your password",
+      "confirmPasswordPlaceholder": "Confirm your password",
       "registerButton": "Create Account",
       "haveAccount": "Already have an account?",
+      "hasAccount": "Already have an account?",
       "signIn": "Sign in",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "failed": "Registration failed. Please try again.",
       "terms": "By creating an account, you agree to our",
       "termsLink": "Terms of Service",
       "and": "and",
@@ -140,6 +165,7 @@
     "welcome": "Welcome",
     "systemAdmin": "System Administrator",
     "member": "Member",
+    "regularUser": "Regular User",
     "tabs": {
       "overview": "Overview",
       "orders": "Orders",
@@ -260,6 +286,20 @@
       "messagePlaceholder": "Your message..."
     }
   },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Discover Our Story",
+    "story": "Founded with a passion for exceptional coffee, SPIRITHUB ROASTERY has been crafting premium coffee experiences since 2020. We source the finest beans from around the world and roast them to perfection.",
+    "mission": "Our mission is to bring you the perfect cup of coffee while supporting sustainable farming practices and building strong communities.",
+    "values": {
+      "qualityTitle": "Quality",
+      "quality": "We never compromise on the quality of our beans and brewing methods.",
+      "sustainabilityTitle": "Sustainability", 
+      "sustainability": "We work directly with farmers to ensure sustainable and ethical practices.",
+      "communityTitle": "Community",
+      "community": "Building connections one cup at a time in our local and global communities."
+    }
+  },
   "footer": {
     "description": "Premium coffee roasted with passion and expertise.",
     "quickLinks": "Quick Links",
@@ -283,6 +323,9 @@
     "loading": "Loading...",
     "error": "Something went wrong",
     "toggleTheme": "Toggle theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
     "toggleLanguage": "Toggle language",
     "pleaseLogin": "Please login"
   }

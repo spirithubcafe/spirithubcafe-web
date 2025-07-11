@@ -13,7 +13,7 @@ import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
 
 export default function CheckoutPage() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
   const { cart, clearCart } = useCart()
   const { formatPrice } = useCurrency()
 

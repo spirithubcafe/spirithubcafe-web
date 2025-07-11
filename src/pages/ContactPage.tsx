@@ -10,8 +10,9 @@ export function ContactPage() {
   const { t } = useTranslation()
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl space-y-12">
+    <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-5xl mx-auto space-y-12">
         {/* Header */}
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">
@@ -101,6 +102,7 @@ export function ContactPage() {
               </form>
             </CardContent>
           </Card>
+        </div>
         </div>
       </div>
     </div>

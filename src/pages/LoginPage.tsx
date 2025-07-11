@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { DEMO_USERS } from '@/types'
 
 export function LoginPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { login } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
@@ -20,6 +20,8 @@ export function LoginPage() {
     email: '',
     password: ''
   })
+
+  const isArabic = i18n.language === 'ar'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -58,7 +60,7 @@ export function LoginPage() {
         <div className="flex flex-col items-center space-y-2">
           <div className="flex items-center space-x-2">
             <Coffee className="h-8 w-8 text-amber-600" />
-            <h1 className="text-2xl font-bold">SPIRITHUB ROASTERY</h1>
+            <h1 className="text-2xl font-bold">{t('common.brandName')}</h1>
           </div>
           <p className="text-muted-foreground">{t('auth.login.subtitle')}</p>
         </div>
@@ -82,9 +84,9 @@ export function LoginPage() {
                   }
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="font-medium">{user.name}</p>
+                  <p className="font-medium">{isArabic ? (user.nameAr || user.name) : user.name}</p>
                   <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <p className="text-xs text-amber-600">{user.role === 'admin' ? 'Administrator' : 'Regular User'}</p>
+                  <p className="text-xs text-amber-600">{user.role === 'admin' ? t('dashboard.systemAdmin') : t('dashboard.regularUser')}</p>
                 </div>
               </Button>
             ))}
@@ -96,7 +98,7 @@ export function LoginPage() {
           <CardHeader>
             <CardTitle>{t('auth.login.title')}</CardTitle>
             <CardDescription>
-              {t('auth.login.description')}
+              {t('auth.login.subtitle')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -145,7 +147,7 @@ export function LoginPage() {
               )}
 
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? t('common.loading') : t('auth.login.submit')}
+                {loading ? t('common.loading') : t('auth.login.loginButton')}
               </Button>
             </form>
 
@@ -171,7 +173,7 @@ export function LoginPage() {
                 {t('auth.login.demoInfo.description')}
               </p>
               <p className="text-xs text-amber-600 dark:text-amber-400">
-                {t('auth.login.demoInfo.password')}: demo123
+                {t('auth.login.demoInfo.password')}: {t('auth.login.demoInfo.passwordValue')}
               </p>
             </div>
           </CardContent>

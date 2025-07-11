@@ -6,8 +6,9 @@ export function Footer() {
   const { t } = useTranslation()
 
   return (
-    <footer className="border-t bg-background">
-      <div className="container py-12">
+    <footer className="border-t border-border/40 bg-gradient-to-b from-background to-muted/20 shadow-inner w-full">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
@@ -70,6 +71,7 @@ export function Footer() {
           <p className="text-sm text-muted-foreground">
             {t('footer.copyright')}
           </p>
+        </div>
         </div>
       </div>
     </footer>
