@@ -65,7 +65,12 @@
       "email": "Email",
       "subject": "Subject",
       "message": "Message",
-      "send": "Send Message"
+      "send": "Send Message",
+      "description": "We'll get back to you as soon as possible.",
+      "namePlaceholder": "Your name",
+      "emailPlaceholder": "your@email.com",
+      "subjectPlaceholder": "Subject",
+      "messagePlaceholder": "Your message..."
     }
   },
   "footer": {

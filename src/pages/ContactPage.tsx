@@ -11,9 +11,9 @@ export function ContactPage() {
 
   return (
     <div className="container py-12">
-      <div className="max-w-4xl mx-auto space-y-12">
+      <div className="max-w-4xl space-y-12">
         {/* Header */}
-        <div className="text-center space-y-4">
+        <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">
             {t('contact.title')}
           </h1>
@@ -28,32 +28,32 @@ export function ContactPage() {
             <div>
               <h2 className="text-2xl font-bold mb-6">{t('contact.getInTouch')}</h2>
               <div className="space-y-4">
-                <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 no-flip" />
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                   <div>
                     <p className="font-medium">{t('contact.info.addressLabel')}</p>
                     <p className="text-muted-foreground">{t('contact.info.address')}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5 no-flip" />
+                <div className="flex items-start gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                   <div>
                     <p className="font-medium">{t('contact.info.phoneLabel')}</p>
                     <p className="text-muted-foreground currency">{t('contact.info.phone')}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5 no-flip" />
+                <div className="flex items-start gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                   <div>
                     <p className="font-medium">{t('contact.info.emailLabel')}</p>
                     <p className="text-muted-foreground currency">{t('contact.info.email')}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <Clock className="h-5 w-5 text-muted-foreground mt-0.5 no-flip" />
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                   <div>
                     <p className="font-medium">{t('contact.info.hoursLabel')}</p>
                     <p className="text-muted-foreground">{t('contact.info.hours')}</p>
@@ -68,7 +68,7 @@ export function ContactPage() {
             <CardHeader>
               <CardTitle>{t('contact.form.send')}</CardTitle>
               <CardDescription>
-                We'll get back to you as soon as possible.
+                {t('contact.form.description')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -76,22 +76,22 @@ export function ContactPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">{t('contact.form.name')}</Label>
-                    <Input id="name" placeholder="Your name" />
+                    <Input id="name" placeholder={t('contact.form.namePlaceholder')} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">{t('contact.form.email')}</Label>
-                    <Input id="email" type="email" placeholder="your@email.com" />
+                    <Input id="email" type="email" placeholder={t('contact.form.emailPlaceholder')} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="subject">{t('contact.form.subject')}</Label>
-                  <Input id="subject" placeholder="Subject" />
+                  <Input id="subject" placeholder={t('contact.form.subjectPlaceholder')} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="message">{t('contact.form.message')}</Label>
                   <Textarea 
                     id="message" 
-                    placeholder="Your message..."
+                    placeholder={t('contact.form.messagePlaceholder')}
                     className="min-h-[120px]"
                   />
                 </div>

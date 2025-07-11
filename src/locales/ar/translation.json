@@ -65,7 +65,12 @@
       "email": "البريد الإلكتروني",
       "subject": "الموضوع",
       "message": "الرسالة",
-      "send": "إرسال الرسالة"
+      "send": "إرسال الرسالة",
+      "description": "سنرد عليك في أقرب وقت ممكن.",
+      "namePlaceholder": "اسمك",
+      "emailPlaceholder": "your@email.com",
+      "subjectPlaceholder": "الموضوع",
+      "messagePlaceholder": "رسالتك..."
     }
   },
   "footer": {
