@@ -13,11 +13,12 @@ import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
 
 export default function CheckoutPage() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { cart, clearCart } = useCart()
   const { formatPrice } = useCurrency()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
+
   const isArabic = i18n.language === 'ar'
 
   const [formData, setFormData] = useState({

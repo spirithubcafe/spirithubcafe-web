@@ -19,8 +19,7 @@ export function Navigation() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo - در RTL سمت راست، در LTR سمت چپ */}
-        <div className={`flex items-center gap-3 ${isRTL ? 'order-3' : 'order-1'}`}>
+         <div className={`flex items-center gap-3 ${isRTL ? 'order-3' : 'order-1'}`}>
           <Coffee className="h-6 w-6 text-amber-600 no-flip" />
           <Link to="/" className="text-xl font-bold text-foreground">
             {t('navigation.brandName')}
@@ -73,7 +72,7 @@ export function Navigation() {
               <Link to="/dashboard" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">
-                  {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+                  {t('navigation.dashboard')}
                 </span>
               </Link>
             </Button>
@@ -82,7 +81,7 @@ export function Navigation() {
               <Link to="/login" className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:inline">
-                  {isRTL ? 'تسجيل الدخول' : 'Login'}
+                  {t('navigation.login')}
                 </span>
               </Link>
             </Button>

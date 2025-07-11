@@ -24,7 +24,7 @@ export function CurrencyToggle() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
           <DollarSign className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Toggle currency</span>
+          <span className="sr-only">{t('common.toggleCurrency')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

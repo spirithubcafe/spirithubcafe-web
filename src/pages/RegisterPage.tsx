@@ -31,13 +31,13 @@ export function RegisterPage() {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('auth.register.passwordMismatch'))
       setLoading(false)
       return
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
+      setError(t('auth.register.passwordTooShort'))
       setLoading(false)
       return
     }
@@ -52,7 +52,7 @@ export function RegisterPage() {
     if (success) {
       navigate('/dashboard')
     } else {
-      setError('Registration failed. Please try again.')
+      setError(t('auth.register.failed'))
     }
     
     setLoading(false)

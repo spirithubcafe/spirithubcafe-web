@@ -31,7 +31,7 @@ export function LoginPage() {
     if (success) {
       navigate('/dashboard')
     } else {
-      setError('Invalid email or password')
+      setError(t('auth.login.invalidCredentials'))
     }
     
     setLoading(false)

@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
 
 export function LanguageToggle() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng)
@@ -42,7 +42,7 @@ export function LanguageToggle() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="icon">
           <Languages className="h-[1.2rem] w-[1.2rem]" />
-          <span className="sr-only">Toggle language</span>
+          <span className="sr-only">{t('common.toggleLanguage')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

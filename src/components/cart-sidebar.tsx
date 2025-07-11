@@ -8,10 +8,9 @@ import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
 
 export function CartSidebar() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { cart, updateQuantity, removeFromCart } = useCart()
   const { formatPrice } = useCurrency()
-  const isArabic = i18n.language === 'ar'
 
   return (
     <Sheet>
@@ -31,10 +30,10 @@ export function CartSidebar() {
           <SheetHeader className="p-6 pb-4">
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
-              {isArabic ? 'سلة التسوق' : 'Shopping Cart'}
+              {t('cart.title')}
               {cart.totalItems > 0 && (
                 <Badge variant="secondary">
-                  {cart.totalItems} {isArabic ? 'عنصر' : 'items'}
+                  {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
                 </Badge>
               )}
             </SheetTitle>
@@ -47,15 +46,15 @@ export function CartSidebar() {
                   <Coffee className="h-16 w-16 text-muted-foreground mx-auto" />
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {isArabic ? 'سلة التسوق فارغة' : 'Your cart is empty'}
+                      {t('cart.empty')}
                     </h3>
                     <p className="text-muted-foreground">
-                      {isArabic ? 'أضف بعض المنتجات للبدء' : 'Add some products to get started'}
+                      {t('cart.emptyDescription')}
                     </p>
                   </div>
                   <Button asChild>
                     <Link to="/shop">
-                      {isArabic ? 'تسوق الآن' : 'Shop Now'}
+                      {t('cart.shopNow')}
                     </Link>
                   </Button>
                 </div>
@@ -73,7 +72,7 @@ export function CartSidebar() {
                       <div className="flex-1 space-y-2">
                         <div className="flex items-start justify-between">
                           <h4 className="font-medium text-sm">
-                            {isArabic ? item.product.nameAr : item.product.name}
+                            {i18n.language === 'ar' ? item.product.nameAr : item.product.name}
                           </h4>
                           <Button
                             variant="ghost"
@@ -86,7 +85,7 @@ export function CartSidebar() {
                         </div>
                         
                         <p className="text-sm text-muted-foreground">
-                          {isArabic ? item.product.categoryAr : item.product.category}
+                          {i18n.language === 'ar' ? item.product.categoryAr : item.product.category}
                         </p>
                         
                         <div className="flex items-center justify-between">
@@ -124,7 +123,7 @@ export function CartSidebar() {
                 {/* Cart Summary */}
                 <div className="border-t pt-4 pb-6 space-y-4">
                   <div className="flex items-center justify-between text-lg font-semibold">
-                    <span>{isArabic ? 'المجموع' : 'Total'}</span>
+                    <span>{t('cart.total')}</span>
                     <span className="text-amber-600 currency">
                       {formatPrice(cart.total)}
                     </span>
@@ -133,12 +132,12 @@ export function CartSidebar() {
                   <div className="space-y-2">
                     <Button asChild className="w-full">
                       <Link to="/checkout">
-                        {isArabic ? 'إتمام الشراء' : 'Checkout'}
+                        {t('cart.checkout')}
                       </Link>
                     </Button>
                     <Button variant="outline" asChild className="w-full">
                       <Link to="/shop">
-                        {isArabic ? 'متابعة التسوق' : 'Continue Shopping'}
+                        {t('cart.continueShopping')}
                       </Link>
                     </Button>
                   </div>
