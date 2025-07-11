@@ -1,13 +1,17 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Coffee } from 'lucide-react'
+import { Coffee, User } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
 import { CurrencyToggle } from '@/components/currency-toggle'
+import { CartSidebar } from '@/components/cart-sidebar'
+import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 
 export function Navigation() {
   const location = useLocation()
   const { t, i18n } = useTranslation()
+  const { auth } = useAuth()
   const isRTL = i18n.language === 'ar'
 
   const isActive = (path: string) => location.pathname === path
@@ -61,6 +65,29 @@ export function Navigation() {
 
         {/* Action Icons - در RTL سمت چپ، در LTR سمت راست */}
         <div className={`flex items-center gap-3 ${isRTL ? 'order-1' : 'order-3'}`}>
+          <CartSidebar />
+          
+          {/* Auth Button */}
+          {auth.isAuthenticated ? (
+            <Button variant="outline" asChild>
+              <Link to="/dashboard" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {isRTL ? 'لوحة التحكم' : 'Dashboard'}
+                </span>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" asChild>
+              <Link to="/login" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">
+                  {isRTL ? 'تسجيل الدخول' : 'Login'}
+                </span>
+              </Link>
+            </Button>
+          )}
+          
           <CurrencyToggle />
           <LanguageToggle />
           <ThemeToggle />
