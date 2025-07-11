@@ -452,6 +452,41 @@
   background: rgba(0, 0, 0, 0.95);
 }
 
+/* Mobile Menu Gradient Overlay for Better Visual Separation */
+.mobile-menu-gradient {
+  background: linear-gradient(
+    to bottom,
+    hsl(var(--background)) 0%,
+    hsl(var(--background) / 0.98) 50%,
+    hsl(var(--background)) 100%
+  );
+}
+
+/* Enhanced backdrop blur for mobile menu */
+.mobile-menu-backdrop {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+/* Ensure mobile menu stays above all content */
+.mobile-menu-container {
+  position: fixed;
+  z-index: 9999;
+  background: hsl(var(--background));
+  box-shadow: 
+    0 10px 38px -10px hsla(var(--foreground) / 0.35),
+    0 10px 20px -15px hsla(var(--foreground) / 0.2);
+}
+
+/* Dark mode enhancements */
+.dark .mobile-menu-container {
+  background: hsl(var(--background));
+  border-top: 1px solid hsl(var(--border) / 0.3);
+  box-shadow: 
+    0 10px 38px -10px hsla(0 0% 0% / 0.5),
+    0 10px 20px -15px hsla(0 0% 0% / 0.3);
+}
+
 /* Enhanced Button Hover Effects */
 .btn-amber-hover {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -505,6 +540,103 @@
 
 .mobile-menu-content.closing {
   animation: mobileMenuSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Enhanced Mobile Menu with Glass Effect and Rounded Corners */
+.mobile-menu-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05)
+  );
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.dark .mobile-menu-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.7),
+    rgba(0, 0, 0, 0.8)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced Glass Effect for Mobile Menu */
+.mobile-menu-enhanced-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(25px) saturate(200%);
+  -webkit-backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.dark .mobile-menu-enhanced-glass {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.9) 50%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Backdrop Click to Close */
+.mobile-menu-backdrop-clickable {
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* RTL Support for Mobile Menu */
+[dir="rtl"] .mobile-menu-rtl-content {
+  text-align: right;
+}
+
+[dir="rtl"] .mobile-menu-rtl-content .flex {
+  flex-direction: row-reverse;
+}
+
+/* Smooth border gradient */
+.mobile-menu-border-glow {
+  position: relative;
+}
+
+.mobile-menu-border-glow::before {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24, #f59e0b, #d97706);
+  background-size: 200% 100%;
+  animation: borderGlow 3s ease infinite;
+}
+
+@keyframes borderGlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 /* Responsive improvements */
