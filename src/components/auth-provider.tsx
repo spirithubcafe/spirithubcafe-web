@@ -5,6 +5,7 @@ import { DEMO_USERS } from '@/types'
 
 interface AuthContextType {
   auth: AuthState
+  currentUser: User | null
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   register: (userData: Omit<User, 'id' | 'joinDate'>) => Promise<boolean>
@@ -91,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       auth,
+      currentUser: auth.user,
       login,
       logout,
       register,

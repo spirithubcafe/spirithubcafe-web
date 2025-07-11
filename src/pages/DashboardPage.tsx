@@ -30,6 +30,7 @@ import { Progress } from '@/components/ui/progress'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
+import { DEMO_USERS } from '@/types'
 
 const DEMO_ORDERS = [
   {
@@ -177,42 +178,54 @@ export default function DashboardPage() {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8 gap-2 h-auto p-2">
+            <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+              <BarChart3 className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm text-center">
                 {isArabic ? 'نظرة عامة' : 'Overview'}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4" />
-              <span className="hidden sm:inline">
+            <TabsTrigger value="orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+              <ShoppingBag className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm text-center">
                 {isArabic ? 'الطلبات' : 'Orders'}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">
+            <TabsTrigger value="profile" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+              <User className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm text-center">
                 {isArabic ? 'الملف الشخصي' : 'Profile'}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">
+            <TabsTrigger value="settings" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+              <Settings className="h-4 w-4 shrink-0" />
+              <span className="text-xs sm:text-sm text-center">
                 {isArabic ? 'الإعدادات' : 'Settings'}
               </span>
             </TabsTrigger>
-            {user.role === 'admin' && (
+            {user && user.role === 'admin' && (
               <>
-                <TabsTrigger value="products" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  <span className="hidden sm:inline">
+                <TabsTrigger value="users" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm text-center">
+                    {isArabic ? 'المستخدمين' : 'Users'}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="products" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+                  <Package className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm text-center">
                     {isArabic ? 'المنتجات' : 'Products'}
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="analytics" className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="hidden sm:inline">
+                <TabsTrigger value="admin-orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+                  <ShoppingBag className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm text-center">
+                    {isArabic ? 'كل الطلبات' : 'All Orders'}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+                  <TrendingUp className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm text-center">
                     {isArabic ? 'التحليلات' : 'Analytics'}
                   </span>
                 </TabsTrigger>
@@ -335,37 +348,70 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="space-y-4">
                   {DEMO_ORDERS.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
-                          {order.status === 'delivered' ? (
-                            <CheckCircle className="h-6 w-6 text-green-600" />
-                          ) : order.status === 'shipped' ? (
-                            <Truck className="h-6 w-6 text-blue-600" />
-                          ) : (
-                            <Clock className="h-6 w-6 text-yellow-600" />
-                          )}
+                    <div key={order.id} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
+                            {order.status === 'delivered' ? (
+                              <CheckCircle className="h-6 w-6 text-green-600" />
+                            ) : order.status === 'shipped' ? (
+                              <Truck className="h-6 w-6 text-blue-600" />
+                            ) : (
+                              <Clock className="h-6 w-6 text-yellow-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{order.id}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.date).toLocaleDateString(isArabic ? 'ar' : 'en')}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {order.items} {isArabic ? 'عنصر' : 'items'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">{order.id}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(order.date).toLocaleDateString(isArabic ? 'ar' : 'en')}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {order.items} {isArabic ? 'عنصر' : 'items'}
+                        <div className="text-right">
+                          <Badge className={getStatusColor(order.status)}>
+                            {getStatusText(order.status)}
+                          </Badge>
+                          <p className="text-lg font-medium mt-1 currency">
+                            {formatPrice(order.total)}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(order.status)}>
-                          {getStatusText(order.status)}
-                        </Badge>
-                        <p className="text-lg font-medium mt-1 currency">
-                          {formatPrice(order.total)}
-                        </p>
-                        <Button variant="ghost" size="sm" className="mt-2">
+                      
+                      {/* Order Actions */}
+                      <div className="flex flex-wrap gap-2 pt-2 border-t">
+                        <Button variant="outline" size="sm">
+                          {isArabic ? 'تتبع الطلب' : 'Track Order'}
+                        </Button>
+                        <Button variant="outline" size="sm">
                           {isArabic ? 'عرض التفاصيل' : 'View Details'}
                         </Button>
+                        <Button variant="outline" size="sm">
+                          {isArabic ? 'فتح تذكرة دعم' : 'Open Support Ticket'}
+                        </Button>
+                        {order.status === 'delivered' && (
+                          <Button variant="outline" size="sm">
+                            {isArabic ? 'تقييم الطلب' : 'Rate Order'}
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* Order Progress */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>{isArabic ? 'حالة الطلب' : 'Order Status'}</span>
+                          <span className="font-medium">
+                            {order.status === 'delivered' ? (isArabic ? 'مكتمل' : 'Completed') :
+                             order.status === 'shipped' ? (isArabic ? 'في الطريق' : 'In Transit') :
+                             (isArabic ? 'قيد التجهيز' : 'Processing')}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={order.status === 'delivered' ? 100 : order.status === 'shipped' ? 70 : 30} 
+                          className="h-2" 
+                        />
                       </div>
                     </div>
                   ))}
@@ -521,56 +567,8 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-          {/* Admin Products Tab */}
-          {user.role === 'admin' && (
-            <TabsContent value="products" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>
-                    {isArabic ? 'إدارة المنتجات' : 'Product Management'}
-                  </CardTitle>
-                  <CardDescription>
-                    {isArabic ? 'إدارة المنتجات والمخزون' : 'Manage products and inventory'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {DEMO_PRODUCTS.map((product) => (
-                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-lg flex items-center justify-center">
-                            <Coffee className="h-6 w-6 text-amber-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">
-                              {isArabic ? product.nameAr : product.name}
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <span>{product.sales} {isArabic ? 'مبيعات' : 'sales'}</span>
-                              <span className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                {product.rating}
-                              </span>
-                              <span>{product.reviews} {isArabic ? 'تقييم' : 'reviews'}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium currency">{formatPrice(product.revenue)}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {isArabic ? 'إجمالي الإيرادات' : 'Total Revenue'}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-
           {/* Admin Analytics Tab */}
-          {user.role === 'admin' && (
+          {user && user.role === 'admin' && (
             <TabsContent value="analytics" className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
@@ -634,6 +632,28 @@ export default function DashboardPage() {
                 </Card>
               </div>
 
+              {/* Sales Chart Placeholder */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {isArabic ? 'مخطط المبيعات' : 'Sales Chart'}
+                  </CardTitle>
+                  <CardDescription>
+                    {isArabic ? 'أداء المبيعات على مدار الشهر' : 'Sales performance over the month'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[300px] bg-muted/20 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-muted-foreground">
+                        {isArabic ? 'سيتم إضافة المخطط قريباً' : 'Chart will be added soon'}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -669,6 +689,186 @@ export default function DashboardPage() {
                           <p className="text-sm text-muted-foreground">
                             {isArabic ? 'إيرادات' : 'Revenue'}
                           </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Admin Products Tab */}
+          {user && user.role === 'admin' && (
+            <TabsContent value="products" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    {isArabic ? 'إدارة المنتجات' : 'Product Management'}
+                  </CardTitle>
+                  <CardDescription>
+                    {isArabic ? 'إدارة المنتجات والمخزون' : 'Manage products and inventory'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-medium">
+                        {isArabic ? 'قائمة المنتجات' : 'Product List'}
+                      </h3>
+                      <Button>
+                        {isArabic ? 'إضافة منتج جديد' : 'Add New Product'}
+                      </Button>
+                    </div>
+                    
+                    {DEMO_PRODUCTS.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-lg flex items-center justify-center">
+                            <Coffee className="h-6 w-6 text-amber-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">
+                              {isArabic ? product.nameAr : product.name}
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                              <span>{product.sales} {isArabic ? 'مبيعات' : 'sales'}</span>
+                              <span className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                {product.rating}
+                              </span>
+                              <span>{product.reviews} {isArabic ? 'تقييم' : 'reviews'}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium currency">{formatPrice(product.revenue)}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {isArabic ? 'إجمالي الإيرادات' : 'Total Revenue'}
+                          </p>
+                          <div className="flex gap-2 mt-2">
+                            <Button variant="outline" size="sm">
+                              {isArabic ? 'تعديل' : 'Edit'}
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              {isArabic ? 'حذف' : 'Delete'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Admin Users Tab */}
+          {user && user.role === 'admin' && (
+            <TabsContent value="users" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    {isArabic ? 'إدارة المستخدمين' : 'User Management'}
+                  </CardTitle>
+                  <CardDescription>
+                    {isArabic ? 'إدارة حسابات المستخدمين والأدوار' : 'Manage user accounts and roles'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {DEMO_USERS.map((demoUser: any) => (
+                      <div key={demoUser.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={demoUser.avatar} alt={demoUser.name} />
+                            <AvatarFallback>
+                              {demoUser.name.split(' ').map((n: string) => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">
+                              {isArabic ? (demoUser.nameAr || demoUser.name) : demoUser.name}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{demoUser.email}</p>
+                            <Badge variant={demoUser.role === 'admin' ? 'default' : 'secondary'}>
+                              {demoUser.role === 'admin' 
+                                ? (isArabic ? 'مدير' : 'Admin')
+                                : (isArabic ? 'مستخدم' : 'User')
+                              }
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm">
+                            {isArabic ? 'تعديل' : 'Edit'}
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            {isArabic ? 'عرض' : 'View'}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* Admin All Orders Tab */}
+          {user && user.role === 'admin' && (
+            <TabsContent value="admin-orders" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5" />
+                    {isArabic ? 'جميع الطلبات' : 'All Orders'}
+                  </CardTitle>
+                  <CardDescription>
+                    {isArabic ? 'إدارة جميع طلبات المستخدمين' : 'Manage all user orders'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {DEMO_ORDERS.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
+                            {order.status === 'delivered' ? (
+                              <CheckCircle className="h-6 w-6 text-green-600" />
+                            ) : order.status === 'shipped' ? (
+                              <Truck className="h-6 w-6 text-blue-600" />
+                            ) : (
+                              <Clock className="h-6 w-6 text-yellow-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium">{order.id}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {isArabic ? 'عميل: أحمد محمد' : 'Customer: Ahmed Mohammed'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(order.date).toLocaleDateString(isArabic ? 'ar' : 'en')}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge className={getStatusColor(order.status)}>
+                            {getStatusText(order.status)}
+                          </Badge>
+                          <p className="text-lg font-medium mt-1 currency">
+                            {formatPrice(order.total)}
+                          </p>
+                          <div className="flex gap-2 mt-2">
+                            <Button variant="outline" size="sm">
+                              {isArabic ? 'تحديث' : 'Update'}
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              {isArabic ? 'عرض' : 'View'}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}

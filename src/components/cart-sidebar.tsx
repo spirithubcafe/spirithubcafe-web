@@ -26,124 +26,126 @@ export function CartSidebar() {
         </Button>
       </SheetTrigger>
       
-      <SheetContent className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5" />
-            {isArabic ? 'سلة التسوق' : 'Shopping Cart'}
-            {cart.totalItems > 0 && (
-              <Badge variant="secondary">
-                {cart.totalItems} {isArabic ? 'عنصر' : 'items'}
-              </Badge>
-            )}
-          </SheetTitle>
-        </SheetHeader>
-
+      <SheetContent className="w-full sm:max-w-lg p-0">
         <div className="flex flex-col h-full">
-          {cart.items.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <Coffee className="h-16 w-16 text-muted-foreground mx-auto" />
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    {isArabic ? 'سلة التسوق فارغة' : 'Your cart is empty'}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {isArabic ? 'أضف بعض المنتجات للبدء' : 'Add some products to get started'}
-                  </p>
+          <SheetHeader className="p-6 pb-4">
+            <SheetTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />
+              {isArabic ? 'سلة التسوق' : 'Shopping Cart'}
+              {cart.totalItems > 0 && (
+                <Badge variant="secondary">
+                  {cart.totalItems} {isArabic ? 'عنصر' : 'items'}
+                </Badge>
+              )}
+            </SheetTitle>
+          </SheetHeader>
+
+          <div className="flex-1 flex flex-col px-6">
+            {cart.items.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-center space-y-4">
+                  <Coffee className="h-16 w-16 text-muted-foreground mx-auto" />
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      {isArabic ? 'سلة التسوق فارغة' : 'Your cart is empty'}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {isArabic ? 'أضف بعض المنتجات للبدء' : 'Add some products to get started'}
+                    </p>
+                  </div>
+                  <Button asChild>
+                    <Link to="/shop">
+                      {isArabic ? 'تسوق الآن' : 'Shop Now'}
+                    </Link>
+                  </Button>
                 </div>
-                <Button asChild>
-                  <Link to="/shop">
-                    {isArabic ? 'تسوق الآن' : 'Shop Now'}
-                  </Link>
-                </Button>
               </div>
-            </div>
-          ) : (
-            <>
-              {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-4">
-                {cart.items.map((item) => (
-                  <div key={item.product.id} className="flex gap-4 p-4 border rounded-lg">
-                    <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
-                      <Coffee className="h-8 w-8 text-amber-600" />
-                    </div>
-                    
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-medium text-sm">
-                          {isArabic ? item.product.nameAr : item.product.name}
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFromCart(item.product.id)}
-                          className="h-6 w-6 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+            ) : (
+              <>
+                {/* Cart Items */}
+                <div className="flex-1 overflow-y-auto py-2 space-y-4">
+                  {cart.items.map((item) => (
+                    <div key={item.product.id} className="flex gap-4 p-4 border rounded-lg">
+                      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
+                        <Coffee className="h-8 w-8 text-amber-600" />
                       </div>
                       
-                      <p className="text-sm text-muted-foreground">
-                        {isArabic ? item.product.categoryAr : item.product.category}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-medium text-sm">
+                            {isArabic ? item.product.nameAr : item.product.name}
+                          </h4>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                            className="h-6 w-6 p-0"
+                            onClick={() => removeFromCart(item.product.id)}
+                            className="h-6 w-6 p-0 hover:bg-destructive/10"
                           >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="text-sm font-medium w-8 text-center">
-                            {item.quantity}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <Plus className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                         
-                        <p className="font-semibold text-amber-600 currency">
-                          {formatPrice(item.product.price * item.quantity)}
+                        <p className="text-sm text-muted-foreground">
+                          {isArabic ? item.product.categoryAr : item.product.category}
                         </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm font-medium w-8 text-center">
+                              {item.quantity}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          
+                          <p className="font-semibold text-amber-600 currency">
+                            {formatPrice(item.product.price * item.quantity)}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              {/* Cart Summary */}
-              <div className="border-t pt-4 space-y-4">
-                <div className="flex items-center justify-between text-lg font-semibold">
-                  <span>{isArabic ? 'المجموع' : 'Total'}</span>
-                  <span className="text-amber-600 currency">
-                    {formatPrice(cart.total)}
-                  </span>
+                {/* Cart Summary */}
+                <div className="border-t pt-4 pb-6 space-y-4">
+                  <div className="flex items-center justify-between text-lg font-semibold">
+                    <span>{isArabic ? 'المجموع' : 'Total'}</span>
+                    <span className="text-amber-600 currency">
+                      {formatPrice(cart.total)}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button asChild className="w-full">
+                      <Link to="/checkout">
+                        {isArabic ? 'إتمام الشراء' : 'Checkout'}
+                      </Link>
+                    </Button>
+                    <Button variant="outline" asChild className="w-full">
+                      <Link to="/shop">
+                        {isArabic ? 'متابعة التسوق' : 'Continue Shopping'}
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Button asChild className="w-full">
-                    <Link to="/checkout">
-                      {isArabic ? 'إتمام الشراء' : 'Checkout'}
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/shop">
-                      {isArabic ? 'متابعة التسوق' : 'Continue Shopping'}
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
