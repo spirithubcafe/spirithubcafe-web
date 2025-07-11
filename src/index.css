@@ -617,6 +617,77 @@
   flex-direction: row-reverse;
 }
 
+/* RTL Mobile Menu Support */
+[dir="rtl"] .mobile-menu-rtl {
+  right: 0.5rem;
+  left: auto;
+}
+
+[dir="ltr"] .mobile-menu-ltr {
+  left: 0.5rem;
+  right: auto;
+}
+
+/* Mobile Navigation RTL Support */
+[dir="rtl"] .mobile-nav-button {
+  order: 1;
+}
+
+[dir="rtl"] .mobile-nav-logo {
+  order: 3;
+}
+
+[dir="rtl"] .mobile-nav-controls {
+  order: 2;
+}
+
+/* Better mobile menu positioning for RTL */
+@media (max-width: 768px) {
+  [dir="rtl"] .mobile-menu-content {
+    text-align: left;
+    direction: ltr;
+  }
+  
+  [dir="rtl"] .mobile-menu-content .grid {
+    direction: ltr;
+  }
+  
+  [dir="rtl"] .mobile-menu-content .flex {
+    flex-direction: row;
+  }
+  
+  [dir="rtl"] .mobile-menu-nav-link {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* Logo text visibility improvements */
+.logo-text-mobile {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .logo-text-mobile {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+}
+
+/* Better RTL flex support for navigation */
+[dir="rtl"] .nav-flex-reverse {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .nav-justify-end {
+  justify-content: flex-end;
+}
+
+[dir="rtl"] .nav-text-right {
+  text-align: right;
+}
+
 /* Smooth border gradient */
 .mobile-menu-border-glow {
   position: relative;
@@ -660,4 +731,81 @@
   outline: 2px solid #d97706;
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Mobile Menu Open State - Remove Header Blur */
+body.mobile-menu-open nav {
+  background: hsl(var(--background)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Alternative approach for header blur removal */
+.nav-no-blur {
+  background: hsl(var(--background)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure header stays solid when mobile menu is open */
+.mobile-menu-open nav {
+  background: hsl(var(--background)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Arabic Logo Positioning - Always Right */
+[dir="rtl"] .nav-logo {
+  order: 3 !important;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+[dir="ltr"] .nav-logo {
+  order: 1 !important;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Better mobile menu state management */
+.mobile-menu-active {
+  overflow: hidden;
+}
+
+.mobile-menu-active .nav-header {
+  background: hsl(var(--background));
+  backdrop-filter: none;
+}
+
+/* Arabic Mobile Menu Button Alignment */
+[dir="rtl"] .mobile-menu-button-left {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+[dir="rtl"] .mobile-menu-nav-button {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  flex-direction: row !important;
+}
+
+/* Ensure buttons in Arabic mobile menu are left-aligned */
+[dir="rtl"] .mobile-menu-content .mobile-nav-link {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+[dir="rtl"] .mobile-menu-content button {
+  justify-content: center !important;
+}
+
+[dir="rtl"] .mobile-menu-content .grid button {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Navigation buttons in Arabic should be centered within their containers */
+[dir="rtl"] .mobile-menu-auth-buttons {
+  justify-content: center !important;
+  text-align: center !important;
 }

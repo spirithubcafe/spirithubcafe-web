@@ -1,227 +1,381 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Coffee, User, Menu, X } from 'lucide-react'
+import { Menu, X, Coffee, User, LogOut, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
 import { CurrencyToggle } from '@/components/currency-toggle'
 import { CartSidebar } from '@/components/cart-sidebar'
-import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/components/auth-provider'
+import { useCart } from '@/components/cart-provider'
 import { cn } from '@/lib/utils'
 
 export function Navigation() {
+  const { t, i18n } = useTranslation()
+  const { auth, logout } = useAuth()
+  const { cart } = useCart()
   const location = useLocation()
-  const { t } = useTranslation()
-  const { auth } = useAuth()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isArabic = i18n.language === 'ar'
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [location.pathname])
+
+  // Close mobile menu on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.classList.add('mobile-menu-open')
+    } else {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('mobile-menu-open')
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('mobile-menu-open')
+    }
+  }, [mobileMenuOpen])
+
+  const navigationItems = [
+    { href: '/', label: t('navigation.home') },
+    { href: '/shop', label: t('navigation.shop') },
+    { href: '/about', label: t('navigation.about') },
+    { href: '/contact', label: t('navigation.contact') },
+  ]
 
   const isActive = (path: string) => location.pathname === path
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen)
+  const handleLogout = () => {
+    logout()
+    setMobileMenuOpen(false)
   }
-
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false)
-  }
-
-  const navLinks = [
-    { to: '/', label: t('navigation.home') },
-    { to: '/shop', label: t('navigation.shop') },
-    { to: '/about', label: t('navigation.about') },
-    { to: '/contact', label: t('navigation.contact') }
-  ]
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-sm">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex h-16 items-center justify-between">
-          
-          {/* Logo - Always visible */}
-          <div className="flex items-center gap-3">
-            <Coffee className="h-6 w-6 text-amber-600 no-flip shrink-0" />
-            <Link 
-              to="/" 
-              className="text-lg md:text-xl font-bold text-foreground hover:text-amber-600 transition-colors duration-200"
-              onClick={closeMobileMenu}
-            >
-              {t('navigation.brandName')}
-            </Link>
-          </div>
-          
-          {/* Desktop Navigation Links - Hidden on mobile */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-medium">
-            {navLinks.map((link) => (
-              <Link 
-                key={link.to}
-                to={link.to} 
-                className={cn(
-                  "relative py-2 px-1 transition-all duration-300 hover:text-amber-600 group",
-                  isActive(link.to) 
-                    ? 'text-amber-600' 
-                    : 'text-foreground/70 hover:text-foreground'
-                )}
-              >
-                {link.label}
+    <>
+      {/* Navigation Bar */}
+      <nav className={cn(
+        "sticky top-0 z-50 w-full border-b",
+        mobileMenuOpen 
+          ? "bg-background" 
+          : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      )}>
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between max-w-7xl mx-auto">
+            
+            {/* Logo - Always right for Arabic, left for English */}
+            <div className={cn(
+              "flex items-center gap-2 flex-shrink-0",
+              isArabic ? "order-3" : "order-1"
+            )}>
+              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Coffee className="h-7 w-7 text-amber-600 no-flip" />
                 <span className={cn(
-                  "absolute bottom-0 left-0 h-0.5 bg-amber-600 transition-all duration-300",
-                  isActive(link.to) 
-                    ? 'w-full' 
-                    : 'w-0 group-hover:w-full'
-                )} />
+                  "font-bold",
+                  isArabic 
+                    ? "text-base" 
+                    : "text-lg sm:inline hidden md:inline"
+                )}>
+                  {t('navigation.brandName')}
+                </span>
               </Link>
-            ))}
-          </nav>
+            </div>
 
-          {/* Desktop Action Icons */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
-            <CartSidebar />
-            
-            {auth.isAuthenticated ? (
-              <Button variant="outline" size="sm" asChild className="hover:bg-amber-50 hover:border-amber-200 dark:hover:bg-amber-950/20">
-                <Link to="/dashboard" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="hidden lg:inline">
-                    {t('navigation.dashboard')}
-                  </span>
-                </Link>
+            {/* Desktop Navigation Links - Centered */}
+            <div className={cn(
+              "hidden md:flex items-center gap-1",
+              isArabic ? "order-2" : "order-2"
+            )}>
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.href}
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className={cn(
+                    "nav-link-underline transition-colors hover:text-amber-600",
+                    isActive(item.href) 
+                      ? "text-amber-600 bg-amber-50 dark:bg-amber-950/20" 
+                      : "text-foreground"
+                  )}
+                >
+                  <Link to={item.href}>
+                    {item.label}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+
+            {/* Right Side Controls - Left aligned for Arabic, Right for English */}
+            <div className={cn(
+              "flex items-center gap-2",
+              isArabic ? "order-1 md:order-3" : "order-3"
+            )}>
+              {/* Settings Controls */}
+              <div className="hidden sm:flex items-center gap-2">
+                <ThemeToggle />
+                <LanguageToggle />
+                <CurrencyToggle />
+              </div>
+
+              {/* Cart */}
+              <CartSidebar />
+
+              {/* Auth Buttons */}
+              {auth.isAuthenticated ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/dashboard" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      <span className="hidden lg:block">
+                        {t('navigation.dashboard')}
+                      </span>
+                    </Link>
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden lg:block">
+                      {t('navigation.logout')}
+                    </span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/login">{t('navigation.login')}</Link>
+                  </Button>
+                  <Button size="sm" asChild>
+                    <Link to="/register">{t('navigation.register')}</Link>
+                  </Button>
+                </div>
+              )}
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="outline"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-4 w-4" />
+                ) : (
+                  <Menu className="h-4 w-4" />
+                )}
               </Button>
-            ) : (
-              <Button variant="outline" size="sm" asChild className="hover:bg-amber-50 hover:border-amber-200 dark:hover:bg-amber-950/20">
-                <Link to="/login" className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  <span className="hidden lg:inline">
-                    {t('navigation.login')}
-                  </span>
-                </Link>
-              </Button>
-            )}
-            
-            <div className="flex items-center gap-1">
-              <CurrencyToggle />
-              <LanguageToggle />
-              <ThemeToggle />
             </div>
           </div>
-
-          {/* Mobile Actions - Cart + Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
-            <CartSidebar />
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMobileMenu}
-              className="p-2 hover:bg-amber-50 dark:hover:bg-amber-950/20 transition-colors duration-200"
-              aria-label="Toggle menu"
-            >
-              <div className="relative w-6 h-6">
-                <Menu 
-                  className={cn(
-                    "absolute inset-0 h-5 w-5 transition-all duration-300 transform",
-                    isMobileMenuOpen ? "rotate-90 opacity-0 scale-75" : "rotate-0 opacity-100 scale-100"
-                  )} 
-                />
-                <X 
-                  className={cn(
-                    "absolute inset-0 h-5 w-5 transition-all duration-300 transform",
-                    isMobileMenuOpen ? "rotate-0 opacity-100 scale-100" : "-rotate-90 opacity-0 scale-75"
-                  )} 
-                />
-              </div>
-            </Button>
-          </div>
         </div>
-      </div>
+      </nav>
 
       {/* Mobile Menu Overlay */}
-      <div className={cn(
-        "md:hidden fixed inset-0 top-16 bg-background backdrop-blur-xl transition-all duration-300 ease-in-out border-t border-border/20 shadow-2xl",
-        isMobileMenuOpen 
-          ? "opacity-100 visible" 
-          : "opacity-0 invisible"
-      )}>
-        
-        {/* Mobile Navigation */}
-        <div className={cn(
-          "w-full h-full px-4 py-6 transform transition-all duration-300 ease-in-out bg-background/98",
-          isMobileMenuOpen 
-            ? "translate-y-0 opacity-100" 
-            : "-translate-y-4 opacity-0"
-        )}>
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setMobileMenuOpen(false)}
+          />
           
-          {/* Navigation Links */}
-          <nav className="space-y-1 mb-8">
-            {navLinks.map((link, index) => (
-              <Link 
-                key={link.to}
-                to={link.to}
-                onClick={closeMobileMenu}
-                className={cn(
-                  "block py-3 px-4 rounded-lg text-base font-medium transition-all duration-200 hover:bg-amber-50 dark:hover:bg-amber-950/20",
-                  isActive(link.to) 
-                    ? 'text-amber-600 bg-amber-50 dark:bg-amber-950/20' 
-                    : 'text-foreground/80 hover:text-amber-600'
-                )}
-                style={{
-                  animationDelay: isMobileMenuOpen ? `${index * 50}ms` : '0ms'
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  {link.label}
-                  {isActive(link.to) && (
-                    <div className="w-2 h-2 bg-amber-600 rounded-full" />
-                  )}
+          {/* Menu Content - RTL positioning for Arabic */}
+          <div className={cn(
+            "fixed top-16 bottom-0 bg-background border-t shadow-xl",
+            "animate-in duration-200 w-80 max-w-[calc(100vw-2rem)]",
+            isArabic 
+              ? "right-2 slide-in-from-right-2" 
+              : "left-2 slide-in-from-left-2"
+          )}>
+            <div className={cn(
+              "flex flex-col h-full",
+              isArabic ? "text-left" : "text-left"
+            )}>
+              {/* Navigation Links */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-4">
+                  {/* Main Navigation */}
+                  <div className="space-y-2">
+                    <h3 className={cn(
+                      "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
+                      isArabic ? "text-left" : "text-left"
+                    )}>
+                      {t('navigation.menu', 'Menu')}
+                    </h3>
+                    {navigationItems.map((item, index) => (
+                      <Button
+                        key={item.href}
+                        variant={isActive(item.href) ? "secondary" : "ghost"}
+                        size="sm"
+                        asChild
+                        className={cn(
+                          "w-full h-12 text-base font-medium mobile-nav-link",
+                          isArabic ? "justify-start text-left" : "justify-start",
+                          isActive(item.href) && "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300"
+                        )}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <Link to={item.href} onClick={() => setMobileMenuOpen(false)} className="w-full">
+                          {item.label}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Settings Section */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <h3 className={cn(
+                      "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
+                      isArabic ? "text-left" : "text-left"
+                    )}>
+                      {t('navigation.settings')}
+                    </h3>
+                    <div className={cn(
+                      "grid grid-cols-3 gap-2",
+                      isArabic && "grid-flow-row-dense"
+                    )}>
+                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
+                        <ThemeToggle />
+                        <span className="text-xs text-muted-foreground text-center">
+                          {isArabic ? 'المظهر' : 'Theme'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
+                        <LanguageToggle />
+                        <span className="text-xs text-muted-foreground text-center">
+                          {isArabic ? 'اللغة' : 'Language'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
+                        <CurrencyToggle />
+                        <span className="text-xs text-muted-foreground text-center">
+                          {isArabic ? 'العملة' : 'Currency'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Cart Section */}
+                  <div className="space-y-2 pt-4 border-t">
+                    <h3 className={cn(
+                      "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
+                      isArabic ? "text-left" : "text-left"
+                    )}>
+                      {t('cart.title')}
+                    </h3>
+                    <div className={cn(
+                      "flex items-center gap-3 p-4 rounded-lg border bg-muted/50",
+                      isArabic ? "flex-row" : "flex-row"
+                    )}>
+                      <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className={cn(
+                          "text-sm font-medium",
+                          isArabic ? "text-left" : "text-left"
+                        )}>
+                          {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
+                        </p>
+                        <p className={cn(
+                          "text-xs text-muted-foreground",
+                          isArabic ? "text-left" : "text-left"
+                        )}>
+                          {t('cart.total')}: {cart.total.toFixed(2)}
+                        </p>
+                      </div>
+                      {cart.totalItems > 0 && (
+                        <Badge variant="secondary">{cart.totalItems}</Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </Link>
-            ))}
-          </nav>
-
-          {/* Auth Section */}
-          <div className="space-y-3 mb-8">
-            {auth.isAuthenticated ? (
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/dashboard" onClick={closeMobileMenu}>
-                  <User className="h-4 w-4 mr-3" />
-                  {t('navigation.dashboard')}
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/login" onClick={closeMobileMenu}>
-                  <User className="h-4 w-4 mr-3" />
-                  {t('navigation.login')}
-                </Link>
-              </Button>
-            )}
-          </div>
-
-          {/* Settings */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-foreground/60 uppercase tracking-wider px-4">
-              {t('navigation.settings')}
-            </h3>
-            
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                <CurrencyToggle />
-                <span className="text-xs text-foreground/60">{t('navigation.currency')}</span>
               </div>
-              
-              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                <LanguageToggle />
-                <span className="text-xs text-foreground/60">{t('navigation.language')}</span>
-              </div>
-              
-              <div className="flex flex-col items-center gap-2 p-3 rounded-lg bg-muted/30">
-                <ThemeToggle />
-                <span className="text-xs text-foreground/60">{t('theme.title')}</span>
+
+              {/* Auth Section */}
+              <div className="border-t p-6 bg-muted/20">
+                {auth.isAuthenticated ? (
+                  <div className="space-y-3">
+                    <div className={cn(
+                      "flex items-center gap-3 p-3 rounded-lg bg-background border",
+                      isArabic ? "flex-row" : "flex-row"
+                    )}>
+                      <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
+                        <User className="h-5 w-5 text-amber-600" />
+                      </div>
+                      <div className={cn(
+                        "flex-1",
+                        isArabic ? "text-left" : "text-left"
+                      )}>
+                        <p className="font-medium text-sm">{auth.user?.name}</p>
+                        <p className="text-xs text-muted-foreground">{auth.user?.email}</p>
+                      </div>
+                    </div>
+                    <div className={cn(
+                      "grid grid-cols-2 gap-2",
+                      isArabic && "grid-flow-col"
+                    )}>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
+                          "flex items-center gap-2 justify-center",
+                          isArabic && "flex-row"
+                        )}>
+                          <User className="h-4 w-4" />
+                          {t('navigation.dashboard')}
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleLogout}
+                        className={cn(
+                          "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20 flex items-center gap-2 justify-center",
+                          isArabic && "flex-row"
+                        )}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t('navigation.logout')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className={cn(
+                    "grid grid-cols-2 gap-2",
+                    isArabic && "grid-flow-col"
+                  )}>
+                    <Button variant="outline" asChild>
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
+                        {t('navigation.login')}
+                      </Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
+                        {t('navigation.register')}
+                      </Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </header>
+      )}
+    </>
   )
 }
