@@ -4,7 +4,7 @@
     "shop": "Shop",
     "about": "About Us",
     "contact": "Contact Us",
-    "brandName": "SPIRITHUB ROASTERY",
+    "brandName": "SPIRITHUB",
     "login": "Login",
     "register": "Register",
     "dashboard": "Dashboard",
@@ -15,7 +15,7 @@
   },
   "homepage": {
     "hero": {
-      "title": "Welcome to SPIRITHUB ROASTERY",
+      "title": "Welcome to SPIRITHUB",
       "subtitle": "Premium coffee roasted to perfection",
       "description": "Discover our carefully selected coffee beans from around the world, roasted with passion and expertise to bring you the perfect cup every time.",
       "shopNow": "Shop Now",
