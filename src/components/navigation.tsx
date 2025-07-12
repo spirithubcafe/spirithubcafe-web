@@ -82,10 +82,7 @@ export function Navigation() {
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <Coffee className="h-7 w-7 text-amber-600 no-flip" />
                 <span className={cn(
-                  "font-bold",
-                  isArabic 
-                    ? "text-base" 
-                    : "text-lg sm:inline hidden md:inline"
+                  "font-bold"
                 )}>
                   {t('navigation.brandName')}
                 </span>
