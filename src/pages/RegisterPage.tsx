@@ -9,7 +9,8 @@ import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 
 export function RegisterPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isArabic = i18n.language === 'ar'
   const { register } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
@@ -125,12 +126,13 @@ export function RegisterPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
+                    className={`${isArabic ? 'text-right' : 'text-left'}`}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className={`absolute ${isArabic ? 'left-0' : 'right-0'} top-0 h-full px-3 py-2 hover:bg-transparent`}
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (
@@ -152,12 +154,13 @@ export function RegisterPage() {
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     required
+                    className={`${isArabic ? 'text-right' : 'text-left'}`}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className={`absolute ${isArabic ? 'left-0' : 'right-0'} top-0 h-full px-3 py-2 hover:bg-transparent`}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? (
