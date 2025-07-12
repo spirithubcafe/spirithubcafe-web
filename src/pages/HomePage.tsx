@@ -3,42 +3,100 @@ import { ArrowRight, Coffee, Star, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
+import { useEffect, useRef, useState } from 'react'
 
 export function HomePage() {
   const { t } = useTranslation()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [textVisible, setTextVisible] = useState(false)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (video) {
+      video.addEventListener('loadeddata', () => {
+        // Start text animation after video loads
+        setTimeout(() => setTextVisible(true), 1000)
+      })
+    }
+  }, [])
 
   return (
     <div className="flex flex-col min-h-screen w-full">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-amber-950/30 dark:via-orange-950/20 dark:to-yellow-950/10 w-full min-h-screen flex items-center">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(251,191,36,0.1),transparent_50%)]"></div>
+      <section className="relative w-full min-h-screen flex items-center overflow-hidden">
+        {/* Video Background */}
+        <div className="absolute inset-0 z-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className={`w-full h-full object-cover transition-all duration-[4000ms] ease-out ${
+              textVisible ? 'blur-[6px] scale-105' : 'blur-[12px] scale-110'
+            }`}
+            style={{
+              filter: `blur(${textVisible ? '6px' : '12px'}) brightness(0.5) contrast(1.3) saturate(0.8)`
+            }}
+          >
+            <source src="/video/back.mp4" type="video/mp4" />
+          </video>
+          
+          {/* Enhanced overlay gradients for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/70"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60"></div>
+          
+          {/* Additional overlay when text is visible */}
+          <div className={`absolute inset-0 bg-black/20 transition-opacity duration-2000 ${
+            textVisible ? 'opacity-100' : 'opacity-0'
+          }`}></div>
+          
+          {/* Animated particles overlay */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(251,191,36,0.1),transparent_50%)]"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(249,115,22,0.08),transparent_50%)]"></div>
+          </div>
         </div>
+
+        {/* Content */}
         <div className="w-full relative z-10 px-4 sm:px-6 lg:px-8">
           <div className="max-w-6xl mx-auto text-center space-y-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 text-sm font-medium">
+            <div className={`space-y-6 transition-all duration-1000 ease-out ${
+              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}>
+              <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium shadow-lg">
                 <Coffee className="h-4 w-4 mr-2" />
                 {t('homepage.hero.badge', 'Premium Coffee Experience')}
               </div>
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold tracking-tight bg-gradient-to-r from-amber-600 via-orange-600 to-yellow-600 bg-clip-text text-transparent">
-                {t('homepage.hero.title')}
+              
+              <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl">
+                <span className="block bg-gradient-to-r from-amber-200 via-orange-200 to-yellow-200 bg-clip-text text-transparent">
+                  {t('homepage.hero.title')}
+                </span>
               </h1>
             </div>
-            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t('homepage.hero.subtitle')}
-            </p>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t('homepage.hero.description')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button asChild size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+            
+            <div className={`space-y-6 transition-all duration-1000 ease-out delay-300 ${
+              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}>
+              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                {t('homepage.hero.subtitle')}
+              </p>
+              <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
+                {t('homepage.hero.description')}
+              </p>
+            </div>
+            
+            <div className={`flex flex-col sm:flex-row gap-4 justify-center pt-6 transition-all duration-1000 ease-out delay-500 ${
+              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+            }`}>
+              <Button asChild size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm">
                 <Link to="/shop" className="flex items-center justify-center">
                   {t('homepage.hero.shopNow')}
                   <ArrowRight className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 no-flip" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="border-amber-200 text-amber-700 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/30" asChild>
+              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 dark:text-white text-black" asChild>
                 <Link to="/about">
                   {t('homepage.hero.learnMore')}
                 </Link>
