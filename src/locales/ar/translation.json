@@ -277,15 +277,37 @@
     "title": "تواصل معنا",
     "subtitle": "تواصل مع فريقنا",
     "getInTouch": "تواصل معنا",
+    "directions": "الحصول على الاتجاهات",
+    "yourLocation": "موقعك",
     "info": {
-      "address": "شارع القهوة 123، حي المحمصة",
-      "phone": "+1 (555) 123-4567",
-      "email": "hello@spirithubroastery.com",
-      "hours": "الإثنين-الجمعة: 8 صباحاً-6 مساءً، السبت-الأحد: 9 صباحاً-5 مساءً",
+      "address": "شارع الموج، مسقط، عمان",
+      "phone": "+968 9190 0005",
+      "phone2": "+968 7272 6999",
+      "whatsapp": "+968 7272 6999",
+      "instagram": "@spirithubcafe",
+      "email": "info@spirithubcafe.com",
+      "hours": "كل أيام الأسبوع: 8 صباحاً - 11 مساءً",
       "addressLabel": "العنوان",
       "phoneLabel": "الهاتف",
       "emailLabel": "البريد الإلكتروني", 
-      "hoursLabel": "ساعات العمل"
+      "hoursLabel": "ساعات العمل",
+      "callNow": "اتصل الآن",
+      "sendWhatsApp": "إرسال واتساب",
+      "sendEmail": "إرسال بريد",
+      "followInstagram": "تابع الانستجرام"
+    },
+    "map": {
+      "title": "موقعنا",
+      "description": "تفضل بزيارتنا في موقع المقهى",
+      "enableLocation": "تمكين الموقع",
+      "getDirections": "الحصول على الاتجاهات",
+      "yourLocationPlaceholder": "أدخل موقعك أو عنوانك",
+      "locationError": "تعذر الحصول على موقعك. يرجى إدخاله يدوياً."
+    },
+    "modal": {
+      "selectPhone": "اختر رقم هاتف للاتصال",
+      "mainLine": "الخط الرئيسي",
+      "secondLine": "الخط الثاني"
     },
     "form": {
       "name": "الاسم",

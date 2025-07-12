@@ -263,15 +263,37 @@
     "title": "Contact Us",
     "subtitle": "Get in touch with our team",
     "getInTouch": "Get in Touch",
+    "directions": "Get Directions",
+    "yourLocation": "Your Location",
     "info": {
-      "address": "123 Coffee Street, Roastery District",
-      "phone": "+1 (555) 123-4567",
-      "email": "hello@spirithubroastery.com",
-      "hours": "Mon-Fri: 8AM-6PM, Sat-Sun: 9AM-5PM",
+      "address": "Al Mouj Street, Muscat, Oman",
+      "phone": "+968 9190 0005",
+      "phone2": "+968 7272 6999",
+      "whatsapp": "+968 7272 6999",
+      "instagram": "@spirithubcafe",
+      "email": "info@spirithubcafe.com",
+      "hours": "Mon-Sun: 8AM-11PM",
       "addressLabel": "Address",
       "phoneLabel": "Phone", 
       "emailLabel": "Email",
-      "hoursLabel": "Hours"
+      "hoursLabel": "Hours",
+      "callNow": "Call Now",
+      "sendWhatsApp": "Send WhatsApp",
+      "sendEmail": "Send Email",
+      "followInstagram": "Follow Instagram"
+    },
+    "map": {
+      "title": "Our Location",
+      "description": "Visit us at our cafe location",
+      "enableLocation": "Enable Location",
+      "getDirections": "Get Directions",
+      "yourLocationPlaceholder": "Enter your location or address",
+      "locationError": "Unable to get your location. Please enter it manually."
+    },
+    "modal": {
+      "selectPhone": "Choose a phone number to call",
+      "mainLine": "Main Line",
+      "secondLine": "Second Line"
     },
     "form": {
       "name": "Name",

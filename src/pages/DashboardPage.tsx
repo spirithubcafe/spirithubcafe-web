@@ -178,7 +178,7 @@ export default function DashboardPage() {
 
         {/* Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8 gap-2 h-auto p-2">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-8 gap-2 h-auto p-2 mb-4">
             <TabsTrigger value="overview" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
               <BarChart3 className="h-4 w-4 shrink-0" />
               <span className="text-xs sm:text-sm text-center">
@@ -307,8 +307,8 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="space-y-4">
                   {DEMO_ORDERS.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center gap-4">
+                    <div key={order.id} className={`flex items-center justify-between p-4 border rounded-lg ${isArabic ? 'flex-row-reverse' : ''}`}>
+                      <div className={`flex items-center gap-4 ${isArabic ? 'flex-row-reverse text-right' : ''}`}>
                         <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
                           <Coffee className="h-5 w-5 text-amber-600" />
                         </div>
@@ -319,11 +319,11 @@ export default function DashboardPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(order.status)}>
+                      <div className={`flex flex-col items-end ${isArabic ? 'items-start text-left' : 'text-right'}`}> 
+                        <Badge className={getStatusColor(order.status) + ' mb-3 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm'} style={{alignSelf: isArabic ? 'flex-start' : 'flex-end'}}>
                           {getStatusText(order.status)}
                         </Badge>
-                        <p className="text-sm font-medium mt-1 currency">
+                        <p className="text-sm font-medium currency">
                           {formatPrice(order.total)}
                         </p>
                       </div>
@@ -371,9 +371,9 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge className={getStatusColor(order.status)}>
-                            {getStatusText(order.status)}
-                          </Badge>
+                        <Badge className={getStatusColor(order.status) + ' mb-3 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm'} style={{alignSelf: isArabic ? 'flex-start' : 'flex-end'}}>
+                          {getStatusText(order.status)}
+                        </Badge>
                           <p className="text-lg font-medium mt-1 currency">
                             {formatPrice(order.total)}
                           </p>
@@ -793,7 +793,7 @@ export default function DashboardPage() {
                               {isArabic ? (demoUser.nameAr || demoUser.name) : demoUser.name}
                             </p>
                             <p className="text-sm text-muted-foreground">{demoUser.email}</p>
-                            <Badge variant={demoUser.role === 'admin' ? 'default' : 'secondary'}>
+                            <Badge variant={demoUser.role === 'admin' ? 'default' : 'secondary'} className={`mb-2 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${isArabic ? 'ml-0 mr-2' : 'mr-0 ml-2'}`} style={{alignSelf: isArabic ? 'flex-start' : 'flex-end'}}>
                               {demoUser.role === 'admin' 
                                 ? (isArabic ? 'مدير' : 'Admin')
                                 : (isArabic ? 'مستخدم' : 'User')
@@ -855,7 +855,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <Badge className={getStatusColor(order.status)}>
+                          <Badge className={getStatusColor(order.status) + ' mb-3 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm'} style={{alignSelf: isArabic ? 'flex-start' : 'flex-end'}}>
                             {getStatusText(order.status)}
                           </Badge>
                           <p className="text-lg font-medium mt-1 currency">
