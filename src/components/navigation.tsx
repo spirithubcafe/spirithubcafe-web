@@ -40,14 +40,11 @@ export function Navigation() {
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden'
-      document.body.classList.add('mobile-menu-open')
     } else {
       document.body.style.overflow = 'unset'
-      document.body.classList.remove('mobile-menu-open')
     }
     return () => {
       document.body.style.overflow = 'unset'
-      document.body.classList.remove('mobile-menu-open')
     }
   }, [mobileMenuOpen])
 
@@ -68,9 +65,13 @@ export function Navigation() {
   return (
     <>
       {/* Navigation Bar */}
-      <nav className={cn(
-        "sticky top-0 z-50 w-full border-b bg-background"
-      )}>
+      <nav
+        className={cn(
+          "sticky top-0 w-full border-b",
+          "bg-background z-50", // default
+          mobileMenuOpen && "bg-background z-[60] shadow-lg" // when mobile menu is open, ensure solid bg and higher z-index
+        )}
+      >
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between max-w-7xl mx-auto">
             
