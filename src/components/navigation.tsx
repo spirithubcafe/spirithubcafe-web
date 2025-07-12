@@ -185,9 +185,9 @@ export function Navigation() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop with blur */}
+          {/* Backdrop without blur */}
           <div 
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50"
             onClick={() => setMobileMenuOpen(false)}
           />
           
@@ -199,10 +199,13 @@ export function Navigation() {
               ? "right-0 slide-in-from-right-2" 
               : "left-0 slide-in-from-left-2"
           )}>
-            <div className={cn(
-              "flex flex-col h-full",
-              isArabic ? "text-right" : "text-left"
-            )}>
+            <div 
+              className={cn(
+                "flex flex-col h-full",
+                isArabic ? "text-right" : "text-left"
+              )}
+              dir={isArabic ? "rtl" : "ltr"}
+            >
               {/* Navigation Links */}
               <div className="flex-1 overflow-y-auto p-6">
                 <div className="space-y-4">
@@ -229,8 +232,8 @@ export function Navigation() {
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
                           <Link to={item.href} onClick={() => setMobileMenuOpen(false)} className={cn(
-                            "w-full",
-                            isArabic ? "text-right" : "text-left"
+                            "w-full flex",
+                            isArabic ? "text-right justify-end" : "text-left justify-start"
                           )}>
                             {item.label}
                           </Link>
@@ -281,15 +284,14 @@ export function Navigation() {
                       {t('cart.title')}
                     </h3>
                     <div className={cn(
-                      "flex items-center gap-3 p-4 rounded-lg border bg-muted/50",
-                      isArabic ? "flex-row-reverse" : "flex-row"
-                    )}>
-                      <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                      "flex items-center gap-3 p-4 rounded-lg border bg-muted/50 flex-row-reverse"
+                     )}>
+                      <ShoppingCart className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                       <div className={cn(
-                        "flex-1",
+                        "flex-1 min-w-0",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-medium truncate">
                           {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -297,7 +299,7 @@ export function Navigation() {
                         </p>
                       </div>
                       {cart.totalItems > 0 && (
-                        <Badge variant="secondary">{cart.totalItems}</Badge>
+                        <Badge variant="secondary" className="flex-shrink-0">{cart.totalItems}</Badge>
                       )}
                     </div>
                   </div>
