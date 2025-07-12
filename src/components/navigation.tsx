@@ -69,10 +69,7 @@ export function Navigation() {
     <>
       {/* Navigation Bar */}
       <nav className={cn(
-        "sticky top-0 z-50 w-full border-b",
-        mobileMenuOpen 
-          ? "bg-background" 
-          : "bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        "sticky top-0 z-50 w-full border-b bg-background"
       )}>
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between max-w-7xl mx-auto">
@@ -191,23 +188,23 @@ export function Navigation() {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          {/* Backdrop */}
+          {/* Backdrop with blur */}
           <div 
             className="fixed inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
           
-          {/* Menu Content - RTL positioning for Arabic */}
+          {/* Menu Content - Full edge positioning */}
           <div className={cn(
             "fixed top-16 bottom-0 bg-background border-t shadow-xl",
-            "animate-in duration-200 w-80 max-w-[calc(100vw-2rem)]",
+            "animate-in duration-200 w-80 max-w-[calc(100vw-1rem)]",
             isArabic 
-              ? "right-2 slide-in-from-right-2" 
-              : "left-2 slide-in-from-left-2"
+              ? "right-0 slide-in-from-right-2" 
+              : "left-0 slide-in-from-left-2"
           )}>
             <div className={cn(
               "flex flex-col h-full",
-              isArabic ? "text-left" : "text-left"
+              isArabic ? "text-right" : "text-left"
             )}>
               {/* Navigation Links */}
               <div className="flex-1 overflow-y-auto p-6">
@@ -216,41 +213,46 @@ export function Navigation() {
                   <div className="space-y-2">
                     <h3 className={cn(
                       "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
-                      isArabic ? "text-left" : "text-left"
+                      isArabic ? "text-right" : "text-left"
                     )}>
                       {t('navigation.menu', 'Menu')}
                     </h3>
-                    {navigationItems.map((item, index) => (
-                      <Button
-                        key={item.href}
-                        variant={isActive(item.href) ? "secondary" : "ghost"}
-                        size="sm"
-                        asChild
-                        className={cn(
-                          "w-full h-12 text-base font-medium mobile-nav-link",
-                          isArabic ? "justify-start text-left" : "justify-start",
-                          isActive(item.href) && "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300"
-                        )}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                      >
-                        <Link to={item.href} onClick={() => setMobileMenuOpen(false)} className="w-full">
-                          {item.label}
-                        </Link>
-                      </Button>
-                    ))}
+                    <div className="space-y-2">
+                      {navigationItems.map((item, index) => (
+                        <Button
+                          key={item.href}
+                          variant={isActive(item.href) ? "secondary" : "ghost"}
+                          size="sm"
+                          asChild
+                          className={cn(
+                            "w-full h-12 text-base font-medium mobile-nav-link",
+                            isArabic ? "justify-end text-right" : "justify-start text-left",
+                            isActive(item.href) && "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300"
+                          )}
+                          style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                          <Link to={item.href} onClick={() => setMobileMenuOpen(false)} className={cn(
+                            "w-full",
+                            isArabic ? "text-right" : "text-left"
+                          )}>
+                            {item.label}
+                          </Link>
+                        </Button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Settings Section */}
                   <div className="space-y-2 pt-4 border-t">
                     <h3 className={cn(
                       "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
-                      isArabic ? "text-left" : "text-left"
+                      isArabic ? "text-right" : "text-left"
                     )}>
                       {t('navigation.settings')}
                     </h3>
                     <div className={cn(
                       "grid grid-cols-3 gap-2",
-                      isArabic && "grid-flow-row-dense"
+                      isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                     )}>
                       <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
                         <ThemeToggle />
@@ -277,26 +279,23 @@ export function Navigation() {
                   <div className="space-y-2 pt-4 border-t">
                     <h3 className={cn(
                       "text-sm font-semibold text-muted-foreground uppercase tracking-wider",
-                      isArabic ? "text-left" : "text-left"
+                      isArabic ? "text-right" : "text-left"
                     )}>
                       {t('cart.title')}
                     </h3>
                     <div className={cn(
                       "flex items-center gap-3 p-4 rounded-lg border bg-muted/50",
-                      isArabic ? "flex-row" : "flex-row"
+                      isArabic ? "flex-row-reverse" : "flex-row"
                     )}>
                       <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className={cn(
-                          "text-sm font-medium",
-                          isArabic ? "text-left" : "text-left"
-                        )}>
+                      <div className={cn(
+                        "flex-1",
+                        isArabic ? "text-right" : "text-left"
+                      )}>
+                        <p className="text-sm font-medium">
                           {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
                         </p>
-                        <p className={cn(
-                          "text-xs text-muted-foreground",
-                          isArabic ? "text-left" : "text-left"
-                        )}>
+                        <p className="text-xs text-muted-foreground">
                           {t('cart.total')}: {cart.total.toFixed(2)}
                         </p>
                       </div>
@@ -314,14 +313,14 @@ export function Navigation() {
                   <div className="space-y-3">
                     <div className={cn(
                       "flex items-center gap-3 p-3 rounded-lg bg-background border",
-                      isArabic ? "flex-row" : "flex-row"
+                      isArabic ? "flex-row-reverse" : "flex-row"
                     )}>
                       <div className="w-10 h-10 bg-amber-100 dark:bg-amber-950 rounded-full flex items-center justify-center">
                         <User className="h-5 w-5 text-amber-600" />
                       </div>
                       <div className={cn(
                         "flex-1",
-                        isArabic ? "text-left" : "text-left"
+                        isArabic ? "text-right" : "text-left"
                       )}>
                         <p className="font-medium text-sm">{auth.user?.name}</p>
                         <p className="text-xs text-muted-foreground">{auth.user?.email}</p>
@@ -329,12 +328,12 @@ export function Navigation() {
                     </div>
                     <div className={cn(
                       "grid grid-cols-2 gap-2",
-                      isArabic && "grid-flow-col"
+                      isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                     )}>
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
                           "flex items-center gap-2 justify-center",
-                          isArabic && "flex-row"
+                          isArabic ? "flex-row-reverse" : "flex-row"
                         )}>
                           <User className="h-4 w-4" />
                           {t('navigation.dashboard')}
@@ -346,7 +345,7 @@ export function Navigation() {
                         onClick={handleLogout}
                         className={cn(
                           "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20 flex items-center gap-2 justify-center",
-                          isArabic && "flex-row"
+                          isArabic ? "flex-row-reverse" : "flex-row"
                         )}
                       >
                         <LogOut className="h-4 w-4" />
@@ -357,7 +356,7 @@ export function Navigation() {
                 ) : (
                   <div className={cn(
                     "grid grid-cols-2 gap-2",
-                    isArabic && "grid-flow-col"
+                    isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                   )}>
                     <Button variant="outline" asChild>
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
