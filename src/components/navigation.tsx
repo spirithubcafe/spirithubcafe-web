@@ -123,7 +123,7 @@ export function Navigation() {
             {/* Right Side Controls - Left aligned for Arabic, Right for English */}
             <div className={cn(
               "flex items-center gap-2",
-              isArabic ? "order-1 md:order-3" : "order-3"
+              isArabic ? "order-1 md:order-1" : "order-3"
             )}>
               {/* Settings Controls */}
               <div className="hidden sm:flex items-center gap-2">
