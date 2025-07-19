@@ -100,71 +100,116 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  
+  /* Coffee-inspired warm color palette */
+  /* Cream background - warm, elegant base */
+  --background: oklch(0.97 0.01 50);
+  --foreground: oklch(0.25 0.05 25);
+  
+  /* Rich coffee brown cards with cream accents */
+  --card: oklch(0.98 0.008 45);
+  --card-foreground: oklch(0.28 0.04 30);
+  
+  /* Warm popover colors */
+  --popover: oklch(0.985 0.006 48);
+  --popover-foreground: oklch(0.25 0.04 28);
+  
+  /* Rich coffee brown primary - deep espresso */
+  --primary: oklch(0.35 0.08 30);
+  --primary-foreground: oklch(0.98 0.008 45);
+  
+  /* Warm secondary - coffee with milk */
+  --secondary: oklch(0.88 0.015 40);
+  --secondary-foreground: oklch(0.32 0.06 28);
+  
+  /* Soft muted tones - coffee foam */
+  --muted: oklch(0.92 0.012 42);
+  --muted-foreground: oklch(0.55 0.03 35);
+  
+  /* Warm accent - roasted coffee */
+  --accent: oklch(0.85 0.02 38);
+  --accent-foreground: oklch(0.3 0.05 32);
+  
+  /* Warm destructive - coffee cherry red */
+  --destructive: oklch(0.6 0.18 25);
+  
+  /* Subtle warm borders */
+  --border: oklch(0.9 0.01 40);
+  --input: oklch(0.94 0.008 42);
+  --ring: oklch(0.6 0.04 35);
+  
+  /* Coffee-inspired chart colors */
+  --chart-1: oklch(0.55 0.12 35); /* Dark roast */
+  --chart-2: oklch(0.65 0.15 120); /* Coffee leaf green */
+  --chart-3: oklch(0.45 0.08 25); /* Espresso */
+  --chart-4: oklch(0.75 0.08 45); /* Golden coffee */
+  --chart-5: oklch(0.6 0.1 15); /* Coffee bean brown */
+  
+  /* Sidebar with coffee theme */
+  --sidebar: oklch(0.95 0.01 44);
+  --sidebar-foreground: oklch(0.28 0.04 30);
+  --sidebar-primary: oklch(0.4 0.08 32);
+  --sidebar-primary-foreground: oklch(0.97 0.008 45);
+  --sidebar-accent: oklch(0.9 0.012 40);
+  --sidebar-accent-foreground: oklch(0.32 0.05 28);
+  --sidebar-border: oklch(0.88 0.01 38);
+  --sidebar-ring: oklch(0.58 0.04 33);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark coffee house atmosphere */
+  /* Deep coffee background - like a cozy cafe at night */
+  --background: oklch(0.12 0.015 20);
+  --foreground: oklch(0.95 0.005 45);
+  
+  /* Rich dark coffee cards with better contrast */
+  --card: oklch(0.18 0.02 25);
+  --card-foreground: oklch(0.96 0.005 44);
+  
+  /* Dark popover with warmth */
+  --popover: oklch(0.16 0.02 24);
+  --popover-foreground: oklch(0.94 0.005 42);
+  
+  /* Bright golden primary for better visibility */
+  --primary: oklch(0.85 0.08 55);
+  --primary-foreground: oklch(0.15 0.02 20);
+  
+  /* Dark secondary with better contrast */
+  --secondary: oklch(0.25 0.03 28);
+  --secondary-foreground: oklch(0.92 0.005 45);
+  
+  /* Dark muted tones with better contrast */
+  --muted: oklch(0.2 0.025 25);
+  --muted-foreground: oklch(0.7 0.015 40);
+  
+  /* Dark accent with high contrast for active states */
+  --accent: oklch(0.35 0.06 35);
+  --accent-foreground: oklch(0.9 0.005 42);
+  
+  /* Warm destructive for dark mode */
+  --destructive: oklch(0.65 0.15 22);
+  
+  /* Subtle dark borders with warmth */
+  --border: oklch(0.25 0.025 26);
+  --input: oklch(34.752% 0.04279 23.792);
+  --ring: oklch(0.6 0.04 45);
+  
+  /* Dark coffee chart colors */
+  --chart-1: oklch(0.65 0.08 45); /* Golden coffee */
+  --chart-2: oklch(0.55 0.12 120); /* Dark leaf green */
+  --chart-3: oklch(0.75 0.06 50); /* Light roast */
+  --chart-4: oklch(0.45 0.1 30); /* Dark espresso */
+  --chart-5: oklch(0.7 0.08 20); /* Caramel */
+  
+  /* Dark sidebar with coffee ambiance */
+  --sidebar: oklch(0.15 0.02 22);
+  --sidebar-foreground: oklch(0.92 0.005 44);
+  --sidebar-primary: oklch(0.8 0.08 50);
+  --sidebar-primary-foreground: oklch(0.12 0.015 20);
+  --sidebar-accent: oklch(0.22 0.025 26);
+  --sidebar-accent-foreground: oklch(0.88 0.005 42);
+  --sidebar-border: oklch(0.25 0.025 27);
+  --sidebar-ring: oklch(0.55 0.04 40);
 }
 
 @layer base {
@@ -783,4 +828,315 @@
 [dir="rtl"] .mobile-menu-auth-buttons {
   justify-content: center !important;
   text-align: center !important;
+}
+
+/* Coffee-inspired gradients and enhancements */
+.coffee-gradient {
+  background: linear-gradient(135deg, 
+    oklch(0.85 0.02 38) 0%, 
+    oklch(0.75 0.04 35) 25%, 
+    oklch(0.65 0.06 32) 50%, 
+    oklch(0.55 0.08 30) 75%, 
+    oklch(0.45 0.1 28) 100%
+  );
+}
+
+.coffee-gradient-dark {
+  background: linear-gradient(135deg, 
+    oklch(0.32 0.05 32) 0%, 
+    oklch(0.28 0.04 30) 25%, 
+    oklch(0.25 0.03 27) 50%, 
+    oklch(0.22 0.03 28) 75%, 
+    oklch(0.18 0.02 26) 100%
+  );
+}
+
+/* Enhanced active/selected states for better visibility */
+.tab-active-light {
+  background: oklch(0.88 0.015 40);
+  color: oklch(0.3 0.06 28);
+  border-color: oklch(0.35 0.08 30);
+  box-shadow: 0 2px 8px oklch(0.35 0.08 30 / 0.15);
+}
+
+.dark .tab-active-dark {
+  background: oklch(0.9 0.12 55) !important;
+  color: oklch(0.08 0.01 15) !important;
+  border-color: oklch(0.95 0.1 60) !important;
+  box-shadow: 0 2px 12px oklch(0.9 0.12 55 / 0.4) !important;
+  font-weight: 700 !important;
+  border-width: 2px !important;
+}
+
+/* Better navigation active states */
+.nav-active-light {
+  background: oklch(0.9 0.012 42);
+  color: oklch(0.32 0.06 28);
+  border-bottom: 2px solid oklch(0.35 0.08 30);
+}
+
+.dark .nav-active-dark {
+  background: oklch(0.85 0.1 50) !important;
+  color: oklch(0.05 0.005 10) !important;
+  border-bottom: 3px solid oklch(0.95 0.12 60) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 20px oklch(0.85 0.1 50 / 0.3) !important;
+}
+
+/* Warm coffee button styling */
+.btn-coffee {
+  background: linear-gradient(135deg, 
+    oklch(0.45 0.08 30) 0%, 
+    oklch(0.4 0.1 28) 100%
+  );
+  color: oklch(0.95 0.008 44);
+  border: 1px solid oklch(0.5 0.06 32);
+  box-shadow: 0 4px 16px oklch(0.3 0.05 25 / 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-coffee:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.5 0.1 32) 0%, 
+    oklch(0.45 0.12 30) 100%
+  );
+  box-shadow: 0 6px 20px oklch(0.25 0.08 25 / 0.3);
+  transform: translateY(-2px);
+}
+
+/* Dark mode button with high contrast */
+.dark .btn-coffee {
+  background: linear-gradient(135deg, 
+    oklch(0.85 0.08 55) 0%, 
+    oklch(0.8 0.1 50) 100%
+  );
+  color: oklch(0.1 0.01 20);
+  border: 1px solid oklch(0.9 0.06 60);
+  box-shadow: 0 4px 16px oklch(0.85 0.08 55 / 0.3);
+}
+
+.dark .btn-coffee:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.9 0.1 60) 0%, 
+    oklch(0.85 0.12 55) 100%
+  );
+  box-shadow: 0 6px 20px oklch(0.85 0.08 55 / 0.4);
+  transform: translateY(-2px);
+}
+
+/* Cream/beige accent button */
+.btn-cream {
+  background: linear-gradient(135deg, 
+    oklch(0.92 0.012 42) 0%, 
+    oklch(0.88 0.015 40) 100%
+  );
+  color: oklch(0.32 0.06 28);
+  border: 1px solid oklch(0.85 0.02 38);
+  box-shadow: 0 2px 8px oklch(0.7 0.03 35 / 0.15);
+}
+
+.btn-cream:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.88 0.015 40) 0%, 
+    oklch(0.85 0.02 38) 100%
+  );
+  box-shadow: 0 4px 12px oklch(0.6 0.04 35 / 0.2);
+}
+
+/* Coffee leaf green accent */
+.accent-coffee-green {
+  color: oklch(0.55 0.12 120);
+}
+
+.bg-coffee-green {
+  background: oklch(0.55 0.12 120);
+}
+
+/* Golden coffee highlight */
+.accent-coffee-gold {
+  color: oklch(0.75 0.08 45);
+}
+
+.bg-coffee-gold {
+  background: oklch(0.75 0.08 45);
+}
+
+/* Enhanced card styling with coffee theme */
+.card-coffee {
+  background: linear-gradient(135deg, 
+    oklch(0.99 0.003 50) 0%, 
+    oklch(0.98 0.005 48) 100%
+  );
+  border: 1px solid oklch(0.93 0.008 44);
+  box-shadow: 
+    0 2px 12px oklch(0.8 0.015 38 / 0.06),
+    0 1px 3px oklch(0.7 0.02 35 / 0.04);
+}
+
+.dark .card-coffee {
+  background: linear-gradient(135deg, 
+    oklch(0.16 0.015 24) 0%, 
+    oklch(0.14 0.018 22) 100%
+  );
+  border: 1px solid oklch(0.25 0.02 26);
+  box-shadow: 
+    0 2px 12px oklch(0.06 0.008 12 / 0.5),
+    0 1px 3px oklch(0.04 0.005 10 / 0.4);
+}
+
+/* Alternative cleaner card style */
+.card-clean {
+  background: oklch(1 0 0);
+  border: 1px solid oklch(0.94 0.005 45);
+  box-shadow: 
+    0 1px 8px oklch(0.8 0.01 40 / 0.08),
+    0 1px 2px oklch(0.7 0.015 35 / 0.05);
+}
+
+.dark .card-clean {
+  background: oklch(0.13 0.01 22);
+  border: 1px solid oklch(0.22 0.015 25);
+  box-shadow: 
+    0 1px 8px oklch(0.05 0.005 15 / 0.6),
+    0 1px 2px oklch(0.03 0.003 12 / 0.5);
+}
+
+/* Coffee-inspired text shadows */
+.text-shadow-coffee {
+  text-shadow: 0 2px 4px oklch(0.3 0.05 25 / 0.2);
+}
+
+.dark .text-shadow-coffee {
+  text-shadow: 0 2px 4px oklch(0.1 0.02 20 / 0.4);
+}
+
+/* Warm glow effects */
+.glow-coffee {
+  box-shadow: 0 0 20px oklch(0.6 0.08 35 / 0.3);
+}
+
+.dark .glow-coffee {
+  box-shadow: 0 0 20px oklch(0.4 0.06 30 / 0.4);
+}
+
+/* Coffee bean pattern background (subtle) */
+.bg-coffee-pattern {
+  background-image: radial-gradient(circle at 2px 2px, oklch(0.85 0.01 35 / 0.1) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+.dark .bg-coffee-pattern {
+  background-image: radial-gradient(circle at 2px 2px, oklch(0.3 0.02 25 / 0.1) 1px, transparent 0);
+}
+
+/* Enhanced navigation with coffee theme */
+.nav-coffee {
+  background: linear-gradient(to bottom, 
+    oklch(0.97 0.01 50 / 0.95) 0%, 
+    oklch(0.95 0.01 48 / 0.9) 100%
+  );
+  backdrop-filter: blur(20px) saturate(150%);
+  border-bottom: 1px solid oklch(0.9 0.01 40 / 0.5);
+}
+
+.dark .nav-coffee {
+  background: linear-gradient(to bottom, 
+    oklch(0.15 0.02 25 / 0.95) 0%, 
+    oklch(0.13 0.02 23 / 0.9) 100%
+  );
+  border-bottom: 1px solid oklch(0.3 0.03 28 / 0.5);
+}
+
+/* Coffee shop ambiance animations */
+@keyframes coffeeGlow {
+  0%, 100% { 
+    box-shadow: 0 0 20px oklch(0.6 0.08 35 / 0.2);
+  }
+  50% { 
+    box-shadow: 0 0 30px oklch(0.6 0.08 35 / 0.4);
+  }
+}
+
+.coffee-glow-animate {
+  animation: coffeeGlow 3s ease-in-out infinite;
+}
+
+
+/* Enhanced mobile menu with coffee theme */
+.mobile-menu-coffee {
+  background: linear-gradient(
+    135deg,
+    oklch(0.98 0.005 50 / 0.98) 0%,
+    oklch(0.96 0.008 48 / 0.95) 50%,
+    oklch(0.98 0.005 52 / 0.98) 100%
+  );
+  backdrop-filter: blur(25px) saturate(200%);
+  border: 1px solid oklch(0.9 0.01 45 / 0.3);
+  box-shadow: 
+    0 25px 50px -12px oklch(0.4 0.08 30 / 0.2),
+    inset 0 1px 0 oklch(0.99 0.003 52 / 0.8);
+}
+
+.dark .mobile-menu-coffee {
+  background: linear-gradient(
+    135deg,
+    oklch(0.14 0.015 24 / 0.98) 0%,
+    oklch(0.12 0.018 22 / 0.95) 50%,
+    oklch(0.16 0.02 26 / 0.98) 100%
+  );
+  border: 1px solid oklch(0.3 0.025 28 / 0.4);
+  box-shadow: 
+    0 25px 50px -12px oklch(0.05 0.008 15 / 0.6),
+    inset 0 1px 0 oklch(0.25 0.02 26 / 0.4);
+}
+
+/* Enhanced contrast for dark mode elements */
+.dark-high-contrast {
+  color: oklch(0.98 0.003 50);
+  background: oklch(0.1 0.01 20);
+}
+
+.dark .dark-high-contrast {
+  color: oklch(0.98 0.003 50);
+  background: oklch(0.08 0.008 18);
+  border-color: oklch(0.85 0.08 55);
+}
+
+/* Super bright active tab for dark mode */
+.dark .super-bright-tab {
+  background: oklch(0.95 0.15 60) !important;
+  color: oklch(0.02 0.002 5) !important;
+  border: 2px solid oklch(0.98 0.12 65) !important;
+  box-shadow: 0 0 30px oklch(0.95 0.15 60 / 0.5) !important;
+  font-weight: 800 !important;
+  transform: scale(1.02) !important;
+}
+
+/* Coffee-themed Toast Styles */
+.coffee-toast {
+  animation: toast-slide-in 0.3s ease-out;
+  transition: all 0.2s ease;
+}
+
+.coffee-toast:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15), 0 15px 15px -5px rgba(0, 0, 0, 0.06) !important;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Dark mode toast adjustments */
+.dark .coffee-toast {
+  background: linear-gradient(135deg, oklch(0.15 0.01 20) 0%, oklch(0.12 0.02 25) 100%) !important;
+  border-color: oklch(0.25 0.02 30) !important;
+  color: oklch(0.9 0.01 50) !important;
 }

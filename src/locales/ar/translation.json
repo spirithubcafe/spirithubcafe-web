@@ -41,6 +41,10 @@
     "subtitle": "استكشف مجموعة القهوة الفاخرة",
     "comingSoon": "قريباً",
     "description": "نحن نحضر تجربة تسوق رائعة لك. ترقبوا!",
+    "searchPlaceholder": "البحث عن المنتجات...",
+    "outOfStock": "غير متوفر",
+    "noProductsFound": "لم يتم العثور على منتجات",
+    "adjustFilters": "جرب تعديل المرشحات أو معايير البحث",
     "category": {
       "all": "الكل",
       "espresso": "إسبريسو",
@@ -49,14 +53,23 @@
       "blends": "خلطات",
       "single-origin": "منشأ واحد"
     },
-    "sortBy": "ترتيب حسب",
-    "sort": {
+    "categories": {
+      "all": "جميع الفئات",
+      "coffeeBeans": "حبوب القهوة",
+      "equipment": "المعدات",
+      "accessories": "الإكسسوارات"
+    },
+    "sortBy": {
+      "label": "ترتيب حسب",
       "name": "الاسم",
-      "price-low": "السعر: من المنخفض للعالي",
-      "price-high": "السعر: من العالي للمنخفض",
+      "priceLow": "السعر: من المنخفض للعالي",
+      "priceHigh": "السعر: من العالي للمنخفض",
       "rating": "التقييم"
     },
     "addToCart": "أضف للسلة",
+    "quantity": "الكمية",
+    "total": "المجموع",
+    "quickView": "عرض سريع",
     "rating": "التقييم",
     "reviews": "تقييمات",
     "noProducts": "لم يتم العثور على منتجات",
@@ -301,6 +314,7 @@
       "description": "تفضل بزيارتنا في موقع المقهى",
       "enableLocation": "تمكين الموقع",
       "getDirections": "الحصول على الاتجاهات",
+      "openMap": "فتح في الخريطة",
       "yourLocationPlaceholder": "أدخل موقعك أو عنوانك",
       "locationError": "تعذر الحصول على موقعك. يرجى إدخاله يدوياً."
     },

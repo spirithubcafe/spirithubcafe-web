@@ -41,6 +41,10 @@
     "subtitle": "Explore our premium coffee collection",
     "comingSoon": "Coming Soon",
     "description": "We're preparing an amazing shopping experience for you. Stay tuned!",
+    "searchPlaceholder": "Search products...",
+    "outOfStock": "Out of Stock",
+    "noProductsFound": "No products found",
+    "adjustFilters": "Try adjusting your filters or search criteria",
     "category": {
       "all": "All",
       "espresso": "Espresso",
@@ -49,14 +53,23 @@
       "blends": "Blends",
       "single-origin": "Single Origin"
     },
-    "sortBy": "Sort by",
-    "sort": {
+    "categories": {
+      "all": "All Categories",
+      "coffeeBeans": "Coffee Beans",
+      "equipment": "Equipment",
+      "accessories": "Accessories"
+    },
+    "sortBy": {
+      "label": "Sort by",
       "name": "Name",
-      "price-low": "Price: Low to High", 
-      "price-high": "Price: High to Low",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low", 
       "rating": "Rating"
     },
     "addToCart": "Add to Cart",
+    "quantity": "Quantity",
+    "total": "Total",
+    "quickView": "Quick View",
     "rating": "Rating",
     "reviews": "reviews",
     "noProducts": "No products found",
@@ -287,6 +300,7 @@
       "description": "Visit us at our cafe location",
       "enableLocation": "Enable Location",
       "getDirections": "Get Directions",
+      "openMap": "Open in Map",
       "yourLocationPlaceholder": "Enter your location or address",
       "locationError": "Unable to get your location. Please enter it manually."
     },

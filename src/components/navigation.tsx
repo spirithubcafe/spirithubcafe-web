@@ -67,9 +67,9 @@ export function Navigation() {
       {/* Navigation Bar */}
       <nav
         className={cn(
-          "sticky top-0 w-full border-b",
-          "bg-background z-50", // default
-          mobileMenuOpen && "bg-background z-[60] shadow-lg" // when mobile menu is open, ensure solid bg and higher z-index
+          "sticky top-0 w-full border-b nav-coffee",
+          "z-50", // default
+          mobileMenuOpen && "z-[60] shadow-2xl" // when mobile menu is open, ensure solid bg and higher z-index
         )}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -80,10 +80,10 @@ export function Navigation() {
               "flex items-center gap-2 flex-shrink-0",
               isArabic ? "order-3" : "order-1"
             )}>
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <Coffee className="h-7 w-7 text-amber-600 no-flip" />
+              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
+                <Coffee className="h-7 w-7 text-primary no-flip coffee-glow-animate" />
                 <span className={cn(
-                  "font-bold"
+                  "font-bold text-foreground"
                 )}>
                   {t('navigation.brandName')}
                 </span>
@@ -102,10 +102,10 @@ export function Navigation() {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link-underline transition-colors hover:text-amber-600",
+                    "nav-link-underline transition-all duration-300 hover:text-primary hover:bg-accent/20",
                     isActive(item.href) 
-                      ? "text-amber-600 bg-amber-50 dark:bg-amber-950/20" 
-                      : "text-foreground"
+                      ? "nav-active-light dark:super-bright-tab text-primary dark:text-primary font-semibold" 
+                      : "text-foreground hover:text-primary"
                   )}
                 >
                   <Link to={item.href}>
@@ -145,7 +145,7 @@ export function Navigation() {
                     variant="ghost" 
                     size="sm" 
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20"
+                    className="flex items-center gap-2 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden lg:block">
@@ -155,10 +155,10 @@ export function Navigation() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className="hover:bg-accent/20">
                     <Link to="/login">{t('navigation.login')}</Link>
                   </Button>
-                  <Button size="sm" asChild>
+                  <Button size="sm" asChild className="btn-coffee">
                     <Link to="/register">{t('navigation.register')}</Link>
                   </Button>
                 </div>
@@ -194,8 +194,8 @@ export function Navigation() {
           
           {/* Menu Content - Full edge positioning */}
           <div className={cn(
-            "fixed top-16 bottom-0 bg-background border-t shadow-xl",
-            "animate-in duration-200 w-80 max-w-[calc(100vw-1rem)]",
+            "fixed top-16 bottom-0 mobile-menu-coffee border-t shadow-2xl",
+            "animate-in duration-300 w-80 max-w-[calc(100vw-1rem)]",
             isArabic 
               ? "right-0 slide-in-from-right-2" 
               : "left-0 slide-in-from-left-2"
@@ -228,7 +228,7 @@ export function Navigation() {
                           className={cn(
                             "w-full h-12 text-base font-medium mobile-nav-link",
                             isArabic ? "justify-end text-right" : "justify-start text-left",
-                            isActive(item.href) && "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300"
+                            isActive(item.href) && "tab-active-light dark:super-bright-tab font-semibold"
                           )}
                           style={{ animationDelay: `${index * 50}ms` }}
                         >

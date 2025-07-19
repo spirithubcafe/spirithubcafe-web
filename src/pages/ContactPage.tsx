@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { MapPin, Phone, Mail, Clock, MessageCircle, Instagram, Navigation, Locate, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useTranslation } from 'react-i18next'
 
-// Store coordinates from the Google Maps URL
+// Spirit Hub Cafe coordinates (Muscat, Oman - Al Mouj Street area)
 const STORE_COORDINATES = {
   lat: 23.618926,
   lng: 58.256566
@@ -22,17 +22,11 @@ export function ContactPage() {
   const [showDirections, setShowDirections] = useState(false)
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
 
-  // Initialize Google Maps
-  useEffect(() => {
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places`
-    script.async = true
-    document.head.appendChild(script)
-
-    return () => {
-      document.head.removeChild(script)
-    }
-  }, [])
+  // استفاده از نقشه ساده OpenStreetMap بدون Leaflet
+  const handleOpenMap = () => {
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${STORE_COORDINATES.lat}&mlon=${STORE_COORDINATES.lng}&zoom=16#map=16/${STORE_COORDINATES.lat}/${STORE_COORDINATES.lng}`
+    window.open(mapUrl, '_blank')
+  }
 
   const handleGetCurrentLocation = () => {
     setIsLocationLoading(true)
@@ -63,7 +57,8 @@ export function ContactPage() {
       return
     }
 
-    const directionsUrl = `https://www.google.com/maps/dir/${userLocation}/${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}`
+    // Use OpenStreetMap directions (or other alternatives)
+    const directionsUrl = `https://www.openstreetmap.org/directions?from=${userLocation}&to=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}&route=foot`
     window.open(directionsUrl, '_blank')
   }
 
@@ -151,17 +146,16 @@ export function ContactPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Google Maps Embed */}
-                  <div className="map-container aspect-video rounded-lg overflow-hidden border">
+                  {/* نقشه ساده OpenStreetMap */}
+                  <div className="map-container aspect-video rounded-lg overflow-hidden border bg-muted/30">
                     <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d14624.778960000002!2d58.256566!3d23.618926!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0xe4ba0e52e4b2a5eb!2zMjPCsDM3JzA4LjEiTiA1OMKwMTUnMjMuNiJF!5e0!3m2!1sen!2s!4v1699999999999!5m2!1sen!2s"
                       width="100%"
                       height="100%"
-                      style={{ border: 0 }}
+                      style={{ minHeight: '300px' }}
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${STORE_COORDINATES.lng-0.005},${STORE_COORDINATES.lat-0.005},${STORE_COORDINATES.lng+0.005},${STORE_COORDINATES.lat+0.005}&amp;layer=mapnik&amp;marker=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}`}
                       allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Spirit Hub Cafe Location - 23.618926, 58.256566"
+                      className="border-0"
+                      title="Spirit Hub Cafe Location"
                     />
                   </div>
 
@@ -206,6 +200,15 @@ export function ContactPage() {
                       >
                         <Navigation className="h-4 w-4 mr-2" />
                         {t('contact.map.getDirections')}
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        onClick={handleOpenMap}
+                        className="contact-action-btn"
+                      >
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {t('contact.map.openMap')}
                       </Button>
                     </div>
 

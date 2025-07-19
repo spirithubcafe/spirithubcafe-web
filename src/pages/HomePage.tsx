@@ -64,12 +64,12 @@ export function HomePage() {
             <div className={`space-y-6 transition-all duration-1000 ease-out ${
               textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
-              <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-medium shadow-lg">
-                <Coffee className="h-4 w-4 mr-2" />
+              <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm font-medium shadow-xl">
+                <Coffee className="h-4 w-4 mr-2 accent-coffee-gold" />
                 {t('homepage.hero.badge', 'Premium Coffee Experience')}
               </div>
               
-              <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl">
+              <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl text-shadow-coffee">
                 <span className="block bg-gradient-to-r from-amber-200 via-orange-200 to-yellow-200 bg-clip-text text-transparent">
                   {t('homepage.hero.title')}
                 </span>
@@ -90,13 +90,13 @@ export function HomePage() {
             <div className={`flex flex-col sm:flex-row gap-4 justify-center pt-6 transition-all duration-1000 ease-out delay-500 ${
               textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
-              <Button asChild size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm">
+              <Button asChild size="lg" className="btn-coffee shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm">
                 <Link to="/shop" className="flex items-center justify-center">
                   {t('homepage.hero.shopNow')}
                   <ArrowRight className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 no-flip" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 dark:text-white text-black" asChild>
+              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300" asChild>
                 <Link to="/about">
                   {t('homepage.hero.learnMore')}
                 </Link>
@@ -107,11 +107,11 @@ export function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 lg:py-32 bg-gradient-to-b from-white to-gray-50 dark:from-background dark:to-gray-950/50 w-full">
+      <section className="py-20 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-accent/5 bg-coffee-pattern w-full">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
                 {t('homepage.features.title', 'Why Choose Us')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -119,10 +119,10 @@ export function HomePage() {
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <Card className="card-clean group hover:glow-coffee hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg backdrop-blur-sm">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950 dark:to-orange-950 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <Star className="h-8 w-8 text-amber-600 no-flip" />
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-950 dark:to-orange-950 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                  <Star className="h-8 w-8 text-amber-600 dark:text-amber-400 no-flip" />
                 </div>
                 <CardTitle className="text-xl">{t('homepage.features.quality.title')}</CardTitle>
               </CardHeader>
@@ -133,10 +133,10 @@ export function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <Card className="card-clean group hover:glow-coffee hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg backdrop-blur-sm">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-950 dark:to-emerald-950 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <Clock className="h-8 w-8 text-green-600 no-flip" />
+                <div className="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-950 dark:to-emerald-950 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg bg-coffee-green">
+                  <Clock className="h-8 w-8 text-green-600 dark:text-green-400 no-flip" />
                 </div>
                 <CardTitle className="text-xl">{t('homepage.features.freshness.title')}</CardTitle>
               </CardHeader>
@@ -147,10 +147,10 @@ export function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+            <Card className="card-clean group hover:glow-coffee hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg backdrop-blur-sm">
               <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-950 dark:to-indigo-950 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
-                  <Coffee className="h-8 w-8 text-purple-600 no-flip" />
+                <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg bg-coffee-gold">
+                  <Coffee className="h-8 w-8 text-amber-700 dark:text-amber-300 no-flip" />
                 </div>
                 <CardTitle className="text-xl">{t('homepage.features.expertise.title')}</CardTitle>
               </CardHeader>

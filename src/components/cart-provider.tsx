@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import type { Cart, CartItem, Product } from '@/types'
 
@@ -15,6 +17,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { i18n } = useTranslation()
   const [cart, setCart] = useState<Cart>({
     items: [],
     total: 0,
@@ -35,9 +38,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [cart])
 
   const addToCart = (product: Product, quantity = 1) => {
+    const existingItem = cart.items.find(item => item.product.id === product.id)
+    const productName = i18n.language === 'ar' ? product.nameAr : product.name
+    
     setCart(prevCart => {
-      const existingItem = prevCart.items.find(item => item.product.id === product.id)
-      
       let newItems: CartItem[]
       
       if (existingItem) {
@@ -59,9 +63,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalItems
       }
     })
+
+    // Show toast after state update
+    if (existingItem) {
+      toast.success(i18n.language === 'ar' ? `تم تحديث كمية ${productName}` : `${productName} quantity updated`)
+    } else {
+      toast.success(i18n.language === 'ar' ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
+    }
   }
 
   const removeFromCart = (productId: string) => {
+    const removedItem = cart.items.find(item => item.product.id === productId)
+    
     setCart(prevCart => {
       const newItems = prevCart.items.filter(item => item.product.id !== productId)
       const total = newItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
@@ -73,6 +86,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
         totalItems
       }
     })
+
+    // Show toast after state update
+    if (removedItem) {
+      const productName = i18n.language === 'ar' ? removedItem.product.nameAr : removedItem.product.name
+      toast.success(i18n.language === 'ar' ? `تم حذف ${productName} من السلة` : `${productName} removed from cart`)
+    }
   }
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -105,6 +124,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total: 0,
       totalItems: 0
     })
+    toast.success(i18n.language === 'ar' ? 'تم مسح السلة' : 'Cart cleared')
   }
 
   const getTotalPrice = () => cart.total

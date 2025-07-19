@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { Coffee, Star, ShoppingCart, Filter, Search } from 'lucide-react'
+import { Coffee, Star, ShoppingCart, Filter, Search, Eye } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ProductQuickView } from '@/components/product-quick-view'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/components/cart-provider'
@@ -18,6 +19,7 @@ export function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Filter and sort products
   const filteredProducts = DEMO_PRODUCTS.filter(product => {
@@ -56,7 +58,10 @@ export function ShopPage() {
   ]
 
   const handleAddToCart = (product: Product) => {
+    setIsLoading(true)
     addToCart(product, 1)
+    // Simulate API call delay
+    setTimeout(() => setIsLoading(false), 500)
   }
 
   return (
@@ -101,7 +106,7 @@ export function ShopPage() {
 
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-full md:w-48">
-              <SelectValue />
+              <SelectValue placeholder={t('shop.sortBy.label')} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="name">{t('shop.sortBy.name')}</SelectItem>
@@ -156,14 +161,23 @@ export function ShopPage() {
                     {formatPrice(product.price)}
                   </p>
                   
-                  <Button 
-                    onClick={() => handleAddToCart(product)}
-                    disabled={!product.inStock}
-                    className="flex items-center space-x-2"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    <span>{t('shop.addToCart')}</span>
-                  </Button>
+                  <div className="flex gap-2">
+                    <ProductQuickView product={product}>
+                      <Button variant="outline" size="sm">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </ProductQuickView>
+                    
+                    <Button 
+                      onClick={() => handleAddToCart(product)}
+                      disabled={!product.inStock || isLoading}
+                      size="sm"
+                      className="flex items-center space-x-2"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      <span>{isLoading ? t('common.loading') : t('shop.addToCart')}</span>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

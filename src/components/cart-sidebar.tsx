@@ -25,9 +25,9 @@ export function CartSidebar() {
         </Button>
       </SheetTrigger>
       
-      <SheetContent className="w-full sm:max-w-lg p-0">
-        <div className="flex flex-col h-full">
-          <SheetHeader className="p-6 pb-4">
+      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
+        <div className="flex flex-col h-full max-h-screen">
+          <SheetHeader className="p-6 pb-4 flex-shrink-0">
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               {t('cart.title')}
@@ -39,7 +39,7 @@ export function CartSidebar() {
             </SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 flex flex-col px-6">
+          <div className="flex-1 flex flex-col px-6 min-h-0">
             {cart.items.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-4">
@@ -61,24 +61,24 @@ export function CartSidebar() {
               </div>
             ) : (
               <>
-                {/* Cart Items */}
-                <div className="flex-1 overflow-y-auto py-2 space-y-4">
+                {/* Scrollable Cart Items */}
+                <div className="flex-1 overflow-y-auto py-2 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                   {cart.items.map((item) => (
-                    <div key={item.product.id} className="flex gap-4 p-4 border rounded-lg">
+                    <div key={item.product.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                         <Coffee className="h-8 w-8 text-amber-600" />
                       </div>
                       
-                      <div className="flex-1 space-y-2">
+                      <div className="flex-1 space-y-2 min-w-0">
                         <div className="flex items-start justify-between">
-                          <h4 className="font-medium text-sm">
+                          <h4 className="font-medium text-sm leading-tight">
                             {i18n.language === 'ar' ? item.product.nameAr : item.product.name}
                           </h4>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => removeFromCart(item.product.id)}
-                            className="h-6 w-6 p-0 hover:bg-destructive/10"
+                            className="h-6 w-6 p-0 hover:bg-destructive/10 flex-shrink-0"
                           >
                             <X className="h-4 w-4" />
                           </Button>
@@ -120,8 +120,8 @@ export function CartSidebar() {
                   ))}
                 </div>
 
-                {/* Cart Summary */}
-                <div className="border-t pt-4 pb-6 space-y-4">
+                {/* Fixed Cart Summary */}
+                <div className="border-t pt-4 pb-6 space-y-4 flex-shrink-0 bg-background">
                   <div className="flex items-center justify-between text-lg font-semibold">
                     <span>{t('cart.total')}</span>
                     <span className="text-amber-600 currency">
