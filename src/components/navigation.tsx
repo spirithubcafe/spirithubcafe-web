@@ -98,14 +98,15 @@ export function Navigation() {
               {navigationItems.map((item) => (
                 <Button
                   key={item.href}
-                  variant="ghost"
+                  variant={isActive(item.href) ? "secondary" : "ghost"}
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link-underline transition-all duration-300 hover:text-primary hover:bg-accent/20",
-                    isActive(item.href) 
-                      ? "nav-active-light dark:super-bright-tab text-primary dark:text-primary font-semibold" 
-                      : "text-foreground hover:text-primary"
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
+                    isActive(item.href)
+                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
+                      : "text-foreground hover:text-primary hover:bg-accent/10",
+                    "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
                   <Link to={item.href}>
