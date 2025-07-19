@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 import { ShoppingCart, Plus, Minus, X, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,9 +12,13 @@ export function CartSidebar() {
   const { t, i18n } = useTranslation()
   const { cart, updateQuantity, removeFromCart } = useCart()
   const { formatPrice } = useCurrency()
+  const isRTL = i18n.language === 'ar'
+
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="h-4 w-4" />
@@ -24,8 +29,11 @@ export function CartSidebar() {
           )}
         </Button>
       </SheetTrigger>
-      
-      <SheetContent className="w-full sm:max-w-lg p-0 flex flex-col">
+
+      <SheetContent 
+        side={isRTL ? "right" : "left"} 
+        className="w-full sm:max-w-lg p-0 flex flex-col"
+      >
         <div className="flex flex-col h-full max-h-screen">
           <SheetHeader className="p-6 pb-4 flex-shrink-0">
             <SheetTitle className="flex items-center gap-2">
@@ -52,10 +60,13 @@ export function CartSidebar() {
                       {t('cart.emptyDescription')}
                     </p>
                   </div>
-                  <Button asChild>
-                    <Link to="/shop">
-                      {t('cart.shopNow')}
-                    </Link>
+                  <Button
+                    onClick={() => {
+                      setOpen(false)
+                      setTimeout(() => navigate('/shop'), 200)
+                    }}
+                  >
+                    {t('cart.shopNow')}
                   </Button>
                 </div>
               </div>
@@ -130,15 +141,24 @@ export function CartSidebar() {
                   </div>
                   
                   <div className="space-y-2">
-                    <Button asChild className="w-full">
-                      <Link to="/checkout">
-                        {t('cart.checkout')}
-                      </Link>
+                    <Button
+                      className="w-full"
+                      onClick={() => {
+                        setOpen(false)
+                        setTimeout(() => navigate('/checkout'), 200)
+                      }}
+                    >
+                      {t('cart.checkout')}
                     </Button>
-                    <Button variant="outline" asChild className="w-full">
-                      <Link to="/shop">
-                        {t('cart.continueShopping')}
-                      </Link>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setOpen(false)
+                        setTimeout(() => navigate('/shop'), 200)
+                      }}
+                    >
+                      {t('cart.continueShopping')}
                     </Button>
                   </div>
                 </div>

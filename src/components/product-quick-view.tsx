@@ -34,7 +34,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Coffee className="h-5 w-5 text-amber-600" />
@@ -44,13 +44,11 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             {i18n.language === 'ar' ? product.descriptionAr : product.description}
           </DialogDescription>
         </DialogHeader>
-        
         <div className="space-y-6 py-4">
           {/* Product Image */}
-          <div className="aspect-square rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 flex items-center justify-center">
-            <Coffee className="h-24 w-24 text-amber-600" />
+          <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 flex items-center justify-center" style={{ height: '120px', minHeight: '120px', maxHeight: '120px' }}>
+            <Coffee className="h-10 w-10 text-amber-600" />
           </div>
-
           {/* Product Details */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -78,7 +76,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 {formatPrice(product.price)}
               </span>
             </div>
-
             {/* Quantity Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
@@ -105,7 +102,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 </Button>
               </div>
             </div>
-
             {/* Total Price */}
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <span className="font-medium">{t('shop.total')}</span>
@@ -113,7 +109,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 {formatPrice(product.price * quantity)}
               </span>
             </div>
-
             {/* Add to Cart Button */}
             <Button onClick={handleAddToCart} className="w-full h-12">
               <ShoppingCart className="h-4 w-4 mr-2" />
