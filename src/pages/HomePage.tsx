@@ -69,7 +69,7 @@ export function HomePage() {
                 {t('homepage.hero.badge', 'Premium Coffee Experience')}
               </div>
               
-              <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold tracking-tight text-white drop-shadow-2xl text-shadow-coffee">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-2xl text-shadow-coffee leading-relaxed">
                 <span className="block bg-gradient-to-r from-amber-200 via-orange-200 to-yellow-200 bg-clip-text text-transparent">
                   {t('homepage.hero.title')}
                 </span>
@@ -96,9 +96,9 @@ export function HomePage() {
                   <ArrowRight className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 no-flip" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300" asChild>
+              <Button variant="outline" size="lg" className="border-white/30 text-coffee-dark hover:bg-white/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300" asChild>
                 <Link to="/about">
-                  {t('homepage.hero.learnMore')}
+                  {t('homepage.hero.aboutUs', 'About Us')}
                 </Link>
               </Button>
             </div>

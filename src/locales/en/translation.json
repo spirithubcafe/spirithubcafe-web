@@ -15,13 +15,16 @@
   },
   "homepage": {
     "hero": {
+      "badge": "Premium Coffee Experience",
       "title": "Welcome to SPIRITHUB",
-      "subtitle": "Premium coffee roasted to perfection",
-      "description": "Discover our carefully selected coffee beans from around the world, roasted with passion and expertise to bring you the perfect cup every time.",
+      "subtitle": "Finest coffee roasted to perfection",
+      "description": "Discover carefully selected coffee beans from around the world, roasted with passion and expertise for the perfect cup every time.",
       "shopNow": "Shop Now",
-      "learnMore": "Learn More"
+      "aboutUs": "About Us"
     },
     "features": {
+      "title": "Why Choose Us",
+      "subtitle": "Discover what makes our coffee exceptional",
       "quality": {
         "title": "Premium Quality",
         "description": "Carefully selected beans from the finest coffee regions"
