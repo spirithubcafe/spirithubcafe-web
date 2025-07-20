@@ -22,7 +22,6 @@ export function ContactPage() {
   const [showDirections, setShowDirections] = useState(false)
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
 
-  // استفاده از نقشه ساده OpenStreetMap بدون Leaflet
   const handleOpenMap = () => {
     const mapUrl = `https://www.openstreetmap.org/?mlat=${STORE_COORDINATES.lat}&mlon=${STORE_COORDINATES.lng}&zoom=16#map=16/${STORE_COORDINATES.lat}/${STORE_COORDINATES.lng}`
     window.open(mapUrl, '_blank')
@@ -57,7 +56,6 @@ export function ContactPage() {
       return
     }
 
-    // Use OpenStreetMap directions (or other alternatives)
     const directionsUrl = `https://www.openstreetmap.org/directions?from=${userLocation}&to=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}&route=foot`
     window.open(directionsUrl, '_blank')
   }
@@ -146,7 +144,6 @@ export function ContactPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* نقشه ساده OpenStreetMap */}
                   <div className="map-container aspect-video rounded-lg overflow-hidden border bg-muted/30">
                     <iframe
                       width="100%"
@@ -159,7 +156,6 @@ export function ContactPage() {
                     />
                   </div>
 
-                  {/* Location Details */}
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
@@ -178,7 +174,6 @@ export function ContactPage() {
                     </div>
                   </div>
 
-                  {/* Directions Section */}
                   <div className="directions-section space-y-3 pt-4 border-t">
                     <h4 className="font-medium">{t('contact.directions')}</h4>
                     
