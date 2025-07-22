@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Coffee, Star, ShoppingCart, Filter, Search, Eye } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,8 +9,8 @@ import { ProductQuickView } from '@/components/product-quick-view'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/components/cart-provider'
-import { DEMO_PRODUCTS } from '@/types'
-import type { Product } from '@/types'
+import { productsService, categoriesService } from '@/services/products'
+import type { Product, Category } from '@/types'
 
 export function ShopPage() {
   const { t, i18n } = useTranslation()
@@ -20,48 +20,90 @@ export function ShopPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
   const [isLoading, setIsLoading] = useState(false)
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Load products and categories
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const [productsData, categoriesData] = await Promise.all([
+        productsService.getProducts({ page: 1, limit: 100 }),
+        categoriesService.getCategories()
+      ])
+      
+      setProducts(productsData.data)
+      setCategories(categoriesData)
+    } catch (error) {
+      console.error('Error loading data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Filter and sort products
-  const filteredProducts = DEMO_PRODUCTS.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesSearch = searchQuery === '' || 
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.nameAr.includes(searchQuery) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.descriptionAr.includes(searchQuery)
+      (product.name_ar && product.name_ar.includes(searchQuery)) ||
+      (product.description && product.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (product.description_ar && product.description_ar.includes(searchQuery))
     
     const matchesCategory = selectedCategory === 'all' || 
-      product.category === selectedCategory ||
-      product.categoryAr === selectedCategory
+      product.category_id?.toString() === selectedCategory
 
     return matchesSearch && matchesCategory
   }).sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price
+        return a.price_usd - b.price_usd
       case 'price-high':
-        return b.price - a.price
-      case 'rating':
-        return b.rating - a.rating
+        return b.price_usd - a.price_usd
       case 'name':
       default:
-        return i18n.language === 'ar' ? 
-          a.nameAr.localeCompare(b.nameAr) : 
-          a.name.localeCompare(b.name)
+        const nameA = i18n.language === 'ar' ? (a.name_ar || a.name) : a.name
+        const nameB = i18n.language === 'ar' ? (b.name_ar || b.name) : b.name
+        return nameA.localeCompare(nameB)
     }
   })
 
-  const categories = [
+  const categoryOptions = [
     { value: 'all', label: t('shop.categories.all') },
-    { value: 'Coffee Beans', label: t('shop.categories.coffeeBeans') },
-    { value: 'Equipment', label: t('shop.categories.equipment') },
-    { value: 'Accessories', label: t('shop.categories.accessories') }
+    ...categories.map(category => ({
+      value: category.id.toString(),
+      label: i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
+    }))
   ]
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = async (product: Product) => {
     setIsLoading(true)
-    addToCart(product, 1)
-    // Simulate API call delay
-    setTimeout(() => setIsLoading(false), 500)
+    try {
+      await addToCart(product, 1)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-center py-12">
+              <Coffee className="h-8 w-8 animate-spin text-amber-600" />
+              <span className="ml-2 text-lg">{t('common.loading')}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -96,7 +138,7 @@ export function ShopPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {categories.map(category => (
+              {categoryOptions.map(category => (
                 <SelectItem key={category.value} value={category.value}>
                   {category.label}
                 </SelectItem>
@@ -126,7 +168,7 @@ export function ShopPage() {
                   <div className="w-full h-48 bg-amber-100 dark:bg-amber-950 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
                     <Coffee className="h-16 w-16 text-amber-600 no-flip" />
                   </div>
-                  {!product.inStock && (
+                  {product.stock <= 0 && (
                     <Badge variant="secondary" className="absolute top-2 right-2">
                       {t('shop.outOfStock')}
                     </Badge>
@@ -136,29 +178,36 @@ export function ShopPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Badge variant="outline">
-                      {i18n.language === 'ar' ? product.categoryAr : product.category}
+                      {product.category ? 
+                        (i18n.language === 'ar' ? (product.category.name_ar || product.category.name) : product.category.name) : 
+                        'General'
+                      }
                     </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      <span className="text-sm">{product.rating}</span>
-                      <span className="text-sm text-muted-foreground">({product.reviews})</span>
-                    </div>
+                    {product.reviews && product.reviews.length > 0 && (
+                      <div className="flex items-center space-x-1">
+                        <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <span className="text-sm">
+                          {(product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length).toFixed(1)}
+                        </span>
+                        <span className="text-sm text-muted-foreground">({product.reviews.length})</span>
+                      </div>
+                    )}
                   </div>
                   
                   <CardTitle className="text-lg">
-                    {i18n.language === 'ar' ? product.nameAr : product.name}
+                    {i18n.language === 'ar' ? (product.name_ar || product.name) : product.name}
                   </CardTitle>
                 </div>
               </CardHeader>
               
               <CardContent className="pt-0">
                 <CardDescription className="mb-4">
-                  {i18n.language === 'ar' ? product.descriptionAr : product.description}
+                  {i18n.language === 'ar' ? (product.description_ar || product.description) : product.description}
                 </CardDescription>
                 
                 <div className="flex items-center justify-between">
                   <p className="text-2xl font-bold text-amber-600 currency">
-                    {formatPrice(product.price)}
+                    {formatPrice(product.price_usd)}
                   </p>
                   
                   <div className="flex gap-2">
@@ -170,7 +219,7 @@ export function ShopPage() {
                     
                     <Button 
                       onClick={() => handleAddToCart(product)}
-                      disabled={!product.inStock || isLoading}
+                      disabled={product.stock <= 0 || isLoading}
                       size="sm"
                       className="flex items-center space-x-2"
                     >

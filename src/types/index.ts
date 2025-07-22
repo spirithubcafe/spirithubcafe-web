@@ -1,179 +1,543 @@
-// User Types
-export interface User {
+// Database Types
+export type Currency = 'USD' | 'OMR' | 'SAR'
+export type UserRole = 'user' | 'shop' | 'admin'
+export type Gender = 'male' | 'female' | 'other'
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
+export type PaymentStatus = 'unpaid' | 'paid' | 'partially_paid' | 'refunded' | 'failed'
+export type PaymentMethod = 'card' | 'paypal' | 'bank_transfer' | 'cash_on_delivery'
+export type BeanType = 'Arabica' | 'Robusta' | 'Blend'
+export type RoastLevel = 'Light Roast' | 'Medium Roast' | 'Medium-Dark Roast' | 'Dark Roast'
+export type TicketStatus = 'open' | 'in_progress' | 'waiting_customer' | 'resolved' | 'closed'
+export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent'
+
+// User Profile Interface
+export interface Profile {
   id: string
-  name: string
-  nameAr?: string
   email: string
-  role: 'admin' | 'user'
-  avatar?: string
-  phone?: string
-  address?: string
-  joinDate: string
+  full_name: string
+  phone: string
+  gender?: Gender
+  date_of_birth?: string
+  profile_image?: string
+  national_id?: string
+  nationality?: string
+  company_name?: string
+  job_title?: string
+  role: UserRole
+  is_active: boolean
+  created_at: string
+  updated_at: string
 }
 
-// Product Types
-export interface Product {
-  id: string
+// Address Interface
+export interface Address {
+  id: number
+  user_id: string
+  recipient_name: string
+  phone: string
+  country: string
+  city: string
+  district?: string
+  postal_code?: string
+  full_address: string
+  location_lat?: number
+  location_lng?: number
+  type: 'shipping' | 'billing'
+  is_default: boolean
+  is_active: boolean
+  created_at: string
+}
+
+// Category Interface
+export interface Category {
+  id: number
   name: string
-  nameAr: string
-  description: string
-  descriptionAr: string
-  price: number
-  image: string
-  category: string
-  categoryAr: string
-  inStock: boolean
+  name_ar?: string
+  description?: string
+  description_ar?: string
+  image_url?: string
+  parent_id?: number
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
+// Coffee Origin Interface
+export interface CoffeeOrigin {
+  id: number
+  name: string
+  name_ar?: string
+  country: string
+  region?: string
+  description?: string
+  flavor_notes: string[]
+  created_at: string
+}
+
+// Roast Level Interface
+export interface RoastLevelType {
+  id: number
+  name: string
+  name_ar?: string
+  description?: string
+  color_code?: string
+  created_at: string
+}
+
+// Product Interface
+export interface Product {
+  id: number
+  name: string
+  name_ar?: string
+  description?: string
+  description_ar?: string
+  image_url?: string
+  gallery_images?: string[]
+  price_usd: number
+  price_omr?: number
+  price_sar?: number
+  category_id?: number
+  origin_id?: number
+  roast_level_id?: number
+  bean_type?: BeanType
+  processing_method?: string
+  altitude?: string
+  harvest_year?: number
+  caffeine_content?: string
+  grind_options?: string[]
+  package_size?: string[]
+  stock: number
+  low_stock_threshold: number
+  weight_grams?: number
+  slug?: string
+  meta_title?: string
+  meta_description?: string
+  featured: boolean
+  bestseller: boolean
+  new_arrival: boolean
+  on_sale: boolean
+  sale_price_usd?: number
+  sale_price_omr?: number
+  sale_price_sar?: number
+  sale_start_date?: string
+  sale_end_date?: string
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+  // Relations
+  category?: Category
+  origin?: CoffeeOrigin
+  roast_level?: RoastLevelType
+  variants?: ProductVariant[]
+  reviews?: ProductReview[]
+  tags?: ProductTag[]
+}
+
+// Product Variant Interface
+export interface ProductVariant {
+  id: number
+  product_id: number
+  variant_type: string
+  variant_name: string
+  variant_value: string
+  price_adjustment_usd: number
+  price_adjustment_omr: number
+  price_adjustment_sar: number
+  stock: number
+  sku?: string
+  weight_grams?: number
+  is_active: boolean
+  sort_order: number
+  created_at: string
+}
+
+// Product Review Interface
+export interface ProductReview {
+  id: number
+  product_id: number
+  user_id?: string
   rating: number
-  reviews: number
+  title?: string
+  review_text?: string
+  is_verified_purchase: boolean
+  is_approved: boolean
+  helpful_count: number
+  created_at: string
+  user?: Profile
 }
 
-// Cart Types
-export interface CartItem {
-  product: Product
-  quantity: number
+// Product Tag Interface
+export interface ProductTag {
+  id: number
+  name: string
+  name_ar?: string
+  color: string
+  created_at: string
 }
 
+// Wishlist Interface
+export interface Wishlist {
+  id: number
+  user_id: string
+  product_id: number
+  created_at: string
+  product?: Product
+}
+
+// Cart Interface
 export interface Cart {
-  items: CartItem[]
-  total: number
-  totalItems: number
+  id: number
+  user_id?: string
+  session_id?: string
+  created_at: string
+  updated_at: string
+  items?: CartItem[]
 }
 
-// Order Types
+// Cart Item Interface
+export interface CartItem {
+  id: number
+  cart_id: number
+  product_id: number
+  variant_id?: number
+  quantity: number
+  added_at: string
+  product?: Product
+  variant?: ProductVariant
+}
+
+// Coupon Interface
+export interface Coupon {
+  id: number
+  code: string
+  name?: string
+  name_ar?: string
+  description?: string
+  discount_type: 'percentage' | 'fixed_amount'
+  discount_value: number
+  minimum_order_amount: number
+  usage_limit?: number
+  used_count: number
+  user_limit: number
+  start_date?: string
+  end_date?: string
+  is_active: boolean
+  created_at: string
+}
+
+// Shipping Zone Interface
+export interface ShippingZone {
+  id: number
+  name: string
+  name_ar?: string
+  countries: string[]
+  created_at: string
+}
+
+// Shipping Method Interface
+export interface ShippingMethod {
+  id: number
+  zone_id: number
+  name: string
+  name_ar?: string
+  description?: string
+  estimated_delivery_days?: string
+  price_usd?: number
+  price_omr?: number
+  price_sar?: number
+  free_shipping_threshold?: number
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  zone?: ShippingZone
+}
+
+// Order Interface
 export interface Order {
-  id: string
-  userId: string
-  items: CartItem[]
-  total: number
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  createdAt: string
-  shippingAddress: {
-    name: string
-    phone: string
-    address: string
-    city: string
-    postalCode: string
-  }
-  paymentMethod: string
+  id: number
+  order_number: string
+  user_id?: string
+  customer_email?: string
+  customer_phone?: string
+  customer_name?: string
+  shipping_address_id?: number
+  billing_address_id?: number
+  shipping_method_id?: number
+  subtotal_usd?: number
+  subtotal_omr?: number
+  subtotal_sar?: number
+  shipping_cost_usd: number
+  shipping_cost_omr: number
+  shipping_cost_sar: number
+  tax_amount_usd: number
+  tax_amount_omr: number
+  tax_amount_sar: number
+  discount_amount_usd: number
+  discount_amount_omr: number
+  discount_amount_sar: number
+  total_price_usd?: number
+  total_price_omr?: number
+  total_price_sar?: number
+  currency: Currency
+  coupon_code?: string
+  status: OrderStatus
+  payment_status: PaymentStatus
+  tracking_number?: string
+  shipped_at?: string
+  delivered_at?: string
+  notes?: string
+  admin_notes?: string
+  created_at: string
+  updated_at: string
+  // Relations
+  user?: Profile
+  shipping_address?: Address
+  billing_address?: Address
+  shipping_method?: ShippingMethod
+  items?: OrderItem[]
+  payments?: Payment[]
+  status_history?: OrderStatusHistory[]
+}
+
+// Order Item Interface
+export interface OrderItem {
+  id: number
+  order_id: number
+  product_id?: number
+  variant_id?: number
+  product_name: string
+  product_name_ar?: string
+  variant_name?: string
+  product_image?: string
+  quantity: number
+  unit_price_usd?: number
+  unit_price_omr?: number
+  unit_price_sar?: number
+  total_price_usd?: number
+  total_price_omr?: number
+  total_price_sar?: number
+  product?: Product
+  variant?: ProductVariant
+}
+
+// Order Status History Interface
+export interface OrderStatusHistory {
+  id: number
+  order_id: number
+  status: OrderStatus
+  note?: string
+  created_by?: string
+  created_at: string
+  user?: Profile
+}
+
+// Payment Interface
+export interface Payment {
+  id: number
+  order_id: number
+  transaction_id?: string
+  amount_usd?: number
+  amount_omr?: number
+  amount_sar?: number
+  currency?: Currency
+  payment_method?: PaymentMethod
+  gateway?: string
+  gateway_transaction_id?: string
+  gateway_response?: any
+  status: PaymentStatus
+  paid_at?: string
+  created_at: string
+}
+
+// Ticket Interface
+export interface Ticket {
+  id: number
+  ticket_number: string
+  user_id?: string
+  order_id?: number
+  customer_name?: string
+  customer_email?: string
+  customer_phone?: string
+  subject: string
+  category?: string
+  priority: TicketPriority
+  status: TicketStatus
+  created_at: string
+  updated_at: string
+  user?: Profile
+  order?: Order
+  messages?: TicketMessage[]
+}
+
+// Ticket Message Interface
+export interface TicketMessage {
+  id: number
+  ticket_id: number
+  user_id?: string
+  message: string
+  attachments?: string[]
+  is_admin: boolean
+  created_at: string
+  user?: Profile
+}
+
+// Newsletter Subscriber Interface
+export interface NewsletterSubscriber {
+  id: number
+  email: string
+  name?: string
+  subscribed_at: string
+  is_active: boolean
+  unsubscribed_at?: string
+}
+
+// Static Page Interface
+export interface StaticPage {
+  id: number
+  slug: string
+  title: string
+  title_ar?: string
+  content?: string
+  content_ar?: string
+  meta_title?: string
+  meta_description?: string
+  is_published: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Blog Post Interface
+export interface BlogPost {
+  id: number
+  title: string
+  title_ar?: string
+  slug: string
+  excerpt?: string
+  excerpt_ar?: string
+  content?: string
+  content_ar?: string
+  featured_image?: string
+  meta_title?: string
+  meta_description?: string
+  author_id?: string
+  category?: string
+  tags?: string[]
+  is_published: boolean
+  published_at?: string
+  created_at: string
+  updated_at: string
+  author?: Profile
+}
+
+// Settings Interface
+export interface Settings {
+  key: string
+  value: any
+  updated_at: string
+}
+
+// Inventory Movement Interface
+export interface InventoryMovement {
+  id: number
+  product_id: number
+  variant_id?: number
+  movement_type: 'in' | 'out' | 'adjustment'
+  quantity: number
+  reason?: string
+  reference_id?: number
+  reference_type?: string
+  created_by?: string
+  created_at: string
+  product?: Product
+  variant?: ProductVariant
+  user?: Profile
 }
 
 // Auth Types
 export interface AuthState {
-  user: User | null
+  user: Profile | null
   isAuthenticated: boolean
   loading: boolean
 }
 
-// Demo Users
-export const DEMO_USERS: User[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    nameAr: 'جون سميث',
-    email: 'user@demo.com',
-    role: 'user',
-    avatar: '/avatars/user.jpg',
-    phone: '+1 555-0123',
-    address: '123 Coffee Street, Bean City',
-    joinDate: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Admin User',
-    nameAr: 'مستخدم مدير',
-    email: 'admin@demo.com',
-    role: 'admin',
-    avatar: '/avatars/admin.jpg',
-    phone: '+1 555-0456',
-    address: '456 Admin Avenue, Control City',
-    joinDate: '2023-06-01'
-  }
-]
+// API Response Types
+export interface ApiResponse<T> {
+  data: T
+  error?: string
+  message?: string
+}
 
-// Demo Products
-export const DEMO_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Premium Arabica Beans',
-    nameAr: 'حبوب أرابيكا فاخرة',
-    description: 'Premium quality Arabica coffee beans from Ethiopia',
-    descriptionAr: 'حبوب قهوة أرابيكا عالية الجودة من إثيوبيا',
-    price: 24.99,
-    image: '/products/arabica.jpg',
-    category: 'Coffee Beans',
-    categoryAr: 'حبوب القهوة',
-    inStock: true,
-    rating: 4.8,
-    reviews: 127
-  },
-  {
-    id: '2',
-    name: 'Dark Roast Espresso',
-    nameAr: 'إسبريسو محمص داكن',
-    description: 'Rich and bold dark roast perfect for espresso',
-    descriptionAr: 'تحميص داكن غني ومميز مثالي للإسبريسو',
-    price: 19.99,
-    image: '/products/dark-roast.jpg',
-    category: 'Coffee Beans',
-    categoryAr: 'حبوب القهوة',
-    inStock: true,
-    rating: 4.6,
-    reviews: 89
-  },
-  {
-    id: '3',
-    name: 'Colombian Single Origin',
-    nameAr: 'كولومبي أصل واحد',
-    description: 'Single origin Colombian coffee with chocolate notes',
-    descriptionAr: 'قهوة كولومبية أصل واحد مع نكهات الشوكولاتة',
-    price: 29.99,
-    image: '/products/colombian.jpg',
-    category: 'Coffee Beans',
-    categoryAr: 'حبوب القهوة',
-    inStock: true,
-    rating: 4.9,
-    reviews: 156
-  },
-  {
-    id: '4',
-    name: 'French Press',
-    nameAr: 'فرنش بريس',
-    description: 'Professional French press coffee maker',
-    descriptionAr: 'صانعة قهوة فرنش بريس احترافية',
-    price: 39.99,
-    image: '/products/french-press.jpg',
-    category: 'Equipment',
-    categoryAr: 'المعدات',
-    inStock: true,
-    rating: 4.7,
-    reviews: 203
-  },
-  {
-    id: '5',
-    name: 'Coffee Grinder',
-    nameAr: 'طاحونة القهوة',
-    description: 'Electric burr coffee grinder for perfect grind',
-    descriptionAr: 'طاحونة قهوة كهربائية للطحن المثالي',
-    price: 79.99,
-    image: '/products/grinder.jpg',
-    category: 'Equipment',
-    categoryAr: 'المعدات',
-    inStock: false,
-    rating: 4.5,
-    reviews: 94
-  },
-  {
-    id: '6',
-    name: 'Coffee Mug Set',
-    nameAr: 'طقم أكواب القهوة',
-    description: 'Set of 4 ceramic coffee mugs',
-    descriptionAr: 'طقم من 4 أكواب قهوة سيراميك',
-    price: 24.99,
-    image: '/products/mugs.jpg',
-    category: 'Accessories',
-    categoryAr: 'الإكسسوارات',
-    inStock: true,
-    rating: 4.4,
-    reviews: 67
-  }
-]
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
+}
+
+// Form Types
+export interface ProductForm {
+  name: string
+  name_ar?: string
+  description?: string
+  description_ar?: string
+  price_usd: number
+  price_omr?: number
+  price_sar?: number
+  category_id?: number
+  origin_id?: number
+  roast_level_id?: number
+  bean_type?: BeanType
+  processing_method?: string
+  altitude?: string
+  harvest_year?: number
+  caffeine_content?: string
+  grind_options?: string[]
+  package_size?: string[]
+  stock: number
+  weight_grams?: number
+  featured: boolean
+  bestseller: boolean
+  new_arrival: boolean
+  on_sale: boolean
+  sale_price_usd?: number
+  sale_price_omr?: number
+  sale_price_sar?: number
+  sale_start_date?: string
+  sale_end_date?: string
+}
+
+export interface ProfileForm {
+  full_name: string
+  phone: string
+  gender?: Gender
+  date_of_birth?: string
+  national_id?: string
+  nationality?: string
+  company_name?: string
+  job_title?: string
+}
+
+export interface AddressForm {
+  recipient_name: string
+  phone: string
+  country: string
+  city: string
+  district?: string
+  postal_code?: string
+  full_address: string
+  type: 'shipping' | 'billing'
+  is_default: boolean
+}
+
+export interface OrderForm {
+  shipping_address_id: number
+  billing_address_id?: number
+  shipping_method_id: number
+  coupon_code?: string
+  notes?: string
+  payment_method: PaymentMethod
+}
+
+

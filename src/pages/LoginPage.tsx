@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Coffee, User, Shield } from 'lucide-react'
+import { Eye, EyeOff, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
-import { DEMO_USERS } from '@/types'
 
 export function LoginPage() {
   const { t, i18n } = useTranslation()
@@ -28,26 +27,12 @@ export function LoginPage() {
     setLoading(true)
     setError('')
 
-    const success = await login(formData.email, formData.password)
+    const result = await login(formData.email, formData.password)
     
-    if (success) {
+    if (result.success) {
       navigate('/dashboard')
     } else {
-      setError(t('auth.login.invalidCredentials'))
-    }
-    
-    setLoading(false)
-  }
-
-  const handleDemoLogin = async (email: string) => {
-    setFormData({ email, password: 'demo123' })
-    setLoading(true)
-    setError('')
-
-    const success = await login(email, 'demo123')
-    
-    if (success) {
-      navigate('/dashboard')
+      setError(result.error || t('auth.login.invalidCredentials'))
     }
     
     setLoading(false)
@@ -63,34 +48,6 @@ export function LoginPage() {
             <h1 className="text-2xl font-bold">{t('common.brandName')}</h1>
           </div>
           <p className="text-muted-foreground">{t('auth.login.subtitle')}</p>
-        </div>
-
-        {/* Demo Users */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-center">{t('auth.login.demoAccounts')}</h3>
-          <div className="grid grid-cols-1 gap-3">
-            {DEMO_USERS.map(user => (
-              <Button
-                key={user.id}
-                variant="outline"
-                className="flex items-center justify-start space-x-3 h-auto p-4"
-                onClick={() => handleDemoLogin(user.email)}
-                disabled={loading}
-              >
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900">
-                  {user.role === 'admin' ? 
-                    <Shield className="h-5 w-5 text-amber-600" /> : 
-                    <User className="h-5 w-5 text-amber-600" />
-                  }
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-medium">{isArabic ? (user.nameAr || user.name) : user.name}</p>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <p className="text-xs text-amber-600">{user.role === 'admin' ? t('dashboard.systemAdmin') : t('dashboard.regularUser')}</p>
-                </div>
-              </Button>
-            ))}
-          </div>
         </div>
 
         {/* Login Form */}
@@ -158,23 +115,6 @@ export function LoginPage() {
                 <Link to="/register" className="text-amber-600 hover:underline">
                   {t('auth.login.signUp')}
                 </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Demo Info */}
-        <Card className="bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <h4 className="font-semibold text-amber-800 dark:text-amber-200">
-                {t('auth.login.demoInfo.title')}
-              </h4>
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                {t('auth.login.demoInfo.description')}
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-400">
-                {t('auth.login.demoInfo.password')}: {t('auth.login.demoInfo.passwordValue')}
               </p>
             </div>
           </CardContent>

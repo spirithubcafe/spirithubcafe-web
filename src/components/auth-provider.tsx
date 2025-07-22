@@ -1,102 +1,182 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { User, AuthState } from '@/types'
-import { DEMO_USERS } from '@/types'
+import type { Profile, AuthState } from '@/types'
+import { auth, db } from '@/lib/supabase'
 
 interface AuthContextType {
   auth: AuthState
-  currentUser: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  logout: () => void
-  register: (userData: Omit<User, 'id' | 'joinDate'>) => Promise<boolean>
-  updateProfile: (userData: Partial<User>) => void
+  currentUser: Profile | null
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => Promise<void>
+  register: (email: string, password: string, userData: { full_name: string; phone: string; role?: string }) => Promise<{ success: boolean; error?: string }>
+  updateProfile: (userData: Partial<Profile>) => Promise<{ success: boolean; error?: string }>
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [auth, setAuth] = useState<AuthState>({
+  const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
     loading: true
   })
+  const [loading, setLoading] = useState(true)
 
-  // Initialize auth state from localStorage
+  // Initialize auth state
   useEffect(() => {
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      const user = JSON.parse(savedUser)
-      setAuth({
-        user,
-        isAuthenticated: true,
-        loading: false
-      })
-    } else {
-      setAuth(prev => ({ ...prev, loading: false }))
-    }
+    // Get initial session
+    auth.getUser().then(({ data: { user }, error }) => {
+      if (user && !error) {
+        loadUserProfile(user.id)
+      } else {
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          loading: false
+        })
+        setLoading(false)
+      }
+    })
+
+    // Listen for auth state changes
+    const { data: { subscription } } = auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await loadUserProfile(session.user.id)
+      } else {
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          loading: false
+        })
+        setLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Demo authentication - check against demo users
-    const user = DEMO_USERS.find(u => u.email === email)
-    
-    if (user && password === 'demo123') {
-      setAuth({
-        user,
-        isAuthenticated: true,
+  const loadUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await db.profiles.get(userId)
+      
+      if (error) {
+        console.error('Error loading profile:', error)
+        setAuthState({
+          user: null,
+          isAuthenticated: false,
+          loading: false
+        })
+      } else if (profile) {
+        setAuthState({
+          user: profile as Profile,
+          isAuthenticated: true,
+          loading: false
+        })
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error)
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
         loading: false
       })
-      localStorage.setItem('user', JSON.stringify(user))
-      return true
     }
-    
-    return false
+    setLoading(false)
   }
 
-  const logout = () => {
-    setAuth({
-      user: null,
-      isAuthenticated: false,
-      loading: false
-    })
-    localStorage.removeItem('user')
-    localStorage.removeItem('cart')
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true)
+      const { data, error } = await auth.signIn(email, password)
+      
+      if (error) {
+        setLoading(false)
+        return { success: false, error: error.message }
+      }
+
+      if (data.user) {
+        await loadUserProfile(data.user.id)
+      }
+
+      setLoading(false)
+      return { success: true }
+    } catch (error: any) {
+      setLoading(false)
+      return { success: false, error: error.message }
+    }
   }
 
-  const register = async (userData: Omit<User, 'id' | 'joinDate'>): Promise<boolean> => {
-    // Demo registration - just create user
-    const newUser: User = {
-      ...userData,
-      id: Date.now().toString(),
-      joinDate: new Date().toISOString(),
-      role: 'user'
+  const register = async (email: string, password: string, userData: { full_name: string; phone: string; role?: string }) => {
+    try {
+      setLoading(true)
+      const { data, error } = await auth.signUp(email, password, userData)
+      
+      if (error) {
+        setLoading(false)
+        return { success: false, error: error.message }
+      }
+
+      if (data.user) {
+        // Profile will be created automatically by the database trigger
+        // Wait a moment and then load the profile
+        setTimeout(() => {
+          loadUserProfile(data.user!.id)
+        }, 1000)
+      }
+
+      setLoading(false)
+      return { success: true }
+    } catch (error: any) {
+      setLoading(false)
+      return { success: false, error: error.message }
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await auth.signOut()
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        loading: false
+      })
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  const updateProfile = async (userData: Partial<Profile>) => {
+    if (!authState.user) {
+      return { success: false, error: 'No user logged in' }
     }
 
-    setAuth({
-      user: newUser,
-      isAuthenticated: true,
-      loading: false
-    })
-    localStorage.setItem('user', JSON.stringify(newUser))
-    return true
-  }
+    try {
+      const { error } = await db.profiles.update(authState.user.id, userData)
+      
+      if (error) {
+        return { success: false, error: error.message }
+      }
 
-  const updateProfile = (userData: Partial<User>) => {
-    if (auth.user) {
-      const updatedUser = { ...auth.user, ...userData }
-      setAuth(prev => ({ ...prev, user: updatedUser }))
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      // Update local state
+      const updatedUser = { ...authState.user, ...userData }
+      setAuthState(prev => ({ ...prev, user: updatedUser }))
+      
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message }
     }
   }
 
   return (
     <AuthContext.Provider value={{
-      auth,
-      currentUser: auth.user,
+      auth: authState,
+      currentUser: authState.user,
       login,
       logout,
       register,
-      updateProfile
+      updateProfile,
+      loading
     }}>
       {children}
     </AuthContext.Provider>

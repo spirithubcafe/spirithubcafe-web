@@ -43,18 +43,37 @@ export function RegisterPage() {
       return
     }
 
-    const success = await register({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: 'user'
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError(t('auth.register.passwordMismatch'))
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError(t('auth.register.passwordTooShort'))
+      setLoading(false)
+      return
+    }
+
+    const result = await register(formData.email, formData.password, {
+      full_name: formData.name,
+      phone: formData.phone
     })
     
-    if (success) {
+    if (result.success) {
       navigate('/dashboard')
     } else {
-      setError(t('auth.register.failed'))
+      setError(result.error || t('auth.register.failed'))
     }
+    
+    setLoading(false)
+  }
     
     setLoading(false)
   }

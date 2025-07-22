@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 
 export default function CheckoutPage() {
   const { i18n } = useTranslation()
-  const { cart, clearCart } = useCart()
+  const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice } = useCurrency()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -55,7 +55,7 @@ export default function CheckoutPage() {
     clearCart()
   }
 
-  if (cart.items.length === 0 && !orderSuccess) {
+  if (!cart || !cart.items || cart.items.length === 0 && !orderSuccess) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -381,21 +381,21 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-4">
                   {/* Cart Items */}
                   <div className="space-y-3">
-                    {cart.items.map((item) => (
-                      <div key={item.product.id} className="flex items-center gap-3">
+                    {cart?.items?.map((item) => (
+                      <div key={item.product?.id} className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                           <Coffee className="h-6 w-6 text-amber-600" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm">
-                            {isArabic ? item.product.nameAr : item.product.name}
+                            {isArabic ? (item.product?.name_ar || item.product?.name) : item.product?.name}
                           </h4>
                           <p className="text-xs text-muted-foreground">
                             {isArabic ? 'الكمية' : 'Qty'}: {item.quantity}
                           </p>
                         </div>
                         <div className="text-sm font-medium currency">
-                          {formatPrice(item.product.price * item.quantity)}
+                          {formatPrice((item.product?.price_omr || item.product?.price_usd || item.product?.price_sar || 0) * item.quantity)}
                         </div>
                       </div>
                     ))}
@@ -404,7 +404,7 @@ export default function CheckoutPage() {
                   <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>{isArabic ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                      <span className="currency">{formatPrice(cart.total)}</span>
+                      <span className="currency">{formatPrice(getTotalPrice())}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>{isArabic ? 'الشحن' : 'Shipping'}</span>
@@ -412,12 +412,12 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>{isArabic ? 'الضرائب' : 'Tax'}</span>
-                      <span className="currency">{formatPrice(cart.total * 0.1)}</span>
+                      <span className="currency">{formatPrice(getTotalPrice() * 0.1)}</span>
                     </div>
                     <div className="border-t pt-2 flex justify-between font-bold">
                       <span>{isArabic ? 'المجموع الكلي' : 'Total'}</span>
                       <span className="text-amber-600 currency">
-                        {formatPrice(cart.total + 5 + cart.total * 0.1)}
+                        {formatPrice(getTotalPrice() + 5 + getTotalPrice() * 0.1)}
                       </span>
                     </div>
                   </div>
