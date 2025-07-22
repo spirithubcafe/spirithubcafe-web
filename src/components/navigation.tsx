@@ -14,7 +14,8 @@ import { cn } from '@/lib/utils'
 
 export function Navigation() {
   const { t, i18n } = useTranslation()
-  const { auth, logout } = useAuth()
+  const auth = useAuth()
+  const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -135,7 +136,7 @@ export function Navigation() {
               <CartSidebar />
 
               {/* Auth Buttons */}
-              {auth.isAuthenticated ? (
+              {auth.currentUser ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild>
                     <Link to="/dashboard" className="flex items-center gap-2">
@@ -313,7 +314,7 @@ export function Navigation() {
 
               {/* Auth Section */}
               <div className="border-t p-6 bg-muted/20">
-                {auth.isAuthenticated ? (
+                {auth.currentUser ? (
                   <div className="space-y-3">
                     <div className={cn(
                       "flex items-center gap-3 p-3 rounded-lg bg-background border",
@@ -326,8 +327,8 @@ export function Navigation() {
                         "flex-1",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="font-medium text-sm">{auth.user?.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{auth.user?.email}</p>
+                        <p className="font-medium text-sm">{auth.currentUser?.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{auth.currentUser?.email}</p>
                       </div>
                     </div>
                     <div className={cn(

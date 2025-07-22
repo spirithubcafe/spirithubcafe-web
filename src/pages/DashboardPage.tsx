@@ -139,7 +139,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={user.profile_image} alt={user.full_name} />
+                <AvatarImage src={user.avatar} alt={user.full_name} />
                 <AvatarFallback>
                   {user.full_name.split(' ').map((n: string) => n[0]).join('')}
                 </AvatarFallback>

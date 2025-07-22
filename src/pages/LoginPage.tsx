@@ -27,15 +27,28 @@ export function LoginPage() {
     setLoading(true)
     setError('')
 
-    const result = await login(formData.email, formData.password)
-    
-    if (result.success) {
-      navigate('/dashboard')
-    } else {
-      setError(result.error || t('auth.login.invalidCredentials'))
+    console.log('Login attempt started')
+    console.log('Login credentials:', { email: formData.email, passwordLength: formData.password.length })
+
+    try {
+      const result = await login(formData.email, formData.password)
+      
+      console.log('Login result received:', result)
+      
+      if (result.success) {
+        console.log('Login successful, navigating to dashboard')
+        navigate('/dashboard')
+      } else {
+        console.log('Login failed:', result.error)
+        setError(result.error || t('auth.login.invalidCredentials'))
+      }
+    } catch (error: any) {
+      console.error('Login exception:', error)
+      setError(error.message || t('auth.login.invalidCredentials'))
     }
     
     setLoading(false)
+    console.log('Login attempt completed')
   }
 
   return (
