@@ -117,9 +117,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string, userData: { full_name: string; phone: string; role?: string }) => {
     try {
       setLoading(true)
+      
+      console.log('Attempting registration with:', { email, userData })
+      
       const { data, error } = await auth.signUp(email, password, userData)
       
+      console.log('Registration response:', { data, error })
+      
       if (error) {
+        console.error('Registration error:', error)
         setLoading(false)
         return { success: false, error: error.message }
       }
@@ -135,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return { success: true }
     } catch (error: any) {
+      console.error('Registration exception:', error)
       setLoading(false)
       return { success: false, error: error.message }
     }

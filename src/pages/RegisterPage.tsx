@@ -30,52 +30,53 @@ export function RegisterPage() {
     setLoading(true)
     setError('')
 
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError(t('auth.register.passwordMismatch'))
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError(t('auth.register.passwordTooShort'))
-      setLoading(false)
-      return
-    }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError(t('auth.register.passwordMismatch'))
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError(t('auth.register.passwordTooShort'))
-      setLoading(false)
-      return
-    }
-
-    const result = await register(formData.email, formData.password, {
-      full_name: formData.name,
-      phone: formData.phone
+    console.log('Registration attempt started')
+    console.log('Form data:', { 
+      email: formData.email, 
+      name: formData.name,
+      phone: formData.phone,
+      passwordLength: formData.password.length 
     })
-    
-    if (result.success) {
-      navigate('/dashboard')
-    } else {
-      setError(result.error || t('auth.register.failed'))
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      console.log('Password mismatch error')
+      setError(t('auth.register.passwordMismatch'))
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      console.log('Password too short error')
+      setError(t('auth.register.passwordTooShort'))
+      setLoading(false)
+      return
+    }
+
+    console.log('Validation passed, calling register function')
+
+    try {
+      const result = await register(formData.email, formData.password, {
+        full_name: formData.name,
+        phone: formData.phone
+      })
+      
+      console.log('Registration result received:', result)
+      
+      if (result.success) {
+        console.log('Registration successful, navigating to dashboard')
+        navigate('/dashboard')
+      } else {
+        console.log('Registration failed:', result.error)
+        setError(result.error || t('auth.register.failed'))
+      }
+    } catch (error: any) {
+      console.error('Registration exception caught:', error)
+      setError(error.message || t('auth.register.failed'))
     }
     
     setLoading(false)
-  }
-    
-    setLoading(false)
+    console.log('Registration attempt completed')
   }
 
   return (

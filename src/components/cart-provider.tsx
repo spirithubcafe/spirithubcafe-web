@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import type { Cart, CartItem, Product, ProductVariant } from '@/types'
+import type { Cart, Product, ProductVariant } from '@/types'
 import { db } from '@/lib/supabase'
 import { useAuth } from './auth-provider'
 

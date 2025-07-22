@@ -38,10 +38,10 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Coffee className="h-5 w-5 text-amber-600" />
-            {i18n.language === 'ar' ? product.nameAr : product.name}
+            {i18n.language === 'ar' ? product.name_ar : product.name}
           </DialogTitle>
           <DialogDescription>
-            {i18n.language === 'ar' ? product.descriptionAr : product.description}
+            {i18n.language === 'ar' ? product.description_ar : product.description}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6 py-4">
@@ -54,26 +54,26 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">
-                  {i18n.language === 'ar' ? product.categoryAr : product.category}
+                  {i18n.language === 'ar' ? product.category?.name_ar : product.category?.name}
                 </Badge>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
+                        i < Math.floor(4.5)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
                       }`}
                     />
                   ))}
                   <span className="text-sm text-muted-foreground ml-1">
-                    ({product.rating})
+                    (4.5)
                   </span>
                 </div>
               </div>
               <span className="text-2xl font-bold text-amber-600 currency">
-                {formatPrice(product.price)}
+                {formatPrice(product.price_usd)}
               </span>
             </div>
             {/* Quantity Selector */}
@@ -106,7 +106,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <span className="font-medium">{t('shop.total')}</span>
               <span className="text-xl font-bold text-amber-600 currency">
-                {formatPrice(product.price * quantity)}
+                {formatPrice(product.price_usd * quantity)}
               </span>
             </div>
             {/* Add to Cart Button */}
