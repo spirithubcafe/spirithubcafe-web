@@ -88,9 +88,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true)
+      
+      console.log('Attempting login with:', { email, passwordLength: password.length })
+      
       const { data, error } = await auth.signIn(email, password)
       
+      console.log('Login response:', { data, error })
+      
       if (error) {
+        console.error('Login error:', error)
         setLoading(false)
         return { success: false, error: error.message }
       }
@@ -102,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return { success: true }
     } catch (error: any) {
+      console.error('Login exception:', error)
       setLoading(false)
       return { success: false, error: error.message }
     }

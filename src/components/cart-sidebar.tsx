@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { ShoppingCart, Plus, Minus, X, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,21 +10,24 @@ import { useTranslation } from 'react-i18next'
 
 export function CartSidebar() {
   const { t, i18n } = useTranslation()
-  const { cart, updateQuantity, removeFromCart } = useCart()
+  const { cart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice } = useCart()
   const { formatPrice } = useCurrency()
   const isRTL = i18n.language === 'ar'
 
   const [open, setOpen] = useState(false)
   const navigate = useNavigate()
 
+  const totalItems = getTotalItems()
+  const totalPrice = getTotalPrice()
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
           <ShoppingCart className="h-4 w-4" />
-          {cart.totalItems > 0 && (
+          {totalItems > 0 && (
             <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-              {cart.totalItems}
+              {totalItems}
             </Badge>
           )}
         </Button>
@@ -39,16 +42,16 @@ export function CartSidebar() {
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
               {t('cart.title')}
-              {cart.totalItems > 0 && (
+              {totalItems > 0 && (
                 <Badge variant="secondary">
-                  {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
+                  {totalItems} {totalItems === 1 ? t('cart.item') : t('cart.items')}
                 </Badge>
               )}
             </SheetTitle>
           </SheetHeader>
 
           <div className="flex-1 flex flex-col px-6 min-h-0">
-            {cart.items.length === 0 ? (
+            {!cart || !cart.items || cart.items.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-4">
                   <Coffee className="h-16 w-16 text-muted-foreground mx-auto" />
@@ -74,8 +77,8 @@ export function CartSidebar() {
               <>
                 {/* Scrollable Cart Items */}
                 <div className="flex-1 overflow-y-auto py-2 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                  {cart.items.map((item) => (
-                    <div key={item.product.id} className="flex gap-4 p-4 border rounded-lg bg-card">
+                  {cart.items?.map((item) => (
+                    <div key={item.product?.id || item.product_id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                         <Coffee className="h-8 w-8 text-amber-600" />
                       </div>
@@ -83,12 +86,12 @@ export function CartSidebar() {
                       <div className="flex-1 space-y-2 min-w-0">
                         <div className="flex items-start justify-between">
                           <h4 className="font-medium text-sm leading-tight">
-                            {i18n.language === 'ar' ? item.product.nameAr : item.product.name}
+                            {i18n.language === 'ar' ? item.product?.name_ar : item.product?.name}
                           </h4>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeFromCart(item.product.id)}
+                            onClick={() => removeFromCart(item.product?.id || item.product_id)}
                             className="h-6 w-6 p-0 hover:bg-destructive/10 flex-shrink-0"
                           >
                             <X className="h-4 w-4" />
@@ -96,7 +99,7 @@ export function CartSidebar() {
                         </div>
                         
                         <p className="text-sm text-muted-foreground">
-                          {i18n.language === 'ar' ? item.product.categoryAr : item.product.category}
+                          {i18n.language === 'ar' ? item.product?.category?.name_ar : item.product?.category?.name}
                         </p>
                         
                         <div className="flex items-center justify-between">
@@ -104,7 +107,7 @@ export function CartSidebar() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.product?.id || item.product_id, item.quantity - 1)}
                               className="h-8 w-8 p-0"
                             >
                               <Minus className="h-3 w-3" />
@@ -115,7 +118,7 @@ export function CartSidebar() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.product?.id || item.product_id, item.quantity + 1)}
                               className="h-8 w-8 p-0"
                             >
                               <Plus className="h-3 w-3" />
@@ -123,7 +126,7 @@ export function CartSidebar() {
                           </div>
                           
                           <p className="font-semibold text-amber-600 currency">
-                            {formatPrice(item.product.price * item.quantity)}
+                            {formatPrice((item.product?.price_usd || 0) * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -136,7 +139,7 @@ export function CartSidebar() {
                   <div className="flex items-center justify-between text-lg font-semibold">
                     <span>{t('cart.total')}</span>
                     <span className="text-amber-600 currency">
-                      {formatPrice(cart.total)}
+                      {formatPrice(totalPrice)}
                     </span>
                   </div>
                   

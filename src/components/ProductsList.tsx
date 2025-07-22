@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-
-interface Product {
-  id: number
-  name: string
-  description: string
-  price: number
-  created_at: string
-}
+import type { Product } from '@/types'
 
 export default function ProductsList() {
   const [products, setProducts] = useState<Product[]>([])
@@ -30,7 +23,7 @@ export default function ProductsList() {
           throw error
         }
 
-        setProducts(data || [])
+        setProducts((data || []) as Product[])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
         console.error('Error fetching products:', err)
@@ -66,7 +59,7 @@ export default function ProductsList() {
               <h3 className="text-lg font-semibold">{product.name}</h3>
               <p className="text-gray-600 mb-2">{product.description}</p>
               <p className="text-lg font-bold text-green-600">
-                ${product.price.toFixed(2)}
+                ${product.price_usd.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500">
                 Added: {new Date(product.created_at).toLocaleDateString()}

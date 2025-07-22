@@ -15,10 +15,13 @@ import { cn } from '@/lib/utils'
 export function Navigation() {
   const { t, i18n } = useTranslation()
   const { auth, logout } = useAuth()
-  const { cart } = useCart()
+  const { getTotalItems, getTotalPrice } = useCart()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isArabic = i18n.language === 'ar'
+
+  const totalItems = getTotalItems()
+  const totalPrice = getTotalPrice()
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -294,14 +297,14 @@ export function Navigation() {
                         isArabic ? "text-right" : "text-left"
                       )}>
                         <p className="text-sm font-medium truncate">
-                          {cart.totalItems} {cart.totalItems === 1 ? t('cart.item') : t('cart.items')}
+                          {totalItems} {totalItems === 1 ? t('cart.item') : t('cart.items')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t('cart.total')}: {cart.total.toFixed(2)}
+                          {t('cart.total')}: {totalPrice.toFixed(2)}
                         </p>
                       </div>
-                      {cart.totalItems > 0 && (
-                        <Badge variant="secondary" className="flex-shrink-0">{cart.totalItems}</Badge>
+                      {totalItems > 0 && (
+                        <Badge variant="secondary" className="flex-shrink-0">{totalItems}</Badge>
                       )}
                     </div>
                   </div>
@@ -323,7 +326,7 @@ export function Navigation() {
                         "flex-1",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="font-medium text-sm">{auth.user?.name}</p>
+                        <p className="font-medium text-sm">{auth.user?.full_name}</p>
                         <p className="text-xs text-muted-foreground">{auth.user?.email}</p>
                       </div>
                     </div>
