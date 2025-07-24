@@ -21,7 +21,8 @@ import {
   Clock,
   Truck,
   Crown,
-  Briefcase
+  Briefcase,
+  Tags
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -37,9 +38,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
-import type { Order, Product } from '@/types'
-import { firestoreService, type UserProfile } from '@/lib/firebase'
+import type { Order } from '@/types'
+import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
 import { productsService } from '@/services/products'
+import CategoryManagement from '@/components/admin/CategoryManagement'
+import ProductManagement from '@/components/admin/ProductManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -297,6 +300,12 @@ export default function DashboardPage() {
                   <Package className="h-4 w-4 shrink-0" />
                   <span className="text-xs sm:text-sm text-center">
                     {isArabic ? 'المنتجات' : 'Products'}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="categories" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
+                  <Tags className="h-4 w-4 shrink-0" />
+                  <span className="text-xs sm:text-sm text-center">
+                    {isArabic ? 'الفئات' : 'Categories'}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="admin-orders" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-2 py-3 h-auto">
@@ -873,76 +882,14 @@ export default function DashboardPage() {
           {/* Admin Products Tab */}
           {user && user.role === 'admin' && (
             <TabsContent value="products" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    {isArabic ? 'إدارة المنتجات' : 'Product Management'}
-                  </CardTitle>
-                  <CardDescription>
-                    {isArabic ? 'إدارة المنتجات والمخزون' : 'Manage products and inventory'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-medium">
-                        {isArabic ? 'قائمة المنتجات' : 'Product List'}
-                      </h3>
-                      <Button>
-                        {isArabic ? 'إضافة منتج جديد' : 'Add New Product'}
-                      </Button>
-                    </div>
-                    
-                    {loading ? (
-                      <div className="text-center py-8">
-                        <p>{t('common.loading')}</p>
-                      </div>
-                    ) : products.length > 0 ? (
-                      products.map((product) => (
-                        <div key={product.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-lg flex items-center justify-center">
-                              <Coffee className="h-6 w-6 text-amber-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium">
-                                {isArabic ? (product.name_ar || product.name) : product.name}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <span>{isArabic ? 'منتج متميز' : 'Featured product'}</span>
-                                <span className="flex items-center gap-1">
-                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                  4.5
-                                </span>
-                                <span>{isArabic ? 'منتج نشط' : 'Active'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium currency">{formatPrice(product.price_omr || product.price_usd || product.price_sar || 0)}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {isArabic ? 'السعر' : 'Price'}
-                            </p>
-                            <div className="flex gap-2 mt-2">
-                              <Button variant="outline" size="sm">
-                                {isArabic ? 'تعديل' : 'Edit'}
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                {isArabic ? 'حذف' : 'Delete'}
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">{isArabic ? 'لا توجد منتجات' : 'No products yet'}</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <ProductManagement />
+            </TabsContent>
+          )}
+
+          {/* Admin Categories Tab */}
+          {user && user.role === 'admin' && (
+            <TabsContent value="categories" className="space-y-6">
+              <CategoryManagement />
             </TabsContent>
           )}
 
