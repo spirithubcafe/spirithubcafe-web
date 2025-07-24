@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import type { Product } from '@/types'
+import { firestoreService, type Product } from '@/lib/firebase'
 
 export default function ProductsList() {
   const [products, setProducts] = useState<Product[]>([])
@@ -13,17 +12,9 @@ export default function ProductsList() {
         setLoading(true)
         setError(null)
 
-        // Fetch all rows from the products table
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (error) {
-          throw error
-        }
-
-        setProducts((data || []) as Product[])
+        // Fetch all products from Firestore
+        const result = await firestoreService.products.list()
+        setProducts(result.items)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
         console.error('Error fetching products:', err)
@@ -62,7 +53,7 @@ export default function ProductsList() {
                 ${product.price_usd.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500">
-                Added: {new Date(product.created_at).toLocaleDateString()}
+                Added: {product.created.toLocaleDateString()}
               </p>
             </div>
           ))}

@@ -15,6 +15,7 @@ import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import DashboardPage from '@/pages/DashboardPage'
+import { AdminPage } from '@/pages/AdminPage'
 import './App.css'
 
 function App() {
@@ -40,6 +41,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <DashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <AdminPage />
                         </ProtectedRoute>
                       } 
                     />

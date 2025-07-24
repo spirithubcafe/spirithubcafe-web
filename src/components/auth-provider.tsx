@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { auth, type User } from '@/lib/pocketbase'
+import { authService, type UserProfile } from '@/lib/firebase'
+import type { User } from 'firebase/auth'
 
 interface AuthContextType {
-  currentUser: User | null
+  currentUser: UserProfile | null
+  firebaseUser: User | null
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
   register: (email: string, password: string, userData: { full_name: string; phone?: string }) => Promise<{ success: boolean; error?: string }>
@@ -13,18 +15,23 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Initialize auth state
   useEffect(() => {
-    const user = auth.getCurrentUser()
-    setCurrentUser(user)
-    setLoading(false)
-
-    // Listen for auth changes
-    const unsubscribe = auth.onAuthChange((user) => {
-      setCurrentUser(user)
+    const unsubscribe = authService.onAuthChange(async (user) => {
+      setFirebaseUser(user)
+      
+      if (user) {
+        // Get user profile from Firestore
+        const userProfile = await authService.getUserProfile(user.uid)
+        setCurrentUser(userProfile)
+      } else {
+        setCurrentUser(null)
+      }
+      
       setLoading(false)
     })
 
@@ -37,12 +44,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('Attempting login with:', { email, passwordLength: password.length })
       
-      const result = await auth.login(email, password)
+      const result = await authService.login(email, password)
       
       console.log('Login response:', result)
       
-      if (result.success) {
-        setCurrentUser(result.user as unknown as User)
+      if (result.success && result.user) {
+        setCurrentUser(result.user)
       }
 
       setLoading(false)
@@ -60,12 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('Attempting registration with:', { email, userData })
       
-      const result = await auth.register(email, password, userData)
+      const result = await authService.register(email, password, userData)
       
       console.log('Registration response:', result)
       
-      if (result.success) {
-        setCurrentUser(result.user as unknown as User)
+      if (result.success && result.user) {
+        setCurrentUser(result.user)
       }
 
       setLoading(false)
@@ -79,8 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await auth.logout()
+      await authService.logout()
       setCurrentUser(null)
+      setFirebaseUser(null)
     } catch (error: any) {
       console.error('Logout error:', error)
     }
@@ -89,6 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{
       currentUser,
+      firebaseUser,
       loading,
       login,
       logout,

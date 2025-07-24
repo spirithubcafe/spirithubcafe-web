@@ -9,11 +9,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { auth } = useAuth()
+  const { currentUser, loading } = useAuth()
   const location = useLocation()
   const { t } = useTranslation()
 
-  if (auth.loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -24,11 +24,11 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     )
   }
 
-  if (!auth.isAuthenticated) {
+  if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
-  if (requiredRole && auth.user?.role !== requiredRole) {
+  if (requiredRole && currentUser.role !== requiredRole) {
     return <Navigate to="/dashboard" replace />
   }
 

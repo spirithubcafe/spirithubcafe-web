@@ -2,16 +2,26 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import type { Cart, Product, ProductVariant } from '@/types'
-import { db } from '@/lib/supabase'
+import { firestoreService, subscriptions, type Product, type CartItem } from '@/lib/firebase'
 import { useAuth } from './auth-provider'
+
+interface Cart {
+  id: string
+  user_id: string
+  items: CartItemWithProduct[]
+}
+
+interface CartItemWithProduct extends CartItem {
+  product: Product | null
+}
 
 interface CartContextType {
   cart: Cart | null
+  cartItems: CartItemWithProduct[]
   loading: boolean
-  addToCart: (product: Product, quantity?: number, variant?: ProductVariant) => Promise<void>
-  removeFromCart: (itemId: number) => Promise<void>
-  updateQuantity: (itemId: number, quantity: number) => Promise<void>
+  addToCart: (product: Product, quantity?: number) => Promise<void>
+  removeFromCart: (itemId: string) => Promise<void>
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>
   clearCart: () => Promise<void>
   getTotalPrice: () => number
   getTotalItems: () => number
@@ -23,44 +33,56 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
   const { currentUser } = useAuth()
-  const [cart, setCart] = useState<Cart | null>(null)
+  const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([])
   const [loading, setLoading] = useState(false)
+
+  // Create cart object for compatibility
+  const cart: Cart | null = currentUser ? {
+    id: `cart_${currentUser.id}`,
+    user_id: currentUser.id,
+    items: cartItems
+  } : null
 
   // Load cart when user changes
   useEffect(() => {
     if (currentUser) {
       loadCart()
+      
+      // Set up real-time subscription
+      const unsubscribe = subscriptions.onCartChange(currentUser.id, (items) => {
+        loadCartWithProducts(items)
+      })
+      
+      return unsubscribe
     } else {
-      setCart(null)
+      setCartItems([])
     }
   }, [currentUser])
+
+  const loadCartWithProducts = async (items: any[]) => {
+    try {
+      const itemsWithProducts = await Promise.all(
+        items.map(async (item) => {
+          const product = await firestoreService.products.get(item.product_id)
+          return {
+            ...item,
+            product
+          }
+        })
+      )
+      setCartItems(itemsWithProducts)
+    } catch (error) {
+      console.error('Error loading cart with products:', error)
+    }
+  }
 
   const loadCart = async () => {
     if (!currentUser) return
 
     try {
       setLoading(true)
-      const { data: cartData, error } = await db.cart.get(currentUser.id)
-      
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error loading cart:', error)
-        return
-      }
-
-      if (cartData) {
-        setCart(cartData as Cart)
-      } else {
-        // Create a new cart if none exists
-        const { data: newCart, error: createError } = await db.cart.create({
-          user_id: currentUser.id
-        })
-        
-        if (createError) {
-          console.error('Error creating cart:', createError)
-        } else if (newCart) {
-          setCart(newCart as Cart)
-        }
-      }
+      const result = await firestoreService.cart.getUserCart(currentUser.id)
+      setCartItems(result.items)
     } catch (error) {
       console.error('Error loading cart:', error)
     } finally {
@@ -72,22 +94,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     await loadCart()
   }
 
-  const addToCart = async (product: Product, quantity = 1, variant?: ProductVariant) => {
-    if (!currentUser || !cart) {
+  const addToCart = async (product: Product, quantity = 1) => {
+    if (!currentUser) {
       toast.error(i18n.language === 'ar' ? 'يرجى تسجيل الدخول أولاً' : 'Please log in first')
       return
     }
 
     try {
-      const { error } = await db.cart.addItem(cart.id, product.id, quantity, variant?.id)
-      
-      if (error) {
-        console.error('Error adding to cart:', error)
-        toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء الإضافة إلى السلة' : 'Error adding to cart')
-        return
-      }
-
-      await loadCart() // Refresh cart data
+      await firestoreService.cart.addItem(currentUser.id, product.id, quantity)
 
       const productName = i18n.language === 'ar' ? product.name_ar || product.name : product.name
       toast.success(i18n.language === 'ar' ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
@@ -97,19 +111,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const removeFromCart = async (itemId: number) => {
-    if (!currentUser || !cart) return
+  const removeFromCart = async (itemId: string) => {
+    if (!currentUser) return
 
     try {
-      const { error } = await db.cart.removeItem(itemId)
-      
-      if (error) {
-        console.error('Error removing from cart:', error)
-        toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء الحذف من السلة' : 'Error removing from cart')
-        return
-      }
-
-      await loadCart() // Refresh cart data
+      await firestoreService.cart.removeItem(itemId)
       toast.success(i18n.language === 'ar' ? 'تم حذف المنتج من السلة' : 'Product removed from cart')
     } catch (error) {
       console.error('Error removing from cart:', error)
@@ -117,8 +123,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updateQuantity = async (itemId: number, quantity: number) => {
-    if (!currentUser || !cart) return
+  const updateQuantity = async (itemId: string, quantity: number) => {
+    if (!currentUser) return
 
     if (quantity <= 0) {
       await removeFromCart(itemId)
@@ -126,15 +132,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const { error } = await db.cart.updateItem(itemId, quantity)
-      
-      if (error) {
-        console.error('Error updating cart:', error)
-        toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
-        return
-      }
-
-      await loadCart() // Refresh cart data
+      await firestoreService.cart.updateQuantity(itemId, quantity)
     } catch (error) {
       console.error('Error updating cart:', error)
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
@@ -142,18 +140,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const clearCart = async () => {
-    if (!currentUser || !cart) return
+    if (!currentUser) return
 
     try {
-      const { error } = await db.cart.clear(cart.id)
-      
-      if (error) {
-        console.error('Error clearing cart:', error)
-        toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء مسح السلة' : 'Error clearing cart')
-        return
-      }
-
-      await loadCart() // Refresh cart data
+      await firestoreService.cart.clearCart(currentUser.id)
       toast.success(i18n.language === 'ar' ? 'تم مسح السلة' : 'Cart cleared')
     } catch (error) {
       console.error('Error clearing cart:', error)
@@ -162,17 +152,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalPrice = () => {
-    if (!cart?.items) return 0
-    
-    return cart.items.reduce((total, item) => {
-      const product = item.product
-      const variant = item.variant
+    return cartItems.reduce((total, item) => {
+      if (!item.product) return total
       
-      if (!product) return total
-      
-      let price = product.price_usd
-      if (variant) {
-        price += variant.price_adjustment_usd
+      let price = item.product.price_usd
+      if (item.product.is_on_sale && item.product.sale_price_usd) {
+        price = item.product.sale_price_usd
       }
       
       return total + (price * item.quantity)
@@ -180,13 +165,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalItems = () => {
-    if (!cart?.items) return 0
-    return cart.items.reduce((total, item) => total + item.quantity, 0)
+    return cartItems.reduce((total, item) => total + item.quantity, 0)
   }
 
   return (
     <CartContext.Provider value={{
       cart,
+      cartItems,
       loading,
       addToCart,
       removeFromCart,

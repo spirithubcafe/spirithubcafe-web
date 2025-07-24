@@ -1,26 +1,25 @@
-import { db } from '@/lib/supabase'
-import type { Product, Category, CoffeeOrigin, RoastLevelType, PaginatedResponse } from '@/types'
+import { firestoreService, type Product, type Category } from '@/lib/firebase'
 
 export interface ProductFilters {
-  category_id?: number
-  origin_id?: number
-  roast_level_id?: number
-  bean_type?: string
+  category?: string
   featured?: boolean
   bestseller?: boolean
   new_arrival?: boolean
   on_sale?: boolean
-  min_price?: number
-  max_price?: number
   search?: string
-  tag_ids?: number[]
 }
 
 export interface ProductsListOptions extends ProductFilters {
   page?: number
   limit?: number
-  sort_by?: 'name' | 'price' | 'created_at' | 'rating'
-  sort_order?: 'asc' | 'desc'
+}
+
+export interface PaginatedResponse<T> {
+  data: T[]
+  total: number
+  page: number
+  limit: number
+  total_pages: number
 }
 
 export const productsService = {
@@ -30,33 +29,21 @@ export const productsService = {
       const {
         page = 1,
         limit = 12,
-        sort_by = 'created_at',
-        sort_order = 'desc',
         ...filters
       } = options
 
-      let query = db.products.list(filters)
-
-      // Apply sorting
-      const ascending = sort_order === 'asc'
-      query = query.order(sort_by, { ascending })
-
-      // Apply pagination
+      const result = await firestoreService.products.list(filters)
+      
+      // Client-side pagination (for now)
       const start = (page - 1) * limit
-      const end = start + limit - 1
-      query = query.range(start, end)
-
-      const { data: products, error, count } = await query
-
-      if (error) {
-        throw error
-      }
-
-      const total_pages = count ? Math.ceil(count / limit) : 0
+      const end = start + limit
+      const paginatedData = result.items.slice(start, end)
+      
+      const total_pages = Math.ceil(result.totalItems / limit)
 
       return {
-        data: (products || []) as unknown as Product[],
-        total: count || 0,
+        data: paginatedData,
+        total: result.totalItems,
         page,
         limit,
         total_pages
@@ -68,33 +55,11 @@ export const productsService = {
   },
 
   // Get single product by ID
-  async getProduct(id: number): Promise<Product | null> {
+  async getProduct(id: string): Promise<Product | null> {
     try {
-      const { data: product, error } = await db.products.get(id)
-      
-      if (error) {
-        throw error
-      }
-
-      return product as unknown as Product
+      return await firestoreService.products.get(id)
     } catch (error) {
       console.error('Error fetching product:', error)
-      throw error
-    }
-  },
-
-  // Get single product by slug
-  async getProductBySlug(slug: string): Promise<Product | null> {
-    try {
-      const { data: product, error } = await db.products.getBySlug(slug)
-      
-      if (error) {
-        throw error
-      }
-
-      return product as unknown as Product
-    } catch (error) {
-      console.error('Error fetching product by slug:', error)
       throw error
     }
   },
@@ -102,13 +67,8 @@ export const productsService = {
   // Search products
   async searchProducts(searchTerm: string): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.search(searchTerm)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list({ search: searchTerm })
+      return result.items
     } catch (error) {
       console.error('Error searching products:', error)
       throw error
@@ -118,14 +78,8 @@ export const productsService = {
   // Get featured products
   async getFeaturedProducts(limit = 8): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.list({ featured: true })
-        .limit(limit)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list({ featured: true })
+      return result.items.slice(0, limit)
     } catch (error) {
       console.error('Error fetching featured products:', error)
       throw error
@@ -135,14 +89,8 @@ export const productsService = {
   // Get bestseller products
   async getBestsellerProducts(limit = 8): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.list({ bestseller: true })
-        .limit(limit)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list({ bestseller: true })
+      return result.items.slice(0, limit)
     } catch (error) {
       console.error('Error fetching bestseller products:', error)
       throw error
@@ -152,14 +100,8 @@ export const productsService = {
   // Get new arrival products
   async getNewArrivalProducts(limit = 8): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.list({ new_arrival: true })
-        .limit(limit)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list({ new_arrival: true })
+      return result.items.slice(0, limit)
     } catch (error) {
       console.error('Error fetching new arrival products:', error)
       throw error
@@ -169,14 +111,9 @@ export const productsService = {
   // Get on sale products
   async getOnSaleProducts(limit = 8): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.list({ on_sale: true })
-        .limit(limit)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list()
+      const onSaleProducts = result.items.filter(product => product.is_on_sale)
+      return onSaleProducts.slice(0, limit)
     } catch (error) {
       console.error('Error fetching on sale products:', error)
       throw error
@@ -184,17 +121,11 @@ export const productsService = {
   },
 
   // Get related products (same category, different product)
-  async getRelatedProducts(productId: number, categoryId: number, limit = 4): Promise<Product[]> {
+  async getRelatedProducts(productId: string, categoryId: string, limit = 4): Promise<Product[]> {
     try {
-      const { data: products, error } = await db.products.list({ category_id: categoryId })
-        .neq('id', productId)
-        .limit(limit)
-      
-      if (error) {
-        throw error
-      }
-
-      return (products || []) as unknown as Product[]
+      const result = await firestoreService.products.list({ category: categoryId })
+      const relatedProducts = result.items.filter(product => product.id !== productId)
+      return relatedProducts.slice(0, limit)
     } catch (error) {
       console.error('Error fetching related products:', error)
       throw error
@@ -202,15 +133,9 @@ export const productsService = {
   },
 
   // Create a new product (admin only)
-  async createProduct(productData: any): Promise<Product> {
+  async createProduct(productData: Omit<Product, 'id' | 'created' | 'updated'>): Promise<any> {
     try {
-      const { data: product, error } = await db.products.create(productData)
-      
-      if (error) {
-        throw error
-      }
-
-      return product as unknown as Product
+      return await firestoreService.products.create(productData)
     } catch (error) {
       console.error('Error creating product:', error)
       throw error
@@ -218,13 +143,9 @@ export const productsService = {
   },
 
   // Update a product (admin only)
-  async updateProduct(id: number, productData: any): Promise<void> {
+  async updateProduct(id: string, productData: Partial<Product>): Promise<void> {
     try {
-      const { error } = await db.products.update(id, productData)
-      
-      if (error) {
-        throw error
-      }
+      await firestoreService.products.update(id, productData)
     } catch (error) {
       console.error('Error updating product:', error)
       throw error
@@ -232,13 +153,9 @@ export const productsService = {
   },
 
   // Delete a product (admin only)
-  async deleteProduct(id: number): Promise<void> {
+  async deleteProduct(id: string): Promise<void> {
     try {
-      const { error } = await db.products.delete(id)
-      
-      if (error) {
-        throw error
-      }
+      await firestoreService.products.delete(id)
     } catch (error) {
       console.error('Error deleting product:', error)
       throw error
@@ -250,13 +167,8 @@ export const categoriesService = {
   // Get all categories
   async getCategories(): Promise<Category[]> {
     try {
-      const { data: categories, error } = await db.categories.list()
-      
-      if (error) {
-        throw error
-      }
-
-      return (categories || []) as unknown as Category[]
+      const result = await firestoreService.categories.list()
+      return result.items
     } catch (error) {
       console.error('Error fetching categories:', error)
       throw error
@@ -264,85 +176,41 @@ export const categoriesService = {
   },
 
   // Get single category
-  async getCategory(id: number): Promise<Category | null> {
+  async getCategory(id: string): Promise<Category | null> {
     try {
-      const { data: category, error } = await db.categories.get(id)
-      
-      if (error) {
-        throw error
-      }
-
-      return category as unknown as Category
+      return await firestoreService.categories.get(id)
     } catch (error) {
       console.error('Error fetching category:', error)
       throw error
     }
   },
-}
 
-export const coffeeOriginsService = {
-  // Get all coffee origins
-  async getCoffeeOrigins(): Promise<CoffeeOrigin[]> {
+  // Create a new category (admin only)
+  async createCategory(categoryData: Omit<Category, 'id' | 'created' | 'updated'>): Promise<any> {
     try {
-      const { data: origins, error } = await db.coffeeOrigins.list()
-      
-      if (error) {
-        throw error
-      }
-
-      return (origins || []) as unknown as CoffeeOrigin[]
+      return await firestoreService.categories.create(categoryData)
     } catch (error) {
-      console.error('Error fetching coffee origins:', error)
+      console.error('Error creating category:', error)
       throw error
     }
   },
 
-  // Get single coffee origin
-  async getCoffeeOrigin(id: number): Promise<CoffeeOrigin | null> {
+  // Update a category (admin only)
+  async updateCategory(id: string, categoryData: Partial<Category>): Promise<void> {
     try {
-      const { data: origin, error } = await db.coffeeOrigins.get(id)
-      
-      if (error) {
-        throw error
-      }
-
-      return origin as unknown as CoffeeOrigin
+      await firestoreService.categories.update(id, categoryData)
     } catch (error) {
-      console.error('Error fetching coffee origin:', error)
-      throw error
-    }
-  },
-}
-
-export const roastLevelsService = {
-  // Get all roast levels
-  async getRoastLevels(): Promise<RoastLevelType[]> {
-    try {
-      const { data: levels, error } = await db.roastLevels.list()
-      
-      if (error) {
-        throw error
-      }
-
-      return (levels || []) as unknown as RoastLevelType[]
-    } catch (error) {
-      console.error('Error fetching roast levels:', error)
+      console.error('Error updating category:', error)
       throw error
     }
   },
 
-  // Get single roast level
-  async getRoastLevel(id: number): Promise<RoastLevelType | null> {
+  // Delete a category (admin only)
+  async deleteCategory(id: string): Promise<void> {
     try {
-      const { data: level, error } = await db.roastLevels.get(id)
-      
-      if (error) {
-        throw error
-      }
-
-      return level as unknown as RoastLevelType
+      await firestoreService.categories.delete(id)
     } catch (error) {
-      console.error('Error fetching roast level:', error)
+      console.error('Error deleting category:', error)
       throw error
     }
   },

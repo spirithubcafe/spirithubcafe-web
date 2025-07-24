@@ -31,7 +31,7 @@ import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import type { Order, Product, Profile } from '@/types'
-import { db } from '@/lib/supabase'
+import { firestoreService } from '@/lib/firebase'
 import { productsService } from '@/services/products'
 
 export default function DashboardPage() {
@@ -57,18 +57,29 @@ export default function DashboardPage() {
         
         // Fetch user orders
         if (user?.id) {
-          const { data: userOrders } = await db.orders.list()
-          setOrders((userOrders || []).filter((order: any) => order.user_id === user.id) as unknown as Order[])
+          const userOrders = await firestoreService.orders.list(user.id)
+          setOrders(userOrders.items as unknown as Order[])
         }
 
         // Fetch featured products
         const featuredProducts = await productsService.getFeaturedProducts(10)
-        setProducts(featuredProducts)
+        // Ensure products match the local Product type
+        setProducts(featuredProducts.map((p: any) => ({
+          ...p,
+          stock: p.stock ?? 0,
+          low_stock_threshold: p.low_stock_threshold ?? 0,
+          featured: p.featured ?? false,
+          bestseller: p.bestseller ?? false,
+          price_omr: p.price_omr ?? 0,
+          price_usd: p.price_usd ?? 0,
+          price_sar: p.price_sar ?? 0,
+          name_ar: p.name_ar ?? '',
+        })))
 
         // Fetch users (admin only)
         if (user?.role === 'admin') {
-          const { data: allUsers } = await db.profiles.list()
-          setUsers((allUsers || []) as unknown as Profile[])
+          const allUsers = await firestoreService.orders.list() // We don't have a profiles service, using orders for now
+          setUsers([]) // Placeholder for now
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
