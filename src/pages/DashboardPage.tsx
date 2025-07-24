@@ -30,8 +30,8 @@ import { Progress } from '@/components/ui/progress'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
-import type { Order, Product, Profile } from '@/types'
-import { firestoreService } from '@/lib/firebase'
+import type { Order, Product } from '@/types'
+import { firestoreService, type UserProfile } from '@/lib/firebase'
 import { productsService } from '@/services/products'
 
 export default function DashboardPage() {
@@ -46,7 +46,7 @@ export default function DashboardPage() {
   // State for data
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
-  const [users, setUsers] = useState<Profile[]>([])
+  const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
 
   // Fetch dashboard data
@@ -78,8 +78,8 @@ export default function DashboardPage() {
 
         // Fetch users (admin only)
         if (user?.role === 'admin') {
-          const allUsers = await firestoreService.orders.list() // We don't have a profiles service, using orders for now
-          setUsers([]) // Placeholder for now
+          const allUsers = await firestoreService.users.list()
+          setUsers(allUsers.items)
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
@@ -826,7 +826,7 @@ export default function DashboardPage() {
                         <div key={dbUser.id} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex items-center gap-4">
                             <Avatar className="h-12 w-12">
-                              <AvatarImage src={dbUser.profile_image} alt={dbUser.full_name} />
+                              <AvatarImage src={dbUser.avatar} alt={dbUser.full_name} />
                               <AvatarFallback>
                                 {dbUser.full_name.split(' ').map((n: string) => n[0]).join('')}
                               </AvatarFallback>
