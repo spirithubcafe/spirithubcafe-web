@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Star, ShoppingCart, Plus, Minus, Coffee } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/components/cart-provider'
-import type { Product } from '@/types'
+import { firestoreService, type Product, type Category } from '@/lib/firebase'
 
 interface ProductQuickViewProps {
   product: Product
@@ -19,6 +19,27 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
   const [isOpen, setIsOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+
+  // Load categories when component mounts
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  // Get category name by ID
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
+    if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
+    return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
+  }
 
   const handleAddToCart = () => {
     addToCart(product, quantity)
@@ -46,7 +67,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         </DialogHeader>
         <div className="space-y-6 py-4">
           {/* Product Image */}
-          <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 flex items-center justify-center" style={{ height: '120px', minHeight: '120px', maxHeight: '120px' }}>
+          <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 flex items-center justify-center h-30 min-h-30 max-h-30">
             <Coffee className="h-10 w-10 text-amber-600" />
           </div>
           {/* Product Details */}
@@ -54,7 +75,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">
-                  {i18n.language === 'ar' ? product.category?.name_ar : product.category?.name}
+                  {getCategoryName(product.category_id)}
                 </Badge>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -73,7 +94,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 </div>
               </div>
               <span className="text-2xl font-bold text-amber-600 currency">
-                {formatPrice(product.price_usd)}
+                {formatPrice(product.price_omr)}
               </span>
             </div>
             {/* Quantity Selector */}
@@ -106,7 +127,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
               <span className="font-medium">{t('shop.total')}</span>
               <span className="text-xl font-bold text-amber-600 currency">
-                {formatPrice(product.price_usd * quantity)}
+                {formatPrice(product.price_omr * quantity)}
               </span>
             </div>
             {/* Add to Cart Button */}

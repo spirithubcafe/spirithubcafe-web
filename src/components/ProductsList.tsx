@@ -50,7 +50,7 @@ export default function ProductsList() {
               <h3 className="text-lg font-semibold">{product.name}</h3>
               <p className="text-gray-600 mb-2">{product.description}</p>
               <p className="text-lg font-bold text-green-600">
-                ${product.price_usd.toFixed(2)}
+                ${product.price_omr.toFixed(2)}
               </p>
               <p className="text-sm text-gray-500">
                 Added: {product.created.toLocaleDateString()}

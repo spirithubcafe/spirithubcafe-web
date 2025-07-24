@@ -63,7 +63,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const itemsWithProducts = await Promise.all(
         items.map(async (item) => {
-          const product = await firestoreService.products.get(item.product_id)
+          // Ensure product_id is a string
+          const productId = String(item.product_id);
+          const product = await firestoreService.products.get(productId)
           return {
             ...item,
             product
@@ -101,7 +103,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await firestoreService.cart.addItem(currentUser.id, product.id, quantity)
+      // Ensure product ID is a string
+      const productId = String(product.id);
+      await firestoreService.cart.addItem(currentUser.id, productId, quantity)
 
       const productName = i18n.language === 'ar' ? product.name_ar || product.name : product.name
       toast.success(i18n.language === 'ar' ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
@@ -159,8 +163,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (item.product.is_on_sale && item.product.sale_price_usd) {
         price = item.product.sale_price_usd
       }
-      
-      return total + (price * item.quantity)
+      // Ensure price is a number and not undefined
+      const safePrice = typeof price === 'number' ? price : 0;
+      return total + (safePrice * item.quantity)
     }, 0)
   }
 

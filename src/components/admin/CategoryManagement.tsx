@@ -172,9 +172,27 @@ export default function CategoryManagement() {
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-32 bg-gray-200 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                {/* Image skeleton */}
+                <div className="aspect-video bg-muted rounded-lg mb-4"></div>
+                
+                {/* Status badge skeleton */}
+                <div className="h-5 bg-muted rounded-full w-16 mb-3"></div>
+                
+                {/* Title skeleton */}
+                <div className="h-6 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
+                
+                {/* Description skeleton */}
+                <div className="space-y-2 mb-4">
+                  <div className="h-3 bg-muted rounded"></div>
+                  <div className="h-3 bg-muted rounded w-4/5"></div>
+                </div>
+                
+                {/* Buttons skeleton */}
+                <div className="flex gap-2">
+                  <div className="h-9 bg-muted rounded flex-1"></div>
+                  <div className="h-9 bg-muted rounded w-9"></div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -287,7 +305,7 @@ export default function CategoryManagement() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="name">{isArabic ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
+                <Label htmlFor="name" className="mb-2 block">{isArabic ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -297,7 +315,7 @@ export default function CategoryManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="name_ar">{isArabic ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
+                <Label htmlFor="name_ar" className="mb-2 block">{isArabic ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
                 <Input
                   id="name_ar"
                   value={formData.name_ar}
@@ -309,7 +327,7 @@ export default function CategoryManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="description">{isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                <Label htmlFor="description" className="mb-2 block">{isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -319,7 +337,7 @@ export default function CategoryManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="description_ar">{isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                <Label htmlFor="description_ar" className="mb-2 block">{isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
                 <Textarea
                   id="description_ar"
                   value={formData.description_ar}
@@ -332,7 +350,7 @@ export default function CategoryManagement() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="image">{isArabic ? 'رابط الصورة' : 'Image URL'}</Label>
+                <Label htmlFor="image" className="mb-2 block">{isArabic ? 'رابط الصورة' : 'Image URL'}</Label>
                 <Input
                   id="image"
                   value={formData.image}
@@ -341,7 +359,7 @@ export default function CategoryManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="sort_order">{isArabic ? 'ترتيب العرض' : 'Sort Order'}</Label>
+                <Label htmlFor="sort_order" className="mb-2 block">{isArabic ? 'ترتيب العرض' : 'Sort Order'}</Label>
                 <Input
                   id="sort_order"
                   type="number"

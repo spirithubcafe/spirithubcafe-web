@@ -56,12 +56,12 @@ export function ShopPage() {
   const getProductPrice = (product: Product) => {
     switch (currency) {
       case 'OMR':
-        return product.price_omr || (product.price_usd * 0.385) // USD to OMR conversion
+        return product.price_omr || (product.price_omr * 0.385) // USD to OMR conversion
       case 'SAR':
-        return product.price_sar || (product.price_usd * 3.75) // USD to SAR conversion
+        return product.price_sar || (product.price_omr * 3.75) // USD to SAR conversion
       case 'USD':
       default:
-        return product.price_usd
+        return product.price_omr
     }
   }
 
@@ -71,12 +71,12 @@ export function ShopPage() {
     
     switch (currency) {
       case 'OMR':
-        return product.sale_price_omr || (product.sale_price_usd ? product.sale_price_usd * 0.385 : null)
+        return product.sale_price_omr || (product.sale_price_omr ? product.sale_price_omr * 0.385 : null)
       case 'SAR':
-        return product.sale_price_sar || (product.sale_price_usd ? product.sale_price_usd * 3.75 : null)
+        return product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
       case 'USD':
       default:
-        return product.sale_price_usd || null
+        return product.sale_price_omr || null
     }
   }
 
@@ -95,9 +95,9 @@ export function ShopPage() {
   }).sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return getProductPrice(a) - getProductPrice(b)
+        return (getProductPrice(a) ?? 0) - (getProductPrice(b) ?? 0)
       case 'price-high':
-        return getProductPrice(b) - getProductPrice(a)
+        return (getProductPrice(b) ?? 0) - (getProductPrice(a) ?? 0)
       case 'featured':
         return Number(b.is_featured) - Number(a.is_featured)
       case 'bestseller':
@@ -123,15 +123,8 @@ export function ShopPage() {
   const handleAddToCart = async (product: Product) => {
     setIsLoading(true)
     try {
-      // Convert product to match cart expectations
-      const cartProduct = {
-        ...product,
-        id: parseInt(product.id), // Convert string ID to number for cart
-        stock: product.stock_quantity,
-        price_omr: product.price_omr,
-        price_sar: product.price_sar
-      }
-      await addToCart(cartProduct as any, 1)
+      // Just pass the product directly to addToCart
+      await addToCart(product, 1)
     } catch (error) {
       console.error('Error adding to cart:', error)
     } finally {
@@ -294,12 +287,12 @@ export function ShopPage() {
                           {formatPrice(salePrice)}
                         </span>
                         <span className="text-sm line-through text-muted-foreground">
-                          {formatPrice(productPrice)}
+                          {formatPrice(productPrice ?? 0)}
                         </span>
                       </>
                     ) : (
                       <span className="text-lg font-bold">
-                        {formatPrice(productPrice)}
+                        {formatPrice(productPrice ?? 0)}
                       </span>
                     )}
                   </div>

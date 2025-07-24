@@ -19,8 +19,8 @@ interface ProductFormData {
   description: string
   description_ar: string
   category_id: string
-  price_usd: number
-  sale_price_usd: number
+  price_omr: number  // قیمت اصلی به ریال عمان
+  sale_price_omr: number
   image: string
   gallery: string[]
   is_active: boolean
@@ -59,8 +59,8 @@ export default function ProductManagement() {
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
 
   const [filters, setFilters] = useState<ProductFilters>({
-    category_id: '',
-    status: '',
+    category_id: 'all',
+    status: 'all',
     search: ''
   })
 
@@ -70,8 +70,8 @@ export default function ProductManagement() {
     description: '',
     description_ar: '',
     category_id: '',
-    price_usd: 0,
-    sale_price_usd: 0,
+    price_omr: 0,  // قیمت اصلی به ریال عمان
+    sale_price_omr: 0,
     image: '',
     gallery: [],
     is_active: true,
@@ -110,11 +110,11 @@ export default function ProductManagement() {
   const filteredProducts = products.filter(product => {
     let matches = true
 
-    if (filters.category_id && product.category_id !== filters.category_id) {
+    if (filters.category_id && filters.category_id !== 'all' && product.category_id !== filters.category_id) {
       matches = false
     }
 
-    if (filters.status) {
+    if (filters.status && filters.status !== 'all') {
       if (filters.status === 'active' && !product.is_active) matches = false
       if (filters.status === 'inactive' && product.is_active) matches = false
       if (filters.status === 'featured' && !product.is_featured) matches = false
@@ -143,8 +143,8 @@ export default function ProductManagement() {
         description: product.description || '',
         description_ar: product.description_ar || '',
         category_id: product.category_id,
-        price_usd: product.price_usd,
-        sale_price_usd: product.sale_price_usd || 0,
+        price_omr: product.price_omr || 0, // از OMR به OMR - بدون تبدیل
+        sale_price_omr: product.sale_price_omr || 0,
         image: product.image || '',
         gallery: product.gallery || [],
         is_active: product.is_active,
@@ -167,8 +167,8 @@ export default function ProductManagement() {
         description: '',
         description_ar: '',
         category_id: '',
-        price_usd: 0,
-        sale_price_usd: 0,
+        price_omr: 0,  // قیمت اصلی به ریال عمان
+        sale_price_omr: 0,
         image: '',
         gallery: [],
         is_active: true,
@@ -302,7 +302,7 @@ export default function ProductManagement() {
                   <SelectValue placeholder={isArabic ? 'جميع الفئات' : 'All Categories'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{isArabic ? 'جميع الفئات' : 'All Categories'}</SelectItem>
+                  <SelectItem value="all">{isArabic ? 'جميع الفئات' : 'All Categories'}</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {isArabic ? (category.name_ar || category.name) : category.name}
@@ -318,7 +318,7 @@ export default function ProductManagement() {
                   <SelectValue placeholder={isArabic ? 'جميع الحالات' : 'All Status'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">{isArabic ? 'جميع الحالات' : 'All Status'}</SelectItem>
+                  <SelectItem value="all">{isArabic ? 'جميع الحالات' : 'All Status'}</SelectItem>
                   <SelectItem value="active">{isArabic ? 'نشط' : 'Active'}</SelectItem>
                   <SelectItem value="inactive">{isArabic ? 'غير نشط' : 'Inactive'}</SelectItem>
                   <SelectItem value="featured">{isArabic ? 'مميز' : 'Featured'}</SelectItem>
@@ -348,10 +348,27 @@ export default function ProductManagement() {
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-4">
-                <div className="h-32 bg-gray-200 rounded mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                {/* Image skeleton */}
+                <div className="aspect-square bg-muted rounded-lg mb-4"></div>
+                
+                {/* Badges skeleton */}
+                <div className="flex gap-2 mb-3">
+                  <div className="h-5 bg-muted rounded-full w-12"></div>
+                  <div className="h-5 bg-muted rounded-full w-16"></div>
+                </div>
+                
+                {/* Title skeleton */}
+                <div className="h-5 bg-muted rounded mb-2"></div>
+                <div className="h-4 bg-muted rounded w-3/4 mb-3"></div>
+                
+                {/* Price skeleton */}
+                <div className="h-6 bg-muted rounded w-20 mb-4"></div>
+                
+                {/* Buttons skeleton */}
+                <div className="flex gap-2">
+                  <div className="h-9 bg-muted rounded flex-1"></div>
+                  <div className="h-9 bg-muted rounded w-9"></div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -409,11 +426,11 @@ export default function ProductManagement() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-lg">
-                        {formatPrice(product.price_usd)}
+                        {formatPrice(product.price_omr)}
                       </p>
-                      {product.is_on_sale && product.sale_price_usd && product.sale_price_usd < product.price_usd && (
+                      {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
                         <p className="text-xs text-muted-foreground line-through">
-                          {formatPrice(product.sale_price_usd)}
+                          {formatPrice(product.sale_price_omr)}
                         </p>
                       )}
                     </div>
@@ -503,7 +520,7 @@ export default function ProductManagement() {
 
               <TabsContent value="basic" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="name">{isArabic ? 'اسم المنتج (إنجليزي) *' : 'Product Name (English) *'}</Label>
                     <Input
                       id="name"
@@ -512,7 +529,7 @@ export default function ProductManagement() {
                       required
                     />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="name_ar">{isArabic ? 'اسم المنتج (عربي)' : 'Product Name (Arabic)'}</Label>
                     <Input
                       id="name_ar"
@@ -522,7 +539,7 @@ export default function ProductManagement() {
                   </div>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="category_id">{isArabic ? 'الفئة *' : 'Category *'}</Label>
                   <Select value={formData.category_id} onValueChange={(value) => setFormData({ ...formData, category_id: value })}>
                     <SelectTrigger>
@@ -539,7 +556,7 @@ export default function ProductManagement() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="description">{isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
                     <Textarea
                       id="description"
@@ -548,7 +565,7 @@ export default function ProductManagement() {
                       rows={4}
                     />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="description_ar">{isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
                     <Textarea
                       id="description_ar"
@@ -563,26 +580,26 @@ export default function ProductManagement() {
               <TabsContent value="pricing" className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="price_usd">{isArabic ? 'السعر (دولار) *' : 'Price (USD) *'}</Label>
+                    <Label htmlFor="price_omr">{isArabic ? 'السعر (ريال عماني) *' : 'Price (OMR) *'}</Label>
                     <Input
-                      id="price_usd"
+                      id="price_omr"
                       type="number"
-                      step="0.01"
+                      step="0.001"
                       min="0"
-                      value={formData.price_usd}
-                      onChange={(e) => setFormData({ ...formData, price_usd: parseFloat(e.target.value) || 0 })}
+                      value={formData.price_omr}
+                      onChange={(e) => setFormData({ ...formData, price_omr: parseFloat(e.target.value) || 0 })}
                       required
                     />
                   </div>
                   <div>
-                    <Label htmlFor="sale_price_usd">{isArabic ? 'سعر التخفيض (دولار)' : 'Sale Price (USD)'}</Label>
+                    <Label htmlFor="sale_price_omr">{isArabic ? 'سعر التخفيض (ريال عماني)' : 'Sale Price (OMR)'}</Label>
                     <Input
-                      id="sale_price_usd"
+                      id="sale_price_omr"
                       type="number"
-                      step="0.01"
+                      step="0.001"
                       min="0"
-                      value={formData.sale_price_usd}
-                      onChange={(e) => setFormData({ ...formData, sale_price_usd: parseFloat(e.target.value) || 0 })}
+                      value={formData.sale_price_omr}
+                      onChange={(e) => setFormData({ ...formData, sale_price_omr: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                 </div>
@@ -802,7 +819,7 @@ export default function ProductManagement() {
                     {getCategoryName(viewingProduct.category_id)}
                   </p>
                   <p className="text-2xl font-bold">
-                    {formatPrice(viewingProduct.price_usd)}
+                    {formatPrice(viewingProduct.price_omr)}
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {getProductBadges(viewingProduct).map((badge, index) => (

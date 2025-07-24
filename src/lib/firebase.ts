@@ -85,12 +85,12 @@ export interface Product {
   description?: string;
   description_ar?: string;
   category_id: string; // reference to categories
-  price_usd: number;
-  price_omr?: number;
-  price_sar?: number;
-  sale_price_usd?: number;
-  sale_price_omr?: number;
-  sale_price_sar?: number;
+  price_omr: number; // قیمت اصلی به ریال عمان
+  price_usd?: number; // قیمت محاسبه شده به دلار
+  price_sar?: number; // قیمت محاسبه شده به ریال سعودی
+  sale_price_omr?: number; // قیمت تخفیف به ریال عمان
+  sale_price_usd?: number; // قیمت تخفیف محاسبه شده به دلار
+  sale_price_sar?: number; // قیمت تخفیف محاسبه شده به ریال سعودی
   image?: string;
   gallery: string[]; // array of image URLs
   is_active: boolean;
@@ -461,15 +461,20 @@ export const firestoreService = {
   categories: {
     list: async () => {
       try {
+        // Temporarily simplified query to avoid index requirement
         const q = query(
           collection(db, 'categories'),
-          where('is_active', '==', true),
-          orderBy('sort_order')
+          where('is_active', '==', true)
         );
         const querySnapshot = await getDocs(q);
+        const categories = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
+        
+        // Sort in memory for now
+        categories.sort((a, b) => a.sort_order - b.sort_order);
+        
         return {
-          items: querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category)),
-          totalItems: querySnapshot.docs.length
+          items: categories,
+          totalItems: categories.length
         };
       } catch (error) {
         console.error('Error getting categories:', error);
@@ -654,7 +659,9 @@ export const firestoreService = {
         // Get product details for each cart item
         const itemsWithProducts = await Promise.all(
           cartItems.map(async (item) => {
-            const product = await firestoreService.products.get(item.product_id);
+            // Ensure product_id is a string
+            const productId = String(item.product_id);
+            const product = await firestoreService.products.get(productId);
             return {
               ...item,
               product

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ShoppingCart, Plus, Minus, X, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useCart } from '@/components/cart-provider'
 import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
+import { firestoreService, type Category } from '@/lib/firebase'
 
 export function CartSidebar() {
   const { t, i18n } = useTranslation()
@@ -15,7 +16,28 @@ export function CartSidebar() {
   const isRTL = i18n.language === 'ar'
 
   const [open, setOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
   const navigate = useNavigate()
+
+  // Load categories when component mounts
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      }
+    }
+    loadCategories()
+  }, [])
+
+  // Get category name by ID
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
+    if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
+    return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
+  }
 
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
@@ -99,7 +121,7 @@ export function CartSidebar() {
                         </div>
                         
                         <p className="text-sm text-muted-foreground">
-                          {i18n.language === 'ar' ? item.product?.category?.name_ar : item.product?.category?.name}
+                          {item.product?.category_id ? getCategoryName(item.product.category_id) : (i18n.language === 'ar' ? 'عام' : 'General')}
                         </p>
                         
                         <div className="flex items-center justify-between">
@@ -126,7 +148,7 @@ export function CartSidebar() {
                           </div>
                           
                           <p className="font-semibold text-amber-600 currency">
-                            {formatPrice((item.product?.price_usd || 0) * item.quantity)}
+                            {formatPrice((item.product?.price_omr || 0) * item.quantity)}
                           </p>
                         </div>
                       </div>
