@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
-import { Trash2, Shield, User, Users, Crown, Store } from 'lucide-react'
+import { Trash2, Shield, User, Users, Crown, Store, Briefcase } from 'lucide-react'
 
 export function AdminPage() {
   const { currentUser, loading } = useAuth()
@@ -62,7 +62,7 @@ export function AdminPage() {
     }
   }
 
-  const handleRoleChange = async (userId: string, newRole: 'admin' | 'shop_owner' | 'user') => {
+  const handleRoleChange = async (userId: string, newRole: 'admin' | 'shop_owner' | 'employee' | 'user') => {
     try {
       await firestoreService.users.updateRole(userId, newRole)
       await loadUsers()
@@ -182,7 +182,7 @@ export function AdminPage() {
                     <TableCell>
                       <Select
                         value={user.role}
-                        onValueChange={(newRole: 'admin' | 'shop_owner' | 'user') => handleRoleChange(user.id, newRole)}
+                        onValueChange={(newRole: 'admin' | 'shop_owner' | 'employee' | 'user') => handleRoleChange(user.id, newRole)}
                         disabled={user.id === currentUser.id} // Cannot change own role
                       >
                         <SelectTrigger className="w-32">
@@ -193,6 +193,12 @@ export function AdminPage() {
                             <div className="flex items-center space-x-2">
                               <User className="h-4 w-4" />
                               <span>کاربر</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="employee">
+                            <div className="flex items-center space-x-2">
+                              <Briefcase className="h-4 w-4" />
+                              <span>موظف المتجر</span>
                             </div>
                           </SelectItem>
                           <SelectItem value="shop_owner">
@@ -216,10 +222,12 @@ export function AdminPage() {
                         <Badge variant={
                           user.role === 'admin' ? 'default' : 
                           user.role === 'shop_owner' ? 'outline' : 
+                          user.role === 'employee' ? 'outline' :
                           'secondary'
                         }>
                           {user.role === 'admin' ? 'مدیر' : 
                            user.role === 'shop_owner' ? 'کاربر فروشگاه' : 
+                           user.role === 'employee' ? 'موظف المتجر' :
                            'کاربر'}
                         </Badge>
                         {user.id !== currentUser.id && (

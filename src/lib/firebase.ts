@@ -59,7 +59,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   phone?: string;
-  role: 'admin' | 'shop_owner' | 'user';
+  role: 'admin' | 'shop_owner' | 'employee' | 'user';
   avatar?: string;
   created: Date;
   updated: Date;
@@ -365,7 +365,7 @@ export const firestoreService = {
     },
 
     // Update user role (Admin only)
-    updateRole: async (userId: string, newRole: 'admin' | 'shop_owner' | 'user'): Promise<boolean> => {
+    updateRole: async (userId: string, newRole: 'admin' | 'shop_owner' | 'employee' | 'user'): Promise<boolean> => {
       return await safeFirestoreOperation(
         async () => {
           await updateDoc(doc(db, 'users', userId), {
@@ -377,6 +377,48 @@ export const firestoreService = {
         },
         false,
         'updateUserRole'
+      );
+    },
+
+    // Update user profile
+    update: async (userId: string, data: Partial<UserProfile>): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const updateData: any = {
+            ...data,
+            updated: serverTimestamp()
+          };
+          
+          // Remove fields that shouldn't be updated directly
+          delete updateData.id;
+          delete updateData.created;
+          
+          await updateDoc(doc(db, 'users', userId), updateData);
+          console.log(`✅ User ${userId} profile updated`);
+          return true;
+        },
+        false,
+        'updateUserProfile'
+      );
+    },
+
+    // Get single user (for viewing/editing)
+    get: async (userId: string): Promise<UserProfile | null> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const userDoc = await getDoc(doc(db, 'users', userId));
+          if (userDoc.exists()) {
+            return {
+              id: userId,
+              ...userDoc.data(),
+              created: userDoc.data().created?.toDate() || new Date(),
+              updated: userDoc.data().updated?.toDate() || new Date()
+            } as UserProfile;
+          }
+          return null;
+        },
+        null,
+        'getUser'
       );
     },
 
@@ -394,7 +436,7 @@ export const firestoreService = {
     },
 
     // Get user stats (Admin only)
-    getStats: async (): Promise<{ totalUsers: number; adminUsers: number; shopOwners: number; regularUsers: number }> => {
+    getStats: async (): Promise<{ totalUsers: number; adminUsers: number; shopOwners: number; employees: number; regularUsers: number }> => {
       return await safeFirestoreOperation(
         async () => {
           const q = query(collection(db, 'users'));
@@ -404,11 +446,12 @@ export const firestoreService = {
           const totalUsers = users.length;
           const adminUsers = users.filter(user => user.role === 'admin').length;
           const shopOwners = users.filter(user => user.role === 'shop_owner').length;
+          const employees = users.filter(user => user.role === 'employee').length;
           const regularUsers = users.filter(user => user.role === 'user').length;
           
-          return { totalUsers, adminUsers, shopOwners, regularUsers };
+          return { totalUsers, adminUsers, shopOwners, employees, regularUsers };
         },
-        { totalUsers: 0, adminUsers: 0, shopOwners: 0, regularUsers: 0 },
+        { totalUsers: 0, adminUsers: 0, shopOwners: 0, employees: 0, regularUsers: 0 },
         'getUserStats'
       );
     }

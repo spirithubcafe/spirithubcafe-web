@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import type { FormEvent } from 'react'
 import { 
   User, 
   ShoppingBag, 
@@ -18,7 +19,9 @@ import {
   MessageSquare,
   CheckCircle,
   Clock,
-  Truck
+  Truck,
+  Crown,
+  Briefcase
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -27,6 +30,10 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
@@ -48,6 +55,12 @@ export default function DashboardPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
   const [loading, setLoading] = useState(true)
+
+  // State for user editing
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
 
   // Fetch dashboard data
   useEffect(() => {
@@ -118,6 +131,77 @@ export default function DashboardPage() {
       processing: isArabic ? 'قيد المعالجة' : 'Processing'
     }
     return statusMap[status as keyof typeof statusMap] || status
+  }
+
+  // Helper functions for user management
+  const getRoleBadgeStyles = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800'
+      case 'shop_owner':
+        return 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800'
+      case 'employee':
+        return 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800'
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-950 dark:text-gray-300 dark:border-gray-800'
+    }
+  }
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Crown className="h-3 w-3" />
+      case 'shop_owner':
+        return <Coffee className="h-3 w-3" />
+      case 'employee':
+        return <Briefcase className="h-3 w-3" />
+      default:
+        return <User className="h-3 w-3" />
+    }
+  }
+
+  const formatUserDate = (date: Date) => {
+    return new Intl.DateTimeFormat(isArabic ? 'ar-SA' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(date)
+  }
+
+  // User management handlers
+  const handleUserEdit = (userToEdit: UserProfile) => {
+    setSelectedUser(userToEdit)
+    setEditDialogOpen(true)
+  }
+
+  const handleUserView = (userToView: UserProfile) => {
+    setSelectedUser(userToView)
+    setViewDialogOpen(true)
+  }
+
+  const handleUpdateUser = async (formData: Partial<UserProfile>) => {
+    if (!selectedUser) return
+
+    try {
+      setEditLoading(true)
+      
+      const success = await firestoreService.users.update(selectedUser.id, formData)
+      
+      if (success) {
+        // Refresh users list
+        if (user?.role === 'admin') {
+          const allUsers = await firestoreService.users.list()
+          setUsers(allUsers.items)
+        }
+        
+        setEditDialogOpen(false)
+        setSelectedUser(null)
+      }
+    } catch (error) {
+      console.error('Error updating user:', error)
+    } finally {
+      setEditLoading(false)
+    }
   }
 
   if (!user) {
@@ -519,6 +603,66 @@ export default function DashboardPage() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
+            {/* Profile Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  {isArabic ? 'المعلومات الشخصية' : 'Personal Information'}
+                </CardTitle>
+                <CardDescription>
+                  {isArabic ? 'تحديث معلوماتك الشخصية' : 'Update your personal information'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-6 border border-border rounded-xl bg-gradient-to-r from-primary/5 to-secondary/5 hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <Avatar className="h-16 w-16 ring-2 ring-primary/20 shadow-sm">
+                        <AvatarImage src={user?.avatar} alt={user?.full_name} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                          {user?.full_name.split(' ').map((n: string) => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-green-500 border-2 border-background rounded-full"></div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg mb-1">{user?.full_name}</h3>
+                      <p className="text-sm text-muted-foreground mb-1">{user?.email}</p>
+                      {user?.phone && (
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {user.phone}
+                        </p>
+                      )}
+                      <div className={`inline-flex items-center gap-1 mt-2 px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeStyles(user?.role || 'user')}`}>
+                        {getRoleIcon(user?.role || 'user')}
+                        <span>
+                          {user?.role === 'admin' 
+                            ? (isArabic ? 'مدير النظام' : 'Admin')
+                            : user?.role === 'shop_owner'
+                            ? (isArabic ? 'مالك متجر' : 'Shop Owner')
+                            : user?.role === 'employee'
+                            ? (isArabic ? 'موظف المتجر' : 'Shop Employee')
+                            : (isArabic ? 'مستخدم' : 'User')
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => user && handleUserEdit(user)}
+                    className="hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    {isArabic ? 'تعديل الملف الشخصي' : 'Edit Profile'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -805,58 +949,223 @@ export default function DashboardPage() {
           {/* Admin Users Tab */}
           {user && user.role === 'admin' && (
             <TabsContent value="users" className="space-y-6">
+              {/* User Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-950 rounded-lg">
+                        <Users className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {isArabic ? 'إجمالي المستخدمين' : 'Total Users'}
+                        </p>
+                        <p className="text-2xl font-bold">{users.length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-red-100 dark:bg-red-950 rounded-lg">
+                        <Crown className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {isArabic ? 'المديرين' : 'Admins'}
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {users.filter(u => u.role === 'admin').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 dark:bg-green-950 rounded-lg">
+                        <Coffee className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {isArabic ? 'أصحاب المتاجر' : 'Shop Owners'}
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {users.filter(u => u.role === 'shop_owner').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-950 rounded-lg">
+                        <Briefcase className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {isArabic ? 'موظفو المتجر' : 'Shop Employees'}
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {users.filter(u => u.role === 'employee').length}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    {isArabic ? 'إدارة المستخدمين' : 'User Management'}
-                  </CardTitle>
-                  <CardDescription>
-                    {isArabic ? 'إدارة حسابات المستخدمين والأدوار' : 'Manage user accounts and roles'}
-                  </CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        {isArabic ? 'إدارة المستخدمين' : 'User Management'}
+                        {!loading && (
+                          <Badge variant="secondary" className="ml-2">
+                            {users.length}
+                          </Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription>
+                        {isArabic ? 'إدارة حسابات المستخدمين والأدوار' : 'Manage user accounts and roles'}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (user?.role === 'admin') {
+                          setLoading(true)
+                          firestoreService.users.list().then(result => {
+                            setUsers(result.items)
+                            setLoading(false)
+                          })
+                        }
+                      }}
+                      disabled={loading}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-1" />
+                      {isArabic ? 'تحديث' : 'Refresh'}
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {loading ? (
-                      <div className="text-center py-8">
-                        <p>{t('common.loading')}</p>
+                      <div className="flex items-center justify-center py-12">
+                        <div className="text-center space-y-2">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
+                        </div>
                       </div>
                     ) : users.length > 0 ? (
-                      users.map((dbUser) => (
-                        <div key={dbUser.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src={dbUser.avatar} alt={dbUser.full_name} />
-                              <AvatarFallback>
-                                {dbUser.full_name.split(' ').map((n: string) => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">
-                                {dbUser.full_name}
-                              </p>
-                              <p className="text-sm text-muted-foreground">{dbUser.email}</p>
-                              <Badge variant={dbUser.role === 'admin' ? 'default' : 'secondary'} className={`mb-2 px-4 py-2 text-xs font-semibold rounded-lg shadow-sm ${isArabic ? 'ml-0 mr-2' : 'mr-0 ml-2'}`} style={{alignSelf: isArabic ? 'flex-start' : 'flex-end'}}>
-                                {dbUser.role === 'admin' 
-                                  ? (isArabic ? 'مدير' : 'Admin')
-                                  : (isArabic ? 'مستخدم' : 'User')
-                                }
-                              </Badge>
+                      <div className="space-y-3">
+                        {users.map((dbUser) => (
+                          <div 
+                            key={dbUser.id} 
+                            className="group relative bg-card border border-border rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:border-primary/30 hover:bg-card/80 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-4"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-4 flex-1">
+                                {/* Avatar */}
+                                <div className="relative">
+                                  <Avatar className="h-14 w-14 ring-2 ring-background shadow-sm">
+                                    <AvatarImage src={dbUser.avatar} alt={dbUser.full_name} />
+                                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                                      {dbUser.full_name.split(' ').map((n: string) => n[0]).join('')}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  </div>
+
+                                {/* User Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-semibold text-lg text-foreground mb-1 truncate">
+                                        {dbUser.full_name}
+                                      </h3>
+                                      <p className="text-sm text-muted-foreground mb-2 truncate">
+                                        {dbUser.email}
+                                      </p>
+                                    </div>
+                                    
+                                    {/* Role Badge */}
+                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border ${getRoleBadgeStyles(dbUser.role)}`}>
+                                      {getRoleIcon(dbUser.role)}
+                                      <span>
+                                        {dbUser.role === 'admin' 
+                                          ? (isArabic ? 'مدير النظام' : 'Admin')
+                                          : dbUser.role === 'shop_owner'
+                                          ? (isArabic ? 'مالك متجر' : 'Shop Owner')
+                                          : dbUser.role === 'employee'
+                                          ? (isArabic ? 'موظف المتجر' : 'Shop Employee')
+                                          : (isArabic ? 'مستخدم' : 'User')
+                                        }
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Additional Info */}
+                                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                    {dbUser.phone && (
+                                      <span className="flex items-center gap-1">
+                                        <User className="h-3 w-3" />
+                                        {dbUser.phone}
+                                      </span>
+                                    )}
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      {isArabic ? 'انضم في' : 'Joined'} {formatUserDate(dbUser.created)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2 ml-4">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => handleUserView(dbUser)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <User className="h-4 w-4 mr-1" />
+                                  {isArabic ? 'عرض' : 'View'}
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => handleUserEdit(dbUser)}
+                                  className="hover:bg-primary hover:text-primary-foreground"
+                                >
+                                  <Settings className="h-4 w-4 mr-1" />
+                                  {isArabic ? 'تعديل' : 'Edit'}
+                                </Button>
+                              </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
-                              {isArabic ? 'تعديل' : 'Edit'}
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              {isArabic ? 'عرض' : 'View'}
-                            </Button>
-                          </div>
-                        </div>
-                      ))
+                        ))}
+                      </div>
                     ) : (
-                      <div className="text-center py-8">
-                        <p className="text-muted-foreground">{isArabic ? 'لا يوجد مستخدمون' : 'No users yet'}</p>
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                          <Users className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          {isArabic ? 'لا يوجد مستخدمون' : 'No users found'}
+                        </h3>
+                        <p className="text-muted-foreground text-sm">
+                          {isArabic ? 'لم يتم العثور على أي مستخدمين في النظام' : 'No users have been found in the system'}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -936,7 +1245,276 @@ export default function DashboardPage() {
             </TabsContent>
           )}
         </Tabs>
+
+        {/* User Edit Dialog */}
+        <UserEditDialog
+          user={selectedUser}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onSave={handleUpdateUser}
+          loading={editLoading}
+          isArabic={isArabic}
+          currentUserRole={user?.role}
+          currentUserId={user?.id}
+        />
+
+        {/* User View Dialog */}
+        <UserViewDialog
+          user={selectedUser}
+          open={viewDialogOpen}
+          onOpenChange={setViewDialogOpen}
+          isArabic={isArabic}
+        />
       </div>
     </div>
+  )
+}
+
+// User Edit Dialog Component
+interface UserEditDialogProps {
+  user: UserProfile | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSave: (data: Partial<UserProfile>) => Promise<void>
+  loading: boolean
+  isArabic: boolean
+  currentUserRole?: string
+  currentUserId?: string
+}
+
+function UserEditDialog({ user, open, onOpenChange, onSave, loading, isArabic, currentUserRole, currentUserId }: UserEditDialogProps) {
+  const [formData, setFormData] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    role: 'user' as 'admin' | 'shop_owner' | 'employee' | 'user'
+  })
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        full_name: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        role: user.role || 'user'
+      })
+    }
+  }, [user])
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    await onSave(formData)
+  }
+
+  const isAdmin = currentUserRole === 'admin'
+  const isEditingSelf = user?.id === currentUserId
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isArabic ? 'تعديل المستخدم' : 'Edit User'}
+          </DialogTitle>
+          <DialogDescription>
+            {isArabic ? 'تحديث معلومات المستخدم' : 'Update user information'}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="full_name">
+              {isArabic ? 'الاسم الكامل' : 'Full Name'}
+            </Label>
+            <Input
+              id="full_name"
+              value={formData.full_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">
+              {isArabic ? 'البريد الإلكتروني' : 'Email'}
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required
+              disabled={!isAdmin || isEditingSelf} // Only admin can change email, but not their own
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">
+              {isArabic ? 'رقم الهاتف' : 'Phone Number'}
+            </Label>
+            <Input
+              id="phone"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            />
+          </div>
+
+          {/* Role selection - only admin can edit roles and not their own */}
+          {isAdmin && !isEditingSelf && (
+            <div className="space-y-2">
+              <Label htmlFor="role">
+                {isArabic ? 'الدور' : 'Role'}
+              </Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value: 'admin' | 'shop_owner' | 'employee' | 'user') => 
+                  setFormData(prev => ({ ...prev, role: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">
+                    {isArabic ? 'مستخدم' : 'User'}
+                  </SelectItem>
+                  <SelectItem value="employee">
+                    {isArabic ? 'موظف المتجر' : 'Shop Employee'}
+                  </SelectItem>
+                  <SelectItem value="shop_owner">
+                    {isArabic ? 'مالك متجر' : 'Shop Owner'}
+                  </SelectItem>
+                  <SelectItem value="admin">
+                    {isArabic ? 'مدير' : 'Admin'}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading 
+                ? (isArabic ? 'جاري الحفظ...' : 'Saving...') 
+                : (isArabic ? 'حفظ' : 'Save')
+              }
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// User View Dialog Component
+interface UserViewDialogProps {
+  user: UserProfile | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  isArabic: boolean
+}
+
+function UserViewDialog({ user, open, onOpenChange, isArabic }: UserViewDialogProps) {
+  if (!user) return null
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat(isArabic ? 'ar-SA' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date)
+  }
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return isArabic ? 'مدير' : 'Admin'
+      case 'shop_owner':
+        return isArabic ? 'مالك متجر' : 'Shop Owner'
+      case 'employee':
+        return isArabic ? 'موظف المتجر' : 'Shop Employee'
+      default:
+        return isArabic ? 'مستخدم' : 'User'
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {isArabic ? 'عرض المستخدم' : 'View User'}
+          </DialogTitle>
+          <DialogDescription>
+            {isArabic ? 'معلومات المستخدم' : 'User information'}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={user.avatar} alt={user.full_name} />
+              <AvatarFallback className="text-lg">
+                {user.full_name.split(' ').map((n: string) => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="text-lg font-semibold">{user.full_name}</h3>
+              <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                {getRoleText(user.role)}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">
+                {isArabic ? 'البريد الإلكتروني' : 'Email'}
+              </Label>
+              <p className="text-sm">{user.email}</p>
+            </div>
+
+            {user.phone && (
+              <div>
+                <Label className="text-sm font-medium text-muted-foreground">
+                  {isArabic ? 'رقم الهاتف' : 'Phone'}
+                </Label>
+                <p className="text-sm">{user.phone}</p>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">
+                {isArabic ? 'تاريخ الانضمام' : 'Joined Date'}
+              </Label>
+              <p className="text-sm">{formatDate(user.created)}</p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">
+                {isArabic ? 'آخر تحديث' : 'Last Updated'}
+              </Label>
+              <p className="text-sm">{formatDate(user.updated)}</p>
+            </div>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button onClick={() => onOpenChange(false)}>
+            {isArabic ? 'إغلاق' : 'Close'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
