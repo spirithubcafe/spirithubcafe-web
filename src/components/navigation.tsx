@@ -9,7 +9,7 @@ import { CurrencyToggle } from '@/components/currency-toggle'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/components/auth-provider'
-import { useCart } from '@/components/cart-provider'
+import { useCart } from '@/hooks/useCart'
 import { cn } from '@/lib/utils'
 
 export function Navigation() {

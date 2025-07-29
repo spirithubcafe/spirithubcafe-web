@@ -4,10 +4,15 @@ import { ShoppingCart, Plus, Minus, X, Coffee } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { useCart } from '@/components/cart-provider'
+import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
-import { firestoreService, type Category } from '@/lib/firebase'
+import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
+
+// Define local interface for cart items with products
+interface CartItemWithProduct extends CartItem {
+  product: Product | null
+}
 
 export function CartSidebar() {
   const { t, i18n } = useTranslation()
@@ -99,7 +104,7 @@ export function CartSidebar() {
               <>
                 {/* Scrollable Cart Items */}
                 <div className="flex-1 overflow-y-auto py-2 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                  {cart.items?.map((item) => (
+                  {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.product?.id || item.product_id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                         <Coffee className="h-8 w-8 text-amber-600" />

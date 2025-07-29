@@ -1,34 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import { firestoreService, subscriptions, type Product, type CartItem } from '@/lib/firebase'
+import { firestoreService, subscriptions, type Product } from '@/lib/firebase'
 import { useAuth } from './auth-provider'
-
-interface Cart {
-  id: string
-  user_id: string
-  items: CartItemWithProduct[]
-}
-
-interface CartItemWithProduct extends CartItem {
-  product: Product | null
-}
-
-interface CartContextType {
-  cart: Cart | null
-  cartItems: CartItemWithProduct[]
-  loading: boolean
-  addToCart: (product: Product, quantity?: number) => Promise<void>
-  removeFromCart: (itemId: string) => Promise<void>
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>
-  clearCart: () => Promise<void>
-  getTotalPrice: () => number
-  getTotalItems: () => number
-  refreshCart: () => Promise<void>
-}
-
-const CartContext = createContext<CartContextType | undefined>(undefined)
+import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
@@ -42,6 +18,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     user_id: currentUser.id,
     items: cartItems
   } : null
+
+  const loadCart = useCallback(async () => {
+    if (!currentUser) return
+
+    try {
+      setLoading(true)
+      const result = await firestoreService.cart.getUserCart(currentUser.id)
+      setCartItems(result.items)
+    } catch (error) {
+      console.error('Error loading cart:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [currentUser])
 
   // Load cart when user changes
   useEffect(() => {
@@ -57,7 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } else {
       setCartItems([])
     }
-  }, [currentUser])
+  }, [currentUser, loadCart])
 
   const loadCartWithProducts = async (items: any[]) => {
     try {
@@ -75,20 +65,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
       setCartItems(itemsWithProducts)
     } catch (error) {
       console.error('Error loading cart with products:', error)
-    }
-  }
-
-  const loadCart = async () => {
-    if (!currentUser) return
-
-    try {
-      setLoading(true)
-      const result = await firestoreService.cart.getUserCart(currentUser.id)
-      setCartItems(result.items)
-    } catch (error) {
-      console.error('Error loading cart:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -191,10 +167,3 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useCart() {
-  const context = useContext(CartContext)
-  if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider')
-  }
-  return context
-}

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
-import { useCart } from '@/components/cart-provider'
+import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 
 export function ShopPage() {
@@ -105,10 +105,11 @@ export function ShopPage() {
       case 'new':
         return Number(b.is_new_arrival) - Number(a.is_new_arrival)
       case 'name':
-      default:
+      default: {
         const nameA = isArabic ? (a.name_ar || a.name) : a.name
         const nameB = isArabic ? (b.name_ar || b.name) : b.name
         return nameA.localeCompare(nameB)
+      }
     }
   })
 

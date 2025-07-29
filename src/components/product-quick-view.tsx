@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
-import { useCart } from '@/components/cart-provider'
+import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 
 interface ProductQuickViewProps {

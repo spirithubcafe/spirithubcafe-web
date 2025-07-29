@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { useCart } from '@/components/cart-provider'
+import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
 

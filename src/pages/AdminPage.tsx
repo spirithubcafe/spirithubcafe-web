@@ -20,26 +20,12 @@ export function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
-  // Check if user is admin
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-600"></div>
-          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!currentUser || currentUser.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />
-  }
-
   useEffect(() => {
-    loadUsers()
-    loadStats()
-  }, [])
+    if (currentUser && currentUser.role === 'admin') {
+      loadUsers()
+      loadStats()
+    }
+  }, [currentUser])
 
   const loadUsers = async () => {
     try {
@@ -55,11 +41,33 @@ export function AdminPage() {
 
   const loadStats = async () => {
     try {
-      const result = await firestoreService.users.getStats()
-      setStats(result)
+      const result = await firestoreService.users.list()
+      const allUsers = result.items
+      setStats({
+        totalUsers: allUsers.length,
+        adminUsers: allUsers.filter(u => u.role === 'admin').length,
+        shopOwners: allUsers.filter(u => u.role === 'shop_owner').length,
+        regularUsers: allUsers.filter(u => u.role === 'user').length
+      })
     } catch (error) {
       console.error('Error loading stats:', error)
     }
+  }
+
+  // Check if user is admin
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-amber-600"></div>
+          <p className="mt-4 text-muted-foreground">{t('common.loading')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!currentUser || currentUser.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />
   }
 
   const handleRoleChange = async (userId: string, newRole: 'admin' | 'shop_owner' | 'employee' | 'user') => {
