@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useTranslation } from 'react-i18next'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 // Spirit Hub Cafe coordinates (Muscat, Oman - Al Mouj Street area)
 const STORE_COORDINATES = {
@@ -19,6 +20,9 @@ export function ContactPage() {
   const isRTL = i18n.language === 'ar' || i18n.language === 'fa'
   const [userLocation, setUserLocation] = useState<string>('')
   const [isLocationLoading, setIsLocationLoading] = useState(false)
+
+  // Smooth scroll to top when page loads
+  useScrollToTopOnRouteChange()
   const [showDirections, setShowDirections] = useState(false)
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
 

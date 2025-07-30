@@ -11,8 +11,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/components/currency-provider'
 import { useTranslation } from 'react-i18next'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export default function CheckoutPage() {
+  useScrollToTopOnRouteChange()
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice } = useCurrency()

@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { Trash2, Shield, User, Users, Crown, Store, Briefcase } from 'lucide-react'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function AdminPage() {
+  useScrollToTopOnRouteChange()
   const { currentUser, loading } = useAuth()
   const { t } = useTranslation()
   const [users, setUsers] = useState<UserProfile[]>([])

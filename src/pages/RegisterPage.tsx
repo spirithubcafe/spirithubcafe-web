@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function RegisterPage() {
+  useScrollToTopOnRouteChange()
   const { t, i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   const { register } = useAuth()

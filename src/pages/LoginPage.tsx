@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/components/auth-provider'
 import { useTranslation } from 'react-i18next'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function LoginPage() {
   const { t, i18n } = useTranslation()
@@ -19,6 +20,9 @@ export function LoginPage() {
     email: '',
     password: ''
   })
+
+  // Smooth scroll to top when page loads
+  useScrollToTopOnRouteChange()
 
   const isArabic = i18n.language === 'ar'
 

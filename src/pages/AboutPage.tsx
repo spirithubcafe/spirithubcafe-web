@@ -1,9 +1,13 @@
 import { Heart, Leaf, Users } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function AboutPage() {
   const { t } = useTranslation()
+
+  // Smooth scroll to top when page loads
+  useScrollToTopOnRouteChange()
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function ShopPage() {
   const { i18n } = useTranslation()
@@ -19,6 +20,9 @@ export function ShopPage() {
   const [sortBy, setSortBy] = useState<string>('name')
   const [isLoading, setIsLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+
+  // Smooth scroll to top when page loads
+  useScrollToTopOnRouteChange()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const isArabic = i18n.language === 'ar'

@@ -4,11 +4,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
+import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function HomePage() {
   const { t } = useTranslation()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [textVisible, setTextVisible] = useState(false)
+
+  // Smooth scroll to top when page loads
+  useScrollToTopOnRouteChange()
 
   useEffect(() => {
     const video = videoRef.current
