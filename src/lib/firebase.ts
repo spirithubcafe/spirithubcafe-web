@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail, updatePassword } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -17,13 +17,6 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Debug: Check if environment variables are loaded
-console.log('Firebase Config Debug:', {
-  apiKey: firebaseConfig.apiKey ? '✓ Loaded' : '✗ Missing',
-  authDomain: firebaseConfig.authDomain ? '✓ Loaded' : '✗ Missing',
-  projectId: firebaseConfig.projectId ? '✓ Loaded' : '✗ Missing',
-  appId: firebaseConfig.appId ? '✓ Loaded' : '✗ Missing'
-});
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -36,10 +29,8 @@ const storage = getStorage(app);
 let db: any = null;
 try {
   db = getFirestore(app);
-  console.log('🔥 Firestore initialized successfully');
 } catch (error) {
   console.error('❌ Firestore initialization failed:', error);
-  // We'll create a mock db for development
   db = null;
 }
 
@@ -63,6 +54,8 @@ export interface UserProfile {
   avatar?: string;
   created: Date;
   updated: Date;
+  temporary_password?: string | null;
+  password_reset_required?: boolean;
 }
 
 export interface Category {
@@ -331,6 +324,130 @@ export const authService = {
       null,
       'getUserProfile'
     );
+  },
+
+  // Admin function to send password reset email to any user
+  resetUserPassword: async (userEmail: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      console.log('🔐 Sending password reset email to:', userEmail);
+      
+      await sendPasswordResetEmail(auth, userEmail);
+      
+      console.log('✅ Password reset email sent successfully');
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Password reset error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // Admin function to generate temporary password for users
+  generateTemporaryPassword: async (userEmail: string): Promise<{ success: boolean; tempPassword?: string; error?: string }> => {
+    try {
+      // Generate a secure temporary password
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
+      
+      console.log('🔐 Generated temporary password for:', userEmail);
+      
+      // Store temporary password in Firestore for admin to share with user
+      await safeFirestoreOperation(
+        async () => {
+          const userQuery = query(collection(db, 'users'), where('email', '==', userEmail));
+          const userSnapshot = await getDocs(userQuery);
+          
+          if (!userSnapshot.empty) {
+            const userDoc = userSnapshot.docs[0];
+            await updateDoc(doc(db, 'users', userDoc.id), {
+              temporary_password: tempPassword,
+              password_reset_required: true,
+              updated: serverTimestamp()
+            });
+          }
+          return true;
+        },
+        false,
+        'setTemporaryPassword'
+      );
+      
+      return {
+        success: true,
+        tempPassword
+      };
+    } catch (error: any) {
+      console.error('❌ Temporary password generation error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // User function to change their own password
+  changePassword: async (currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const user = auth.currentUser;
+      if (!user || !user.email) {
+        return {
+          success: false,
+          error: 'No authenticated user found'
+        };
+      }
+
+      // Re-authenticate user with current password
+      const credential = await signInWithEmailAndPassword(auth, user.email, currentPassword);
+      
+      // Update password
+      await updatePassword(credential.user, newPassword);
+      
+      // Clear temporary password flags if they exist
+      await safeFirestoreOperation(
+        async () => {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists()) {
+            await updateDoc(doc(db, 'users', user.uid), {
+              temporary_password: null,
+              password_reset_required: false,
+              updated: serverTimestamp()
+            });
+          }
+          return true;
+        },
+        false,
+        'clearTemporaryPassword'
+      );
+      
+      console.log('✅ Password changed successfully');
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Password change error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // Forgot password function (sends email)
+  forgotPassword: async (email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Forgot password error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
   }
 };
 

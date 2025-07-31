@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next'
 import type { Order } from '@/types'
 import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
 import { productsService } from '@/services/products'
-import { useSmoothScrollToTop } from '@/hooks/useSmoothScrollToTop'
 
 // Dashboard Components
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
@@ -47,7 +46,22 @@ export default function DashboardPage() {
   const mainContentRef = useRef<HTMLElement>(null)
   
   // Smooth scroll to top when tab changes
-  useSmoothScrollToTop(activeTab, mainContentRef)
+  useEffect(() => {
+    const scrollToTop = () => {
+      const container = mainContentRef.current
+      if (container) {
+        container.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        })
+      }
+    }
+    
+    // Small delay to ensure content is rendered
+    const timer = setTimeout(scrollToTop, 1000)
+    
+    return () => clearTimeout(timer)
+  }, [activeTab])
   
   // State for data
   const [orders, setOrders] = useState<Order[]>([])

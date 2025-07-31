@@ -124,6 +124,12 @@ export function LoginPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('common.loading') : t('auth.login.loginButton')}
               </Button>
+              
+              <div className="text-center">
+                <Link to="/forgot-password" className="text-sm text-amber-600 hover:underline">
+                  {isArabic ? 'نسيت كلمة المرور؟' : 'Forgot Password?'}
+                </Link>
+              </div>
             </form>
 
             <div className="mt-6 text-center">

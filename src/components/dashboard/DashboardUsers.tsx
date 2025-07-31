@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Crown, Briefcase, User } from 'lucide-react'
+import { Crown, Briefcase, User, KeyRound } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import type { UserProfile } from '@/lib/firebase'
-import { firestoreService } from '@/lib/firebase'
+import { firestoreService, authService } from '@/lib/firebase'
 
 interface DashboardUsersProps {
   users: UserProfile[]
@@ -27,7 +27,12 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
+  const [passwordResetDialogOpen, setPasswordResetDialogOpen] = useState(false)
+  const [tempPasswordDialogOpen, setTempPasswordDialogOpen] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false)
+  const [tempPasswordLoading, setTempPasswordLoading] = useState(false)
+  const [generatedPassword, setGeneratedPassword] = useState('')
 
   const handleUserEdit = (user: UserProfile) => {
     setSelectedUser(user)
@@ -37,6 +42,61 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
   const handleUserView = (user: UserProfile) => {
     setSelectedUser(user)
     setViewDialogOpen(true)
+  }
+
+  const handlePasswordReset = (user: UserProfile) => {
+    setSelectedUser(user)
+    setPasswordResetDialogOpen(true)
+  }
+
+  const handleGenerateTemporaryPassword = (user: UserProfile) => {
+    setSelectedUser(user)
+    setTempPasswordDialogOpen(true)
+  }
+
+  const handlePasswordResetConfirm = async () => {
+    if (!selectedUser) return
+
+    try {
+      setPasswordResetLoading(true)
+      
+      const result = await authService.resetUserPassword(selectedUser.email)
+      
+      if (result.success) {
+        console.log('Password reset email sent successfully')
+        setPasswordResetDialogOpen(false)
+        setSelectedUser(null)
+      } else {
+        console.error('Password reset failed:', result.error)
+      }
+    } catch (error) {
+      console.error('Error sending password reset:', error)
+    } finally {
+      setPasswordResetLoading(false)
+    }
+  }
+
+  const handleGenerateTemporaryPasswordConfirm = async () => {
+    if (!selectedUser) return
+
+    try {
+      setTempPasswordLoading(true)
+      
+      const result = await authService.generateTemporaryPassword(selectedUser.email)
+      
+      if (result.success && result.tempPassword) {
+        setGeneratedPassword(result.tempPassword)
+        // Refresh user list to show the temporary password status
+        const allUsers = await firestoreService.users.list()
+        onUsersUpdate(allUsers.items)
+      } else {
+        console.error('Temporary password generation failed:', result.error)
+      }
+    } catch (error) {
+      console.error('Error generating temporary password:', error)
+    } finally {
+      setTempPasswordLoading(false)
+    }
   }
 
   const handleRoleChange = (value: string) => {
@@ -141,6 +201,24 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
                           onClick={() => handleUserEdit(user)}
                         >
                           {isArabic ? 'تعديل' : 'Edit'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerateTemporaryPassword(user)}
+                          className="flex items-center gap-1"
+                        >
+                          <KeyRound className="h-3 w-3" />
+                          {isArabic ? 'كلمة مرور مؤقتة' : 'Temp Password'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePasswordReset(user)}
+                          className="flex items-center gap-1"
+                        >
+                          <KeyRound className="h-3 w-3" />
+                          {isArabic ? 'نسيت كلمة المرور' : 'Forgot Password'}
                         </Button>
                       </div>
                     </div>
@@ -305,6 +383,140 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
             >
               {isArabic ? 'إغلاق' : 'Close'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Reset Confirmation Dialog */}
+      <Dialog open={passwordResetDialogOpen} onOpenChange={setPasswordResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isArabic ? 'نسيت كلمة المرور' : 'Forgot Password'}
+            </DialogTitle>
+            <DialogDescription>
+              {isArabic 
+                ? 'هل أنت متأكد من أنك تريد إرسال رابط استرداد كلمة المرور لهذا المستخدم؟'
+                : 'Are you sure you want to send a password recovery link to this user?'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="py-4">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.full_name} />
+                  <AvatarFallback>
+                    {selectedUser.full_name.split(' ').map((n: string) => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{selectedUser.full_name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
+                {isArabic 
+                  ? 'سيتم إرسال رابط استرداد كلمة المرور إلى عنوان البريد الإلكتروني للمستخدم.'
+                  : 'A password recovery link will be sent to the user\'s email address.'
+                }
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPasswordResetDialogOpen(false)}
+              disabled={passwordResetLoading}
+            >
+              {isArabic ? 'إلغاء' : 'Cancel'}
+            </Button>
+            <Button
+              onClick={handlePasswordResetConfirm}
+              disabled={passwordResetLoading}
+              className="flex items-center gap-2"
+            >
+              <KeyRound className="h-4 w-4" />
+              {passwordResetLoading 
+                ? (isArabic ? 'جارٍ الإرسال...' : 'Sending...')
+                : (isArabic ? 'إرسال رابط الاسترداد' : 'Send Recovery Link')
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Temporary Password Generation Dialog */}
+      <Dialog open={tempPasswordDialogOpen} onOpenChange={setTempPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isArabic ? 'إنشاء كلمة مرور مؤقتة' : 'Generate Temporary Password'}
+            </DialogTitle>
+            <DialogDescription>
+              {isArabic 
+                ? 'سيتم إنشاء كلمة مرور مؤقتة لهذا المستخدم يمكنك تقديمها له.'
+                : 'A temporary password will be generated for this user that you can provide to them.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="py-4">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.full_name} />
+                  <AvatarFallback>
+                    {selectedUser.full_name.split(' ').map((n: string) => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{selectedUser.full_name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+              
+              {generatedPassword && (
+                <div className="mt-4 p-4 bg-muted rounded-lg">
+                  <Label className="text-sm font-medium">
+                    {isArabic ? 'كلمة المرور المؤقتة:' : 'Temporary Password:'}
+                  </Label>
+                  <div className="mt-2 p-2 bg-background rounded border font-mono text-lg">
+                    {generatedPassword}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {isArabic 
+                      ? 'قدم كلمة المرور هذه للمستخدم. يجب عليه تغييرها في أول تسجيل دخول.'
+                      : 'Provide this password to the user. They must change it on first login.'
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setTempPasswordDialogOpen(false)
+                setGeneratedPassword('')
+              }}
+              disabled={tempPasswordLoading}
+            >
+              {isArabic ? 'إغلاق' : 'Close'}
+            </Button>
+            {!generatedPassword && (
+              <Button
+                onClick={handleGenerateTemporaryPasswordConfirm}
+                disabled={tempPasswordLoading}
+                className="flex items-center gap-2"
+              >
+                <KeyRound className="h-4 w-4" />
+                {tempPasswordLoading 
+                  ? (isArabic ? 'جارٍ الإنشاء...' : 'Generating...')
+                  : (isArabic ? 'إنشاء كلمة مرور مؤقتة' : 'Generate Password')
+                }
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

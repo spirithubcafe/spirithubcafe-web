@@ -13,6 +13,7 @@ import { AboutPage } from '@/pages/AboutPage'
 import { ContactPage } from '@/pages/ContactPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import DashboardPage from '@/pages/DashboardPage'
 import { AdminPage } from '@/pages/AdminPage'
@@ -35,6 +36,7 @@ function App() {
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
                     <Route 
                       path="/dashboard" 
