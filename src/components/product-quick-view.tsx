@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, ShoppingCart, Plus, Minus, Coffee } from 'lucide-react'
+import { Star, ShoppingCart, Plus, Minus, Coffee, Heart, Share2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import toast from 'react-hot-toast'
 
 interface ProductQuickViewProps {
   product: Product
@@ -14,12 +15,15 @@ interface ProductQuickViewProps {
 }
 
 export function ProductQuickView({ product, children }: ProductQuickViewProps) {
-  const { t, i18n } = useTranslation()
-  const { formatPrice } = useCurrency()
+  const { i18n } = useTranslation()
+  const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
   const [quantity, setQuantity] = useState(1)
   const [isOpen, setIsOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const isArabic = i18n.language === 'ar'
 
   // Load categories when component mounts
   useEffect(() => {
@@ -37,44 +41,125 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId)
-    if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
-    return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
+    if (!category) return isArabic ? 'عام' : 'General'
+    return isArabic ? (category.name_ar || category.name) : category.name
   }
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity)
-    setIsOpen(false)
-    setQuantity(1)
+  // Get product price based on selected currency
+  const getProductPrice = (product: Product) => {
+    switch (currency) {
+      case 'OMR':
+        return product.price_omr || (product.price_omr * 0.385)
+      case 'SAR':
+        return product.price_sar || (product.price_omr * 3.75)
+      case 'USD':
+      default:
+        return product.price_omr
+    }
   }
 
-  const incrementQuantity = () => setQuantity(prev => prev + 1)
+  // Get sale price if on sale
+  const getSalePrice = (product: Product) => {
+    if (!product.is_on_sale) return null
+    
+    switch (currency) {
+      case 'OMR':
+        return product.sale_price_omr || (product.sale_price_omr ? product.sale_price_omr * 0.385 : null)
+      case 'SAR':
+        return product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
+      case 'USD':
+      default:
+        return product.sale_price_omr || null
+    }
+  }
+
+  const productPrice = getProductPrice(product)
+  const salePrice = getSalePrice(product)
+  const productName = isArabic ? (product.name_ar || product.name) : product.name
+  const productDescription = isArabic ? (product.description_ar || product.description) : product.description
+
+  const handleAddToCart = async () => {
+    setIsLoading(true)
+    try {
+      await addToCart(product, quantity)
+      setIsOpen(false)
+      setQuantity(1)
+      toast.success(isArabic ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      toast.error(isArabic ? 'حدث خطأ أثناء الإضافة إلى السلة' : 'Error adding to cart')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const incrementQuantity = () => {
+    if (quantity < product.stock_quantity) {
+      setQuantity(prev => prev + 1)
+    }
+  }
+  
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1))
+
+  const getProductBadges = (product: Product) => {
+    const badges = []
+    if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
+    if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
+    if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
+    if (product.is_on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+    return badges
+  }
+
+  const badges = getProductBadges(product)
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Coffee className="h-5 w-5 text-amber-600" />
-            {i18n.language === 'ar' ? product.name_ar : product.name}
-          </DialogTitle>
-          <DialogDescription>
-            {i18n.language === 'ar' ? product.description_ar : product.description}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Product Image */}
-          <div className="rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 flex items-center justify-center h-30 min-h-30 max-h-30">
-            <Coffee className="h-10 w-10 text-amber-600" />
+          <div className="space-y-4">
+            <div className="relative aspect-square rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 overflow-hidden">
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt={productName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <Coffee className="h-20 w-20 text-amber-600" />
+                </div>
+              )}
+              
+              {/* Badges */}
+              <div className="absolute top-3 left-3 flex flex-col gap-1">
+                {badges.map((badge, index) => (
+                  <Badge key={index} className={`text-xs text-white ${badge.color}`}>
+                    {badge.text}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="absolute top-3 right-3 flex flex-col gap-2">
+                <Button size="sm" variant="secondary" className="h-8 w-8 p-0 rounded-full">
+                  <Heart className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="secondary" className="h-8 w-8 p-0 rounded-full">
+                  <Share2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
+
           {/* Product Details */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
+            <DialogHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline">
                   {getCategoryName(product.category_id)}
                 </Badge>
                 <div className="flex items-center gap-1">
@@ -82,58 +167,113 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(4.5)
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
+                        i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
                       }`}
                     />
                   ))}
-                  <span className="text-sm text-muted-foreground ml-1">
-                    (4.5)
-                  </span>
+                  <span className="text-sm text-muted-foreground ml-1">(4.2)</span>
                 </div>
               </div>
-              <span className="text-2xl font-bold text-amber-600 currency">
-                {formatPrice(product.price_omr)}
-              </span>
-            </div>
-            {/* Quantity Selector */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                {t('shop.quantity')}
-              </label>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="text-lg font-medium w-12 text-center">
-                  {quantity}
+              <DialogTitle className="text-2xl font-bold text-left">
+                {productName}
+              </DialogTitle>
+              <DialogDescription className="text-base text-left">
+                {productDescription}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Price */}
+            <div className="flex items-center gap-3">
+              {salePrice ? (
+                <>
+                  <span className="text-3xl font-bold text-red-600">
+                    {formatPrice(salePrice)}
+                  </span>
+                  <span className="text-lg line-through text-muted-foreground">
+                    {formatPrice(productPrice)}
+                  </span>
+                  <Badge variant="destructive">
+                    {Math.round(((productPrice - salePrice) / productPrice) * 100)}% {isArabic ? 'خصم' : 'OFF'}
+                  </Badge>
+                </>
+              ) : (
+                <span className="text-3xl font-bold text-amber-600">
+                  {formatPrice(productPrice)}
                 </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={incrementQuantity}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
+              )}
+            </div>
+
+            {/* Stock Info */}
+            <div className="space-y-2">
+              {product.stock_quantity > 0 ? (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                    {isArabic ? 'متوفر' : 'In Stock'}
+                  </Badge>
+                  {product.stock_quantity <= 10 && (
+                    <span className="text-sm text-orange-600 font-medium">
+                      {isArabic ? `متبقي ${product.stock_quantity} قطع فقط` : `Only ${product.stock_quantity} left!`}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <Badge variant="destructive">
+                  {isArabic ? 'نفذت الكمية' : 'Out of Stock'}
+                </Badge>
+              )}
+            </div>
+
+            {/* Quantity Selector */}
+            {product.stock_quantity > 0 && (
+              <div className="space-y-3">
+                <label className="text-sm font-medium">
+                  {isArabic ? 'الكمية' : 'Quantity'}
+                </label>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-lg font-medium w-12 text-center">
+                    {quantity}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={incrementQuantity}
+                    disabled={quantity >= product.stock_quantity}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
             {/* Total Price */}
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <span className="font-medium">{t('shop.total')}</span>
-              <span className="text-xl font-bold text-amber-600 currency">
-                {formatPrice(product.price_omr * quantity)}
-              </span>
-            </div>
+            {product.stock_quantity > 0 && (
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <span className="font-medium text-lg">{isArabic ? 'المجموع' : 'Total'}</span>
+                <span className="text-2xl font-bold text-amber-600">
+                  {formatPrice((salePrice || productPrice) * quantity)}
+                </span>
+              </div>
+            )}
+
             {/* Add to Cart Button */}
-            <Button onClick={handleAddToCart} className="w-full h-12">
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              {t('shop.addToCart')}
+            <Button 
+              onClick={handleAddToCart} 
+              className="w-full h-12 text-lg"
+              disabled={product.stock_quantity <= 0 || isLoading}
+            >
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              {isLoading 
+                ? (isArabic ? 'جارٍ الإضافة...' : 'Adding...')
+                : (isArabic ? 'أضف إلى السلة' : 'Add to Cart')
+              }
             </Button>
           </div>
         </div>

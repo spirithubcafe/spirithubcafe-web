@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { authService, type UserProfile } from '@/lib/firebase'
 import type { User } from 'firebase/auth'
@@ -6,18 +6,47 @@ import type { User } from 'firebase/auth'
 interface AuthContextType {
   currentUser: UserProfile | null
   firebaseUser: User | null
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean }>
   logout: () => Promise<void>
-  register: (email: string, password: string, userData: { full_name: string; phone?: string }) => Promise<{ success: boolean; error?: string }>
+  register: (email: string, password: string, userData: { full_name: string; phone?: string }) => Promise<{ success: boolean; error?: string; requiresEmailVerification?: boolean }>
+  sendEmailVerification: () => Promise<{ success: boolean; error?: string }>
+  checkEmailVerification: () => Promise<{ success: boolean; verified: boolean; error?: string }>
+  refreshUser: () => Promise<void>
   loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+export { AuthContext }
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null)
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const refreshUser = useCallback(async () => {
+    if (firebaseUser) {
+      try {
+        // Reload the Firebase user to get latest verification status
+        await firebaseUser.reload()
+        
+        // Get updated user profile from Firestore
+        const userProfile = await authService.getUserProfile(firebaseUser.uid)
+        if (userProfile) {
+          // Update email verification status with latest from Firebase Auth
+          userProfile.email_verified = firebaseUser.emailVerified
+          
+          // If email was just verified, update Firestore as well
+          if (firebaseUser.emailVerified && !userProfile.email_verified) {
+            await authService.checkEmailVerification()
+          }
+        }
+        setCurrentUser(userProfile)
+      } catch (error) {
+        console.error('Error refreshing user:', error)
+      }
+    }
+  }, [firebaseUser])
 
   // Initialize auth state
   useEffect(() => {
@@ -25,8 +54,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFirebaseUser(user)
       
       if (user) {
+        // Always reload user to get latest verification status
+        try {
+          await user.reload()
+        } catch (error) {
+          console.error('Error reloading user:', error)
+        }
+        
         // Get user profile from Firestore
         const userProfile = await authService.getUserProfile(user.uid)
+        if (userProfile) {
+          // Update email verification status in profile with latest status from Firebase Auth
+          userProfile.email_verified = user.emailVerified
+          
+          // If email was just verified, update Firestore as well
+          if (user.emailVerified && !userProfile.email_verified) {
+            await authService.checkEmailVerification()
+          }
+        }
         setCurrentUser(userProfile)
       } else {
         setCurrentUser(null)
@@ -35,8 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    return unsubscribe
-  }, [])
+    // Listen for window focus to check verification status when user returns
+    const handleWindowFocus = async () => {
+      if (firebaseUser && !firebaseUser.emailVerified) {
+        await refreshUser()
+      }
+    }
+
+    window.addEventListener('focus', handleWindowFocus)
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('focus', handleWindowFocus)
+    }
+  }, [firebaseUser, refreshUser])
 
   const login = async (email: string, password: string) => {
     try {
@@ -84,6 +141,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const sendEmailVerification = async () => {
+    try {
+      const result = await authService.sendEmailVerification()
+      return result
+    } catch (error: any) {
+      console.error('Send email verification error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  const checkEmailVerification = async () => {
+    try {
+      const result = await authService.checkEmailVerification()
+      if (result.success && result.verified && currentUser) {
+        // Update current user profile with verification status
+        setCurrentUser({
+          ...currentUser,
+          email_verified: true
+        })
+      }
+      return result
+    } catch (error: any) {
+      console.error('Check email verification error:', error)
+      return { success: false, verified: false, error: error.message }
+    }
+  }
+
   const logout = async () => {
     try {
       await authService.logout()
@@ -102,16 +186,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       register,
+      sendEmailVerification,
+      checkEmailVerification,
+      refreshUser,
     }}>
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }

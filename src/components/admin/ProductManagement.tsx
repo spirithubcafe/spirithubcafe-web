@@ -206,7 +206,10 @@ export default function ProductManagement() {
       if (editingProduct) {
         await firestoreService.products.update(editingProduct.id, formData)
       } else {
-        await firestoreService.products.create(formData)
+        await firestoreService.products.create({
+          ...formData,
+          stock: formData.stock_quantity // Map stock_quantity to stock
+        })
       }
 
       await loadData()

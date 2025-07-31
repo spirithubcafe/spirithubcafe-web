@@ -152,8 +152,12 @@ export function CartSidebar() {
                             </Button>
                           </div>
                           
-                          <p className="font-semibold text-amber-600 currency">
-                            {formatPrice((item.product?.price_omr || 0) * item.quantity)}
+                          <p className="font-semibold text-amber-600">
+                            {item.product && formatPrice(
+                              (item.product.is_on_sale && item.product.sale_price_omr 
+                                ? item.product.sale_price_omr 
+                                : item.product.price_omr || 0) * item.quantity
+                            )}
                           </p>
                         </div>
                       </div>

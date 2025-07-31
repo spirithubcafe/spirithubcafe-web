@@ -1,21 +1,24 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Coffee } from 'lucide-react'
+import { Eye, EyeOff, Coffee, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/components/auth-provider'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function LoginPage() {
   const { t, i18n } = useTranslation()
-  const { login } = useAuth()
+  const { login, sendEmailVerification, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showEmailVerificationDialog, setShowEmailVerificationDialog] = useState(false)
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false)
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -43,8 +46,13 @@ export function LoginPage() {
         console.log('Login successful, navigating to dashboard')
         navigate('/dashboard')
       } else {
-        console.log('Login failed:', result.error)
-        setError(result.error || t('auth.login.invalidCredentials'))
+        if (result.requiresEmailVerification) {
+          console.log('Email verification required')
+          setShowEmailVerificationDialog(true)
+        } else {
+          console.log('Login failed:', result.error)
+          setError(result.error || t('auth.login.invalidCredentials'))
+        }
       }
     } catch (error: any) {
       console.error('Login exception:', error)
@@ -53,6 +61,39 @@ export function LoginPage() {
     
     setLoading(false)
     console.log('Login attempt completed')
+  }
+
+  const handleSendVerificationEmail = async () => {
+    try {
+      const result = await sendEmailVerification()
+      if (result.success) {
+        setVerificationEmailSent(true)
+      } else {
+        setError(result.error || 'Failed to send verification email')
+      }
+    } catch (error: any) {
+      console.error('Send verification email error:', error)
+      setError(error.message || 'Failed to send verification email')
+    }
+  }
+
+  const handleCheckVerificationStatus = async () => {
+    try {
+      await refreshUser()
+      // Try to login again to see if verification is now complete
+      const result = await login(formData.email, formData.password)
+      if (result.success) {
+        setShowEmailVerificationDialog(false)
+        navigate('/dashboard')
+      } else if (!result.requiresEmailVerification) {
+        setError(result.error || 'Login failed')
+        setShowEmailVerificationDialog(false)
+      }
+      // If still requires verification, keep dialog open
+    } catch (error: any) {
+      console.error('Check verification status error:', error)
+      setError(error.message || 'Failed to check verification status')
+    }
   }
 
   return (
@@ -143,6 +184,72 @@ export function LoginPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Email Verification Required Dialog */}
+      <Dialog open={showEmailVerificationDialog} onOpenChange={setShowEmailVerificationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {isArabic ? 'تأكيد البريد الإلكتروني مطلوب' : 'Email Verification Required'}
+            </DialogTitle>
+            <DialogDescription>
+              {isArabic 
+                ? 'يجب تأكيد بريدك الإلكتروني قبل تسجيل الدخول.'
+                : 'You must verify your email address before logging in.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground mb-4">
+              {isArabic 
+                ? 'سيتم إرسال رابط التأكيد إلى بريدك الإلكتروني:'
+                : 'A verification link will be sent to your email address:'
+              }
+            </p>
+            <div className="p-3 bg-muted rounded-lg">
+              <code className="text-sm">{formData.email}</code>
+            </div>
+            
+            {verificationEmailSent && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm text-green-800">
+                  {isArabic 
+                    ? '✅ تم إرسال رابط التأكيد بنجاح. تحقق من بريدك الإلكتروني.'
+                    : '✅ Verification email sent successfully. Check your inbox.'
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEmailVerificationDialog(false)}
+            >
+              {isArabic ? 'إغلاق' : 'Close'}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleCheckVerificationStatus}
+              className="flex items-center gap-2"
+            >
+              {isArabic ? 'تحقق من التأكيد' : 'Check Verification'}
+            </Button>
+            {!verificationEmailSent && (
+              <Button
+                onClick={handleSendVerificationEmail}
+                className="flex items-center gap-2"
+              >
+                <Mail className="h-4 w-4" />
+                {isArabic ? 'إرسال رابط التأكيد' : 'Send Verification Link'}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

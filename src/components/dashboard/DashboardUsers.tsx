@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Crown, Briefcase, User, KeyRound } from 'lucide-react'
+import { Crown, Briefcase, User, KeyRound, Mail, MailCheck } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -28,11 +28,8 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [passwordResetDialogOpen, setPasswordResetDialogOpen] = useState(false)
-  const [tempPasswordDialogOpen, setTempPasswordDialogOpen] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
   const [passwordResetLoading, setPasswordResetLoading] = useState(false)
-  const [tempPasswordLoading, setTempPasswordLoading] = useState(false)
-  const [generatedPassword, setGeneratedPassword] = useState('')
 
   const handleUserEdit = (user: UserProfile) => {
     setSelectedUser(user)
@@ -47,11 +44,6 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
   const handlePasswordReset = (user: UserProfile) => {
     setSelectedUser(user)
     setPasswordResetDialogOpen(true)
-  }
-
-  const handleGenerateTemporaryPassword = (user: UserProfile) => {
-    setSelectedUser(user)
-    setTempPasswordDialogOpen(true)
   }
 
   const handlePasswordResetConfirm = async () => {
@@ -73,29 +65,6 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
       console.error('Error sending password reset:', error)
     } finally {
       setPasswordResetLoading(false)
-    }
-  }
-
-  const handleGenerateTemporaryPasswordConfirm = async () => {
-    if (!selectedUser) return
-
-    try {
-      setTempPasswordLoading(true)
-      
-      const result = await authService.generateTemporaryPassword(selectedUser.email)
-      
-      if (result.success && result.tempPassword) {
-        setGeneratedPassword(result.tempPassword)
-        // Refresh user list to show the temporary password status
-        const allUsers = await firestoreService.users.list()
-        onUsersUpdate(allUsers.items)
-      } else {
-        console.error('Temporary password generation failed:', result.error)
-      }
-    } catch (error) {
-      console.error('Error generating temporary password:', error)
-    } finally {
-      setTempPasswordLoading(false)
     }
   }
 
@@ -161,7 +130,7 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
               {users.map((user) => (
                 <Card key={user.id}>
                   <CardContent className="pt-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex items-center space-x-4">
                         <Avatar>
                           <AvatarImage src={user.avatar} alt={user.full_name} />
@@ -185,13 +154,27 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
                               }
                             </div>
                           </Badge>
+                          {/* Email verification status */}
+                          <Badge 
+                            variant={user.email_verified ? "default" : "destructive"} 
+                            className="mt-1 ml-2"
+                          >
+                            <div className="flex items-center gap-1">
+                              {user.email_verified ? <MailCheck className="h-3 w-3" /> : <Mail className="h-3 w-3" />}
+                              {user.email_verified 
+                                ? (isArabic ? 'البريد مؤكد' : 'Email Verified')
+                                : (isArabic ? 'البريد غير مؤكد' : 'Email Not Verified')
+                              }
+                            </div>
+                          </Badge>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 lg:flex-nowrap">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleUserView(user)}
+                          className="flex-1 sm:flex-none"
                         >
                           {isArabic ? 'عرض' : 'View'}
                         </Button>
@@ -199,26 +182,20 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
                           variant="outline"
                           size="sm"
                           onClick={() => handleUserEdit(user)}
+                          className="flex-1 sm:flex-none"
                         >
                           {isArabic ? 'تعديل' : 'Edit'}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleGenerateTemporaryPassword(user)}
-                          className="flex items-center gap-1"
-                        >
-                          <KeyRound className="h-3 w-3" />
-                          {isArabic ? 'كلمة مرور مؤقتة' : 'Temp Password'}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
                           onClick={() => handlePasswordReset(user)}
-                          className="flex items-center gap-1"
+                          className="flex items-center gap-1 flex-1 sm:flex-none min-w-0"
                         >
-                          <KeyRound className="h-3 w-3" />
-                          {isArabic ? 'نسيت كلمة المرور' : 'Forgot Password'}
+                          <KeyRound className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {isArabic ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+                          </span>
                         </Button>
                       </div>
                     </div>
@@ -442,81 +419,6 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
                 : (isArabic ? 'إرسال رابط الاسترداد' : 'Send Recovery Link')
               }
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Temporary Password Generation Dialog */}
-      <Dialog open={tempPasswordDialogOpen} onOpenChange={setTempPasswordDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {isArabic ? 'إنشاء كلمة مرور مؤقتة' : 'Generate Temporary Password'}
-            </DialogTitle>
-            <DialogDescription>
-              {isArabic 
-                ? 'سيتم إنشاء كلمة مرور مؤقتة لهذا المستخدم يمكنك تقديمها له.'
-                : 'A temporary password will be generated for this user that you can provide to them.'
-              }
-            </DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="py-4">
-              <div className="flex items-center space-x-4">
-                <Avatar>
-                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.full_name} />
-                  <AvatarFallback>
-                    {selectedUser.full_name.split(' ').map((n: string) => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="font-semibold">{selectedUser.full_name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                </div>
-              </div>
-              
-              {generatedPassword && (
-                <div className="mt-4 p-4 bg-muted rounded-lg">
-                  <Label className="text-sm font-medium">
-                    {isArabic ? 'كلمة المرور المؤقتة:' : 'Temporary Password:'}
-                  </Label>
-                  <div className="mt-2 p-2 bg-background rounded border font-mono text-lg">
-                    {generatedPassword}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {isArabic 
-                      ? 'قدم كلمة المرور هذه للمستخدم. يجب عليه تغييرها في أول تسجيل دخول.'
-                      : 'Provide this password to the user. They must change it on first login.'
-                    }
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setTempPasswordDialogOpen(false)
-                setGeneratedPassword('')
-              }}
-              disabled={tempPasswordLoading}
-            >
-              {isArabic ? 'إغلاق' : 'Close'}
-            </Button>
-            {!generatedPassword && (
-              <Button
-                onClick={handleGenerateTemporaryPasswordConfirm}
-                disabled={tempPasswordLoading}
-                className="flex items-center gap-2"
-              >
-                <KeyRound className="h-4 w-4" />
-                {tempPasswordLoading 
-                  ? (isArabic ? 'جارٍ الإنشاء...' : 'Generating...')
-                  : (isArabic ? 'إنشاء كلمة مرور مؤقتة' : 'Generate Password')
-                }
-              </Button>
-            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -10,13 +10,15 @@ import {
   TrendingUp,
   Tags,
   Menu,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/components/auth-provider'
+import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import type { Order } from '@/types'
 import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
@@ -32,6 +34,7 @@ import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
 import DashboardAdminOrders from '@/components/dashboard/DashboardAdminOrders'
 import CategoryManagement from '@/components/admin/CategoryManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
+import ReviewManagement from '@/components/admin/ReviewManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -67,6 +70,7 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
+  const [pendingReviewsCount, setPendingReviewsCount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   // Fetch dashboard data
@@ -99,6 +103,9 @@ export default function DashboardPage() {
         if (user?.role === 'admin') {
           const allUsers = await firestoreService.users.list()
           setUsers(allUsers.items)
+          
+          // Fetch pending reviews count
+          await loadPendingReviewsCount()
         }
 
       } catch (error) {
@@ -112,6 +119,17 @@ export default function DashboardPage() {
       fetchDashboardData()
     }
   }, [user])
+
+  // Load pending reviews count
+  const loadPendingReviewsCount = async () => {
+    try {
+      const result = await firestoreService.reviews.list()
+      const pendingCount = result.items.filter(review => !review.is_approved).length
+      setPendingReviewsCount(pendingCount)
+    } catch (error) {
+      console.error('Error loading pending reviews count:', error)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -178,6 +196,13 @@ export default function DashboardPage() {
         label: isArabic ? 'التحليلات' : 'Analytics',
         icon: TrendingUp,
         show: true
+      },
+      {
+        id: 'reviews',
+        label: isArabic ? 'المراجعات' : 'Reviews',
+        icon: MessageSquare,
+        show: true,
+        badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined
       }
     ] : [])
   ]
@@ -210,6 +235,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && (
           <DashboardAnalytics users={users} products={products} />
         )
+      case 'reviews':
+        return user?.role === 'admin' && <ReviewManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }
@@ -261,7 +288,12 @@ export default function DashboardPage() {
                     )}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge && (
+                      <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
+                        {item.badge}
+                      </Badge>
+                    )}
                   </button>
                 )
               })}
@@ -307,7 +339,12 @@ export default function DashboardPage() {
                       )}
                     >
                       <Icon className="h-4 w-4" />
-                      {item.label}
+                      <span className="flex-1 text-left">{item.label}</span>
+                      {item.badge && (
+                        <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
+                          {item.badge}
+                        </Badge>
+                      )}
                     </button>
                   )
                 })}

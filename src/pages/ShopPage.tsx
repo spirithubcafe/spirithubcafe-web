@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Coffee, ShoppingCart, Eye } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Coffee, ShoppingCart, Eye, Heart, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/components/currency-provider'
 import { useCart } from '@/hooks/useCart'
+import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
@@ -149,13 +151,29 @@ export function ShopPage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Header Skeleton */}
+        <div className="mb-8 space-y-4">
+          <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
+          </div>
+        </div>
+        
+        {/* Products Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="bg-muted rounded-lg h-64 mb-4"></div>
-              <div className="bg-muted rounded h-4 mb-2"></div>
-              <div className="bg-muted rounded h-4 w-2/3"></div>
-            </div>
+            <Card key={i} className="overflow-hidden">
+              <div className="aspect-square bg-muted animate-pulse"></div>
+              <CardContent className="p-4 space-y-3">
+                <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                <div className="h-6 bg-muted rounded animate-pulse"></div>
+                <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                <div className="h-6 bg-muted rounded w-24 animate-pulse"></div>
+                <div className="h-10 bg-muted rounded animate-pulse"></div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
@@ -166,56 +184,138 @@ export function ShopPage() {
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">
-          {isArabic ? 'متجر القهوة' : 'Coffee Shop'}
-        </h1>
-        
-        {/* Filters */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div className="flex-1">
-            <Input
-              placeholder={isArabic ? 'البحث عن المنتجات...' : 'Search products...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
-            />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+              {isArabic ? 'متجر القهوة' : 'Coffee Shop'}
+            </h1>
+            <p className="text-muted-foreground">
+              {isArabic 
+                ? `اكتشف مجموعتنا المميزة من ${products.length} منتج` 
+                : `Discover our premium collection of ${products.length} products`
+              }
+            </p>
           </div>
           
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-full lg:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="hidden md:flex items-center gap-4">
+            <Badge variant="secondary" className="text-sm">
+              {isArabic ? `${filteredProducts.length} منتج` : `${filteredProducts.length} Products`}
+            </Badge>
+          </div>
+        </div>
+        
+        {/* Filters */}
+        <div className="space-y-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder={isArabic ? 'البحث عن المنتجات...' : 'Search products...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categoryOptions.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full lg:w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">{isArabic ? 'الاسم' : 'Name'}</SelectItem>
-              <SelectItem value="price-low">{isArabic ? 'السعر: الأقل إلى الأعلى' : 'Price: Low to High'}</SelectItem>
-              <SelectItem value="price-high">{isArabic ? 'السعر: الأعلى إلى الأقل' : 'Price: High to Low'}</SelectItem>
-              <SelectItem value="featured">{isArabic ? 'المميزة' : 'Featured'}</SelectItem>
-              <SelectItem value="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Bestseller'}</SelectItem>
-              <SelectItem value="new">{isArabic ? 'وصل حديثاً' : 'New Arrivals'}</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full lg:w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name">{isArabic ? 'الاسم' : 'Name'}</SelectItem>
+                <SelectItem value="price-low">{isArabic ? 'السعر: الأقل إلى الأعلى' : 'Price: Low to High'}</SelectItem>
+                <SelectItem value="price-high">{isArabic ? 'السعر: الأعلى إلى الأقل' : 'Price: High to Low'}</SelectItem>
+                <SelectItem value="featured">{isArabic ? 'المميزة' : 'Featured'}</SelectItem>
+                <SelectItem value="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Bestseller'}</SelectItem>
+                <SelectItem value="new">{isArabic ? 'وصل حديثاً' : 'New Arrivals'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Active Filters Summary */}
+          {(searchQuery || selectedCategory !== 'all') && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">
+                {isArabic ? 'الفلاتر النشطة:' : 'Active filters:'}
+              </span>
+              {searchQuery && (
+                <Badge variant="secondary" className="gap-1">
+                  {isArabic ? 'البحث:' : 'Search:'} "{searchQuery}"
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {selectedCategory !== 'all' && (
+                <Badge variant="secondary" className="gap-1">
+                  {categoryOptions.find(c => c.value === selectedCategory)?.label}
+                  <button 
+                    onClick={() => setSelectedCategory('all')}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('')
+                  setSelectedCategory('all')
+                }}
+                className="text-xs h-6"
+              >
+                {isArabic ? 'مسح الكل' : 'Clear all'}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg text-muted-foreground">
-            {isArabic ? 'لا توجد منتجات متاحة' : 'No products found'}
-          </p>
+        <div className="text-center py-20">
+          <div className="max-w-md mx-auto space-y-4">
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto">
+              <Coffee className="h-12 w-12 text-muted-foreground" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2">
+                {isArabic ? 'لا توجد منتجات' : 'No Products Found'}
+              </h3>
+              <p className="text-muted-foreground">
+                {isArabic 
+                  ? 'لم يتم العثور على منتجات تطابق البحث الخاص بك. جرب مصطلحات بحث مختلفة.'
+                  : 'No products match your search criteria. Try different search terms or filters.'
+                }
+              </p>
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchQuery('')
+                setSelectedCategory('all')
+              }}
+            >
+              {isArabic ? 'مسح الفلاتر' : 'Clear Filters'}
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -228,104 +328,148 @@ export function ShopPage() {
             const categoryName = getCategoryName(product.category_id)
 
             return (
-              <Card key={product.id} className="overflow-hidden">
-                <div className="relative">
-                  {/* Product Image */}
-                  <div className="aspect-square bg-muted">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={productName}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Coffee className="h-16 w-16 text-muted-foreground" />
+              <div key={product.id} className="group">
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <Link to={`/product/${product.slug || product.id}`} className="block">
+                    <div className="relative overflow-hidden">
+                      {/* Product Image */}
+                      <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
+                        {product.image ? (
+                          <img
+                            src={product.image}
+                            alt={productName}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                            <Coffee className="h-16 w-16 text-amber-600" />
+                          </div>
+                        )}
+                        
+                        {/* Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
-                    )}
-                  </div>
 
-                  {/* Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {badges.map((badge, index) => (
-                      <Badge key={index} className={`text-xs text-white ${badge.color}`}>
-                        {badge.text}
-                      </Badge>
-                    ))}
-                  </div>
+                      {/* Badges */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-1">
+                        {badges.map((badge, index) => (
+                          <Badge key={index} className={`text-xs text-white shadow-sm ${badge.color}`}>
+                            {badge.text}
+                          </Badge>
+                        ))}
+                      </div>
 
-                  {/* Out of Stock Overlay */}
-                  {product.stock_quantity <= 0 && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                      <Badge variant="destructive">
-                        {isArabic ? 'نفذت الكمية' : 'Out of Stock'}
-                      </Badge>
+                      {/* Out of Stock Overlay */}
+                      {product.stock_quantity <= 0 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                          <Badge variant="destructive" className="text-sm py-2 px-4">
+                            {isArabic ? 'نفذت الكمية' : 'Out of Stock'}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                <CardContent className="p-4">
-                  {/* Category */}
-                  <div className="mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      {categoryName}
-                    </Badge>
-                  </div>
+                    <CardContent className="p-4 space-y-3">
+                      {/* Category */}
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="text-xs">
+                          {categoryName}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${
+                                i < Math.floor(product.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs text-muted-foreground ml-1">
+                            ({(product.average_rating || 0).toFixed(1)})
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Product Name */}
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                    {productName}
-                  </h3>
+                      {/* Product Name */}
+                      <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex items-start">
+                        {productName}
+                      </h3>
 
-                  {/* Description */}
-                  {productDescription && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                      {productDescription}
-                    </p>
-                  )}
+                      {/* Description */}
+                      {productDescription && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                          {productDescription}
+                        </p>
+                      )}
 
-                  {/* Price */}
-                  <div className="flex items-center gap-2 mb-4">
-                    {salePrice ? (
-                      <>
-                        <span className="text-lg font-bold text-red-600">
-                          {formatPrice(salePrice)}
-                        </span>
-                        <span className="text-sm line-through text-muted-foreground">
-                          {formatPrice(productPrice ?? 0)}
-                        </span>
-                      </>
-                    ) : (
-                      <span className="text-lg font-bold">
-                        {formatPrice(productPrice ?? 0)}
-                      </span>
-                    )}
-                  </div>
+                      {/* Price */}
+                      <div className="flex items-center gap-2">
+                        {salePrice ? (
+                          <>
+                            <span className="text-xl font-bold text-red-600">
+                              {formatPrice(salePrice)}
+                            </span>
+                            <span className="text-sm line-through text-muted-foreground">
+                              {formatPrice(productPrice ?? 0)}
+                            </span>
+                            <Badge variant="destructive" className="text-xs">
+                              {Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)}% {isArabic ? 'خصم' : 'OFF'}
+                            </Badge>
+                          </>
+                        ) : (
+                          <span className="text-xl font-bold text-amber-600">
+                            {formatPrice(productPrice ?? 0)}
+                          </span>
+                        )}
+                      </div>
 
-                  {/* Stock Info */}
-                  {product.stock_quantity > 0 && product.stock_quantity <= 10 && (
-                    <p className="text-sm text-orange-600 mb-2">
-                      {isArabic ? `متبقي ${product.stock_quantity} قطع فقط` : `Only ${product.stock_quantity} left in stock`}
-                    </p>
-                  )}
+                      {/* Stock Info */}
+                      {product.stock_quantity > 0 && product.stock_quantity <= 10 && (
+                        <p className="text-sm text-orange-600 font-medium">
+                          {isArabic ? `متبقي ${product.stock_quantity} قطع فقط` : `Only ${product.stock_quantity} left!`}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Link>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleAddToCart(product)}
-                      className="flex-1"
-                      disabled={product.stock_quantity <= 0 || isLoading}
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      {isArabic ? 'أضف للسلة' : 'Add to Cart'}
-                    </Button>
-                    
-                    <Button variant="outline" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  {/* Actions - Outside of Link to prevent nested buttons */}
+                  <CardContent className="px-4 pb-4 pt-0">
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          handleAddToCart(product)
+                        }}
+                        className="flex-1 h-10"
+                        disabled={product.stock_quantity <= 0 || isLoading}
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        {isArabic ? 'أضف للسلة' : 'Add to Cart'}
+                      </Button>
+                      
+                      {/* Quick Action Buttons */}
+                      <Button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                        }}
+                        size="icon"
+                        variant="outline"
+                        className="h-10 w-10"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      
+                      <ProductQuickView product={product}>
+                        <Button variant="outline" size="icon" className="h-10 w-10">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </ProductQuickView>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )
           })}
         </div>

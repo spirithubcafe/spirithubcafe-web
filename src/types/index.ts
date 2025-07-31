@@ -84,6 +84,20 @@ export interface RoastLevelType {
   created_at: string
 }
 
+// Product Property Interface (for dynamic properties)
+export interface ProductProperty {
+  id: number
+  product_id: number
+  property_name: string
+  property_name_ar?: string
+  property_value: string
+  property_value_ar?: string
+  property_type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect'
+  sort_order: number
+  is_active: boolean
+  created_at: string
+}
+
 // Product Interface
 export interface Product {
   id: number
@@ -132,6 +146,9 @@ export interface Product {
   variants?: ProductVariant[]
   reviews?: ProductReview[]
   tags?: ProductTag[]
+  properties?: ProductProperty[]
+  average_rating?: number
+  review_count?: number
 }
 
 // Product Variant Interface

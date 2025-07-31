@@ -8,7 +8,7 @@ import { LanguageToggle } from '@/components/language-toggle'
 import { CurrencyToggle } from '@/components/currency-toggle'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/components/auth-provider'
+import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { cn } from '@/lib/utils'
 

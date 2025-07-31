@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail, updatePassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, sendPasswordResetEmail, updatePassword, sendEmailVerification } from "firebase/auth";
 import type { User } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -54,8 +54,7 @@ export interface UserProfile {
   avatar?: string;
   created: Date;
   updated: Date;
-  temporary_password?: string | null;
-  password_reset_required?: boolean;
+  email_verified: boolean;
 }
 
 export interface Category {
@@ -71,34 +70,72 @@ export interface Category {
   updated: Date;
 }
 
+export interface ProductProperty {
+  name: string;
+  name_ar: string;
+  value: string;
+  value_ar: string;
+}
+
 export interface Product {
   id: string;
   name: string;
   name_ar: string;
   description?: string;
   description_ar?: string;
-  category_id: string; // reference to categories
-  price_omr: number; // قیمت اصلی به ریال عمان
-  price_usd?: number; // قیمت محاسبه شده به دلار
-  price_sar?: number; // قیمت محاسبه شده به ریال سعودی
-  sale_price_omr?: number; // قیمت تخفیف به ریال عمان
-  sale_price_usd?: number; // قیمت تخفیف محاسبه شده به دلار
-  sale_price_sar?: number; // قیمت تخفیف محاسبه شده به ریال سعودی
+  category_id: string; 
+  price_omr: number; 
+  price_usd?: number; 
+  price_sar?: number; 
+  sale_price_omr?: number; 
+  sale_price_usd?: number; 
+  sale_price_sar?: number; 
   image?: string;
+  image_url?: string;
+  images?: string[];
   gallery: string[]; // array of image URLs
+  gallery_images?: string[];
+  properties?: ProductProperty[];
   is_active: boolean;
   is_featured: boolean;
   is_bestseller: boolean;
   is_new_arrival: boolean;
   is_on_sale: boolean;
   stock_quantity: number;
+  stock: number;
   sku?: string;
   weight?: number;
+  slug?: string;
   sort_order: number;
   meta_title?: string;
   meta_description?: string;
+  bean_type?: string;
+  processing_method?: string;
+  altitude?: string;
+  harvest_year?: number;
+  caffeine_content?: string;
+  grind_options?: string[];
+  package_size?: string[];
+  weight_grams?: number;
+  // Rating fields
+  average_rating?: number;
+  total_reviews?: number;
   created: Date;
   updated: Date;
+}
+
+export interface ProductReview {
+  id: number;
+  product_id: string;
+  user_id?: string;
+  rating: number;
+  title?: string;
+  review_text?: string;
+  is_verified_purchase: boolean;
+  is_approved: boolean;
+  helpful_count: number;
+  created_at: string;
+  user?: UserProfile;
 }
 
 export interface CartItem {
@@ -173,13 +210,23 @@ export const authService = {
     try {
       console.log('🔐 Attempting login with Firebase...');
       console.log('Email:', email);
-      console.log('Auth object:', auth);
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
       console.log('✅ Firebase login successful');
       console.log('User:', user);
+      console.log('Email verified:', user.emailVerified);
+      
+      // Check if email is verified
+      if (!user.emailVerified) {
+        console.log('❌ Email not verified');
+        return { 
+          success: false, 
+          error: 'Please verify your email before logging in',
+          requiresEmailVerification: true
+        };
+      }
       
       // Get user profile from Firestore safely
       const userProfile = await safeFirestoreOperation(
@@ -190,7 +237,8 @@ export const authService = {
               id: user.uid,
               ...userDoc.data(),
               created: userDoc.data().created?.toDate() || new Date(),
-              updated: userDoc.data().updated?.toDate() || new Date()
+              updated: userDoc.data().updated?.toDate() || new Date(),
+              email_verified: user.emailVerified
             } as UserProfile;
           }
           return null;
@@ -208,7 +256,8 @@ export const authService = {
           full_name: user.displayName || email.split('@')[0],
           role: 'user' as const,
           created: new Date(),
-          updated: new Date()
+          updated: new Date(),
+          email_verified: user.emailVerified
         };
       }
       
@@ -226,7 +275,6 @@ export const authService = {
       console.log('📝 Attempting registration with Firebase...');
       console.log('Email:', email);
       console.log('User data:', userData);
-      console.log('Auth object:', auth);
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
@@ -240,6 +288,10 @@ export const authService = {
       });
       
       console.log('✅ User display name updated');
+      
+      // Send email verification
+      await sendEmailVerification(user);
+      console.log('📧 Email verification sent');
       
       // Check if this is the first user (admin) BEFORE creating the user document
       const usersCollection = collection(db, 'users');
@@ -262,7 +314,8 @@ export const authService = {
         phone: userData.phone,
         role: userRole,
         created: new Date(),
-        updated: new Date()
+        updated: new Date(),
+        email_verified: user.emailVerified
       };
       
       await safeFirestoreOperation(
@@ -272,6 +325,7 @@ export const authService = {
             full_name: userProfile.full_name,
             phone: userProfile.phone,
             role: userProfile.role,
+            email_verified: userProfile.email_verified,
             created: serverTimestamp(),
             updated: serverTimestamp()
           });
@@ -282,7 +336,11 @@ export const authService = {
         'createUserProfile'
       );
       
-      return { success: true, user: userProfile };
+      return { 
+        success: true, 
+        user: userProfile,
+        requiresEmailVerification: true
+      };
     } catch (error: any) {
       console.error('❌ Firebase registration error:', error);
       console.error('Error code:', error.code);
@@ -346,42 +404,72 @@ export const authService = {
     }
   },
 
-  // Admin function to generate temporary password for users
-  generateTemporaryPassword: async (userEmail: string): Promise<{ success: boolean; tempPassword?: string; error?: string }> => {
+  // Send email verification to current user
+  sendEmailVerification: async (): Promise<{ success: boolean; error?: string }> => {
     try {
-      // Generate a secure temporary password
-      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase() + '123!';
+      const user = auth.currentUser;
+      if (!user) {
+        return {
+          success: false,
+          error: 'No authenticated user found'
+        };
+      }
+
+      await sendEmailVerification(user);
+      console.log('📧 Email verification sent');
       
-      console.log('🔐 Generated temporary password for:', userEmail);
+      return {
+        success: true
+      };
+    } catch (error: any) {
+      console.error('❌ Email verification error:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // Check and update email verification status
+  checkEmailVerification: async (): Promise<{ success: boolean; verified: boolean; error?: string }> => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        return {
+          success: false,
+          verified: false,
+          error: 'No authenticated user found'
+        };
+      }
+
+      // Reload user to get latest email verification status
+      await user.reload();
+      const isVerified = user.emailVerified;
       
-      // Store temporary password in Firestore for admin to share with user
-      await safeFirestoreOperation(
-        async () => {
-          const userQuery = query(collection(db, 'users'), where('email', '==', userEmail));
-          const userSnapshot = await getDocs(userQuery);
-          
-          if (!userSnapshot.empty) {
-            const userDoc = userSnapshot.docs[0];
-            await updateDoc(doc(db, 'users', userDoc.id), {
-              temporary_password: tempPassword,
-              password_reset_required: true,
+      // Update Firestore profile if verification status changed
+      if (isVerified) {
+        await safeFirestoreOperation(
+          async () => {
+            await updateDoc(doc(db, 'users', user.uid), {
+              email_verified: true,
               updated: serverTimestamp()
             });
-          }
-          return true;
-        },
-        false,
-        'setTemporaryPassword'
-      );
+            return true;
+          },
+          false,
+          'updateEmailVerificationStatus'
+        );
+      }
       
       return {
         success: true,
-        tempPassword
+        verified: isVerified
       };
     } catch (error: any) {
-      console.error('❌ Temporary password generation error:', error);
+      console.error('❌ Check email verification error:', error);
       return {
         success: false,
+        verified: false,
         error: error.message
       };
     }
@@ -403,23 +491,6 @@ export const authService = {
       
       // Update password
       await updatePassword(credential.user, newPassword);
-      
-      // Clear temporary password flags if they exist
-      await safeFirestoreOperation(
-        async () => {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            await updateDoc(doc(db, 'users', user.uid), {
-              temporary_password: null,
-              password_reset_required: false,
-              updated: serverTimestamp()
-            });
-          }
-          return true;
-        },
-        false,
-        'clearTemporaryPassword'
-      );
       
       console.log('✅ Password changed successfully');
       return {
@@ -978,6 +1049,136 @@ export const firestoreService = {
       } catch (error) {
         console.error('Error creating order item:', error);
         throw error;
+      }
+    }
+  },
+
+  // Reviews management
+  reviews: {
+    async list(productId?: string): Promise<{ items: ProductReview[], total: number }> {
+      try {
+        let q = query(collection(db, 'reviews'));
+        
+        if (productId) {
+          q = query(collection(db, 'reviews'), where('product_id', '==', productId));
+        }
+        
+        const querySnapshot = await getDocs(q);
+        const reviews = querySnapshot.docs.map(doc => ({ 
+          id: parseInt(doc.id) || Math.random(), 
+          ...doc.data() 
+        } as ProductReview));
+        
+        return { items: reviews, total: reviews.length };
+      } catch (error) {
+        console.error('Error listing reviews:', error);
+        throw error;
+      }
+    },
+
+    async get(id: string): Promise<ProductReview | null> {
+      try {
+        const docRef = doc(db, 'reviews', id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          return { id: parseInt(id) || Math.random(), ...docSnap.data() } as ProductReview;
+        }
+        return null;
+      } catch (error) {
+        console.error('Error getting review:', error);
+        throw error;
+      }
+    },
+
+    async create(review: Omit<ProductReview, 'id' | 'created_at'>): Promise<ProductReview> {
+      try {
+        const reviewData = {
+          ...review,
+          created_at: new Date().toISOString(),
+          is_approved: false, // Default to pending approval
+        };
+        
+        const docRef = await addDoc(collection(db, 'reviews'), reviewData);
+        return { id: parseInt(docRef.id) || Math.random(), ...reviewData } as ProductReview;
+      } catch (error) {
+        console.error('Error creating review:', error);
+        throw error;
+      }
+    },
+
+    async update(id: string, updates: Partial<ProductReview>): Promise<void> {
+      try {
+        const docRef = doc(db, 'reviews', id);
+        await updateDoc(docRef, updates);
+      } catch (error) {
+        console.error('Error updating review:', error);
+        throw error;
+      }
+    },
+
+    async delete(id: string): Promise<void> {
+      try {
+        const docRef = doc(db, 'reviews', id);
+        await deleteDoc(docRef);
+      } catch (error) {
+        console.error('Error deleting review:', error);
+        throw error;
+      }
+    },
+
+    async getApprovedByProduct(productId: string): Promise<ProductReview[]> {
+      try {
+        const q = query(
+          collection(db, 'reviews'),
+          where('product_id', '==', productId),
+          where('is_approved', '==', true)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const reviews = querySnapshot.docs.map(doc => ({ 
+          id: parseInt(doc.id) || Math.random(), 
+          ...doc.data() 
+        } as ProductReview));
+        
+        return reviews;
+      } catch (error) {
+        console.error('Error getting approved reviews:', error);
+        throw error;
+      }
+    },
+
+    async getAverageRating(productId: string): Promise<{ average: number, count: number }> {
+      try {
+        const reviews = await this.getApprovedByProduct(productId);
+        
+        if (reviews.length === 0) {
+          return { average: 0, count: 0 };
+        }
+        
+        const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+        const average = totalRating / reviews.length;
+        
+        return { average: Math.round(average * 10) / 10, count: reviews.length };
+      } catch (error) {
+        console.error('Error calculating average rating:', error);
+        return { average: 0, count: 0 };
+      }
+    },
+
+    async hasUserReviewed(productId: string, userId: string): Promise<boolean> {
+      try {
+        const q = query(
+          collection(db, 'reviews'),
+          where('product_id', '==', productId),
+          where('user_id', '==', userId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+      } catch (error) {
+        console.error('Error checking user review:', error);
+        return false;
       }
     }
   }

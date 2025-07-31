@@ -3,12 +3,14 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { firestoreService, subscriptions, type Product } from '@/lib/firebase'
-import { useAuth } from './auth-provider'
+import { useAuth } from '@/hooks/useAuth'
+import { useCurrency } from '@/components/currency-provider'
 import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
   const { currentUser } = useAuth()
+  const { currency } = useCurrency()
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -112,9 +114,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // First check if the item exists
+      const existingItem = cartItems.find(item => item.id === itemId)
+      if (!existingItem) {
+        console.warn('Cart item not found:', itemId)
+        // Reload cart to sync with Firebase
+        loadCart()
+        return
+      }
+
       await firestoreService.cart.updateQuantity(itemId, quantity)
     } catch (error) {
       console.error('Error updating cart:', error)
+      // Reload cart to sync with Firebase on error
+      loadCart()
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
     }
   }
@@ -135,13 +148,33 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cartItems.reduce((total, item) => {
       if (!item.product) return total
       
-      let price = item.product.price_usd
-      if (item.product.is_on_sale && item.product.sale_price_usd) {
-        price = item.product.sale_price_usd
+      // Get price based on current currency
+      let price: number
+      switch (currency) {
+        case 'OMR':
+          price = item.product.price_omr || 0
+          if (item.product.is_on_sale && item.product.sale_price_omr) {
+            price = item.product.sale_price_omr
+          }
+          break
+        case 'SAR':
+          price = item.product.price_sar || (item.product.price_omr * 3.75) || 0
+          if (item.product.is_on_sale && item.product.sale_price_sar) {
+            price = item.product.sale_price_sar
+          } else if (item.product.is_on_sale && item.product.sale_price_omr) {
+            price = item.product.sale_price_omr * 3.75
+          }
+          break
+        case 'USD':
+        default:
+          price = item.product.price_omr || 0
+          if (item.product.is_on_sale && item.product.sale_price_omr) {
+            price = item.product.sale_price_omr
+          }
+          break
       }
-      // Ensure price is a number and not undefined
-      const safePrice = typeof price === 'number' ? price : 0;
-      return total + (safePrice * item.quantity)
+      
+      return total + (price * item.quantity)
     }, 0)
   }
 

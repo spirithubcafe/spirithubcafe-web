@@ -9,6 +9,7 @@ import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { HomePage } from '@/pages/HomePage'
 import { ShopPage } from '@/pages/ShopPage'
+import ProductPage from '@/pages/ProductPage'
 import { AboutPage } from '@/pages/AboutPage'
 import { ContactPage } from '@/pages/ContactPage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -32,6 +33,7 @@ function App() {
                   <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/product/:slug" element={<ProductPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/login" element={<LoginPage />} />
