@@ -84,6 +84,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       // Ensure product ID is a string
       const productId = String(product.id);
       await firestoreService.cart.addItem(currentUser.id, productId, quantity)
+      // Reload cart to reflect changes
+      await loadCart()
 
       const productName = i18n.language === 'ar' ? product.name_ar || product.name : product.name
       toast.success(i18n.language === 'ar' ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
@@ -98,6 +100,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       await firestoreService.cart.removeItem(itemId)
+      // Reload cart to reflect changes
+      await loadCart()
       toast.success(i18n.language === 'ar' ? 'تم حذف المنتج من السلة' : 'Product removed from cart')
     } catch (error) {
       console.error('Error removing from cart:', error)
@@ -119,15 +123,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!existingItem) {
         console.warn('Cart item not found:', itemId)
         // Reload cart to sync with Firebase
-        loadCart()
+        await loadCart()
         return
       }
 
       await firestoreService.cart.updateQuantity(itemId, quantity)
+      // Reload cart to reflect changes
+      await loadCart()
     } catch (error) {
       console.error('Error updating cart:', error)
       // Reload cart to sync with Firebase on error
-      loadCart()
+      await loadCart()
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
     }
   }
@@ -137,6 +143,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     try {
       await firestoreService.cart.clearCart(currentUser.id)
+      // Reload cart to reflect changes
+      await loadCart()
       toast.success(i18n.language === 'ar' ? 'تم مسح السلة' : 'Cart cleared')
     } catch (error) {
       console.error('Error clearing cart:', error)

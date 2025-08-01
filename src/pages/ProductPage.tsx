@@ -154,10 +154,10 @@ export default function ProductPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-muted rounded mb-6 w-32"></div>
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
               <div className="space-y-4">
                 <div className="aspect-square bg-muted rounded-lg"></div>
                 <div className="grid grid-cols-4 gap-2">
@@ -206,7 +206,7 @@ export default function ProductPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <Link 
           to="/shop" 
@@ -216,7 +216,7 @@ export default function ProductPage() {
           {isArabic ? 'العودة إلى المتجر' : 'Back to Shop'}
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">

@@ -105,7 +105,7 @@ export function CartSidebar() {
                 {/* Scrollable Cart Items */}
                 <div className="flex-1 overflow-y-auto py-2 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                   {cart.items?.map((item: CartItemWithProduct) => (
-                    <div key={item.product?.id || item.product_id} className="flex gap-4 p-4 border rounded-lg bg-card">
+                    <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                         <Coffee className="h-8 w-8 text-amber-600" />
                       </div>
@@ -118,7 +118,7 @@ export function CartSidebar() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => removeFromCart(item.product?.id || item.product_id)}
+                            onClick={() => removeFromCart(item.id)}
                             className="h-6 w-6 p-0 hover:bg-destructive/10 flex-shrink-0"
                           >
                             <X className="h-4 w-4" />
@@ -134,8 +134,9 @@ export function CartSidebar() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.product?.id || item.product_id, item.quantity - 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
                               className="h-8 w-8 p-0"
+                              disabled={item.quantity <= 1}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -145,7 +146,7 @@ export function CartSidebar() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => updateQuantity(item.product?.id || item.product_id, item.quantity + 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
                               className="h-8 w-8 p-0"
                             >
                               <Plus className="h-3 w-3" />

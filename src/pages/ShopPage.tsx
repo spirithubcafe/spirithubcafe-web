@@ -150,7 +150,7 @@ export function ShopPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Skeleton */}
         <div className="mb-8 space-y-4">
           <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
@@ -162,9 +162,9 @@ export function ShopPage() {
         </div>
         
         {/* Products Grid Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
+            <Card key={i} className="overflow-hidden py-0">
               <div className="aspect-square bg-muted animate-pulse"></div>
               <CardContent className="p-4 space-y-3">
                 <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
@@ -181,7 +181,7 @@ export function ShopPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
@@ -318,7 +318,7 @@ export function ShopPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
           {filteredProducts.map((product) => {
             const productPrice = getProductPrice(product)
             const salePrice = getSalePrice(product)
@@ -329,7 +329,7 @@ export function ShopPage() {
 
             return (
               <div key={product.id} className="group">
-                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 py-0">
                   <Link to={`/product/${product.slug || product.id}`} className="block">
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
