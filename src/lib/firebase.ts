@@ -71,19 +71,38 @@ export interface Category {
 }
 
 export interface ProductPropertyOption {
+  id?: string;
   value: string;
   label: string;
   label_ar: string;
-  price_modifier?: number; // Price change in OMR
+  price_modifier?: number; // Backward compatibility - in OMR
+  price_modifier_omr?: number; // New explicit pricing
+  price_modifier_usd?: number; 
+  price_modifier_sar?: number;
+  sale_price_modifier_omr?: number;
+  sale_price_modifier_usd?: number;
+  sale_price_modifier_sar?: number;
+  on_sale?: boolean;
+  sale_start_date?: string;
+  sale_end_date?: string;
+  stock?: number;
+  sku?: string;
+  is_active?: boolean;
+  sort_order?: number;
 }
 
 export interface ProductProperty {
+  id?: string;
   name: string;
   name_ar: string;
-  type: 'select' | 'radio' | 'checkbox';
+  type: 'select' | 'radio' | 'checkbox' | 'color' | 'size';
   required: boolean;
   affects_price: boolean;
+  affects_stock?: boolean;
+  display_type?: 'dropdown' | 'buttons' | 'color_swatches' | 'size_grid';
   options: ProductPropertyOption[];
+  is_active?: boolean;
+  sort_order?: number;
 }
 
 export interface Product {
@@ -147,12 +166,38 @@ export interface ProductReview {
   user?: UserProfile;
 }
 
+export interface SelectedPropertyOption {
+  property_id: string;
+  property_name: string;
+  property_name_ar: string;
+  option_id: string;
+  option_value: string;
+  option_label: string;
+  option_label_ar: string;
+  price_modifier_omr: number;
+  price_modifier_usd: number;
+  price_modifier_sar: number;
+  sale_price_modifier_omr?: number;
+  sale_price_modifier_usd?: number;
+  sale_price_modifier_sar?: number;
+  on_sale?: boolean;
+  sale_start_date?: string;
+  sale_end_date?: string;
+}
+
 export interface CartItem {
   id: string;
   user_id: string; // reference to users
   product_id: string; // reference to products
   quantity: number;
-  selectedProperties?: Record<string, string>; // For dynamic product options
+  selectedProperties?: Record<string, string>; // For backward compatibility
+  selectedPropertyOptions?: SelectedPropertyOption[]; // New detailed property selection
+  base_price_omr: number; // Base product price when added to cart
+  base_price_usd: number;
+  base_price_sar: number;
+  total_price_omr: number; // Total including property modifiers
+  total_price_usd: number;
+  total_price_sar: number;
   created: Date;
   updated: Date;
 }
@@ -222,11 +267,87 @@ export interface OrderItem {
   total_price_usd?: number;
   total_price_omr?: number;
   total_price_sar?: number;
-  selected_properties?: Record<string, string>;
+  selected_properties?: Record<string, string>; // For backward compatibility
+  selected_property_options?: SelectedPropertyOption[]; // New detailed property selection
+  base_unit_price_omr?: number; // Base product price
+  base_unit_price_usd?: number;
+  base_unit_price_sar?: number;
+  properties_price_omr?: number; // Additional price from properties
+  properties_price_usd?: number;
+  properties_price_sar?: number;
   created_at: string;
   updated_at: string;
   created: Date;
   updated: Date;
+}
+
+// Helper functions for product properties and pricing
+export function calculatePropertyPrice(
+  selectedOptions: SelectedPropertyOption[], 
+  currency: 'omr' | 'usd' | 'sar' = 'omr'
+): number {
+  return selectedOptions.reduce((total, option) => {
+    const isOnSale = option.on_sale && 
+      (!option.sale_start_date || new Date(option.sale_start_date) <= new Date()) &&
+      (!option.sale_end_date || new Date(option.sale_end_date) >= new Date());
+    
+    if (isOnSale) {
+      switch (currency) {
+        case 'usd': return total + (option.sale_price_modifier_usd || option.price_modifier_usd);
+        case 'sar': return total + (option.sale_price_modifier_sar || option.price_modifier_sar);
+        default: return total + (option.sale_price_modifier_omr || option.price_modifier_omr);
+      }
+    } else {
+      switch (currency) {
+        case 'usd': return total + option.price_modifier_usd;
+        case 'sar': return total + option.price_modifier_sar;
+        default: return total + option.price_modifier_omr;
+      }
+    }
+  }, 0);
+}
+
+export function getProductFinalPrice(
+  product: Product, 
+  selectedOptions: SelectedPropertyOption[] = [], 
+  currency: 'omr' | 'usd' | 'sar' = 'omr'
+): number {
+  let basePrice = 0;
+  
+  // Get base price (check if product is on sale)
+  const isProductOnSale = product.is_on_sale || false;
+  
+  if (isProductOnSale) {
+    switch (currency) {
+      case 'usd': basePrice = product.sale_price_usd || product.price_usd || 0; break;
+      case 'sar': basePrice = product.sale_price_sar || product.price_sar || 0; break;
+      default: basePrice = product.sale_price_omr || product.price_omr || 0; break;
+    }
+  } else {
+    switch (currency) {
+      case 'usd': basePrice = product.price_usd || 0; break;
+      case 'sar': basePrice = product.price_sar || 0; break;
+      default: basePrice = product.price_omr || 0; break;
+    }
+  }
+  
+  // Add property prices
+  const propertyPrice = calculatePropertyPrice(selectedOptions, currency);
+  
+  return basePrice + propertyPrice;
+}
+
+export function isPropertyOptionAvailable(option: ProductPropertyOption): boolean {
+  if (!option.is_active) return false;
+  if (option.stock !== undefined && option.stock <= 0) return false;
+  
+  if (option.on_sale) {
+    const now = new Date();
+    if (option.sale_start_date && new Date(option.sale_start_date) > now) return false;
+    if (option.sale_end_date && new Date(option.sale_end_date) < now) return false;
+  }
+  
+  return true;
 }
 
 // Helper function to check if Firestore is available
@@ -916,8 +1037,34 @@ export const firestoreService = {
       }
     },
     
-    addItem: async (userId: string, productId: string, quantity: number = 1, selectedProperties?: Record<string, string>) => {
+    addItem: async (
+      userId: string, 
+      productId: string, 
+      quantity: number = 1, 
+      selectedProperties?: Record<string, string>,
+      selectedPropertyOptions?: SelectedPropertyOption[]
+    ) => {
       try {
+        // Get product details for pricing
+        const productDoc = await getDoc(doc(db, 'products', productId));
+        if (!productDoc.exists()) {
+          throw new Error('Product not found');
+        }
+        const product = { id: productDoc.id, ...productDoc.data() } as Product;
+        
+        // Calculate prices
+        const basePrice = {
+          omr: product.price_omr || 0,
+          usd: product.price_usd || 0,
+          sar: product.price_sar || 0
+        };
+        
+        const totalPrice = {
+          omr: getProductFinalPrice(product, selectedPropertyOptions, 'omr'),
+          usd: getProductFinalPrice(product, selectedPropertyOptions, 'usd'),
+          sar: getProductFinalPrice(product, selectedPropertyOptions, 'sar')
+        };
+        
         // Check if item already exists in cart with same properties
         const q = query(
           collection(db, 'cart_items'),
@@ -926,41 +1073,68 @@ export const firestoreService = {
         );
         const existing = await getDocs(q);
         
-        // Find exact match including selectedProperties
-        let existingItem = null;
-        for (const doc of existing.docs) {
-          const data = doc.data();
+        // Find exact match including selectedProperties and selectedPropertyOptions
+        let existingItem: any = null;
+        for (const docSnapshot of existing.docs) {
+          const data = docSnapshot.data();
           const existingProps = data.selectedProperties || {};
           const newProps = selectedProperties || {};
           
-          // Compare properties
+          // Compare legacy properties
           const propsMatch = JSON.stringify(existingProps) === JSON.stringify(newProps);
-          if (propsMatch) {
-            existingItem = doc;
+          
+          // Compare new property options
+          const existingOptions = data.selectedPropertyOptions || [];
+          const newOptions = selectedPropertyOptions || [];
+          const optionsMatch = JSON.stringify(existingOptions) === JSON.stringify(newOptions);
+          
+          if (propsMatch && optionsMatch) {
+            existingItem = { id: docSnapshot.id, ...data };
             break;
           }
         }
         
         if (existingItem) {
-          // Update existing item
-          const currentQuantity = existingItem.data().quantity;
-          await updateDoc(existingItem.ref, {
-            quantity: currentQuantity + quantity,
+          // Update existing item with new prices
+          const newQuantity = (existingItem.quantity || 0) + quantity;
+          await updateDoc(doc(db, 'cart_items', existingItem.id), {
+            quantity: newQuantity,
+            total_price_omr: totalPrice.omr,
+            total_price_usd: totalPrice.usd,
+            total_price_sar: totalPrice.sar,
             updated: serverTimestamp()
           });
-          return { id: existingItem.id, ...existingItem.data(), quantity: currentQuantity + quantity };
+          return { 
+            ...existingItem, 
+            quantity: newQuantity,
+            total_price_omr: totalPrice.omr,
+            total_price_usd: totalPrice.usd,
+            total_price_sar: totalPrice.sar
+          };
         } else {
           // Create new item
           const cartItemData: any = {
             user_id: userId,
             product_id: productId,
             quantity,
+            base_price_omr: basePrice.omr,
+            base_price_usd: basePrice.usd,
+            base_price_sar: basePrice.sar,
+            total_price_omr: totalPrice.omr,
+            total_price_usd: totalPrice.usd,
+            total_price_sar: totalPrice.sar,
             created: serverTimestamp(),
             updated: serverTimestamp()
           };
           
+          // Add legacy properties for backward compatibility
           if (selectedProperties && Object.keys(selectedProperties).length > 0) {
             cartItemData.selectedProperties = selectedProperties;
+          }
+          
+          // Add new detailed property options
+          if (selectedPropertyOptions && selectedPropertyOptions.length > 0) {
+            cartItemData.selectedPropertyOptions = selectedPropertyOptions;
           }
           
           const docRef = await addDoc(collection(db, 'cart_items'), cartItemData);

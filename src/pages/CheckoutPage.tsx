@@ -1,3 +1,4 @@
+import { getPropertyPrice } from '@/utils/propertyUtils'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, Coffee, ShoppingCart, CreditCard, MapPin } from 'lucide-react'
@@ -40,8 +41,8 @@ export default function CheckoutPage() {
         const property = product.properties.find((p: any) => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find((opt: any) => opt.value === selectedValue)
-          if (option?.price_modifier) {
-            basePrice += option.price_modifier
+          if (option?.price_modifier_omr || option?.price_modifier) {
+            basePrice += getPropertyPrice(option)
           }
         }
       }

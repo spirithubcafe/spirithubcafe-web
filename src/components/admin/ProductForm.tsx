@@ -6,18 +6,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { Plus, X, Upload, Save, ArrowLeft, Image, Grid, Settings } from 'lucide-react'
-import { firestoreService, storageService, type Category } from '@/lib/firebase'
+import { X, Upload, Save, ArrowLeft, Image, Grid, Settings } from 'lucide-react'
+import { firestoreService, storageService, type Category, type ProductProperty } from '@/lib/firebase'
+import ProductPropertyForm from './ProductPropertyForm'
 import toast from 'react-hot-toast'
-
-interface SimpleProperty {
-  name: string
-  value: string
-  price?: number
-}
 
 interface ProductForm {
   name: string
@@ -31,7 +25,7 @@ interface ProductForm {
   gallery?: string[]
   is_featured: boolean
   is_bestseller: boolean
-  properties: SimpleProperty[]
+  properties: ProductProperty[]
   stock_quantity: number
   slug: string
 }
@@ -69,7 +63,9 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     slug: ''
   })
 
-  const [newProperty, setNewProperty] = useState({ name: '', value: '', price: 0 })
+  const handlePropertiesChange = (properties: ProductProperty[]) => {
+    setForm(prev => ({ ...prev, properties }))
+  }
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -97,11 +93,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         gallery: editingProduct.gallery || [],
         is_featured: editingProduct.is_featured || false,
         is_bestseller: editingProduct.is_bestseller || false,
-        properties: editingProduct.properties?.map((p: any) => ({ 
-          name: p.name, 
-          value: p.options?.[0]?.value || '', 
-          price: p.options?.[0]?.price_modifier || 0 
-        })) || [],
+        properties: editingProduct.properties || [],
         stock_quantity: editingProduct.stock_quantity || 0,
         slug: editingProduct.slug || ''
       })
@@ -148,20 +140,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         is_active: true,
         stock_quantity: form.stock_quantity,
         slug: form.slug || generateSlug(form.name),
-        properties: form.properties.map(p => ({
-          name: p.name,
-          name_ar: p.name,
-          type: 'select' as const,
-          required: false,
-          affects_price: (p.price || 0) > 0,
-          options: [{
-            value: p.value,
-            value_ar: p.value,
-            label: p.value,
-            label_ar: p.value,
-            price_modifier: p.price || 0
-          }]
-        })),
+        properties: form.properties,
         sort_order: 0,
         is_new_arrival: false,
         is_on_sale: (form.sale_price_omr || 0) > 0,
@@ -223,23 +202,6 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
       toast.error(isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image')
       setUploadProgress(0)
     }
-  }
-
-  const addProperty = () => {
-    if (newProperty.name && newProperty.value) {
-      setForm(prev => ({
-        ...prev,
-        properties: [...prev.properties, { ...newProperty }]
-      }))
-      setNewProperty({ name: '', value: '', price: 0 })
-    }
-  }
-
-  const removeProperty = (index: number) => {
-    setForm(prev => ({
-      ...prev,
-      properties: prev.properties.filter((_, i) => i !== index)
-    }))
   }
 
   const removeGalleryImage = (index: number) => {
@@ -431,70 +393,16 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
 
           <Card>
             <CardHeader>
-              <CardTitle>{isArabic ? 'الخصائص' : 'Properties'}</CardTitle>
+              <CardTitle>{isArabic ? 'الخصائص المتقدمة' : 'Advanced Properties'}</CardTitle>
               <CardDescription>
-                {isArabic ? 'أضف خصائص إضافية للمنتج مثل الحجم أو اللون' : 'Add additional product properties like size or color'}
+                {isArabic ? 'أضف خصائص متقدمة للمنتج مع خيارات متعددة وأسعار مختلفة' : 'Add advanced product properties with multiple options and different pricing'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="prop-name">{isArabic ? 'اسم الخاصية' : 'Property Name'}</Label>
-                  <Input
-                    id="prop-name"
-                    value={newProperty.name}
-                    onChange={(e) => setNewProperty(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder={isArabic ? 'مثل: الحجم' : 'e.g: Size'}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prop-value">{isArabic ? 'القيمة' : 'Value'}</Label>
-                  <Input
-                    id="prop-value"
-                    value={newProperty.value}
-                    onChange={(e) => setNewProperty(prev => ({ ...prev, value: e.target.value }))}
-                    placeholder={isArabic ? 'مثل: كبير' : 'e.g: Large'}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prop-price">{isArabic ? 'السعر الإضافي' : 'Additional Price'} (OMR)</Label>
-                  <Input
-                    id="prop-price"
-                    type="number"
-                    step="0.01"
-                    value={newProperty.price}
-                    onChange={(e) => setNewProperty(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button onClick={addProperty} className="w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {isArabic ? 'إضافة' : 'Add'}
-                  </Button>
-                </div>
-              </div>
-
-              {form.properties.length > 0 && (
-                <div className="space-y-2">
-                  <Label>{isArabic ? 'الخصائص الحالية' : 'Current Properties'}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {form.properties.map((property, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center gap-2">
-                        {property.name}: {property.value}
-                        {property.price ? ` (+${property.price} OMR)` : ''}
-                        <button
-                          onClick={() => removeProperty(index)}
-                          className="ml-1 hover:text-destructive"
-                          title={isArabic ? 'حذف الخاصية' : 'Remove property'}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <CardContent>
+              <ProductPropertyForm
+                properties={form.properties}
+                onPropertiesChange={handlePropertiesChange}
+              />
             </CardContent>
           </Card>
         </TabsContent>

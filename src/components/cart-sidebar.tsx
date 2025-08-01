@@ -35,9 +35,9 @@ export function CartSidebar() {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier) {
+          if (option?.price_modifier_omr) {
             // Convert price modifier from OMR to current currency
-            basePrice += option.price_modifier * conversionRates[currency]
+            basePrice += option.price_modifier_omr * conversionRates[currency]
           }
         }
       }

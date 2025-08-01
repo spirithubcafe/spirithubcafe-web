@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
-import { firestoreService, type Order, type OrderItem } from '@/lib/firebase'
+import { firestoreService, type OrderItem } from '@/lib/firebase'
+import type { Order } from '@/types'
 
 interface DashboardOrdersProps {
   orders: Order[]
@@ -141,7 +142,7 @@ export default function DashboardOrders({ orders }: DashboardOrdersProps) {
                         }>
                           {selectedOrder.status === 'delivered' ? (isArabic ? 'تم التسليم' : 'Delivered') :
                            selectedOrder.status === 'shipped' ? (isArabic ? 'تم الشحن' : 'Shipped') :
-                           selectedOrder.status === 'preparing' ? (isArabic ? 'قيد التحضير' : 'Preparing') :
+                           selectedOrder.status === 'processing' ? (isArabic ? 'قيد التحضير' : 'Processing') :
                            selectedOrder.status === 'confirmed' ? (isArabic ? 'مؤكد' : 'Confirmed') :
                            selectedOrder.status === 'pending' ? (isArabic ? 'معلق' : 'Pending') :
                            selectedOrder.status === 'cancelled' ? (isArabic ? 'ملغي' : 'Cancelled') :
@@ -282,9 +283,9 @@ export default function DashboardOrders({ orders }: DashboardOrdersProps) {
                       <span>{isArabic ? 'الإجمالي:' : 'Total:'}</span>
                       <span>{formatPrice(
                         selectedOrder.total_price_omr || 
-                        selectedOrder.total_omr || 
-                        selectedOrder.total_usd || 
-                        selectedOrder.total_sar || 0
+                        selectedOrder.total_price_omr ||
+                        selectedOrder.total_price_usd ||
+                        selectedOrder.total_price_sar || 0
                       )}</span>
                     </div>
                   </div>

@@ -166,8 +166,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const property = item.product.properties.find(p => p.name === propertyName)
           if (property && property.affects_price) {
             const option = property.options.find(opt => opt.value === selectedValue)
-            if (option?.price_modifier) {
-              basePrice += option.price_modifier
+            if (option?.price_modifier_omr) {
+              basePrice += option.price_modifier_omr
             }
           }
         }

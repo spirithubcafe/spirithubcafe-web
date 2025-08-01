@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Star, ShoppingCart, Plus, Minus, Coffee, Heart, Share2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -96,13 +96,13 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier) {
+          if (option?.price_modifier_omr) {
             if (currency === 'OMR') {
-              basePrice += option.price_modifier
+              basePrice += option.price_modifier_omr
             } else if (currency === 'SAR') {
-              basePrice += option.price_modifier * 3.75
+              basePrice += option.price_modifier_omr * 3.75
             } else {
-              basePrice += option.price_modifier * 2.6
+              basePrice += option.price_modifier_omr * 2.6
             }
           }
         }
@@ -137,13 +137,13 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier) {
+          if (option?.price_modifier_omr) {
             if (currency === 'OMR') {
-              baseSalePrice += option.price_modifier
+              baseSalePrice += option.price_modifier_omr
             } else if (currency === 'SAR') {
-              baseSalePrice += option.price_modifier * 3.75
+              baseSalePrice += option.price_modifier_omr * 3.75
             } else {
-              baseSalePrice += option.price_modifier * 2.6
+              baseSalePrice += option.price_modifier_omr * 2.6
             }
           }
         }
@@ -321,12 +321,12 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                             <SelectItem key={option.value} value={option.value}>
                               <span>
                                 {isArabic ? (option.label_ar || option.label) : option.label}
-                                {option.price_modifier && option.price_modifier !== 0 && (
+                                {option.price_modifier_omr && option.price_modifier_omr !== 0 && (
                                   <span className="ml-2 text-sm text-muted-foreground">
-                                    ({option.price_modifier > 0 ? '+' : ''}{formatPrice(
-                                      currency === 'OMR' ? option.price_modifier :
-                                      currency === 'SAR' ? option.price_modifier * 3.75 :
-                                      option.price_modifier * 2.6
+                                    ({option.price_modifier_omr > 0 ? '+' : ''}{formatPrice(
+                                      currency === 'OMR' ? option.price_modifier_omr :
+                                      currency === 'SAR' ? option.price_modifier_omr * 3.75 :
+                                      option.price_modifier_omr * 2.6
                                     )})
                                   </span>
                                 )}
