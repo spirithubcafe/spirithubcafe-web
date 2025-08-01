@@ -137,7 +137,7 @@ export function ForgotPasswordPage() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email" className="block mb-2">
+              <Label htmlFor="email">
                 {isArabic ? 'عنوان البريد الإلكتروني' : 'Email Address'}
               </Label>
               <Input

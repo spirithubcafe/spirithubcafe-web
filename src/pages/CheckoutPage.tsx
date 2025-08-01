@@ -175,7 +175,7 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="firstName">
                         {isArabic ? 'الاسم الأول' : 'First Name'}
                       </Label>
@@ -186,7 +186,7 @@ export default function CheckoutPage() {
                         placeholder={isArabic ? 'أدخل الاسم الأول' : 'Enter first name'}
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="lastName">
                         {isArabic ? 'اسم العائلة' : 'Last Name'}
                       </Label>
@@ -200,7 +200,7 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="email">
                         {isArabic ? 'البريد الإلكتروني' : 'Email'}
                       </Label>
@@ -212,7 +212,7 @@ export default function CheckoutPage() {
                         placeholder={isArabic ? 'أدخل البريد الإلكتروني' : 'Enter email'}
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="phone">
                         {isArabic ? 'رقم الهاتف' : 'Phone Number'}
                       </Label>
@@ -238,7 +238,7 @@ export default function CheckoutPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="address">
                       {isArabic ? 'العنوان' : 'Address'}
                     </Label>
@@ -252,7 +252,7 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="city">
                         {isArabic ? 'المدينة' : 'City'}
                       </Label>
@@ -263,7 +263,7 @@ export default function CheckoutPage() {
                         placeholder={isArabic ? 'أدخل المدينة' : 'Enter city'}
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="state">
                         {isArabic ? 'المحافظة/الولاية' : 'State/Province'}
                       </Label>
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="zipCode">
                         {isArabic ? 'الرمز البريدي' : 'ZIP Code'}
                       </Label>
@@ -288,7 +288,7 @@ export default function CheckoutPage() {
                         placeholder={isArabic ? 'أدخل الرمز البريدي' : 'Enter ZIP code'}
                       />
                     </div>
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="country">
                         {isArabic ? 'البلد' : 'Country'}
                       </Label>
@@ -335,7 +335,7 @@ export default function CheckoutPage() {
 
                   {formData.paymentMethod === 'card' && (
                     <div className="space-y-4 mt-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="cardNumber">
                           {isArabic ? 'رقم البطاقة' : 'Card Number'}
                         </Label>
@@ -348,7 +348,7 @@ export default function CheckoutPage() {
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="expiryDate">
                             {isArabic ? 'تاريخ الانتهاء' : 'Expiry Date'}
                           </Label>
@@ -360,7 +360,7 @@ export default function CheckoutPage() {
                             maxLength={5}
                           />
                         </div>
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="cvv">
                             {isArabic ? 'رمز الأمان' : 'CVV'}
                           </Label>

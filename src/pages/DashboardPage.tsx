@@ -13,7 +13,6 @@ import {
   X,
   MessageSquare
 } from 'lucide-react'
-import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -42,11 +41,13 @@ export default function DashboardPage() {
   const { i18n } = useTranslation()
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const navigate = useNavigate()
   const isArabic = i18n.language === 'ar'
   
   // Ref for main content container
   const mainContentRef = useRef<HTMLElement>(null)
+  
+  // Update activeTab when URL params change
+  // Removed URL sync for simpler tab management
   
   // Smooth scroll to top when tab changes
   useEffect(() => {
@@ -61,7 +62,7 @@ export default function DashboardPage() {
     }
     
     // Small delay to ensure content is rendered
-    const timer = setTimeout(scrollToTop, 1000)
+    const timer = setTimeout(scrollToTop, 100)
     
     return () => clearTimeout(timer)
   }, [activeTab])
@@ -133,7 +134,7 @@ export default function DashboardPage() {
 
   const handleLogout = () => {
     logout()
-    navigate('/')
+    window.location.href = '/'
   }
 
   const handleUsersUpdate = (updatedUsers: UserProfile[]) => {
@@ -252,10 +253,8 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold">
                 {isArabic ? 'يرجى تسجيل الدخول' : 'Please login'}
               </h1>
-              <Button asChild>
-                <Link to="/login">
-                  {isArabic ? 'تسجيل الدخول' : 'Login'}
-                </Link>
+              <Button onClick={() => window.location.href = '/login'}>
+                {isArabic ? 'تسجيل الدخول' : 'Login'}
               </Button>
             </div>
           </div>
@@ -279,7 +278,10 @@ export default function DashboardPage() {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => {
+                      setActiveTab(item.id)
+                      setSidebarOpen(false)
+                    }}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                       activeTab === item.id

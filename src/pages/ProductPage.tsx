@@ -412,7 +412,7 @@ export default function ProductPage() {
                       .filter(property => property.options && property.options.length > 0)
                       .map((property) => (
                         <div key={property.name} className="space-y-2">
-                          <label className="text-sm font-medium">
+                          <label className="text-sm font-medium block mb-2">
                             {isArabic ? (property.name_ar || property.name) : property.name}
                             {property.affects_price && (
                               <span className="text-muted-foreground text-xs ml-1">
