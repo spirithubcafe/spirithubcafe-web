@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
+import { convertPrice } from '@/lib/currency'
 import type { ProductProperty, ProductPropertyOption } from '@/lib/firebase'
 
 interface ProductPropertyFormProps {
@@ -43,8 +44,6 @@ interface OptionFormData {
   sale_price_modifier_usd?: number
   sale_price_modifier_sar?: number
   on_sale?: boolean
-  sale_start_date?: string
-  sale_end_date?: string
   stock?: number
   sku?: string
   is_active?: boolean
@@ -74,6 +73,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
   }
   
   const emptyOption: OptionFormData = {
+    // Explicitly no id for new options
     value: '',
     label: '',
     label_ar: '',
@@ -127,7 +127,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
   }
   
   const handleAddOption = () => {
-    setEditingOption(emptyOption)
+    setEditingOption({ ...emptyOption }) // Create a fresh copy to avoid reference issues
     setIsOptionDialogOpen(true)
   }
   
@@ -158,11 +158,21 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
     if (!editingOption || !editingProperty || !editingProperty.options) return
     
     const newOptions = [...editingProperty.options]
-    const optionIndex = newOptions.findIndex(o => o.id === editingOption.id)
     
-    if (optionIndex >= 0) {
-      newOptions[optionIndex] = editingOption
+    // If editingOption has an id and it exists in the array, it's an edit
+    if (editingOption.id) {
+      const optionIndex = newOptions.findIndex(o => o.id === editingOption.id)
+      if (optionIndex >= 0) {
+        newOptions[optionIndex] = editingOption
+      } else {
+        // Option has ID but not found in array, add as new
+        newOptions.push({
+          ...editingOption,
+          id: editingOption.id || Date.now().toString()
+        })
+      }
     } else {
+      // No ID means it's definitely a new option
       newOptions.push({
         ...editingOption,
         id: Date.now().toString()
@@ -246,16 +256,45 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                     {property.options?.map((option, optionIndex) => (
                       <div
                         key={option.id || optionIndex}
-                        className="flex items-center justify-between p-2 border rounded"
+                        className="flex flex-col p-3 border rounded-lg hover:bg-accent/50"
                       >
-                        <div>
+                        <div className="flex items-center justify-between">
                           <span className="text-sm font-medium">
                             {isArabic ? option.label_ar : option.label}
                           </span>
+                        </div>
+                        
+                        {/* Pricing Display */}
+                        <div className="mt-2 space-y-1">
                           {(option.price_modifier || option.price_modifier_omr) && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              (+{option.price_modifier_omr || option.price_modifier} OMR)
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                                {isArabic ? 'السعر' : 'Price'}
+                              </span>
+                              <span className="text-xs font-mono">
+                                +{option.price_modifier_omr || option.price_modifier} OMR
+                              </span>
+                            </div>
+                          )}
+                          
+                          {option.on_sale && (option.sale_price_modifier_omr) && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-1 bg-destructive/10 text-destructive rounded">
+                                {isArabic ? 'التخفيض' : 'Sale'}
+                              </span>
+                              <span className="text-xs font-mono text-destructive">
+                                +{option.sale_price_modifier_omr} OMR
+                              </span>
+                            </div>
+                          )}
+                          
+                          {option.stock && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs px-2 py-1 bg-secondary text-secondary-foreground rounded">
+                                {isArabic ? 'المخزون' : 'Stock'}
+                              </span>
+                              <span className="text-xs">{option.stock}</span>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -508,138 +547,166 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
               </div>
               
               {/* Pricing */}
-              <div className="space-y-4">
-                <h5 className="font-semibold">{isArabic ? 'الأسعار' : 'Pricing'}</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Price (OMR)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingOption.price_modifier_omr || 0}
-                      onChange={(e) =>
-                        setEditingOption({ 
-                          ...editingOption, 
-                          price_modifier_omr: parseFloat(e.target.value) || 0,
-                          price_modifier: parseFloat(e.target.value) || 0 // backward compatibility
-                        })
-                      }
-                    />
+              <div className="space-y-6">
+                <div className="border-b pb-2">
+                  <h5 className="font-semibold text-lg">{isArabic ? 'أسعار الخيار' : 'Option Pricing'}</h5>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'حدد سعر هذا الخيار وسعر البيع (اختياري)' : 'Set the price for this option and sale price (optional)'}
+                  </p>
+                </div>
+
+                {/* Regular Price */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-primary rounded-full"></div>
+                    <h6 className="font-medium">{isArabic ? 'السعر الأساسي' : 'Regular Price'}</h6>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Price (USD)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingOption.price_modifier_usd || 0}
-                      onChange={(e) =>
-                        setEditingOption({ 
-                          ...editingOption, 
-                          price_modifier_usd: parseFloat(e.target.value) || 0 
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Price (SAR)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={editingOption.price_modifier_sar || 0}
-                      onChange={(e) =>
-                        setEditingOption({ 
-                          ...editingOption, 
-                          price_modifier_sar: parseFloat(e.target.value) || 0 
-                        })
-                      }
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-medium">OMR (ريال عماني)</Label>
+                      <Input
+                        type="number"
+                        step="0.001"
+                        min="0"
+                        value={editingOption.price_modifier_omr || 0}
+                        onChange={(e) => {
+                          const omrPrice = parseFloat(e.target.value) || 0
+                          setEditingOption({ 
+                            ...editingOption, 
+                            price_modifier_omr: omrPrice,
+                            price_modifier_usd: convertPrice(omrPrice, 'USD'),
+                            price_modifier_sar: convertPrice(omrPrice, 'SAR'),
+                            price_modifier: omrPrice // backward compatibility
+                          })
+                        }}
+                        className="font-mono"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-medium">USD (دولار)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editingOption.price_modifier_usd || 0}
+                        disabled
+                        className="bg-muted font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {isArabic ? 'محسوب تلقائياً' : 'Auto-calculated'}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-medium">SAR (ريال سعودي)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={editingOption.price_modifier_sar || 0}
+                        disabled
+                        className="bg-muted font-mono"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {isArabic ? 'محسوب تلقائياً' : 'Auto-calculated'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Sale Pricing */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={editingOption.on_sale || false}
-                    onCheckedChange={(checked) =>
-                      setEditingOption({ ...editingOption, on_sale: checked })
-                    }
-                  />
-                  <Label>{isArabic ? 'في التخفيض' : 'On Sale'}</Label>
-                </div>
-                
-                {editingOption.on_sale && (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                {/* Sale Price */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-destructive rounded-full"></div>
+                    <h6 className="font-medium">{isArabic ? 'سعر البيع (بعد التخفيض)' : 'Sale Price (After Discount)'}</h6>
+                    <Switch
+                      checked={editingOption.on_sale || false}
+                      onCheckedChange={(checked) =>
+                        setEditingOption({ ...editingOption, on_sale: checked })
+                      }
+                    />
+                  </div>
+                  
+                  {editingOption.on_sale && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-destructive/5 border border-destructive/20 rounded-lg">
                       <div className="space-y-2">
-                        <Label>Sale Price (OMR)</Label>
+                        <Label className="font-medium text-destructive">OMR (ريال عماني)</Label>
                         <Input
                           type="number"
-                          step="0.01"
+                          step="0.001"
+                          min="0"
+                          max={editingOption.price_modifier_omr || undefined}
                           value={editingOption.sale_price_modifier_omr || 0}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const omrSalePrice = parseFloat(e.target.value) || 0
+                            const regularPrice = editingOption.price_modifier_omr || 0
+                            
+                            // Validate that sale price is not higher than regular price
+                            if (omrSalePrice > regularPrice && regularPrice > 0) {
+                              // Show warning but allow the input for now
+                              console.warn('Sale price cannot be higher than regular price')
+                              return
+                            }
+                            
                             setEditingOption({ 
                               ...editingOption, 
-                              sale_price_modifier_omr: parseFloat(e.target.value) || 0 
+                              sale_price_modifier_omr: omrSalePrice,
+                              sale_price_modifier_usd: convertPrice(omrSalePrice, 'USD'),
+                              sale_price_modifier_sar: convertPrice(omrSalePrice, 'SAR')
                             })
-                          }
+                          }}
+                          className="font-mono border-destructive/30 focus:border-destructive"
                         />
+                        {editingOption.sale_price_modifier_omr && editingOption.price_modifier_omr && 
+                         editingOption.sale_price_modifier_omr > editingOption.price_modifier_omr && (
+                          <p className="text-xs text-destructive">
+                            {isArabic ? 'سعر البيع لا يمكن أن يكون أعلى من السعر الأساسي' : 'Sale price cannot be higher than regular price'}
+                          </p>
+                        )}
+                        {editingOption.sale_price_modifier_omr && editingOption.price_modifier_omr && 
+                         editingOption.sale_price_modifier_omr < editingOption.price_modifier_omr && (
+                          <p className="text-xs text-green-600 dark:text-green-400">
+                            {isArabic ? 
+                              `توفير: ${(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr).toFixed(3)} OMR` : 
+                              `Savings: ${(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr).toFixed(3)} OMR`
+                            }
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label>Sale Price (USD)</Label>
+                        <Label className="font-medium text-destructive">USD (دولار)</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={editingOption.sale_price_modifier_usd || 0}
-                          onChange={(e) =>
-                            setEditingOption({ 
-                              ...editingOption, 
-                              sale_price_modifier_usd: parseFloat(e.target.value) || 0 
-                            })
-                          }
+                          disabled
+                          className="bg-muted font-mono"
                         />
+                        <p className="text-xs text-destructive/70">
+                          {isArabic ? 'محسوب تلقائياً' : 'Auto-calculated'}
+                        </p>
                       </div>
                       <div className="space-y-2">
-                        <Label>Sale Price (SAR)</Label>
+                        <Label className="font-medium text-destructive">SAR (ريال سعودي)</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={editingOption.sale_price_modifier_sar || 0}
-                          onChange={(e) =>
-                            setEditingOption({ 
-                              ...editingOption, 
-                              sale_price_modifier_sar: parseFloat(e.target.value) || 0 
-                            })
-                          }
+                          disabled
+                          className="bg-muted font-mono"
                         />
+                        <p className="text-xs text-destructive/70">
+                          {isArabic ? 'محسوب تلقائياً' : 'Auto-calculated'}
+                        </p>
                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>{isArabic ? 'تاريخ بداية التخفيض' : 'Sale Start Date'}</Label>
-                        <Input
-                          type="date"
-                          value={editingOption.sale_start_date || ''}
-                          onChange={(e) =>
-                            setEditingOption({ ...editingOption, sale_start_date: e.target.value })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>{isArabic ? 'تاريخ انتهاء التخفيض' : 'Sale End Date'}</Label>
-                        <Input
-                          type="date"
-                          value={editingOption.sale_end_date || ''}
-                          onChange={(e) =>
-                            setEditingOption({ ...editingOption, sale_end_date: e.target.value })
-                          }
-                        />
-                      </div>
+                  )}
+                  
+                  {!editingOption.on_sale && (
+                    <div className="p-4 bg-muted/50 border border-border rounded-lg text-center">
+                      <p className="text-muted-foreground text-sm">
+                        {isArabic ? 'فعل التبديل أعلاه لإضافة سعر مخفض لهذا الخيار' : 'Enable the toggle above to add a discounted price for this option'}
+                      </p>
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
               
               {/* Stock & SKU */}

@@ -73,9 +73,9 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     return isArabic ? (category.name_ar || category.name) : category.name
   }
 
-  // Get product price based on selected currency and properties
-  const getProductPrice = (product: Product) => {
-    let basePrice = 0
+  // Get regular price (without sale) based on selected currency  
+  const getRegularPrice = (product: Product) => {
+    let basePrice: number
     
     switch (currency) {
       case 'OMR':
@@ -90,20 +90,24 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         break
     }
 
-    // Apply property-based price modifications
+    // Apply property-based price modifications (regular prices only)
     if (product.properties && Object.keys(selectedProperties).length > 0) {
       for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier_omr) {
+          if (option) {
+            let regularModifier = 0
+            
             if (currency === 'OMR') {
-              basePrice += option.price_modifier_omr
+              regularModifier = option.price_modifier_omr || option.price_modifier || 0
             } else if (currency === 'SAR') {
-              basePrice += option.price_modifier_omr * 3.75
+              regularModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
             } else {
-              basePrice += option.price_modifier_omr * 2.6
+              regularModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
             }
+            
+            basePrice += regularModifier
           }
         }
       }
@@ -112,10 +116,16 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     return basePrice
   }
 
-  // Get sale price based on selected currency
-  const getSalePrice = (product: Product) => {
-    let baseSalePrice: number | null = null
+  // Get product price based on selected currency - returns sale price if available and lower, otherwise regular
+  const getProductPrice = (product: Product): number => {
+    // Get regular price first
+    const regularPrice = getRegularPrice(product)
     
+    // Calculate sale price
+    let currentPrice = regularPrice
+    
+    // Check base product sale price
+    let baseSalePrice: number | null = null
     switch (currency) {
       case 'OMR':
         baseSalePrice = product.sale_price_omr || null
@@ -129,40 +139,61 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         break
     }
 
-    if (!baseSalePrice) return null
+    // If we have a base sale price, start with that
+    if (baseSalePrice !== null) {
+      currentPrice = baseSalePrice
+    }
 
-    // Apply property-based price modifications to sale price too
+    // Apply property-based price modifications
     if (product.properties && Object.keys(selectedProperties).length > 0) {
       for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier_omr) {
-            if (currency === 'OMR') {
-              baseSalePrice += option.price_modifier_omr
-            } else if (currency === 'SAR') {
-              baseSalePrice += option.price_modifier_omr * 3.75
+          if (option) {
+            let priceModifier = 0
+            
+            // Check if option has sale price and we have a sale context
+            if (option.on_sale && option.sale_price_modifier_omr !== undefined) {
+              // Use sale price modifier
+              if (currency === 'OMR') {
+                priceModifier = option.sale_price_modifier_omr
+              } else if (currency === 'SAR') {
+                priceModifier = option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75
+              } else {
+                priceModifier = option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6
+              }
             } else {
-              baseSalePrice += option.price_modifier_omr * 2.6
+              // Use regular price modifier
+              if (currency === 'OMR') {
+                priceModifier = option.price_modifier_omr || option.price_modifier || 0
+              } else if (currency === 'SAR') {
+                priceModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
+              } else {
+                priceModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+              }
             }
+            
+            currentPrice += priceModifier
           }
         }
       }
     }
-
-    return baseSalePrice
+    
+    // Return sale price only if it's lower than regular price
+    return currentPrice < regularPrice ? currentPrice : regularPrice
   }
-
-
-
 
   const productImages = getProductImages(product)
   const productName = isArabic ? (product.name_ar || product.name) : product.name
   const productDescription = isArabic ? (product.description_ar || product.description) : product.description
 
-  // Recalculate prices when selectedProperties change
+  // Calculate prices
+  const regularPrice = getRegularPrice(product)
   const productPrice = getProductPrice(product)
-  const salePrice = getSalePrice(product)
+  const hasDiscount = productPrice < regularPrice
+
+  // Recalculate prices when selectedProperties change
 
   const handleAddToCart = async () => {
     setIsLoading(true)
@@ -321,15 +352,45 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                             <SelectItem key={option.value} value={option.value}>
                               <span>
                                 {isArabic ? (option.label_ar || option.label) : option.label}
-                                {option.price_modifier_omr && option.price_modifier_omr !== 0 && (
-                                  <span className="ml-2 text-sm text-muted-foreground">
-                                    ({option.price_modifier_omr > 0 ? '+' : ''}{formatPrice(
-                                      currency === 'OMR' ? option.price_modifier_omr :
-                                      currency === 'SAR' ? option.price_modifier_omr * 3.75 :
-                                      option.price_modifier_omr * 2.6
-                                    )})
-                                  </span>
-                                )}
+                                {(() => {
+                                  const regularModifier = currency === 'OMR' ? 
+                                    (option.price_modifier_omr || option.price_modifier || 0) :
+                                    currency === 'SAR' ? 
+                                    (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75) :
+                                    (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+                                  
+                                  const saleModifier = option.on_sale && option.sale_price_modifier_omr !== undefined ?
+                                    (currency === 'OMR' ? 
+                                      option.sale_price_modifier_omr :
+                                      currency === 'SAR' ? 
+                                      (option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75) :
+                                      (option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6)) :
+                                    null
+                                  
+                                  const displayModifier = saleModifier !== null ? saleModifier : regularModifier
+                                  
+                                  if (displayModifier !== 0) {
+                                    return (
+                                      <span className="ml-2 text-sm">
+                                        {saleModifier !== null && saleModifier < regularModifier ? (
+                                          <>
+                                            <span className="line-through text-muted-foreground">
+                                              ({regularModifier > 0 ? '+' : ''}{formatPrice(regularModifier)})
+                                            </span>
+                                            <span className="text-red-600 ml-1">
+                                              ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <span className="text-muted-foreground">
+                                            ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                          </span>
+                                        )}
+                                      </span>
+                                    )
+                                  }
+                                  return null
+                                })()}
                               </span>
                             </SelectItem>
                           ))}
@@ -361,16 +422,16 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
             {/* Price */}
             <div className="flex items-center gap-3">
-              {salePrice && salePrice < productPrice ? (
+              {hasDiscount ? (
                 <>
                   <span className="text-3xl font-bold text-red-600">
-                    {formatPrice(salePrice)}
-                  </span>
-                  <span className="text-lg line-through text-muted-foreground">
                     {formatPrice(productPrice)}
                   </span>
+                  <span className="text-lg line-through text-muted-foreground">
+                    {formatPrice(regularPrice)}
+                  </span>
                   {(() => {
-                    const discountPercent = Math.round(((productPrice - salePrice) / productPrice) * 100)
+                    const discountPercent = Math.round(((regularPrice - productPrice) / regularPrice) * 100)
                     return discountPercent > 0 ? (
                       <Badge variant="destructive">
                         {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
@@ -440,7 +501,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                 <span className="font-medium text-lg">{isArabic ? 'المجموع' : 'Total'}</span>
                 <span className="text-2xl font-bold text-amber-600">
-                  {formatPrice((salePrice || productPrice) * quantity)}
+                  {formatPrice(productPrice * quantity)}
                 </span>
               </div>
             )}

@@ -107,6 +107,73 @@ export default function ProductPage() {
     if (!product) return 0
     
     let basePrice: number
+    let baseSalePrice: number
+    
+    switch (currency) {
+      case 'OMR':
+        basePrice = product.price_omr || 0
+        baseSalePrice = product.sale_price_omr || basePrice
+        break
+      case 'SAR':
+        basePrice = product.price_sar || (product.price_omr || 0) * 3.75
+        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : basePrice)
+        break
+      case 'USD':
+      default:
+        basePrice = product.price_usd || (product.price_omr || 0) * 2.6
+        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : basePrice)
+        break
+    }
+
+    // Apply property-based price modifications
+    if (product.properties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option) {
+            let regularModifier = 0
+            let saleModifier = 0
+            
+            // Get regular price modifier
+            if (currency === 'OMR') {
+              regularModifier = option.price_modifier_omr || option.price_modifier || 0
+            } else if (currency === 'SAR') {
+              regularModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
+            } else {
+              regularModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+            }
+            
+            // Get sale price modifier
+            if (option.on_sale && option.sale_price_modifier_omr !== undefined) {
+              if (currency === 'OMR') {
+                saleModifier = option.sale_price_modifier_omr
+              } else if (currency === 'SAR') {
+                saleModifier = option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75
+              } else {
+                saleModifier = option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6
+              }
+            } else {
+              // Use regular modifier if no sale modifier
+              saleModifier = regularModifier
+            }
+            
+            basePrice += regularModifier
+            baseSalePrice += saleModifier
+          }
+        }
+      }
+    }
+
+    // Return the lower price (sale price if it's lower than regular price)
+    return Math.min(basePrice, baseSalePrice)
+  }
+
+  const getRegularPrice = (): number => {
+    if (!product) return 0
+    
+    let basePrice: number
+    
     switch (currency) {
       case 'OMR':
         basePrice = product.price_omr || 0
@@ -120,20 +187,24 @@ export default function ProductPage() {
         break
     }
 
-    // Apply property-based price modifications
+    // Apply property-based price modifications (regular prices only)
     if (product.properties && Object.keys(selectedProperties).length > 0) {
       for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
         const property = product.properties.find(p => p.name === propertyName)
         if (property && property.affects_price) {
           const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier) {
+          if (option) {
+            let regularModifier = 0
+            
             if (currency === 'OMR') {
-              basePrice += option.price_modifier
+              regularModifier = option.price_modifier_omr || option.price_modifier || 0
             } else if (currency === 'SAR') {
-              basePrice += option.price_modifier * 3.75
+              regularModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
             } else {
-              basePrice += option.price_modifier * 2.6
+              regularModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
             }
+            
+            basePrice += regularModifier
           }
         }
       }
@@ -143,47 +214,11 @@ export default function ProductPage() {
   }
 
   const getSalePrice = (): number | null => {
-    if (!product) return null
+    const regularPrice = getRegularPrice()
+    const currentPrice = getProductPrice()
     
-    let baseSalePrice: number | null
-    switch (currency) {
-      case 'OMR':
-        if (!product.sale_price_omr) return null
-        baseSalePrice = product.sale_price_omr
-        break
-      case 'SAR':
-        if (!product.sale_price_sar && !product.sale_price_omr) return null
-        baseSalePrice = product.sale_price_sar || (product.sale_price_omr || 0) * 3.75
-        break
-      case 'USD':
-      default:
-        if (!product.sale_price_usd && !product.sale_price_omr) return null
-        baseSalePrice = product.sale_price_usd || (product.sale_price_omr || 0) * 2.6
-        break
-    }
-
-    if (!baseSalePrice) return null
-
-    // Apply property-based price modifications to sale price too
-    if (product.properties && Object.keys(selectedProperties).length > 0) {
-      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
-        const property = product.properties.find(p => p.name === propertyName)
-        if (property && property.affects_price) {
-          const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier) {
-            if (currency === 'OMR') {
-              baseSalePrice += option.price_modifier
-            } else if (currency === 'SAR') {
-              baseSalePrice += option.price_modifier * 3.75
-            } else {
-              baseSalePrice += option.price_modifier * 2.6
-            }
-          }
-        }
-      }
-    }
-
-    return baseSalePrice
+    // Return sale price only if it's lower than regular price
+    return currentPrice < regularPrice ? currentPrice : null
   }
 
   const getProductBadges = () => {
@@ -257,8 +292,9 @@ export default function ProductPage() {
   }
 
   const productPrice = getProductPrice()
-  const salePrice = getSalePrice()
-  const finalPrice = salePrice || productPrice
+  const regularPrice = getRegularPrice()
+  const hasDiscount = productPrice < regularPrice
+  const finalPrice = productPrice
   const badges = getProductBadges()
 
   return (
@@ -367,17 +403,17 @@ export default function ProductPage() {
 
             {/* Price */}
             <div className="space-y-2">
-              {salePrice && salePrice < productPrice ? (
+              {hasDiscount ? (
                 <div>
                   <div className="flex items-center gap-3">
                     <span className="text-3xl font-bold text-red-600">
-                      {formatPrice(salePrice)}
-                    </span>
-                    <span className="text-xl text-muted-foreground line-through">
                       {formatPrice(productPrice)}
                     </span>
+                    <span className="text-xl text-muted-foreground line-through">
+                      {formatPrice(regularPrice)}
+                    </span>
                     {(() => {
-                      const discountPercent = Math.round(((productPrice - salePrice) / productPrice) * 100)
+                      const discountPercent = Math.round(((regularPrice - productPrice) / regularPrice) * 100)
                       return discountPercent > 0 ? (
                         <Badge variant="destructive">
                           {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
@@ -432,15 +468,45 @@ export default function ProductPage() {
                                 <SelectItem key={option.value} value={option.value}>
                                   <span>
                                     {isArabic ? (option.label_ar || option.label) : option.label}
-                                    {option.price_modifier && option.price_modifier !== 0 && (
-                                      <span className="ml-2 text-sm text-muted-foreground">
-                                        ({option.price_modifier > 0 ? '+' : ''}{formatPrice(
-                                          currency === 'OMR' ? option.price_modifier :
-                                          currency === 'SAR' ? option.price_modifier * 3.75 :
-                                          option.price_modifier * 2.6
-                                        )})
-                                      </span>
-                                    )}
+                                    {(() => {
+                                      const regularModifier = currency === 'OMR' ? 
+                                        (option.price_modifier_omr || option.price_modifier || 0) :
+                                        currency === 'SAR' ? 
+                                        (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75) :
+                                        (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+                                      
+                                      const saleModifier = option.on_sale && option.sale_price_modifier_omr !== undefined ?
+                                        (currency === 'OMR' ? 
+                                          option.sale_price_modifier_omr :
+                                          currency === 'SAR' ? 
+                                          (option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75) :
+                                          (option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6)) :
+                                        null
+                                      
+                                      const displayModifier = saleModifier !== null ? saleModifier : regularModifier
+                                      
+                                      if (displayModifier !== 0) {
+                                        return (
+                                          <span className="ml-2 text-sm">
+                                            {saleModifier !== null && saleModifier < regularModifier ? (
+                                              <>
+                                                <span className="line-through text-muted-foreground">
+                                                  ({regularModifier > 0 ? '+' : ''}{formatPrice(regularModifier)})
+                                                </span>
+                                                <span className="text-red-600 ml-1">
+                                                  ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                                </span>
+                                              </>
+                                            ) : (
+                                              <span className="text-muted-foreground">
+                                                ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                              </span>
+                                            )}
+                                          </span>
+                                        )
+                                      }
+                                      return null
+                                    })()}
                                   </span>
                                 </SelectItem>
                               ))}

@@ -159,6 +159,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       // Base price is always in OMR, convert to current currency
       let basePrice = item.product.price_omr || 0
+      let baseSalePrice = item.product.sale_price_omr || basePrice
       
       // Apply property-based price modifications
       if (item.product.properties && item.selectedProperties && Object.keys(item.selectedProperties).length > 0) {
@@ -166,21 +167,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const property = item.product.properties.find(p => p.name === propertyName)
           if (property && property.affects_price) {
             const option = property.options.find(opt => opt.value === selectedValue)
-            if (option?.price_modifier_omr) {
-              basePrice += option.price_modifier_omr
+            if (option) {
+              // Check if option has sale price and use it, otherwise use regular price
+              const regularModifier = option.price_modifier_omr || option.price_modifier || 0
+              let saleModifier = regularModifier
+              
+              if (option.on_sale && option.sale_price_modifier_omr !== undefined) {
+                saleModifier = option.sale_price_modifier_omr
+              }
+              
+              // Apply the appropriate modifier to both prices
+              basePrice += regularModifier
+              baseSalePrice += saleModifier
             }
           }
         }
       }
       
-      // Apply sale price if available and lower than modified base price
-      if (item.product.sale_price_omr && item.product.sale_price_omr < (item.product.price_omr || 0)) {
-        // Note: We don't apply property modifiers to sale price base as that would be too complex
-        // Instead, we compare the original sale price with the original base price
-        basePrice = item.product.sale_price_omr
-      }
+      // Use the sale price if it's lower than the regular price
+      const finalPrice = baseSalePrice < basePrice ? baseSalePrice : basePrice
       
-      const price = basePrice * conversionRates[currency]
+      const price = finalPrice * conversionRates[currency]
       return total + (price * item.quantity)
     }, 0)
   }
