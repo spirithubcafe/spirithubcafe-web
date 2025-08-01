@@ -2,7 +2,7 @@ import { ShoppingBag, Clock, Heart, Star } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import type { Order } from '@/types'
 import type { Product } from '@/lib/firebase'
 

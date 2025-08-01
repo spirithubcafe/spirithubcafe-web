@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import toast from 'react-hot-toast'
@@ -22,6 +22,8 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedProperties, setSelectedProperties] = useState<Record<string, string>>({})
 
   const isArabic = i18n.language === 'ar'
 
@@ -38,6 +40,31 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     loadCategories()
   }, [])
 
+  // Get all product images from different fields
+  const getProductImages = (product: Product): string[] => {
+    const images: string[] = []
+    
+    // Add images from different fields
+    if (product.images && Array.isArray(product.images)) {
+      images.push(...product.images)
+    }
+    if (product.gallery && Array.isArray(product.gallery)) {
+      images.push(...product.gallery)
+    }
+    if (product.gallery_images && Array.isArray(product.gallery_images)) {
+      images.push(...product.gallery_images)
+    }
+    if (product.image) {
+      images.push(product.image)
+    }
+    if (product.image_url) {
+      images.push(product.image_url)
+    }
+    
+    // Remove duplicates and empty strings
+    return [...new Set(images.filter(img => img && img.trim() !== ''))]
+  }
+
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId)
@@ -45,34 +72,62 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     return isArabic ? (category.name_ar || category.name) : category.name
   }
 
-  // Get product price based on selected currency
+  // Get product price based on selected currency and properties
   const getProductPrice = (product: Product) => {
-    switch (currency) {
-      case 'OMR':
-        return product.price_omr || (product.price_omr * 0.385)
-      case 'SAR':
-        return product.price_sar || (product.price_omr * 3.75)
-      case 'USD':
-      default:
-        return product.price_omr
-    }
-  }
-
-  // Get sale price if on sale
-  const getSalePrice = (product: Product) => {
-    if (!product.is_on_sale) return null
+    let basePrice = 0
     
     switch (currency) {
       case 'OMR':
-        return product.sale_price_omr || (product.sale_price_omr ? product.sale_price_omr * 0.385 : null)
+        basePrice = product.price_omr || 0
+        break
+      case 'SAR':
+        basePrice = product.price_sar || (product.price_omr || 0) * 3.75
+        break
+      case 'USD':
+      default:
+        basePrice = product.price_usd || (product.price_omr || 0) * 2.6
+        break
+    }
+
+    // Apply property-based price modifications
+    if (product.properties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            if (currency === 'OMR') {
+              basePrice += option.price_modifier
+            } else if (currency === 'SAR') {
+              basePrice += option.price_modifier * 3.75
+            } else {
+              basePrice += option.price_modifier * 2.6
+            }
+          }
+        }
+      }
+    }
+
+    return basePrice
+  }
+
+  // Get sale price based on selected currency
+  const getSalePrice = (product: Product) => {
+    switch (currency) {
+      case 'OMR':
+        return product.sale_price_omr || null
       case 'SAR':
         return product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
       case 'USD':
       default:
-        return product.sale_price_omr || null
+        return product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : null)
     }
   }
 
+
+
+
+  const productImages = getProductImages(product)
   const productPrice = getProductPrice(product)
   const salePrice = getSalePrice(product)
   const productName = isArabic ? (product.name_ar || product.name) : product.name
@@ -81,9 +136,14 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const handleAddToCart = async () => {
     setIsLoading(true)
     try {
-      await addToCart(product, quantity)
+      const productWithProperties = {
+        ...product,
+        selectedProperties: Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined
+      }
+      await addToCart(productWithProperties, quantity)
       setIsOpen(false)
       setQuantity(1)
+      setSelectedProperties({})
       toast.success(isArabic ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -117,14 +177,15 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="grid md:grid-cols-2 gap-6">
-          {/* Product Image */}
+          {/* Product Images */}
           <div className="space-y-4">
+            {/* Main Image */}
             <div className="relative aspect-square rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 overflow-hidden">
-              {product.image ? (
+              {productImages.length > 0 ? (
                 <img
-                  src={product.image}
+                  src={productImages[selectedImage] || productImages[0]}
                   alt={productName}
                   className="w-full h-full object-cover"
                 />
@@ -153,6 +214,27 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 </Button>
               </div>
             </div>
+
+            {/* Image Thumbnails */}
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto">
+                {productImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                      selectedImage === index ? 'border-amber-500' : 'border-gray-200'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${productName} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}
@@ -167,11 +249,13 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                        i < Math.floor(product.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                       }`}
                     />
                   ))}
-                  <span className="text-sm text-muted-foreground ml-1">(4.2)</span>
+                  <span className="text-sm text-muted-foreground ml-1">
+                    ({product.average_rating?.toFixed(1) || '0.0'})
+                  </span>
                 </div>
               </div>
               <DialogTitle className="text-2xl font-bold text-left">
@@ -181,6 +265,42 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 {productDescription}
               </DialogDescription>
             </DialogHeader>
+
+            {/* Dynamic Properties */}
+            {product.properties && product.properties.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-medium">{isArabic ? 'المواصفات' : 'Options'}</h4>
+                {product.properties.map((property) => (
+                  <div key={property.name} className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {isArabic ? (property.name_ar || property.name) : property.name}
+                    </label>
+                    <select
+                      value={selectedProperties[property.name] || ''}
+                      onChange={(e) => setSelectedProperties(prev => ({ ...prev, [property.name]: e.target.value }))}
+                      className="w-full p-2 border rounded-lg"
+                      aria-label={isArabic ? (property.name_ar || property.name) : property.name}
+                    >
+                      <option value="">
+                        {isArabic ? 'اختر...' : 'Select...'}
+                      </option>
+                      {property.options?.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {isArabic ? (option.label_ar || option.label) : option.label}
+                          {option.price_modifier && option.price_modifier !== 0 && (
+                            ` (${option.price_modifier > 0 ? '+' : ''}${formatPrice(
+                              currency === 'OMR' ? option.price_modifier :
+                              currency === 'SAR' ? option.price_modifier * 3.75 :
+                              option.price_modifier * 2.6
+                            )})`
+                          )}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Price */}
             <div className="flex items-center gap-3">
@@ -192,9 +312,14 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                   <span className="text-lg line-through text-muted-foreground">
                     {formatPrice(productPrice)}
                   </span>
-                  <Badge variant="destructive">
-                    {Math.round(((productPrice - salePrice) / productPrice) * 100)}% {isArabic ? 'خصم' : 'OFF'}
-                  </Badge>
+                  {(() => {
+                    const discountPercent = Math.round(((productPrice - salePrice) / productPrice) * 100)
+                    return discountPercent > 0 ? (
+                      <Badge variant="destructive">
+                        {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
+                      </Badge>
+                    ) : null
+                  })()}
                 </>
               ) : (
                 <span className="text-3xl font-bold text-amber-600">

@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 
 export function CurrencyToggle() {

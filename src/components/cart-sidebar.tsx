@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/hooks/useCart'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
+import { conversionRates } from '@/lib/currency'
 
 // Define local interface for cart items with products
 interface CartItemWithProduct extends CartItem {
@@ -17,12 +18,23 @@ interface CartItemWithProduct extends CartItem {
 export function CartSidebar() {
   const { t, i18n } = useTranslation()
   const { cart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice } = useCart()
-  const { formatPrice } = useCurrency()
+  const { formatPrice, currency } = useCurrency()
   const isRTL = i18n.language === 'ar'
 
   const [open, setOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const navigate = useNavigate()
+
+  // Helper function to get product price in current currency
+  const getProductPrice = (product: Product): number => {
+    return (product.price_omr || 0) * conversionRates[currency]
+  }
+
+  // Helper function to get sale price in current currency  
+  const getSalePrice = (product: Product): number | null => {
+    if (!product.sale_price_omr || product.sale_price_omr >= (product.price_omr || 0)) return null
+    return product.sale_price_omr * conversionRates[currency]
+  }
 
   // Load categories when component mounts
   useEffect(() => {
@@ -154,11 +166,12 @@ export function CartSidebar() {
                           </div>
                           
                           <p className="font-semibold text-amber-600">
-                            {item.product && formatPrice(
-                              (item.product.is_on_sale && item.product.sale_price_omr 
-                                ? item.product.sale_price_omr 
-                                : item.product.price_omr || 0) * item.quantity
-                            )}
+                            {item.product && (() => {
+                              const salePrice = getSalePrice(item.product)
+                              const regularPrice = getProductPrice(item.product)
+                              const finalPrice = salePrice || regularPrice
+                              return formatPrice(finalPrice * item.quantity)
+                            })()}
                           </p>
                         </div>
                       </div>

@@ -9,19 +9,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useCart } from '@/hooks/useCart'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
+import { conversionRates } from '@/lib/currency'
 
 export default function CheckoutPage() {
   useScrollToTopOnRouteChange()
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
-  const { formatPrice } = useCurrency()
+  const { formatPrice, currency } = useCurrency()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
 
   const isArabic = i18n.language === 'ar'
+
+  // Helper function to get product price in current currency
+  const getProductPrice = (product: any): number => {
+    let basePrice = product.price_omr || 0
+    if (product.sale_price_omr && product.sale_price_omr < basePrice) {
+      basePrice = product.sale_price_omr
+    }
+    return basePrice * conversionRates[currency]
+  }
 
   const [formData, setFormData] = useState({
     // Personal Info
@@ -397,7 +407,7 @@ export default function CheckoutPage() {
                           </p>
                         </div>
                         <div className="text-sm font-medium currency">
-                          {formatPrice((item.product?.price_omr || item.product?.price_usd || item.product?.price_sar || 0) * item.quantity)}
+                          {item.product && formatPrice(getProductPrice(item.product) * item.quantity)}
                         </div>
                       </div>
                     ))}

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
@@ -62,12 +62,12 @@ export function ShopPage() {
   const getProductPrice = (product: Product) => {
     switch (currency) {
       case 'OMR':
-        return product.price_omr || (product.price_omr * 0.385) // USD to OMR conversion
+        return product.price_omr || 0
       case 'SAR':
-        return product.price_sar || (product.price_omr * 3.75) // USD to SAR conversion
+        return product.price_sar || (product.price_omr || 0) * 3.75 // OMR to SAR conversion
       case 'USD':
       default:
-        return product.price_omr
+        return product.price_usd || (product.price_omr || 0) * 2.6 // OMR to USD conversion
     }
   }
 
@@ -77,12 +77,12 @@ export function ShopPage() {
     
     switch (currency) {
       case 'OMR':
-        return product.sale_price_omr || (product.sale_price_omr ? product.sale_price_omr * 0.385 : null)
+        return product.sale_price_omr || null
       case 'SAR':
         return product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
       case 'USD':
       default:
-        return product.sale_price_omr || null
+        return product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : null)
     }
   }
 
@@ -334,11 +334,21 @@ export function ShopPage() {
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
-                        {product.image ? (
+                        {(product.images?.[0] || product.gallery?.[0] || product.gallery_images?.[0] || product.image_url || product.image) ? (
                           <img
-                            src={product.image}
+                            src={
+                              product.images?.[0] || 
+                              product.gallery?.[0] || 
+                              product.gallery_images?.[0] || 
+                              product.image_url || 
+                              product.image || 
+                              '/images/logo.png'
+                            }
                             alt={productName}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/logo.png'
+                            }}
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
@@ -404,7 +414,7 @@ export function ShopPage() {
 
                       {/* Price */}
                       <div className="flex items-center gap-2">
-                        {salePrice ? (
+                        {salePrice && salePrice < (productPrice ?? 0) ? (
                           <>
                             <span className="text-xl font-bold text-red-600">
                               {formatPrice(salePrice)}
@@ -412,9 +422,14 @@ export function ShopPage() {
                             <span className="text-sm line-through text-muted-foreground">
                               {formatPrice(productPrice ?? 0)}
                             </span>
-                            <Badge variant="destructive" className="text-xs">
-                              {Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)}% {isArabic ? 'خصم' : 'OFF'}
-                            </Badge>
+                            {(() => {
+                              const discountPercent = Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)
+                              return discountPercent > 0 ? (
+                                <Badge variant="destructive" className="text-xs">
+                                  {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
+                                </Badge>
+                              ) : null
+                            })()}
                           </>
                         ) : (
                           <span className="text-xl font-bold text-amber-600">

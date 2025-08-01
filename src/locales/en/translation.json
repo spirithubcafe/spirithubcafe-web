@@ -37,6 +37,12 @@
         "title": "Expert Roasting",
         "description": "Years of experience in perfecting the art of coffee roasting"
       }
+    },
+    "featured": {
+      "title": "Featured Products",
+      "subtitle": "Discover our best deals and top-rated products",
+      "noProducts": "No featured products available at the moment",
+      "viewAll": "View All Products"
     }
   },
   "shop": {

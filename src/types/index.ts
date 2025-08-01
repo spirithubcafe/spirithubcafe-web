@@ -84,18 +84,22 @@ export interface RoastLevelType {
   created_at: string
 }
 
+// Product Property Option Interface
+export interface ProductPropertyOption {
+  value: string
+  label: string
+  label_ar: string
+  price_modifier?: number // Price change in OMR
+}
+
 // Product Property Interface (for dynamic properties)
 export interface ProductProperty {
-  id: number
-  product_id: number
-  property_name: string
-  property_name_ar?: string
-  property_value: string
-  property_value_ar?: string
-  property_type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect'
-  sort_order: number
-  is_active: boolean
-  created_at: string
+  name: string
+  name_ar: string
+  type: 'select' | 'radio' | 'checkbox'
+  required: boolean
+  affects_price: boolean
+  options: ProductPropertyOption[]
 }
 
 // Product Interface

@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
 import { firestoreService, subscriptions, type Product } from '@/lib/firebase'
 import { useAuth } from '@/hooks/useAuth'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
+import { conversionRates } from '@/lib/currency'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
@@ -156,32 +157,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cartItems.reduce((total, item) => {
       if (!item.product) return total
       
-      // Get price based on current currency
-      let price: number
-      switch (currency) {
-        case 'OMR':
-          price = item.product.price_omr || 0
-          if (item.product.is_on_sale && item.product.sale_price_omr) {
-            price = item.product.sale_price_omr
-          }
-          break
-        case 'SAR':
-          price = item.product.price_sar || (item.product.price_omr * 3.75) || 0
-          if (item.product.is_on_sale && item.product.sale_price_sar) {
-            price = item.product.sale_price_sar
-          } else if (item.product.is_on_sale && item.product.sale_price_omr) {
-            price = item.product.sale_price_omr * 3.75
-          }
-          break
-        case 'USD':
-        default:
-          price = item.product.price_omr || 0
-          if (item.product.is_on_sale && item.product.sale_price_omr) {
-            price = item.product.sale_price_omr
-          }
-          break
+      // Base price is always in OMR, convert to current currency
+      let basePrice = item.product.price_omr || 0
+      if (item.product.sale_price_omr && item.product.sale_price_omr < basePrice) {
+        basePrice = item.product.sale_price_omr
       }
       
+      const price = basePrice * conversionRates[currency]
       return total + (price * item.quantity)
     }, 0)
   }

@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
-import { useCurrency } from '@/components/currency-provider'
+import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type ProductReview } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
@@ -106,26 +106,29 @@ export default function ProductPage() {
     
     switch (currency) {
       case 'OMR':
-        return product.price_omr || (product.price_usd || 0) * 0.385
+        return product.price_omr || 0
       case 'SAR':
-        return product.price_sar || (product.price_usd || 0) * 3.75
+        return product.price_sar || (product.price_omr || 0) * 3.75
       case 'USD':
       default:
-        return product.price_usd || 0
+        return product.price_usd || (product.price_omr || 0) * 2.6
     }
   }
 
   const getSalePrice = (): number | null => {
-    if (!product || !product.sale_price_usd) return null
+    if (!product) return null
     
     switch (currency) {
       case 'OMR':
-        return product.sale_price_omr || product.sale_price_usd * 0.385
+        if (!product.sale_price_omr) return null
+        return product.sale_price_omr
       case 'SAR':
-        return product.sale_price_sar || product.sale_price_usd * 3.75
+        if (!product.sale_price_sar && !product.sale_price_omr) return null
+        return product.sale_price_sar || (product.sale_price_omr || 0) * 3.75
       case 'USD':
       default:
-        return product.sale_price_usd
+        if (!product.sale_price_usd && !product.sale_price_omr) return null
+        return product.sale_price_usd || (product.sale_price_omr || 0) * 2.6
     }
   }
 
@@ -219,33 +222,57 @@ export default function ProductPage() {
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
-              <img
-                src={product.images?.[selectedImageIndex] || product.image || '/images/placeholder-product.png'}
-                alt={isArabic ? product.name_ar : product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            {product.images && product.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {product.images.map((image: string, index: number) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`aspect-square rounded border-2 overflow-hidden transition-all ${
-                      selectedImageIndex === index ? 'border-primary' : 'border-transparent'
-                    }`}
-                  >
+            {(() => {
+              // Get all available images
+              const availableImages = [
+                ...(product.images || []),
+                ...(product.gallery || []),
+                ...(product.gallery_images || [])
+              ].filter(img => img && img.trim() !== '')
+              
+              // Add main image if it exists and not already in the list
+              if (product.image && !availableImages.includes(product.image)) {
+                availableImages.unshift(product.image)
+              }
+              if (product.image_url && !availableImages.includes(product.image_url)) {
+                availableImages.unshift(product.image_url)
+              }
+              
+              // Remove duplicates
+              const uniqueImages = [...new Set(availableImages)]
+              
+              return (
+                <>
+                  <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
                     <img
-                      src={image}
-                      alt={`${isArabic ? product.name_ar : product.name} ${index + 1}`}
+                      src={uniqueImages[selectedImageIndex] || '/images/placeholder-product.png'}
+                      alt={isArabic ? product.name_ar : product.name}
                       className="w-full h-full object-cover"
                     />
-                  </button>
-                ))}
-              </div>
-            )}
+                  </div>
+                  
+                  {uniqueImages.length > 1 && (
+                    <div className="grid grid-cols-4 gap-2">
+                      {uniqueImages.map((image: string, index: number) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedImageIndex(index)}
+                          className={`aspect-square rounded border-2 overflow-hidden transition-all ${
+                            selectedImageIndex === index ? 'border-primary' : 'border-transparent'
+                          }`}
+                        >
+                          <img
+                            src={image}
+                            alt={`${isArabic ? product.name_ar : product.name} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
           </div>
 
           {/* Product Information */}
@@ -295,9 +322,14 @@ export default function ProductPage() {
                     <span className="text-xl text-muted-foreground line-through">
                       {formatPrice(productPrice)}
                     </span>
-                    <Badge variant="destructive">
-                      {Math.round(((productPrice - salePrice) / productPrice) * 100)}% {isArabic ? 'خصم' : 'OFF'}
-                    </Badge>
+                    {(() => {
+                      const discountPercent = Math.round(((productPrice - salePrice) / productPrice) * 100)
+                      return discountPercent > 0 ? (
+                        <Badge variant="destructive">
+                          {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
+                        </Badge>
+                      ) : null
+                    })()}
                   </div>
                 </div>
               ) : (

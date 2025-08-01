@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-
-type Currency = 'USD' | 'SAR' | 'OMR'
+import React, { useEffect, useState } from 'react'
+import type { Currency } from '@/lib/currency'
+import { currencySymbols } from '@/lib/currency'
+import { CurrencyProviderContext } from '@/hooks/useCurrency'
 
 type CurrencyProviderProps = {
   children: React.ReactNode
@@ -8,37 +9,9 @@ type CurrencyProviderProps = {
   storageKey?: string
 }
 
-type CurrencyProviderState = {
-  currency: Currency
-  setCurrency: (currency: Currency) => void
-  formatPrice: (price: number) => string
-  getSymbol: () => string
-}
-
-const initialState: CurrencyProviderState = {
-  currency: 'USD',
-  setCurrency: () => null,
-  formatPrice: () => '',
-  getSymbol: () => '',
-}
-
-const CurrencyProviderContext = createContext<CurrencyProviderState>(initialState)
-
-const currencySymbols = {
-  USD: '$',
-  SAR: 'ر.س',
-  OMR: 'ر.ع'
-}
-
-const currencyRates = {
-  USD: 1,
-  SAR: 3.75, // 1 USD = 3.75 SAR
-  OMR: 0.385 // 1 USD = 0.385 OMR
-}
-
 export function CurrencyProvider({
   children,
-  defaultCurrency = 'USD',
+  defaultCurrency = 'OMR',
   storageKey = 'spirithub-currency',
   ...props
 }: CurrencyProviderProps) {
@@ -51,14 +24,15 @@ export function CurrencyProvider({
   }, [currency, storageKey])
 
   const formatPrice = (price: number): string => {
-    const convertedPrice = price * currencyRates[currency]
+    // Price is already converted in the component level (getProductPrice)
+    // We just need to format and add the symbol
     const symbol = currencySymbols[currency]
     
     // Format based on currency
     const formattedPrice = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: currency === 'OMR' ? 3 : 2,
       maximumFractionDigits: currency === 'OMR' ? 3 : 2,
-    }).format(convertedPrice)
+    }).format(price)
 
     // For Arabic currencies, put symbol after number
     if (currency === 'SAR' || currency === 'OMR') {
@@ -86,13 +60,4 @@ export function CurrencyProvider({
       {children}
     </CurrencyProviderContext.Provider>
   )
-}
-
-export const useCurrency = () => {
-  const context = useContext(CurrencyProviderContext)
-
-  if (context === undefined)
-    throw new Error('useCurrency must be used within a CurrencyProvider')
-
-  return context
 }

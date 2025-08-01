@@ -70,11 +70,20 @@ export interface Category {
   updated: Date;
 }
 
+export interface ProductPropertyOption {
+  value: string;
+  label: string;
+  label_ar: string;
+  price_modifier?: number; // Price change in OMR
+}
+
 export interface ProductProperty {
   name: string;
   name_ar: string;
-  value: string;
-  value_ar: string;
+  type: 'select' | 'radio' | 'checkbox';
+  required: boolean;
+  affects_price: boolean;
+  options: ProductPropertyOption[];
 }
 
 export interface Product {

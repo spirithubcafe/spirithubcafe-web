@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
-import { useCurrency } from '@/components/currency-provider'
-import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import { useCurrency } from '@/hooks/useCurrency'
+import { firestoreService, type Product, type Category, type ProductProperty } from '@/lib/firebase'
 
 interface ProductFormData {
   name: string
@@ -34,6 +34,7 @@ interface ProductFormData {
   sort_order: number
   meta_title: string
   meta_description: string
+  properties: ProductProperty[]
 }
 
 interface ProductFilters {
@@ -74,6 +75,7 @@ export default function ProductManagement() {
     sale_price_omr: 0,
     image: '',
     gallery: [],
+    properties: [],
     is_active: true,
     is_featured: false,
     is_bestseller: false,
@@ -147,6 +149,7 @@ export default function ProductManagement() {
         sale_price_omr: product.sale_price_omr || 0,
         image: product.image || '',
         gallery: product.gallery || [],
+        properties: product.properties || [],
         is_active: product.is_active,
         is_featured: product.is_featured,
         is_bestseller: product.is_bestseller,
@@ -171,6 +174,7 @@ export default function ProductManagement() {
         sale_price_omr: 0,
         image: '',
         gallery: [],
+        properties: [],
         is_active: true,
         is_featured: false,
         is_bestseller: false,
@@ -428,12 +432,18 @@ export default function ProductManagement() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-lg">
-                        {formatPrice(product.price_omr)}
-                      </p>
-                      {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
-                        <p className="text-xs text-muted-foreground line-through">
-                          {formatPrice(product.sale_price_omr)}
+                      {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr ? (
+                        <>
+                          <p className="font-semibold text-lg text-red-600">
+                            {product.sale_price_omr.toFixed(3)} ر.ع
+                          </p>
+                          <p className="text-xs text-muted-foreground line-through">
+                            {product.price_omr.toFixed(3)} ر.ع
+                          </p>
+                        </>
+                      ) : (
+                        <p className="font-semibold text-lg">
+                          {product.price_omr.toFixed(3)} ر.ع
                         </p>
                       )}
                     </div>
@@ -514,10 +524,11 @@ export default function ProductManagement() {
 
           <form onSubmit={handleSubmit}>
             <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="basic">{isArabic ? 'أساسي' : 'Basic'}</TabsTrigger>
                 <TabsTrigger value="pricing">{isArabic ? 'الأسعار' : 'Pricing'}</TabsTrigger>
                 <TabsTrigger value="media">{isArabic ? 'الصور' : 'Media'}</TabsTrigger>
+                <TabsTrigger value="properties">{isArabic ? 'المواصفات' : 'Properties'}</TabsTrigger>
                 <TabsTrigger value="settings">{isArabic ? 'إعدادات' : 'Settings'}</TabsTrigger>
               </TabsList>
 
@@ -688,6 +699,234 @@ export default function ProductManagement() {
                       {isArabic ? 'إضافة صورة' : 'Add Image'}
                     </Button>
                   </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="properties" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">{isArabic ? 'مواصفات المنتج الديناميكية' : 'Dynamic Product Properties'}</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newProperty: ProductProperty = {
+                          name: '',
+                          name_ar: '',
+                          type: 'select',
+                          required: false,
+                          affects_price: false,
+                          options: []
+                        }
+                        setFormData({ ...formData, properties: [...formData.properties, newProperty] })
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      {isArabic ? 'إضافة مواصفة' : 'Add Property'}
+                    </Button>
+                  </div>
+
+                  {formData.properties.map((property, propertyIndex) => {
+                    const uniqueId = Math.random().toString(36).substr(2, 9);
+                    return (
+                    <Card key={propertyIndex} className="p-4 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h5 className="font-medium">{isArabic ? `مواصفة ${propertyIndex + 1}` : `Property ${propertyIndex + 1}`}</h5>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newProperties = [...formData.properties]
+                            newProperties.splice(propertyIndex, 1)
+                            setFormData({ ...formData, properties: newProperties })
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>{isArabic ? 'اسم المواصفة (إنجليزي)' : 'Property Name (English)'}</Label>
+                          <Input
+                            value={property.name}
+                            onChange={(e) => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].name = e.target.value
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                            placeholder={isArabic ? 'مثال: الوزن' : 'e.g., Weight'}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>{isArabic ? 'اسم المواصفة (عربي)' : 'Property Name (Arabic)'}</Label>
+                          <Input
+                            value={property.name_ar}
+                            onChange={(e) => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].name_ar = e.target.value
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                            placeholder={isArabic ? 'مثال: الوزن' : 'e.g., الوزن'}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>{isArabic ? 'نوع المواصفة' : 'Property Type'}</Label>
+                          <Select
+                            value={property.type}
+                            onValueChange={(value: 'select' | 'radio' | 'checkbox') => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].type = value
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="select">{isArabic ? 'قائمة منسدلة' : 'Dropdown'}</SelectItem>
+                              <SelectItem value="radio">{isArabic ? 'أزرار اختيار' : 'Radio Buttons'}</SelectItem>
+                              <SelectItem value="checkbox">{isArabic ? 'مربعات اختيار' : 'Checkboxes'}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`property-required-${uniqueId}`}
+                            checked={property.required}
+                            onChange={(e) => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].required = e.target.checked
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                            aria-label={isArabic ? 'مطلوب' : 'Required'}
+                          />
+                          <Label htmlFor={`property-required-${uniqueId}`}>
+                            {isArabic ? 'مطلوب' : 'Required'}
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`property-affects-price-${uniqueId}`}
+                            checked={property.affects_price}
+                            onChange={(e) => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].affects_price = e.target.checked
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                            aria-label={isArabic ? 'يؤثر على السعر' : 'Affects Price'}
+                          />
+                          <Label htmlFor={`property-affects-price-${uniqueId}`}>
+                            {isArabic ? 'يؤثر على السعر' : 'Affects Price'}
+                          </Label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <Label>{isArabic ? 'الخيارات' : 'Options'}</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const newProperties = [...formData.properties]
+                              newProperties[propertyIndex].options.push({
+                                value: '',
+                                label: '',
+                                label_ar: '',
+                                price_modifier: 0
+                              })
+                              setFormData({ ...formData, properties: newProperties })
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            {isArabic ? 'إضافة خيار' : 'Add Option'}
+                          </Button>
+                        </div>
+
+                        {property.options.map((option, optionIndex) => (
+                          <div key={optionIndex} className="grid grid-cols-1 md:grid-cols-5 gap-2 p-3 border rounded-lg">
+                            <div className="space-y-1">
+                              <Label className="text-xs">{isArabic ? 'القيمة' : 'Value'}</Label>
+                              <Input
+                                value={option.value}
+                                onChange={(e) => {
+                                  const newProperties = [...formData.properties]
+                                  newProperties[propertyIndex].options[optionIndex].value = e.target.value
+                                  setFormData({ ...formData, properties: newProperties })
+                                }}
+                                placeholder="250g"
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">{isArabic ? 'التسمية (إنجليزي)' : 'Label (English)'}</Label>
+                              <Input
+                                value={option.label}
+                                onChange={(e) => {
+                                  const newProperties = [...formData.properties]
+                                  newProperties[propertyIndex].options[optionIndex].label = e.target.value
+                                  setFormData({ ...formData, properties: newProperties })
+                                }}
+                                placeholder="250 grams"
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">{isArabic ? 'التسمية (عربي)' : 'Label (Arabic)'}</Label>
+                              <Input
+                                value={option.label_ar}
+                                onChange={(e) => {
+                                  const newProperties = [...formData.properties]
+                                  newProperties[propertyIndex].options[optionIndex].label_ar = e.target.value
+                                  setFormData({ ...formData, properties: newProperties })
+                                }}
+                                placeholder="250 جرام"
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">{isArabic ? 'تعديل السعر (OMR)' : 'Price Modifier (OMR)'}</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={option.price_modifier || 0}
+                                onChange={(e) => {
+                                  const newProperties = [...formData.properties]
+                                  newProperties[propertyIndex].options[optionIndex].price_modifier = parseFloat(e.target.value) || 0
+                                  setFormData({ ...formData, properties: newProperties })
+                                }}
+                                placeholder="0.00"
+                                className="text-sm"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newProperties = [...formData.properties]
+                                  newProperties[propertyIndex].options.splice(optionIndex, 1)
+                                  setFormData({ ...formData, properties: newProperties })
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  )})}
                 </div>
               </TabsContent>
 
