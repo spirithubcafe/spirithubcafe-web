@@ -200,7 +200,7 @@ export default function ProductManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -266,7 +266,7 @@ export default function ProductManagement() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse py-0">
               <CardContent className="p-4">
                 {/* Image skeleton */}
                 <div className="aspect-square bg-muted rounded-lg mb-4"></div>
@@ -309,7 +309,7 @@ export default function ProductManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredProducts.map((product) => (
-            <Card key={product.id} className="group hover:shadow-lg transition-shadow">
+            <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0">
               <CardContent className="p-4">
                 {/* Product Image */}
                 <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">

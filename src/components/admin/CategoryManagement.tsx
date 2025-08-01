@@ -170,7 +170,7 @@ export default function CategoryManagement() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse py-0">
               <CardContent className="p-6">
                 {/* Image skeleton */}
                 <div className="aspect-video bg-muted rounded-lg mb-4"></div>
@@ -212,7 +212,7 @@ export default function CategoryManagement() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categories.map((category) => (
-            <Card key={category.id} className="group hover:shadow-lg transition-shadow">
+            <Card key={category.id} className="group hover:shadow-lg transition-shadow py-0">
               <CardContent className="p-6">
                 {/* Category Image */}
                 <div className="h-32 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800 rounded-lg mb-4 flex items-center justify-center">

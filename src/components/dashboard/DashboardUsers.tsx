@@ -129,7 +129,7 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
             <div className="space-y-4">
               {users.map((user) => (
                 <Card key={user.id}>
-                  <CardContent className="pt-6">
+                  <CardContent>
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                       <div className="flex items-center space-x-4">
                         <Avatar>
