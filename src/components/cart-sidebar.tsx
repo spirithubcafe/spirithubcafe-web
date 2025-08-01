@@ -25,9 +25,25 @@ export function CartSidebar() {
   const [categories, setCategories] = useState<Category[]>([])
   const navigate = useNavigate()
 
-  // Helper function to get product price in current currency
-  const getProductPrice = (product: Product): number => {
-    return (product.price_omr || 0) * conversionRates[currency]
+  // Helper function to get product price with selected properties
+  const getProductPriceWithProperties = (product: Product, selectedProperties?: Record<string, string>): number => {
+    let basePrice = (product.price_omr || 0) * conversionRates[currency]
+    
+    // Apply property-based price modifications
+    if (product.properties && selectedProperties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            // Convert price modifier from OMR to current currency
+            basePrice += option.price_modifier * conversionRates[currency]
+          }
+        }
+      }
+    }
+    
+    return basePrice
   }
 
   // Helper function to get sale price in current currency  
@@ -141,6 +157,23 @@ export function CartSidebar() {
                           {item.product?.category_id ? getCategoryName(item.product.category_id) : (i18n.language === 'ar' ? 'عام' : 'General')}
                         </p>
                         
+                        {/* Selected Properties */}
+                        {item.selectedProperties && Object.keys(item.selectedProperties).length > 0 && (
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            {Object.entries(item.selectedProperties).map(([propertyName, selectedValue]) => {
+                              const property = item.product?.properties?.find(p => p.name === propertyName)
+                              const option = property?.options?.find(opt => opt.value === selectedValue)
+                              const label = i18n.language === 'ar' ? (option?.label_ar || option?.label) : option?.label
+                              return (
+                                <div key={propertyName} className="flex justify-between">
+                                  <span>{i18n.language === 'ar' ? (property?.name_ar || property?.name) : property?.name}:</span>
+                                  <span>{label}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                        
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Button
@@ -168,7 +201,7 @@ export function CartSidebar() {
                           <p className="font-semibold text-amber-600">
                             {item.product && (() => {
                               const salePrice = getSalePrice(item.product)
-                              const regularPrice = getProductPrice(item.product)
+                              const regularPrice = getProductPriceWithProperties(item.product, item.selectedProperties)
                               const finalPrice = salePrice || regularPrice
                               return formatPrice(finalPrice * item.quantity)
                             })()}

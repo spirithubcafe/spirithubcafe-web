@@ -3,6 +3,7 @@ import { Star, ShoppingCart, Plus, Minus, Coffee, Heart, Share2 } from 'lucide-r
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
@@ -113,34 +114,60 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
   // Get sale price based on selected currency
   const getSalePrice = (product: Product) => {
+    let baseSalePrice: number | null = null
+    
     switch (currency) {
       case 'OMR':
-        return product.sale_price_omr || null
+        baseSalePrice = product.sale_price_omr || null
+        break
       case 'SAR':
-        return product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
+        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : null)
+        break
       case 'USD':
       default:
-        return product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : null)
+        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : null)
+        break
     }
+
+    if (!baseSalePrice) return null
+
+    // Apply property-based price modifications to sale price too
+    if (product.properties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            if (currency === 'OMR') {
+              baseSalePrice += option.price_modifier
+            } else if (currency === 'SAR') {
+              baseSalePrice += option.price_modifier * 3.75
+            } else {
+              baseSalePrice += option.price_modifier * 2.6
+            }
+          }
+        }
+      }
+    }
+
+    return baseSalePrice
   }
 
 
 
 
   const productImages = getProductImages(product)
-  const productPrice = getProductPrice(product)
-  const salePrice = getSalePrice(product)
   const productName = isArabic ? (product.name_ar || product.name) : product.name
   const productDescription = isArabic ? (product.description_ar || product.description) : product.description
+
+  // Recalculate prices when selectedProperties change
+  const productPrice = getProductPrice(product)
+  const salePrice = getSalePrice(product)
 
   const handleAddToCart = async () => {
     setIsLoading(true)
     try {
-      const productWithProperties = {
-        ...product,
-        selectedProperties: Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined
-      }
-      await addToCart(productWithProperties, quantity)
+      await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
       setIsOpen(false)
       setQuantity(1)
       setSelectedProperties({})
@@ -267,44 +294,74 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             </DialogHeader>
 
             {/* Dynamic Properties */}
-            {product.properties && product.properties.length > 0 && (
+            {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
               <div className="space-y-3">
-                <h4 className="font-medium">{isArabic ? 'المواصفات' : 'Options'}</h4>
-                {product.properties.map((property) => (
-                  <div key={property.name} className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {isArabic ? (property.name_ar || property.name) : property.name}
-                    </label>
-                    <select
-                      value={selectedProperties[property.name] || ''}
-                      onChange={(e) => setSelectedProperties(prev => ({ ...prev, [property.name]: e.target.value }))}
-                      className="w-full p-2 border rounded-lg"
-                      aria-label={isArabic ? (property.name_ar || property.name) : property.name}
-                    >
-                      <option value="">
-                        {isArabic ? 'اختر...' : 'Select...'}
-                      </option>
-                      {property.options?.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {isArabic ? (option.label_ar || option.label) : option.label}
-                          {option.price_modifier && option.price_modifier !== 0 && (
-                            ` (${option.price_modifier > 0 ? '+' : ''}${formatPrice(
-                              currency === 'OMR' ? option.price_modifier :
-                              currency === 'SAR' ? option.price_modifier * 3.75 :
-                              option.price_modifier * 2.6
-                            )})`
-                          )}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
+                <h4 className="font-medium">{isArabic ? 'الخيارات' : 'Options'}</h4>
+                {product.properties
+                  .filter(property => property.options && property.options.length > 0)
+                  .map((property) => (
+                    <div key={property.name} className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {isArabic ? (property.name_ar || property.name) : property.name}
+                        {property.affects_price && (
+                          <span className="text-muted-foreground text-xs ml-1">
+                            ({isArabic ? 'يؤثر على السعر' : 'affects price'})
+                          </span>
+                        )}
+                      </label>
+                      <Select
+                        value={selectedProperties[property.name] || ''}
+                        onValueChange={(value) => setSelectedProperties(prev => ({ ...prev, [property.name]: value }))}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={isArabic ? 'اختر...' : 'Select...'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {property.options?.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <span>
+                                {isArabic ? (option.label_ar || option.label) : option.label}
+                                {option.price_modifier && option.price_modifier !== 0 && (
+                                  <span className="ml-2 text-sm text-muted-foreground">
+                                    ({option.price_modifier > 0 ? '+' : ''}{formatPrice(
+                                      currency === 'OMR' ? option.price_modifier :
+                                      currency === 'SAR' ? option.price_modifier * 3.75 :
+                                      option.price_modifier * 2.6
+                                    )})
+                                  </span>
+                                )}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+              </div>
+            )}
+
+            {/* Static Properties */}
+            {product.properties && product.properties.some(p => !p.options || p.options.length === 0) && (
+              <div className="space-y-3">
+                <h4 className="font-medium">{isArabic ? 'المواصفات' : 'Specifications'}</h4>
+                <div className="space-y-2">
+                  {product.properties
+                    .filter(property => !property.options || property.options.length === 0)
+                    .map((property: any, index: number) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          {isArabic ? property.name_ar : property.name}:
+                        </span>
+                        <span>{isArabic ? property.value_ar : property.value}</span>
+                      </div>
+                    ))}
+                </div>
               </div>
             )}
 
             {/* Price */}
             <div className="flex items-center gap-3">
-              {salePrice ? (
+              {salePrice && salePrice < productPrice ? (
                 <>
                   <span className="text-3xl font-bold text-red-600">
                     {formatPrice(salePrice)}

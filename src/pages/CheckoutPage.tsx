@@ -24,10 +24,24 @@ export default function CheckoutPage() {
 
   const isArabic = i18n.language === 'ar'
 
-  // Helper function to get product price in current currency
-  const getProductPrice = (product: any): number => {
+  // Helper function to get product price in current currency with properties
+  const getProductPrice = (product: any, selectedProperties?: Record<string, string>): number => {
     let basePrice = product.price_omr || 0
-    if (product.sale_price_omr && product.sale_price_omr < basePrice) {
+    
+    // Apply property-based price modifications
+    if (product.properties && selectedProperties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find((p: any) => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find((opt: any) => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            basePrice += option.price_modifier
+          }
+        }
+      }
+    }
+    
+    if (product.sale_price_omr && product.sale_price_omr < (product.price_omr || 0)) {
       basePrice = product.sale_price_omr
     }
     return basePrice * conversionRates[currency]
@@ -394,7 +408,7 @@ export default function CheckoutPage() {
                   {/* Cart Items */}
                   <div className="space-y-3">
                     {cart?.items?.map((item) => (
-                      <div key={item.product?.id} className="flex items-center gap-3">
+                      <div key={item.product?.id} className="flex items-start gap-3">
                         <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
                           <Coffee className="h-6 w-6 text-amber-600" />
                         </div>
@@ -405,9 +419,24 @@ export default function CheckoutPage() {
                           <p className="text-xs text-muted-foreground">
                             {isArabic ? 'الكمية' : 'Qty'}: {item.quantity}
                           </p>
+                          {/* Selected Properties */}
+                          {item.selectedProperties && Object.keys(item.selectedProperties).length > 0 && (
+                            <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                              {Object.entries(item.selectedProperties).map(([propertyName, selectedValue]) => {
+                                const property = item.product?.properties?.find((p: any) => p.name === propertyName)
+                                const option = property?.options?.find((opt: any) => opt.value === selectedValue)
+                                const label = isArabic ? (option?.label_ar || option?.label) : option?.label
+                                return (
+                                  <div key={propertyName}>
+                                    <span className="font-medium">{isArabic ? (property?.name_ar || property?.name) : property?.name}:</span> {label}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
                         </div>
                         <div className="text-sm font-medium currency">
-                          {item.product && formatPrice(getProductPrice(item.product) * item.quantity)}
+                          {item.product && formatPrice(getProductPrice(item.product, item.selectedProperties) * item.quantity)}
                         </div>
                       </div>
                     ))}

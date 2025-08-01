@@ -15,7 +15,7 @@ interface CartContextType {
   cart: Cart | null
   cartItems: CartItemWithProduct[]
   loading: boolean
-  addToCart: (product: Product, quantity?: number) => Promise<void>
+  addToCart: (product: Product, quantity?: number, selectedProperties?: Record<string, string>) => Promise<void>
   removeFromCart: (itemId: string) => Promise<void>
   updateQuantity: (itemId: string, quantity: number) => Promise<void>
   clearCart: () => Promise<void>

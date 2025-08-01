@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
@@ -23,6 +24,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [reviews, setReviews] = useState<ProductReview[]>([])
+  const [selectedProperties, setSelectedProperties] = useState<Record<string, string>>({})
 
   useScrollToTopOnRouteChange()
 
@@ -93,7 +95,7 @@ export default function ProductPage() {
     if (!product) return
     
     try {
-      await addToCart(product, quantity)
+      await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
       toast.success(isArabic ? 'تم إضافة المنتج إلى السلة' : 'Product added to cart')
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -104,32 +106,84 @@ export default function ProductPage() {
   const getProductPrice = (): number => {
     if (!product) return 0
     
+    let basePrice: number
     switch (currency) {
       case 'OMR':
-        return product.price_omr || 0
+        basePrice = product.price_omr || 0
+        break
       case 'SAR':
-        return product.price_sar || (product.price_omr || 0) * 3.75
+        basePrice = product.price_sar || (product.price_omr || 0) * 3.75
+        break
       case 'USD':
       default:
-        return product.price_usd || (product.price_omr || 0) * 2.6
+        basePrice = product.price_usd || (product.price_omr || 0) * 2.6
+        break
     }
+
+    // Apply property-based price modifications
+    if (product.properties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            if (currency === 'OMR') {
+              basePrice += option.price_modifier
+            } else if (currency === 'SAR') {
+              basePrice += option.price_modifier * 3.75
+            } else {
+              basePrice += option.price_modifier * 2.6
+            }
+          }
+        }
+      }
+    }
+
+    return basePrice
   }
 
   const getSalePrice = (): number | null => {
     if (!product) return null
     
+    let baseSalePrice: number | null
     switch (currency) {
       case 'OMR':
         if (!product.sale_price_omr) return null
-        return product.sale_price_omr
+        baseSalePrice = product.sale_price_omr
+        break
       case 'SAR':
         if (!product.sale_price_sar && !product.sale_price_omr) return null
-        return product.sale_price_sar || (product.sale_price_omr || 0) * 3.75
+        baseSalePrice = product.sale_price_sar || (product.sale_price_omr || 0) * 3.75
+        break
       case 'USD':
       default:
         if (!product.sale_price_usd && !product.sale_price_omr) return null
-        return product.sale_price_usd || (product.sale_price_omr || 0) * 2.6
+        baseSalePrice = product.sale_price_usd || (product.sale_price_omr || 0) * 2.6
+        break
     }
+
+    if (!baseSalePrice) return null
+
+    // Apply property-based price modifications to sale price too
+    if (product.properties && Object.keys(selectedProperties).length > 0) {
+      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+        const property = product.properties.find(p => p.name === propertyName)
+        if (property && property.affects_price) {
+          const option = property.options.find(opt => opt.value === selectedValue)
+          if (option?.price_modifier) {
+            if (currency === 'OMR') {
+              baseSalePrice += option.price_modifier
+            } else if (currency === 'SAR') {
+              baseSalePrice += option.price_modifier * 3.75
+            } else {
+              baseSalePrice += option.price_modifier * 2.6
+            }
+          }
+        }
+      }
+    }
+
+    return baseSalePrice
   }
 
   const getProductBadges = () => {
@@ -313,7 +367,7 @@ export default function ProductPage() {
 
             {/* Price */}
             <div className="space-y-2">
-              {salePrice ? (
+              {salePrice && salePrice < productPrice ? (
                 <div>
                   <div className="flex items-center gap-3">
                     <span className="text-3xl font-bold text-red-600">
@@ -346,22 +400,77 @@ export default function ProductPage() {
               </p>
             </div>
 
-            {/* Properties */}
-            {product.properties && product.properties.length > 0 && (
+            {/* Dynamic Properties for Selection */}
+            {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
+              <Card className="py-0">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold mb-3">
+                    {isArabic ? 'الخيارات' : 'Options'}
+                  </h3>
+                  <div className="space-y-4">
+                    {product.properties
+                      .filter(property => property.options && property.options.length > 0)
+                      .map((property) => (
+                        <div key={property.name} className="space-y-2">
+                          <label className="text-sm font-medium">
+                            {isArabic ? (property.name_ar || property.name) : property.name}
+                            {property.affects_price && (
+                              <span className="text-muted-foreground text-xs ml-1">
+                                ({isArabic ? 'يؤثر على السعر' : 'affects price'})
+                              </span>
+                            )}
+                          </label>
+                          <Select
+                            value={selectedProperties[property.name] || ''}
+                            onValueChange={(value) => setSelectedProperties(prev => ({ ...prev, [property.name]: value }))}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={isArabic ? 'اختر...' : 'Select...'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {property.options?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  <span>
+                                    {isArabic ? (option.label_ar || option.label) : option.label}
+                                    {option.price_modifier && option.price_modifier !== 0 && (
+                                      <span className="ml-2 text-sm text-muted-foreground">
+                                        ({option.price_modifier > 0 ? '+' : ''}{formatPrice(
+                                          currency === 'OMR' ? option.price_modifier :
+                                          currency === 'SAR' ? option.price_modifier * 3.75 :
+                                          option.price_modifier * 2.6
+                                        )})
+                                      </span>
+                                    )}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Static Properties */}
+            {product.properties && product.properties.some(p => !p.options || p.options.length === 0) && (
               <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-3">
                     {isArabic ? 'المواصفات' : 'Specifications'}
                   </h3>
                   <div className="space-y-2">
-                    {product.properties.map((property: any, index: number) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          {isArabic ? property.name_ar : property.name}:
-                        </span>
-                        <span>{isArabic ? property.value_ar : property.value}</span>
-                      </div>
-                    ))}
+                    {product.properties
+                      .filter(property => !property.options || property.options.length === 0)
+                      .map((property: any, index: number) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="text-muted-foreground">
+                            {isArabic ? property.name_ar : property.name}:
+                          </span>
+                          <span>{isArabic ? property.value_ar : property.value}</span>
+                        </div>
+                      ))}
                   </div>
                 </CardContent>
               </Card>

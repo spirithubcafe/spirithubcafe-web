@@ -309,14 +309,22 @@ export function HomePage() {
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              {salePrice ? (
+                              {salePrice && salePrice < productPrice ? (
                                 <>
-                                  <span className="text-lg font-bold text-primary">
+                                  <span className="text-lg font-bold text-red-600">
                                     {formatPrice(salePrice)}
                                   </span>
                                   <span className="text-sm text-muted-foreground line-through">
                                     {formatPrice(productPrice)}
                                   </span>
+                                  {(() => {
+                                    const discountPercent = Math.round(((productPrice - salePrice) / productPrice) * 100)
+                                    return discountPercent > 0 ? (
+                                      <Badge variant="destructive" className="text-xs">
+                                        {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
+                                      </Badge>
+                                    ) : null
+                                  })()}
                                 </>
                               ) : (
                                 <span className="text-lg font-bold text-primary">

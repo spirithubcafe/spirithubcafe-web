@@ -152,6 +152,7 @@ export interface CartItem {
   user_id: string; // reference to users
   product_id: string; // reference to products
   quantity: number;
+  selectedProperties?: Record<string, string>; // For dynamic product options
   created: Date;
   updated: Date;
 }
@@ -876,9 +877,9 @@ export const firestoreService = {
       }
     },
     
-    addItem: async (userId: string, productId: string, quantity: number = 1) => {
+    addItem: async (userId: string, productId: string, quantity: number = 1, selectedProperties?: Record<string, string>) => {
       try {
-        // Check if item already exists in cart
+        // Check if item already exists in cart with same properties
         const q = query(
           collection(db, 'cart_items'),
           where('user_id', '==', userId),
@@ -886,9 +887,23 @@ export const firestoreService = {
         );
         const existing = await getDocs(q);
         
-        if (!existing.empty) {
+        // Find exact match including selectedProperties
+        let existingItem = null;
+        for (const doc of existing.docs) {
+          const data = doc.data();
+          const existingProps = data.selectedProperties || {};
+          const newProps = selectedProperties || {};
+          
+          // Compare properties
+          const propsMatch = JSON.stringify(existingProps) === JSON.stringify(newProps);
+          if (propsMatch) {
+            existingItem = doc;
+            break;
+          }
+        }
+        
+        if (existingItem) {
           // Update existing item
-          const existingItem = existing.docs[0];
           const currentQuantity = existingItem.data().quantity;
           await updateDoc(existingItem.ref, {
             quantity: currentQuantity + quantity,
@@ -897,13 +912,18 @@ export const firestoreService = {
           return { id: existingItem.id, ...existingItem.data(), quantity: currentQuantity + quantity };
         } else {
           // Create new item
-          const cartItemData = {
+          const cartItemData: any = {
             user_id: userId,
             product_id: productId,
             quantity,
             created: serverTimestamp(),
             updated: serverTimestamp()
           };
+          
+          if (selectedProperties && Object.keys(selectedProperties).length > 0) {
+            cartItemData.selectedProperties = selectedProperties;
+          }
+          
           const docRef = await addDoc(collection(db, 'cart_items'), cartItemData);
           return { id: docRef.id, ...cartItemData };
         }
