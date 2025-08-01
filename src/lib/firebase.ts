@@ -159,18 +159,50 @@ export interface CartItem {
 
 export interface Order {
   id: string;
-  user_id: string; // reference to users
+  user_id?: string; // reference to users
   order_number: string;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
-  total_usd: number;
+  status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+  payment_status: 'unpaid' | 'paid' | 'partially_paid' | 'refunded' | 'failed';
+  payment_method?: 'card' | 'cash' | 'paypal' | 'bank_transfer';
+  total_usd?: number;
   total_omr?: number;
   total_sar?: number;
+  subtotal_usd?: number;
+  subtotal_omr?: number;
+  subtotal_sar?: number;
+  shipping_cost_usd?: number;
+  shipping_cost_omr?: number;
+  shipping_cost_sar?: number;
+  tax_amount_usd?: number;
+  tax_amount_omr?: number;
+  tax_amount_sar?: number;
+  discount_amount_usd?: number;
+  discount_amount_omr?: number;
+  discount_amount_sar?: number;
+  total_price_usd?: number;
+  total_price_omr?: number;
+  total_price_sar?: number;
   currency: 'USD' | 'OMR' | 'SAR';
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  shipping_address?: {
+    recipient_name: string;
+    phone: string;
+    country: string;
+    city: string;
+    state?: string;
+    postal_code?: string;
+    full_address: string;
+  };
   delivery_address?: string;
   notes?: string;
+  admin_notes?: string;
+  tracking_number?: string;
+  shipped_at?: string;
+  delivered_at?: string;
+  created_at: string;
+  updated_at: string;
   created: Date;
   updated: Date;
 }
@@ -178,14 +210,21 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string; // reference to orders
-  product_id: string; // reference to products
+  product_id?: string; // reference to products
+  product_name: string;
+  product_name_ar?: string;
+  product_image?: string;
+  variant_name?: string;
   quantity: number;
-  unit_price_usd: number;
+  unit_price_usd?: number;
   unit_price_omr?: number;
   unit_price_sar?: number;
-  total_price_usd: number;
+  total_price_usd?: number;
   total_price_omr?: number;
   total_price_sar?: number;
+  selected_properties?: Record<string, string>;
+  created_at: string;
+  updated_at: string;
   created: Date;
   updated: Date;
 }
@@ -1006,8 +1045,16 @@ export const firestoreService = {
     
     create: async (data: Omit<Order, 'id' | 'created' | 'updated'>) => {
       try {
+        // Filter out undefined values to prevent Firebase errors
+        const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {} as any);
+
         const orderData = {
-          ...data,
+          ...cleanData,
           created: serverTimestamp(),
           updated: serverTimestamp()
         };
@@ -1048,11 +1095,14 @@ export const firestoreService = {
         // Get product details for each order item
         const itemsWithProducts = await Promise.all(
           orderItems.map(async (item) => {
-            const product = await firestoreService.products.get(item.product_id);
-            return {
-              ...item,
-              product
-            };
+            if (item.product_id) {
+              const product = await firestoreService.products.get(item.product_id);
+              return {
+                ...item,
+                product
+              };
+            }
+            return item;
           })
         );
         
@@ -1068,8 +1118,16 @@ export const firestoreService = {
     
     create: async (data: Omit<OrderItem, 'id' | 'created' | 'updated'>) => {
       try {
+        // Filter out undefined values to prevent Firebase errors
+        const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+          if (value !== undefined) {
+            acc[key] = value;
+          }
+          return acc;
+        }, {} as any);
+
         const orderItemData = {
-          ...data,
+          ...cleanData,
           created: serverTimestamp(),
           updated: serverTimestamp()
         };

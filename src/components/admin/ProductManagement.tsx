@@ -200,7 +200,7 @@ export default function ProductManagement() {
       </div>
 
       {/* Filters */}
-      <Card className="py-0">
+      <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">

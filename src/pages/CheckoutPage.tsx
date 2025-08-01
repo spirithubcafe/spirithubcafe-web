@@ -12,15 +12,21 @@ import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
+import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
+import { firestoreService, type Order, type OrderItem } from '@/lib/firebase'
+import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
   useScrollToTopOnRouteChange()
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
+  const { currentUser } = useAuth()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
+  const [orderLoading, setOrderLoading] = useState(false)
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
 
   const isArabic = i18n.language === 'ar'
 
@@ -75,10 +81,138 @@ export default function CheckoutPage() {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = () => {
-    // Simulate order processing
-    setOrderSuccess(true)
-    clearCart()
+  const calculateTotals = () => {
+    const subtotal = getTotalPrice()
+    const shippingCost = 5
+    const taxAmount = subtotal * 0.1
+    const total = subtotal + shippingCost + taxAmount
+    
+    return {
+      subtotal,
+      shipping: shippingCost,
+      tax: taxAmount,
+      total
+    }
+  }
+
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+      toast.error(isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields')
+      return
+    }
+
+    if (!formData.address || !formData.city || !formData.country) {
+      toast.error(isArabic ? 'يرجى ملء معلومات التوصيل' : 'Please fill shipping information')
+      return
+    }
+
+    if (!cart?.items || cart.items.length === 0) {
+      toast.error(isArabic ? 'سلة التسوق فارغة' : 'Cart is empty')
+      return
+    }
+
+    try {
+      setOrderLoading(true)
+      
+      const totals = calculateTotals()
+      
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}`
+      
+      // Create order data
+      const orderData: Omit<Order, 'id' | 'created' | 'updated'> = {
+        order_number: orderNumber,
+        user_id: currentUser?.id,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        customer_name: `${formData.firstName} ${formData.lastName}`,
+        
+        // Address data (we'll create proper address records later)
+        shipping_address: {
+          recipient_name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+          country: formData.country,
+          city: formData.city,
+          state: formData.state,
+          postal_code: formData.zipCode,
+          full_address: formData.address
+        },
+        
+        // Pricing in all currencies
+        subtotal_omr: currency === 'OMR' ? totals.subtotal : totals.subtotal / conversionRates.OMR,
+        subtotal_usd: currency === 'USD' ? totals.subtotal : totals.subtotal / conversionRates.USD,
+        subtotal_sar: currency === 'SAR' ? totals.subtotal : totals.subtotal / conversionRates.SAR,
+        
+        shipping_cost_omr: currency === 'OMR' ? totals.shipping : totals.shipping / conversionRates.OMR,
+        shipping_cost_usd: currency === 'USD' ? totals.shipping : totals.shipping / conversionRates.USD,
+        shipping_cost_sar: currency === 'SAR' ? totals.shipping : totals.shipping / conversionRates.SAR,
+        
+        tax_amount_omr: currency === 'OMR' ? totals.tax : totals.tax / conversionRates.OMR,
+        tax_amount_usd: currency === 'USD' ? totals.tax : totals.tax / conversionRates.USD,
+        tax_amount_sar: currency === 'SAR' ? totals.tax : totals.tax / conversionRates.SAR,
+        
+        discount_amount_omr: 0,
+        discount_amount_usd: 0,
+        discount_amount_sar: 0,
+        
+        total_price_omr: currency === 'OMR' ? totals.total : totals.total / conversionRates.OMR,
+        total_price_usd: currency === 'USD' ? totals.total : totals.total / conversionRates.USD,
+        total_price_sar: currency === 'SAR' ? totals.total : totals.total / conversionRates.SAR,
+        
+        currency: currency as 'USD' | 'OMR' | 'SAR',
+        status: 'pending',
+        payment_status: formData.paymentMethod === 'cash' ? 'unpaid' : 'paid',
+        payment_method: formData.paymentMethod as 'card' | 'cash' | 'paypal' | 'bank_transfer',
+        notes: formData.notes,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      // Create the order
+      const order = await firestoreService.orders.create(orderData)
+      
+      // Create order items
+      for (const cartItem of cart.items) {
+        if (!cartItem.product) continue
+        
+        const itemPrice = getProductPrice(cartItem.product, cartItem.selectedProperties)
+        const itemTotal = itemPrice * cartItem.quantity
+        
+        const orderItemData: Omit<OrderItem, 'id' | 'created' | 'updated'> = {
+          order_id: order.id,
+          product_id: cartItem.product.id,
+          product_name: cartItem.product.name,
+          product_name_ar: cartItem.product.name_ar || '',
+          product_image: cartItem.product.image || '',
+          quantity: cartItem.quantity,
+          unit_price_omr: currency === 'OMR' ? itemPrice : itemPrice / conversionRates.OMR,
+          unit_price_usd: currency === 'USD' ? itemPrice : itemPrice / conversionRates.USD,
+          unit_price_sar: currency === 'SAR' ? itemPrice : itemPrice / conversionRates.SAR,
+          total_price_omr: currency === 'OMR' ? itemTotal : itemTotal / conversionRates.OMR,
+          total_price_usd: currency === 'USD' ? itemTotal : itemTotal / conversionRates.USD,
+          total_price_sar: currency === 'SAR' ? itemTotal : itemTotal / conversionRates.SAR,
+          selected_properties: cartItem.selectedProperties || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        await firestoreService.orderItems.create(orderItemData)
+      }
+      
+      // Clear cart and show success
+      setCreatedOrderId(order.id)
+      setOrderSuccess(true)
+      clearCart()
+      
+      toast.success(isArabic ? 'تم إنشاء الطلب بنجاح!' : 'Order created successfully!')
+      
+    } catch (error) {
+      console.error('Error creating order:', error)
+      toast.error(isArabic ? 'حدث خطأ أثناء إنشاء الطلب' : 'Error creating order')
+    } finally {
+      setOrderLoading(false)
+    }
   }
 
   if (!cart || !cart.items || cart.items.length === 0 && !orderSuccess) {
@@ -116,6 +250,11 @@ export default function CheckoutPage() {
               <h1 className="text-3xl font-bold text-green-600">
                 {isArabic ? 'تم الطلب بنجاح!' : 'Order Successful!'}
               </h1>
+              {createdOrderId && (
+                <p className="text-lg font-medium">
+                  {isArabic ? `رقم الطلب: ${createdOrderId}` : `Order ID: ${createdOrderId}`}
+                </p>
+              )}
               <p className="text-muted-foreground">
                 {isArabic ? 'شكراً لك! سيتم التواصل معك قريباً.' : 'Thank you! We will contact you soon.'}
               </p>
@@ -464,8 +603,11 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="pt-4 space-y-2">
-                    <Button onClick={handleSubmit} className="w-full">
-                      {isArabic ? 'تأكيد الطلب' : 'Place Order'}
+                    <Button onClick={handleSubmit} disabled={orderLoading} className="w-full">
+                      {orderLoading 
+                        ? (isArabic ? 'جاري معالجة الطلب...' : 'Processing Order...')
+                        : (isArabic ? 'تأكيد الطلب' : 'Place Order')
+                      }
                     </Button>
                     <Button variant="outline" asChild className="w-full">
                       <Link to="/shop" className="flex items-center gap-2">

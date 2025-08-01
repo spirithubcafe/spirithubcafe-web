@@ -30,10 +30,11 @@ import DashboardProfile from '@/components/dashboard/DashboardProfile'
 import DashboardSettings from '@/components/dashboard/DashboardSettings'
 import DashboardUsers from '@/components/dashboard/DashboardUsers'
 import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
-import DashboardAdminOrders from '@/components/dashboard/DashboardAdminOrders'
 import CategoryManagement from '@/components/admin/CategoryManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
+import OrderManagement from '@/components/admin/OrderManagement'
+import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -199,6 +200,12 @@ export default function DashboardPage() {
         show: true
       },
       {
+        id: 'inventory',
+        label: isArabic ? 'المخزون والتقارير' : 'Inventory & Reports',
+        icon: BarChart3,
+        show: true
+      },
+      {
         id: 'reviews',
         label: isArabic ? 'المراجعات' : 'Reviews',
         icon: MessageSquare,
@@ -231,10 +238,14 @@ export default function DashboardPage() {
       case 'categories':
         return user?.role === 'admin' && <CategoryManagement />
       case 'admin-orders':
-        return user?.role === 'admin' && <DashboardAdminOrders />
+        return user?.role === 'admin' && <OrderManagement />
       case 'analytics':
         return user?.role === 'admin' && (
           <DashboardAnalytics users={users} products={products} />
+        )
+      case 'inventory':
+        return user?.role === 'admin' && (
+          <InventoryAnalytics />
         )
       case 'reviews':
         return user?.role === 'admin' && <ReviewManagement />

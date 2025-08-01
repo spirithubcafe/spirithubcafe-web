@@ -402,7 +402,7 @@ export default function ProductPage() {
 
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
-              <Card className="py-0">
+              <Card>
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-3">
                     {isArabic ? 'الخيارات' : 'Options'}
