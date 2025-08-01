@@ -60,8 +60,7 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
         rating: newReview.rating,
         title: newReview.title,
         review_text: newReview.review_text,
-        is_verified_purchase: false,
-        is_approved: false,
+        is_verified_purchase: false, // You might want to check this based on purchase history
         helpful_count: 0,
         user: currentUser
       })
@@ -92,7 +91,7 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
     }
 
     if (helpfulClicks.has(reviewId)) {
-      toast.error(isArabic ? 'لقد قمت بالتصويت لهذا التقييم من قبل' : 'You have already voted for this review')
+      toast.info(isArabic ? 'لقد قمت بالتصويت لهذا التقييم من قبل' : 'You have already voted for this review')
       return
     }
 
@@ -108,45 +107,122 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
       toast.error(isArabic ? 'حدث خطأ أثناء التصويت' : 'Error voting for review')
     }
   }
+      
+      if (hasReviewed) {
+        toast.error(isArabic ? 'لقد قمت بتقييم هذا المنتج من قبل' : 'You have already reviewed this product')
+        setIsSubmitting(false)
+        return
+      }
+
+      // Create the review
+      const reviewData = {
+        product_id: productId,
+        user_id: currentUser.id,
+        rating: newReview.rating,
+        title: newReview.title.trim(),
+        review_text: newReview.review_text.trim(),
+        is_verified_purchase: false, // TODO: Check if user has actually purchased the product
+        is_approved: false, // Will be approved by admin
+        helpful_count: 0,
+        user: {
+          id: currentUser.id,
+          full_name: currentUser.full_name || currentUser.email || 'Anonymous',
+          email: currentUser.email || '',
+          phone: currentUser.phone || '',
+          role: currentUser.role,
+          email_verified: currentUser.email_verified,
+          created: currentUser.created,
+          updated: new Date()
+        }
+      }
+
+      await firestoreService.reviews.create(reviewData)
+      
+      toast.success(isArabic ? 'تم إضافة التقييم بنجاح وهو في انتظار الموافقة' : 'Review added successfully and is pending approval')
+      setShowAddReview(false)
+      setNewReview({ rating: 5, title: '', review_text: '' })
+      onReviewAdded(productId)
+    } catch (error) {
+      console.error('Error submitting review:', error)
+      toast.error(isArabic ? 'حدث خطأ أثناء إضافة التقييم' : 'Error submitting review')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return isArabic
-      ? date.toLocaleDateString('ar-SA')
-      : date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
-        })
+    return date.toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
   }
-
-  // Calculate rating distribution
-  const ratingDistribution = [5, 4, 3, 2, 1].map(rating => {
-    const count = reviews.filter(r => r.rating === rating).length
-    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0
-    return { rating, count, percentage }
-  })
 
   return (
     <div className="space-y-6">
-      {/* Summary */}
+      {/* Reviews Summary */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold">
-              {isArabic ? 'تقييمات العملاء' : 'Customer Reviews'}
-            </h3>
-            
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Overall Rating */}
+            <div className="text-center">
+              <div className="text-5xl font-bold text-amber-600 mb-2">
+                {averageRating.toFixed(1)}
+              </div>
+              <div className="flex items-center justify-center gap-1 mb-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-5 w-5 ${
+                      i < Math.floor(averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="text-muted-foreground">
+                {isArabic ? 'بناءً على' : 'Based on'} {reviews.length} {isArabic ? 'تقييم' : 'reviews'}
+              </p>
+            </div>
+
+            {/* Rating Distribution */}
+            <div className="space-y-2">
+              {[5, 4, 3, 2, 1].map((rating) => {
+                const count = reviews.filter(r => r.rating === rating).length
+                const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0
+                
+                return (
+                  <div key={rating} className="flex items-center gap-2">
+                    <span className="text-sm w-8">{rating}</span>
+                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                    <div className="flex-1 bg-muted rounded-full h-2 relative overflow-hidden">
+                      <div 
+                        className={`bg-yellow-400 h-2 rounded-full transition-all ${
+                          percentage === 0 ? 'w-0' : ''
+                        }`}
+                        {...(percentage > 0 && { style: { width: `${percentage}%` } })}
+                      />
+                    </div>
+                    <span className="text-sm text-muted-foreground w-8">{count}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Add Review Button */}
+          <div className="mt-6 pt-6 border-t">
             <Dialog open={showAddReview} onOpenChange={setShowAddReview}>
               <DialogTrigger asChild>
-                <Button>
-                  {isArabic ? 'اكتب تقييماً' : 'Write a Review'}
+                <Button variant="outline" className="inline-flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  {isArabic ? 'أضف تقييمك' : 'Write a Review'}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>
-                    {isArabic ? 'اكتب تقييماً' : 'Write a Review'}
+                    {isArabic ? 'أضف تقييمك' : 'Write a Review'}
                   </DialogTitle>
                   <DialogDescription>
                     {isArabic 
@@ -162,25 +238,23 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
                     <label className="text-sm font-medium mb-2 block">
                       {isArabic ? 'التقييم' : 'Rating'}
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {Array.from({ length: 5 }).map((_, i) => (
                         <button
                           key={i}
                           type="button"
-                          title={`Rate ${i + 1} stars`}
                           onClick={() => setNewReview(prev => ({ ...prev, rating: i + 1 }))}
-                          className="p-1"
+                          className="focus:outline-none"
+                          title={`${i + 1} ${isArabic ? 'نجوم' : 'stars'}`}
+                          aria-label={`Rate ${i + 1} ${i === 0 ? 'star' : 'stars'}`}
                         >
                           <Star
-                            className={`h-6 w-6 ${
+                            className={`h-6 w-6 transition-colors ${
                               i < newReview.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
                             }`}
                           />
                         </button>
                       ))}
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        ({newReview.rating}/5)
-                      </span>
                     </div>
                   </div>
 
@@ -223,42 +297,6 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </div>
-
-          {/* Overall Rating */}
-          <div className="flex items-center gap-6 mb-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold">{averageRating.toFixed(1)}</div>
-              <div className="flex items-center gap-1 justify-center mb-1">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < Math.round(averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {reviews.length} {isArabic ? 'تقييم' : 'reviews'}
-              </div>
-            </div>
-
-            {/* Rating Distribution */}
-            <div className="flex-1 space-y-2">
-              {ratingDistribution.map(({ rating, count, percentage }) => (
-                <div key={rating} className="flex items-center gap-3 text-sm">
-                  <span className="w-8">{rating} ★</span>
-                  <div className="flex-1 bg-muted rounded-full h-2 relative overflow-hidden">
-                    <div 
-                      className="bg-yellow-400 h-full rounded-full transition-all duration-300"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className="w-8 text-muted-foreground">{count}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </CardContent>
       </Card>
@@ -335,13 +373,7 @@ export function ProductReviews({ productId, reviews, averageRating, onReviewAdde
 
                     {/* Review Actions */}
                     <div className="flex items-center gap-4">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-muted-foreground"
-                        onClick={() => handleHelpfulClick(review.id)}
-                        disabled={helpfulClicks.has(review.id)}
-                      >
+                      <Button variant="ghost" size="sm" className="text-muted-foreground">
                         <ThumbsUp className="h-4 w-4 mr-1" />
                         {isArabic ? 'مفيد' : 'Helpful'} ({review.helpful_count})
                       </Button>

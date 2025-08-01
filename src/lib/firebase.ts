@@ -125,7 +125,7 @@ export interface Product {
 }
 
 export interface ProductReview {
-  id: number;
+  id: string;
   product_id: string;
   user_id?: string;
   rating: number;
@@ -1065,7 +1065,7 @@ export const firestoreService = {
         
         const querySnapshot = await getDocs(q);
         const reviews = querySnapshot.docs.map(doc => ({ 
-          id: parseInt(doc.id) || Math.random(), 
+          id: doc.id, 
           ...doc.data() 
         } as ProductReview));
         
@@ -1082,7 +1082,7 @@ export const firestoreService = {
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
-          return { id: parseInt(id) || Math.random(), ...docSnap.data() } as ProductReview;
+          return { id: id, ...docSnap.data() } as ProductReview;
         }
         return null;
       } catch (error) {
@@ -1100,7 +1100,7 @@ export const firestoreService = {
         };
         
         const docRef = await addDoc(collection(db, 'reviews'), reviewData);
-        return { id: parseInt(docRef.id) || Math.random(), ...reviewData } as ProductReview;
+        return { id: docRef.id, ...reviewData } as ProductReview;
       } catch (error) {
         console.error('Error creating review:', error);
         throw error;
@@ -1137,7 +1137,7 @@ export const firestoreService = {
         
         const querySnapshot = await getDocs(q);
         const reviews = querySnapshot.docs.map(doc => ({ 
-          id: parseInt(doc.id) || Math.random(), 
+          id: doc.id, 
           ...doc.data() 
         } as ProductReview));
         
@@ -1179,6 +1179,23 @@ export const firestoreService = {
       } catch (error) {
         console.error('Error checking user review:', error);
         return false;
+      }
+    },
+
+    async incrementHelpfulCount(reviewId: string): Promise<void> {
+      try {
+        const reviewRef = doc(db, 'reviews', reviewId);
+        const reviewDoc = await getDoc(reviewRef);
+        
+        if (reviewDoc.exists()) {
+          const currentCount = reviewDoc.data().helpful_count || 0;
+          await updateDoc(reviewRef, {
+            helpful_count: currentCount + 1
+          });
+        }
+      } catch (error) {
+        console.error('Error incrementing helpful count:', error);
+        throw error;
       }
     }
   }

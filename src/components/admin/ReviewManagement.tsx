@@ -63,7 +63,7 @@ export default function ReviewManagement() {
       
       // Update the review in state
       setReviews(prev => prev.map(review => 
-        review.id === reviewId 
+        Number(review.id) === reviewId 
           ? { ...review, is_approved: true }
           : review
       ))
@@ -82,7 +82,7 @@ export default function ReviewManagement() {
       
       // Update the review in state
       setReviews(prev => prev.map(review => 
-        review.id === reviewId 
+        Number(review.id) === reviewId 
           ? { ...review, is_approved: false }
           : review
       ))
@@ -281,7 +281,7 @@ export default function ReviewManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleApproveReview(review.id)}
+                            onClick={() => handleApproveReview(Number(review.id))}
                             className="text-green-600 hover:text-green-700"
                           >
                             <Check className="h-4 w-4" />
@@ -292,7 +292,7 @@ export default function ReviewManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRejectReview(review.id)}
+                            onClick={() => handleRejectReview(Number(review.id))}
                             className="text-orange-600 hover:text-orange-700"
                           >
                             <X className="h-4 w-4" />

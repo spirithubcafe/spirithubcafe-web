@@ -171,8 +171,8 @@ export interface ProductVariant {
 
 // Product Review Interface
 export interface ProductReview {
-  id: number
-  product_id: number
+  id: string
+  product_id: string
   user_id?: string
   rating: number
   title?: string
