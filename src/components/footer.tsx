@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Coffee, Facebook, Twitter, Instagram } from 'lucide-react'
+import { Facebook, Twitter, Instagram } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 export function Footer() {
@@ -13,7 +13,11 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <Coffee className="h-6 w-6 text-amber-600 no-flip flex-shrink-0" />
+              <img 
+                src="/images/logo-s.png" 
+                alt="SpiritHub Cafe Logo" 
+                className="h-8 w-8 object-contain no-flip flex-shrink-0"
+              />
               <span className="text-lg font-bold">{t('navigation.brandName')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
