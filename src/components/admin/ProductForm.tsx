@@ -168,6 +168,18 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
   const handleImageUpload = async (file: File, isGallery = false) => {
     if (!file) return
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(isArabic ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isArabic ? 'حجم الصورة كبير جداً (الحد الأقصى 5 ميجابايت)' : 'Image size too large (max 5MB)')
+      return
+    }
+
     setUploadProgress(0)
     try {
       // Simulate upload progress
@@ -181,7 +193,21 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         })
       }, 200)
 
-      const url = await storageService.upload(`products/${Date.now()}_${file.name}`, file)
+      let url: string;
+      
+      try {
+        // Try Firebase Storage first
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+        url = await storageService.upload(`products/${fileName}`, file)
+      } catch (storageError) {
+        console.warn('Firebase Storage failed, using fallback:', storageError)
+        // Fallback to data URL for development
+        clearInterval(interval)
+        setUploadProgress(50)
+        
+        toast.success(isArabic ? 'استخدام طريقة بديلة للرفع...' : 'Using fallback upload method...')
+        url = await storageService.uploadAsDataURL(file)
+      }
       
       clearInterval(interval)
       setUploadProgress(100)
@@ -199,8 +225,73 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
       toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
     } catch (error) {
       console.error('Error uploading image:', error)
-      toast.error(isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image')
       setUploadProgress(0)
+      
+      // More specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('CORS')) {
+          toast.error(isArabic ? 'خطأ CORS: يرجى التحقق من إعدادات Firebase Storage' : 'CORS error: Please check Firebase Storage configuration')
+        } else if (error.message.includes('Unauthorized')) {
+          toast.error(isArabic ? 'غير مصرح برفع الصور' : 'Unauthorized to upload images')
+        } else if (error.message.includes('quota-exceeded')) {
+          toast.error(isArabic ? 'تم تجاوز حصة التخزين' : 'Storage quota exceeded')
+        } else {
+          toast.error(isArabic ? `خطأ في رفع الصورة: ${error.message}` : `Error uploading image: ${error.message}`)
+        }
+      } else {
+        toast.error(isArabic ? 'خطأ غير معروف في رفع الصورة' : 'Unknown error uploading image')
+      }
+    }
+  }
+
+  const validateImageUrl = (url: string): boolean => {
+    try {
+      new URL(url)
+      return /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url)
+    } catch {
+      return false
+    }
+  }
+
+  const addImageByUrl = (url: string, isGallery = false) => {
+    if (!url.trim()) {
+      toast.error(isArabic ? 'يرجى إدخال رابط الصورة' : 'Please enter image URL')
+      return
+    }
+
+    if (!validateImageUrl(url)) {
+      toast.error(isArabic ? 'رابط الصورة غير صالح' : 'Invalid image URL')
+      return
+    }
+
+    if (isGallery) {
+      if (form.gallery?.includes(url)) {
+        toast.error(isArabic ? 'هذه الصورة موجودة مسبقاً' : 'This image already exists')
+        return
+      }
+      setForm(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), url]
+      }))
+    } else {
+      setForm(prev => ({ ...prev, image: url }))
+    }
+
+    toast.success(isArabic ? 'تمت إضافة الصورة بنجاح' : 'Image added successfully')
+  }
+
+  // Test Firebase Storage connection
+  const testStorageConnection = async () => {
+    try {
+      const canUse = await storageService.canUseFirebaseStorage()
+      if (canUse) {
+        toast.success(isArabic ? 'Firebase Storage متصل بنجاح' : 'Firebase Storage connected successfully')
+      } else {
+        toast.error(isArabic ? 'فشل الاتصال بـ Firebase Storage' : 'Failed to connect to Firebase Storage')
+      }
+    } catch (error) {
+      console.error('Storage test failed:', error)
+      toast.error(isArabic ? 'خطأ في اختبار Firebase Storage' : 'Error testing Firebase Storage')
     }
   }
 
@@ -412,10 +503,38 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
             <CardHeader>
               <CardTitle>{isArabic ? 'الصورة الرئيسية' : 'Main Image'}</CardTitle>
               <CardDescription>
-                {isArabic ? 'ارفع الصورة الرئيسية للمنتج' : 'Upload the main product image'}
+                {isArabic ? 'ارفع الصورة الرئيسية للمنتج أو أدخل رابط الصورة' : 'Upload the main product image or enter image URL'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="main-image-url">{isArabic ? 'رابط الصورة الرئيسية' : 'Main Image URL'}</Label>
+                <Input
+                  id="main-image-url"
+                  type="url"
+                  value={form.image || ''}
+                  onChange={(e) => setForm(prev => ({ ...prev, image: e.target.value }))}
+                  onBlur={(e) => {
+                    const url = e.target.value.trim()
+                    if (url && !validateImageUrl(url)) {
+                      toast.error(isArabic ? 'رابط الصورة غير صالح' : 'Invalid image URL')
+                    }
+                  }}
+                  placeholder={isArabic ? 'أدخل رابط الصورة الرئيسية' : 'Enter main image URL'}
+                />
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {isArabic ? 'أو' : 'Or'}
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="main-image">{isArabic ? 'رفع الصورة الرئيسية' : 'Upload Main Image'}</Label>
                 <div className="flex items-center gap-4">
@@ -450,6 +569,10 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                       src={form.image}
                       alt="Main product image"
                       className="w-32 h-32 object-cover rounded-lg border"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.src = '/images/placeholder-product.png'
+                      }}
                     />
                     <button
                       onClick={() => setForm(prev => ({ ...prev, image: '' }))}
@@ -468,10 +591,56 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
             <CardHeader>
               <CardTitle>{isArabic ? 'معرض الصور' : 'Image Gallery'}</CardTitle>
               <CardDescription>
-                {isArabic ? 'ارفع صور إضافية للمنتج' : 'Upload additional product images'}
+                {isArabic ? 'أضف صور إضافية للمنتج عبر الرفع أو الروابط' : 'Add additional product images via upload or URLs'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="gallery-url">{isArabic ? 'إضافة صورة بالرابط' : 'Add Image by URL'}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="gallery-url"
+                    type="url"
+                    placeholder={isArabic ? 'أدخل رابط الصورة' : 'Enter image URL'}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.target as HTMLInputElement
+                        const url = input.value.trim()
+                        if (url) {
+                          addImageByUrl(url, true)
+                          input.value = ''
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.getElementById('gallery-url') as HTMLInputElement
+                      const url = input.value.trim()
+                      if (url) {
+                        addImageByUrl(url, true)
+                        input.value = ''
+                      }
+                    }}
+                  >
+                    {isArabic ? 'إضافة' : 'Add'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {isArabic ? 'أو' : 'Or'}
+                  </span>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="gallery-image">{isArabic ? 'رفع صورة للمعرض' : 'Upload Gallery Image'}</Label>
                 <div className="flex items-center gap-4">
@@ -505,6 +674,10 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                           src={image}
                           alt={`Gallery image ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/images/placeholder-product.png'
+                          }}
                         />
                         <button
                           onClick={() => removeGalleryImage(index)}

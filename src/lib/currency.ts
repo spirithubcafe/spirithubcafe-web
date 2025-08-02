@@ -28,8 +28,9 @@ export const formatPrice = (price: number, currency: Currency): string => {
     maximumFractionDigits: currency === 'OMR' ? 3 : 2,
   }).format(price)
 
-  // For Arabic currencies, put symbol after number
-  if (currency === 'SAR' || currency === 'OMR') {
+  if (currency === 'OMR') {
+    return `${symbol} ${formattedPrice}`
+  } else if (currency === 'SAR') {
     return `${formattedPrice} ${symbol}`
   }
   

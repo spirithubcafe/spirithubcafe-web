@@ -13,8 +13,34 @@ interface DashboardOverviewProps {
 
 export default function DashboardOverview({ orders, products }: DashboardOverviewProps) {
   const { i18n } = useTranslation()
-  const { formatPrice } = useCurrency()
+  const { formatPrice, currency } = useCurrency()
   const isArabic = i18n.language === 'ar'
+
+  // Helper function to get order total based on current currency
+  const getOrderTotal = (order: any) => {
+    switch (currency) {
+      case 'OMR':
+        return order.total_price_omr || 0
+      case 'SAR':
+        return order.total_price_sar || 0
+      case 'USD':
+      default:
+        return order.total_price_usd || 0
+    }
+  }
+
+  // Helper function to get product price based on current currency
+  const getProductPrice = (product: any) => {
+    switch (currency) {
+      case 'OMR':
+        return product.price_omr || 0
+      case 'SAR':
+        return product.price_sar || (product.price_omr || 0) * 3.75
+      case 'USD':
+      default:
+        return product.price_usd || (product.price_omr || 0) * 2.6
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -117,7 +143,7 @@ export default function DashboardOverview({ orders, products }: DashboardOvervie
                          order.status}
                       </Badge>
                       <p className="text-sm font-medium">
-                        {formatPrice(order.total || 0)}
+                        {formatPrice(getOrderTotal(order))}
                       </p>
                     </div>
                   </div>
@@ -153,7 +179,7 @@ export default function DashboardOverview({ orders, products }: DashboardOvervie
                         {isArabic ? product.name_ar : product.name}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        {formatPrice(product.price_omr)}
+                        {formatPrice(getProductPrice(product))}
                       </p>
                     </div>
                   </div>

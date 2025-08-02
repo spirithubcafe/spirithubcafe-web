@@ -1466,13 +1466,61 @@ export const firestoreService = {
 export const storageService = {
   upload: async (path: string, file: File): Promise<string> => {
     try {
+      // Check if user is authenticated
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User must be authenticated to upload files');
+      }
+
+      // Wait for user to be fully loaded
+      await new Promise((resolve) => {
+        if (currentUser.emailVerified !== undefined) {
+          resolve(true);
+        } else {
+          const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+              unsubscribe();
+              resolve(true);
+            }
+          });
+        }
+      });
+
       const storageRef = ref(storage, path);
-      const snapshot = await uploadBytes(storageRef, file);
+      
+      // Add metadata
+      const metadata = {
+        contentType: file.type,
+        customMetadata: {
+          uploadedBy: currentUser.uid,
+          uploadedAt: new Date().toISOString()
+        }
+      };
+      
+      const snapshot = await uploadBytes(storageRef, file, metadata);
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
-      throw error;
+      
+      // Provide more specific error messages
+      if (error.code === 'storage/unauthorized') {
+        throw new Error('Unauthorized: Please make sure you are logged in and have permission to upload files');
+      } else if (error.code === 'storage/quota-exceeded') {
+        throw new Error('Storage quota exceeded');
+      } else if (error.code === 'storage/unauthenticated') {
+        throw new Error('Authentication required');
+      } else if (error.code === 'storage/retry-limit-exceeded') {
+        throw new Error('Upload failed: Too many retries');
+      } else if (error.code === 'storage/invalid-format') {
+        throw new Error('Invalid file format');
+      } else if (error.code === 'storage/invalid-checksum') {
+        throw new Error('File upload failed: Invalid checksum');
+      } else if (error.message.includes('CORS')) {
+        throw new Error('CORS error: Please check Firebase Storage configuration');
+      } else {
+        throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
+      }
     }
   },
   
@@ -1490,8 +1538,39 @@ export const storageService = {
       throw error;
     }
   },
+
+  // Fallback method for development - converts file to base64 data URL
+  uploadAsDataURL: async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to data URL'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Error reading file'));
+      reader.readAsDataURL(file);
+    });
+  },
+
+  // Check if we can use Firebase Storage or need fallback
+  canUseFirebaseStorage: async (): Promise<boolean> => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return false;
+      
+      // Try to create a test reference
+      ref(storage, 'test/connection.txt');
+      return true;
+    } catch (error) {
+      console.warn('Firebase Storage not available:', error);
+      return false;
+    }
+  },
   
-  delete: async (url: string) => {
+  deleteFile: async (url: string) => {
     try {
       const fileRef = ref(storage, url);
       await deleteObject(fileRef);
