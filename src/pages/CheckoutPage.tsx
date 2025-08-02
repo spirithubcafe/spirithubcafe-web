@@ -1,7 +1,7 @@
 import { getPropertyPrice } from '@/utils/propertyUtils'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle, Coffee, ShoppingCart, CreditCard, MapPin } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle, ShoppingCart, CreditCard, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -550,7 +550,11 @@ export default function CheckoutPage() {
                     {cart?.items?.map((item) => (
                       <div key={item.product?.id} className="flex items-start gap-3">
                         <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
-                          <Coffee className="h-6 w-6 text-amber-600" />
+                          <img 
+                            src="/images/logo-s.png" 
+                            alt="SpiritHub Cafe Logo" 
+                            className="h-8 w-8 object-contain"
+                          />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm">

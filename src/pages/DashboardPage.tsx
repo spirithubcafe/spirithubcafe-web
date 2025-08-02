@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { 
-  User, 
-  ShoppingBag, 
-  Settings, 
+import {
+  User,
+  ShoppingBag,
+  Settings,
   LogOut,
   Users,
   Package,
@@ -43,13 +43,13 @@ export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const isArabic = i18n.language === 'ar'
-  
+
   // Ref for main content container
   const mainContentRef = useRef<HTMLElement>(null)
-  
+
   // Update activeTab when URL params change
   // Removed URL sync for simpler tab management
-  
+
   // Smooth scroll to top when tab changes
   useEffect(() => {
     const scrollToTop = () => {
@@ -61,13 +61,13 @@ export default function DashboardPage() {
         })
       }
     }
-    
+
     // Small delay to ensure content is rendered
     const timer = setTimeout(scrollToTop, 100)
-    
+
     return () => clearTimeout(timer)
   }, [activeTab])
-  
+
   // State for data
   const [orders, setOrders] = useState<Order[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -80,7 +80,7 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
-        
+
         // Fetch user orders
         if (user?.id) {
           const userOrders = await firestoreService.orders.list(user.id)
@@ -105,7 +105,7 @@ export default function DashboardPage() {
         if (user?.role === 'admin') {
           const allUsers = await firestoreService.users.list()
           setUsers(allUsers.items)
-          
+
           // Fetch pending reviews count
           await loadPendingReviewsCount()
         }
@@ -176,15 +176,15 @@ export default function DashboardPage() {
         show: true
       },
       {
-        id: 'products',
-        label: isArabic ? 'المنتجات' : 'Products',
-        icon: Package,
-        show: true
-      },
-      {
         id: 'categories',
         label: isArabic ? 'الفئات' : 'Categories',
         icon: Tags,
+        show: true
+      },
+      {
+        id: 'products',
+        label: isArabic ? 'المنتجات' : 'Products',
+        icon: Package,
         show: true
       },
       {
@@ -227,16 +227,16 @@ export default function DashboardPage() {
         return <DashboardSettings />
       case 'users':
         return user?.role === 'admin' && (
-          <DashboardUsers 
-            users={users} 
-            onUsersUpdate={handleUsersUpdate} 
-            loading={loading} 
+          <DashboardUsers
+            users={users}
+            onUsersUpdate={handleUsersUpdate}
+            loading={loading}
           />
         )
-      case 'products':
-        return user?.role === 'admin' && <ProductManagement />
       case 'categories':
         return user?.role === 'admin' && <CategoryManagement />
+      case 'products':
+        return user?.role === 'admin' && <ProductManagement />
       case 'admin-orders':
         return user?.role === 'admin' && <OrderManagement />
       case 'analytics':
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
-                  
+
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={user.avatar} alt={user.full_name} />
                     <AvatarFallback>
@@ -394,11 +394,11 @@ export default function DashboardPage() {
                       {isArabic ? `مرحباً ${user.full_name}` : `Welcome ${user.full_name}`}
                     </h1>
                     <p className="text-muted-foreground">
-                      {user.role === 'admin' 
+                      {user.role === 'admin'
                         ? (isArabic ? 'مدير النظام' : 'System Administrator')
                         : user.role === 'employee'
-                        ? (isArabic ? 'موظف' : 'Employee')
-                        : (isArabic ? 'عضو' : 'Member')
+                          ? (isArabic ? 'موظف' : 'Employee')
+                          : (isArabic ? 'عضو' : 'Member')
                       }
                     </p>
                   </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Coffee, Mail } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -46,7 +46,11 @@ export function ForgotPasswordPage() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <Coffee className="h-12 w-12 text-primary" />
+              <img 
+                src="/images/logo-s.png" 
+                alt="SpiritHub Cafe Logo" 
+                className="h-16 w-16 object-contain mx-auto mb-4"
+              />
             </div>
             <CardTitle className="text-2xl">
               {isArabic ? 'تم إرسال البريد الإلكتروني' : 'Email Sent'}
@@ -116,7 +120,11 @@ export function ForgotPasswordPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Coffee className="h-12 w-12 text-primary" />
+            <img 
+              src="/images/logo-s.png" 
+              alt="SpiritHub Cafe Logo" 
+              className="h-16 w-16 object-contain mx-auto mb-4"
+            />
           </div>
           <CardTitle className="text-2xl">
             {isArabic ? 'نسيت كلمة المرور' : 'Forgot Password'}

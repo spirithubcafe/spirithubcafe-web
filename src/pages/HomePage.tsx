@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Coffee, Star, Clock, ShoppingCart } from 'lucide-react'
+import { ArrowRight, Star, Clock, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -116,7 +116,11 @@ export function HomePage() {
               textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
             }`}>
               <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm font-medium shadow-xl">
-                <Coffee className="h-4 w-4 mr-2 accent-coffee-gold" />
+                <img 
+                  src="/images/logo-s.png" 
+                  alt="SpiritHub Cafe Logo" 
+                  className="h-5 w-5 mr-2 object-contain no-flip"
+                />
                 {t('homepage.hero.badge', 'Premium Coffee Experience')}
               </div>
               
@@ -201,7 +205,11 @@ export function HomePage() {
             <Card className="card-clean group hover:glow-coffee hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg backdrop-blur-sm">
               <CardHeader className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-amber-100 dark:from-amber-950 dark:to-amber-900 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg bg-coffee-gold">
-                  <Coffee className="h-8 w-8 text-amber-700 dark:text-amber-300 no-flip" />
+                  <img 
+                    src="/images/logo-s.png" 
+                    alt="SpiritHub Cafe Logo" 
+                    className="h-10 w-10 object-contain no-flip"
+                  />
                 </div>
                 <CardTitle className="text-xl">{t('homepage.features.expertise.title')}</CardTitle>
               </CardHeader>

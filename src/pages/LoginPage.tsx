@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, Coffee, Mail } from 'lucide-react'
+import { Eye, EyeOff, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -102,7 +102,11 @@ export function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center space-y-2">
           <div className="flex items-center space-x-2">
-            <Coffee className="h-8 w-8 text-amber-600" />
+            <img 
+              src="/images/logo-s.png" 
+              alt="SpiritHub Cafe Logo" 
+              className="h-12 w-12 object-contain mx-auto mb-2"
+            />
             <h1 className="text-2xl font-bold">{t('common.brandName')}</h1>
           </div>
           <p className="text-muted-foreground">{t('auth.login.subtitle')}</p>

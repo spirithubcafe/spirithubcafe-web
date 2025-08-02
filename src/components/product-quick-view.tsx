@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Star, ShoppingCart, Plus, Minus, Coffee, Heart, Share2 } from 'lucide-react'
+import { Star, ShoppingCart, Plus, Minus, Heart, Share2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -249,7 +249,11 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Coffee className="h-20 w-20 text-amber-600" />
+                  <img 
+                    src="/images/logo-s.png" 
+                    alt="SpiritHub Cafe Logo" 
+                    className="h-24 w-24 object-contain opacity-50"
+                  />
                 </div>
               )}
               

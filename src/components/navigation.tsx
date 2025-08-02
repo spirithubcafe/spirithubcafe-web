@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Coffee, User, LogOut, ShoppingCart } from 'lucide-react'
+import { Menu, X, User, LogOut, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -85,7 +85,11 @@ export function Navigation() {
               isArabic ? "order-3" : "order-1"
             )}>
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
-                <Coffee className="h-7 w-7 text-primary no-flip coffee-glow-animate" />
+                <img 
+                  src="/images/logo-s.png" 
+                  alt="SpiritHub Cafe Logo" 
+                  className="h-8 w-8 object-contain no-flip"
+                />
                 <span className={cn(
                   "font-bold text-foreground"
                 )}>

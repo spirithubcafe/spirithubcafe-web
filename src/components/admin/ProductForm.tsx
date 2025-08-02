@@ -507,6 +507,23 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Debug button for development */}
+              {import.meta.env.DEV && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {isArabic ? 'أدوات التطوير' : 'Development Tools'}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={testStorageConnection}
+                  >
+                    {isArabic ? 'اختبار اتصال التخزين' : 'Test Storage Connection'}
+                  </Button>
+                </div>
+              )}
+              
               <div className="space-y-2">
                 <Label htmlFor="main-image-url">{isArabic ? 'رابط الصورة الرئيسية' : 'Main Image URL'}</Label>
                 <Input

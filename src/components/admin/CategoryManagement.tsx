@@ -166,42 +166,48 @@ export default function CategoryManagement() {
         </Button>
       </div>
 
-      {/* Categories Grid */}
+      {/* Categories List */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
             <Card key={i} className="animate-pulse py-0">
               <CardContent className="p-6">
-                {/* Image skeleton */}
-                <div className="aspect-video bg-muted rounded-lg mb-4"></div>
-                
-                {/* Status badge skeleton */}
-                <div className="h-5 bg-muted rounded-full w-16 mb-3"></div>
-                
-                {/* Title skeleton */}
-                <div className="h-6 bg-muted rounded mb-2"></div>
-                <div className="h-4 bg-muted rounded w-2/3 mb-4"></div>
-                
-                {/* Description skeleton */}
-                <div className="space-y-2 mb-4">
-                  <div className="h-3 bg-muted rounded"></div>
-                  <div className="h-3 bg-muted rounded w-4/5"></div>
-                </div>
-                
-                {/* Buttons skeleton */}
-                <div className="flex gap-2">
-                  <div className="h-9 bg-muted rounded flex-1"></div>
-                  <div className="h-9 bg-muted rounded w-9"></div>
+                <div className="flex items-center gap-4">
+                  {/* Image skeleton */}
+                  <div className="w-16 h-16 bg-muted rounded-lg flex-shrink-0"></div>
+                  
+                  <div className="flex-1 space-y-2">
+                    {/* Status badge skeleton */}
+                    <div className="h-5 bg-muted rounded-full w-16"></div>
+                    
+                    {/* Title skeleton */}
+                    <div className="h-6 bg-muted rounded w-1/3"></div>
+                    
+                    {/* Description skeleton */}
+                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                  
+                  {/* Actions skeleton */}
+                  <div className="flex gap-2">
+                    <div className="h-9 bg-muted rounded w-20"></div>
+                    <div className="h-9 bg-muted rounded w-9"></div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <Card>
+        <Card className="py-0">
           <CardContent className="text-center py-12">
-            <p className="text-muted-foreground mb-4">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Upload className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <p className="text-lg font-medium mb-2">
               {isArabic ? 'لا توجد فئات بعد' : 'No categories yet'}
+            </p>
+            <p className="text-muted-foreground mb-4">
+              {isArabic ? 'ابدأ بإضافة فئة لتنظيم منتجاتك' : 'Start by adding a category to organize your products'}
             </p>
             <Button onClick={() => openDialog()}>
               <Plus className="h-4 w-4 mr-2" />
@@ -210,77 +216,169 @@ export default function CategoryManagement() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((category) => (
-            <Card key={category.id} className="group hover:shadow-lg transition-shadow py-0">
-              <CardContent className="p-6">
-                {/* Category Image */}
-                <div className="h-32 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800 rounded-lg mb-4 flex items-center justify-center">
-                  {category.image ? (
-                    <img 
-                      src={category.image} 
-                      alt={category.name}
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  ) : (
-                    <div className="text-amber-600 dark:text-amber-400 text-center">
-                      <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm opacity-50">
-                        {isArabic ? 'لا توجد صورة' : 'No Image'}
-                      </p>
+        <div className="space-y-3">
+          {/* Categories Header */}
+          <div className="flex items-center justify-between px-4 py-2 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground w-16">
+                {isArabic ? 'صورة' : 'Image'}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground flex-1">
+                {isArabic ? 'الفئة' : 'Category'}
+              </span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-muted-foreground w-20">
+                {isArabic ? 'الحالة' : 'Status'}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground w-16">
+                {isArabic ? 'ترتيب' : 'Order'}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground w-24">
+                {isArabic ? 'إجراءات' : 'Actions'}
+              </span>
+            </div>
+          </div>
+
+          {/* Categories List */}
+          {categories
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((category) => (
+            <Card key={category.id} className="py-0 hover:shadow-md transition-all duration-200 border-l-4 border-l-transparent hover:border-l-primary">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-4">
+                  {/* Category Image */}
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800">
+                    {category.image ? (
+                      <img 
+                        src={category.image} 
+                        alt={category.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/images/placeholder-category.png'
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Upload className="h-6 w-6 text-amber-600 dark:text-amber-400 opacity-50" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Category Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-semibold text-lg truncate">
+                          {isArabic ? (category.name_ar || category.name) : category.name}
+                        </h3>
+                        {(isArabic ? category.name : category.name_ar) && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {isArabic ? category.name : category.name_ar}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
+                    
+                    {(category.description || category.description_ar) && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                        {isArabic ? (category.description_ar || category.description) : category.description}
+                      </p>
+                    )}
 
-                {/* Category Info */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">
-                      {isArabic ? (category.name_ar || category.name) : category.name}
-                    </h3>
-                    <Badge variant={category.is_active ? 'default' : 'secondary'}>
-                      {category.is_active 
-                        ? (isArabic ? 'نشط' : 'Active')
-                        : (isArabic ? 'غير نشط' : 'Inactive')
-                      }
-                    </Badge>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <span>ID: {category.id.slice(0, 8)}</span>
+                      <span>
+                        {isArabic ? 'تم الإنشاء:' : 'Created:'} {
+                          (() => {
+                            if (!category.created) return isArabic ? 'غير متوفر' : 'N/A';
+                            
+                            try {
+                              // Handle Firestore Timestamp
+                              if (category.created && typeof category.created === 'object' && 'seconds' in category.created) {
+                                return new Date((category.created as any).seconds * 1000).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US');
+                              }
+                              // Handle JavaScript Date
+                              if (category.created instanceof Date) {
+                                return category.created.toLocaleDateString(isArabic ? 'ar-SA' : 'en-US');
+                              }
+                              // Handle string date
+                              return new Date(category.created as string).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US');
+                            } catch {
+                              return isArabic ? 'غير متوفر' : 'N/A';
+                            }
+                          })()
+                        }
+                      </span>
+                    </div>
                   </div>
-                  
-                  {category.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {isArabic ? (category.description_ar || category.description) : category.description}
-                    </p>
-                  )}
 
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <span>
-                      {isArabic ? 'ترتيب:' : 'Order:'} {category.sort_order}
-                    </span>
+                  {/* Status and Actions */}
+                  <div className="flex items-center gap-4">
+                    {/* Status */}
+                    <div className="w-20">
+                      <Badge 
+                        variant={category.is_active ? 'default' : 'secondary'}
+                        className="w-full justify-center"
+                      >
+                        {category.is_active 
+                          ? (isArabic ? 'نشط' : 'Active')
+                          : (isArabic ? 'غير نشط' : 'Inactive')
+                        }
+                      </Badge>
+                    </div>
+
+                    {/* Sort Order */}
+                    <div className="w-16 text-center">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-muted text-sm font-medium">
+                        {category.sort_order}
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2 w-24">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openDialog(category)}
+                        className="h-8 w-8 p-0"
+                        title={isArabic ? 'تعديل' : 'Edit'}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => openDeleteDialog(category)}
+                        className="h-8 w-8 p-0"
+                        title={isArabic ? 'حذف' : 'Delete'}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => openDialog(category)}
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    {isArabic ? 'تعديل' : 'Edit'}
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => openDeleteDialog(category)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
+
+          {/* Categories Summary */}
+          <Card className="py-0 bg-muted/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>
+                  {isArabic ? 'إجمالي الفئات:' : 'Total Categories:'} {categories.length}
+                </span>
+                <span>
+                  {isArabic ? 'الفئات النشطة:' : 'Active Categories:'} {categories.filter(c => c.is_active).length}
+                </span>
+                <span>
+                  {isArabic ? 'الفئات غير النشطة:' : 'Inactive Categories:'} {categories.filter(c => !c.is_active).length}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Coffee, ShoppingCart, Eye, Heart, Star } from 'lucide-react'
+import { ShoppingCart, Eye, Heart, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -293,7 +293,11 @@ export function ShopPage() {
         <div className="text-center py-20">
           <div className="max-w-md mx-auto space-y-4">
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto">
-              <Coffee className="h-12 w-12 text-muted-foreground" />
+              <img 
+                src="/images/logo-s.png" 
+                alt="SpiritHub Cafe Logo" 
+                className="h-16 w-16 object-contain opacity-50"
+              />
             </div>
             <div>
               <h3 className="text-xl font-semibold mb-2">
@@ -352,7 +356,11 @@ export function ShopPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                            <Coffee className="h-16 w-16 text-amber-600" />
+                            <img 
+                              src="/images/logo-s.png" 
+                              alt="SpiritHub Cafe Logo" 
+                              className="h-20 w-20 object-contain opacity-50"
+                            />
                           </div>
                         )}
                         

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ShoppingCart, Plus, Minus, X, Coffee } from 'lucide-react'
+import { ShoppingCart, Plus, Minus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
@@ -109,7 +109,11 @@ export function CartSidebar() {
             {!cart || !cart.items || cart.items.length === 0 ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-4">
-                  <Coffee className="h-16 w-16 text-muted-foreground mx-auto" />
+                  <img 
+                    src="/images/logo-s.png" 
+                    alt="SpiritHub Cafe Logo" 
+                    className="h-20 w-20 object-contain mx-auto opacity-50"
+                  />
                   <div>
                     <h3 className="text-lg font-semibold">
                       {t('cart.empty')}
@@ -135,7 +139,11 @@ export function CartSidebar() {
                   {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
-                        <Coffee className="h-8 w-8 text-amber-600" />
+                        <img 
+                          src="/images/logo-s.png" 
+                          alt="SpiritHub Cafe Logo" 
+                          className="h-10 w-10 object-contain"
+                        />
                       </div>
                       
                       <div className="flex-1 space-y-2 min-w-0">
