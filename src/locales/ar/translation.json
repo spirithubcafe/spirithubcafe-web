@@ -9,7 +9,37 @@
     "register": "إنشاء حساب",
     "dashboard": "لوحة التحكم",
     "logout": "تسجيل الخروج",
-    "settings": "الإعدادات",
+    "settings": {
+      "delete": "حذف",
+      "footerSettings": "إعدادات الفوتر",
+      "footerTabs": {
+        "general": "عام",
+        "contact": "تواصل",
+        "social": "وسائل التواصل الاجتماعي",
+        "hours": "ساعات العمل"
+      },
+      "footerForm": {
+        "companyNameEn": "اسم الشركة (إنجليزي)",
+        "companyNameAr": "اسم الشركة (عربي)",
+        "descriptionEn": "الوصف (إنجليزي)",
+        "descriptionAr": "الوصف (عربي)",
+        "addressEn": "العنوان (إنجليزي)",
+        "addressAr": "العنوان (عربي)",
+        "mainPhone": "الهاتف الرئيسي",
+        "secondPhone": "الهاتف الثاني",
+        "email": "البريد الإلكتروني",
+        "whatsapp": "رقم الواتساب",
+        "instagram": "حساب الانستجرام",
+        "facebook": "حساب الفيسبوك",
+        "twitter": "حساب تويتر",
+        "workingHoursEn": "ساعات العمل (إنجليزي)",
+        "workingHoursAr": "ساعات العمل (عربي)",
+        "saveChanges": "حفظ التغييرات",
+        "saving": "جاري الحفظ..."
+      }
+    }
+  },
+  "general": {
     "currency": "العملة",
     "language": "اللغة"
   },
@@ -209,6 +239,18 @@
       "newProducts": "منتجات جديدة",
       "goldLevel": "مستوى الذهب"
     },
+    "wishlist": {
+      "title": "قائمة المفضلة",
+      "emptyTitle": "قائمة المفضلة فارغة",
+      "emptyDescription": "ابدأ بإضافة المنتجات التي تحبها إلى قائمة المفضلة",
+      "shopNow": "تسوق الآن",
+      "addToCart": "أضف للسلة",
+      "removeFromWishlist": "إزالة من المفضلة",
+      "viewAll": "عرض جميع العناصر",
+      "addedToWishlist": "تمت الإضافة للمفضلة",
+      "removedFromWishlist": "تمت الإزالة من المفضلة",
+      "loginRequired": "يرجى تسجيل الدخول لإدارة المفضلة"
+    },
     "orders": {
       "title": "جميع الطلبات",
       "description": "تاريخ جميع طلباتك",
@@ -258,6 +300,8 @@
       "allOrders": "جميع الطلبات",
       "allOrdersDesc": "إدارة جميع طلبات المستخدمين",
       "analytics": "التحليلات",
+      "footerManagement": "إدارة إعدادات الفوتر",
+      "footerManagementDesc": "إدارة جميع المعلومات المعروضة في فوتر الموقع",
       "totalSales": "إجمالي المبيعات",
       "totalOrders": "إجمالي الطلبات",
       "customers": "عدد العملاء",
@@ -279,7 +323,33 @@
       "edit": "تعديل",
       "view": "عرض",
       "update": "تحديث",
-      "delete": "حذف"
+      "delete": "حذف",
+      "footerSettings": "إعدادات الفوتر",
+      "footerTabs": {
+        "general": "عام",
+        "contact": "تواصل",
+        "social": "وسائل التواصل الاجتماعي",
+        "hours": "ساعات العمل"
+      },
+      "footerForm": {
+        "companyNameEn": "اسم الشركة (إنجليزي)",
+        "companyNameAr": "اسم الشركة (عربي)",
+        "descriptionEn": "الوصف (إنجليزي)",
+        "descriptionAr": "الوصف (عربي)",
+        "addressEn": "العنوان (إنجليزي)",
+        "addressAr": "العنوان (عربي)",
+        "mainPhone": "الهاتف الرئيسي",
+        "secondPhone": "الهاتف الثاني",
+        "email": "البريد الإلكتروني",
+        "whatsapp": "رقم الواتساب",
+        "instagram": "حساب الانستجرام",
+        "facebook": "حساب الفيسبوك",
+        "twitter": "حساب تويتر",
+        "workingHoursEn": "ساعات العمل (إنجليزي)",
+        "workingHoursAr": "ساعات العمل (عربي)",
+        "saveChanges": "حفظ التغييرات",
+        "saving": "جاري الحفظ..."
+      }
     }
   },
   "about": {
@@ -368,6 +438,14 @@
   "common": {
     "loading": "جاري التحميل...",
     "error": "حدث خطأ ما",
+    "retry": "إعادة المحاولة",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "success": "نجح",
+    "failed": "فشل",
+    "yes": "نعم",
+    "no": "لا",
     "toggleTheme": "تغيير المظهر",
     "themeLight": "فاتح",
     "themeDark": "داكن",

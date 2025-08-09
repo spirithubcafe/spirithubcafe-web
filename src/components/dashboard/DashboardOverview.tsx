@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
+import DashboardWishlist from './DashboardWishlist'
 import type { Order } from '@/types'
 import type { Product } from '@/lib/firebase'
 
@@ -152,6 +153,8 @@ export default function DashboardOverview({ orders, products }: DashboardOvervie
             )}
           </CardContent>
         </Card>
+
+        <DashboardWishlist />
 
         <Card>
           <CardHeader>

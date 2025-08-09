@@ -1435,6 +1435,67 @@ export const firestoreService = {
     }
   },
 
+  // Settings management  
+  settings: {
+    async get(key: string): Promise<any> {
+      return await safeFirestoreOperation(
+        async () => {
+          const docSnap = await getDoc(doc(db, 'settings', key));
+          if (docSnap.exists()) {
+            return docSnap.data();
+          }
+          return null;
+        },
+        null,
+        'getSettings'
+      );
+    },
+
+    async set(key: string, value: any): Promise<boolean> {
+      return await safeFirestoreOperation(
+        async () => {
+          await setDoc(doc(db, 'settings', key), value);
+          return true;
+        },
+        false,
+        'setSettings'
+      );
+    },
+
+    async update(key: string, value: any): Promise<boolean> {
+      return await safeFirestoreOperation(
+        async () => {
+          await updateDoc(doc(db, 'settings', key), value);
+          return true;
+        },
+        false,
+        'updateSettings'
+      );
+    }
+  },
+
+  // Generic document operations
+  async getDocument(collection: string, id: string): Promise<any> {
+    return await safeFirestoreOperation(
+      async () => {
+        return await getDoc(doc(db, collection, id));
+      },
+      null,
+      'getDocument'
+    );
+  },
+
+  async setDocument(collection: string, id: string, data: any): Promise<boolean> {
+    return await safeFirestoreOperation(
+      async () => {
+        await setDoc(doc(db, collection, id), data);
+        return true;
+      },
+      false,
+      'setDocument'
+    );
+  },
+
   // Reviews management
   reviews: {
     async list(productId?: string): Promise<{ items: ProductReview[], total: number }> {

@@ -11,7 +11,8 @@ import {
   Tags,
   Menu,
   X,
-  MessageSquare
+  MessageSquare,
+  Globe
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,11 +36,12 @@ import ProductManagement from '@/components/admin/ProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
 import OrderManagement from '@/components/admin/OrderManagement'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
+import { FooterManagement } from '@/components/admin/FooterManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
   const user = currentUser
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const isArabic = i18n.language === 'ar'
@@ -211,6 +213,12 @@ export default function DashboardPage() {
         icon: MessageSquare,
         show: true,
         badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined
+      },
+      {
+        id: 'footer',
+        label: t('dashboard.admin.footerSettings'),
+        icon: Globe,
+        show: true
       }
     ] : [])
   ]
@@ -249,6 +257,8 @@ export default function DashboardPage() {
         )
       case 'reviews':
         return user?.role === 'admin' && <ReviewManagement />
+      case 'footer':
+        return user?.role === 'admin' && <FooterManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }

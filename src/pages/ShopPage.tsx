@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
+import { useWishlist } from '@/hooks/useWishlist'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
@@ -18,6 +19,7 @@ export function ShopPage() {
   const { i18n } = useTranslation()
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
+  const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
@@ -474,15 +476,17 @@ export function ShopPage() {
                       
                       {/* Quick Action Buttons */}
                       <Button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.preventDefault()
                           e.stopPropagation()
+                          await toggleWishlist(product.id)
                         }}
                         size="icon"
                         variant="outline"
-                        className="h-10 w-10"
+                        className={`h-10 w-10 ${isInWishlist(product.id) ? 'text-red-500 bg-red-50 hover:bg-red-100' : ''}`}
+                        disabled={wishlistLoading}
                       >
-                        <Heart className="h-4 w-4" />
+                        <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                       </Button>
                       
                       <ProductQuickView product={product}>

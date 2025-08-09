@@ -1,9 +1,23 @@
 import { Link } from 'react-router-dom'
 import { Facebook, Twitter, Instagram } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useFooterSettings } from '@/hooks/useFooterSettings'
 
 export function Footer() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const { settings } = useFooterSettings()
+  const isArabic = i18n.language === 'ar'
+
+  // Use settings if available, otherwise fallback to translation keys
+  const companyName = settings?.companyName || t('navigation.brandName')
+  const description = isArabic 
+    ? (settings?.descriptionAr || settings?.description || t('footer.description'))
+    : (settings?.description || t('footer.description'))
+  const address = isArabic 
+    ? (settings?.addressAr || settings?.address || t('contact.info.address'))
+    : (settings?.address || t('contact.info.address'))
+  const phone = settings?.phone || t('contact.info.phone')
+  const email = settings?.email || t('contact.info.email')
 
   return (
     <footer className="border-t border-border/40 bg-gradient-to-b from-background to-muted/20 shadow-inner w-full">
@@ -18,10 +32,10 @@ export function Footer() {
                 alt="SpiritHub Cafe Logo" 
                 className="h-8 w-8 object-contain no-flip flex-shrink-0"
               />
-              <span className="text-lg font-bold">{t('navigation.brandName')}</span>
+              <span className="text-lg font-bold">{companyName}</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              {t('footer.description')}
+              {description}
             </p>
           </div>
 
@@ -48,9 +62,11 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">{t('navigation.contact')}</h3>
             <div className="space-y-2 text-sm text-muted-foreground">
-              <p>{t('contact.info.address')}</p>
-              <p className="currency">{t('contact.info.phone')}</p>
-              <p className="currency">{t('contact.info.email')}</p>
+              <p>{address}</p>
+              <div className="space-y-1">
+                <p className="currency">{phone}</p>
+                <p className="currency">{email}</p>
+              </div>
             </div>
           </div>
 
@@ -58,15 +74,53 @@ export function Footer() {
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">{t('footer.followUs')}</h3>
             <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Facebook className="h-5 w-5 no-flip" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Twitter className="h-5 w-5 no-flip" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Instagram className="h-5 w-5 no-flip" />
-              </a>
+              {settings?.facebook && (
+                <a 
+                  href={`https://facebook.com/${settings.facebook}`} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-5 w-5 no-flip" />
+                </a>
+              )}
+              {settings?.twitter && (
+                <a 
+                  href={`https://twitter.com/${settings.twitter}`} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Twitter"
+                >
+                  <Twitter className="h-5 w-5 no-flip" />
+                </a>
+              )}
+              {settings?.instagram && (
+                <a 
+                  href={`https://instagram.com/${settings.instagram.replace('@', '')}`} 
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5 no-flip" />
+                </a>
+              )}
+              {/* Fallback to translation keys if settings not available */}
+              {!settings && (
+                <>
+                  <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Facebook">
+                    <Facebook className="h-5 w-5 no-flip" />
+                  </a>
+                  <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Twitter">
+                    <Twitter className="h-5 w-5 no-flip" />
+                  </a>
+                  <a href="#" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Instagram">
+                    <Instagram className="h-5 w-5 no-flip" />
+                  </a>
+                </>
+              )}
             </div>
           </div>
         </div>

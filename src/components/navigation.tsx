@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, LogOut, ShoppingCart } from 'lucide-react'
+import { Menu, X, User, LogOut, ShoppingCart, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -10,6 +10,7 @@ import { CartSidebar } from '@/components/cart-sidebar'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
+import { useWishlist } from '@/hooks/useWishlist'
 import { cn } from '@/lib/utils'
 
 export function Navigation() {
@@ -17,6 +18,7 @@ export function Navigation() {
   const auth = useAuth()
   const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
+  const { wishlistCount } = useWishlist()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isArabic = i18n.language === 'ar'
@@ -135,6 +137,22 @@ export function Navigation() {
                 <LanguageToggle />
                 <CurrencyToggle />
               </div>
+
+              {/* Wishlist Button */}
+              {auth.currentUser && (
+                <Button variant="outline" size="icon" asChild className="relative">
+                  <Link to="/wishlist">
+                    <Heart className="h-4 w-4" />
+                    {wishlistCount > 0 && (
+                      <Badge
+                        className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-600"
+                      >
+                        {wishlistCount > 99 ? '99+' : wishlistCount}
+                      </Badge>
+                    )}
+                  </Link>
+                </Button>
+              )}
 
               {/* Cart */}
               <CartSidebar />
@@ -348,12 +366,26 @@ export function Navigation() {
                           {t('navigation.dashboard')}
                         </Link>
                       </Button>
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className={cn(
+                          "flex items-center gap-2 justify-center relative",
+                          isArabic ? "flex-row-reverse" : "flex-row"
+                        )}>
+                          <Heart className="h-4 w-4" />
+                          {isArabic ? 'المفضلة' : 'Wishlist'}
+                          {wishlistCount > 0 && (
+                            <Badge className="ml-1 h-4 w-4 flex items-center justify-center p-0 text-xs bg-red-500">
+                              {wishlistCount > 99 ? '99+' : wishlistCount}
+                            </Badge>
+                          )}
+                        </Link>
+                      </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={handleLogout}
                         className={cn(
-                          "text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20 flex items-center gap-2 justify-center",
+                          "col-span-2 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20 flex items-center gap-2 justify-center",
                           isArabic ? "flex-row-reverse" : "flex-row"
                         )}
                       >

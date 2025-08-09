@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
+import { useWishlist } from '@/hooks/useWishlist'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
 import toast from 'react-hot-toast'
@@ -20,6 +21,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const { i18n } = useTranslation()
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
+  const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
   const [quantity, setQuantity] = useState(1)
   const [isOpen, setIsOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -277,8 +279,18 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
               {/* Action Buttons */}
               <div className="absolute top-3 right-3 flex flex-col gap-2">
-                <Button size="sm" variant="secondary" className="h-8 w-8 p-0 rounded-full">
-                  <Heart className="h-4 w-4" />
+                <Button 
+                  size="sm" 
+                  variant="secondary" 
+                  className={`h-8 w-8 p-0 rounded-full ${isInWishlist(product.id) ? 'text-red-500 bg-red-50 hover:bg-red-100' : ''}`}
+                  onClick={async (e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    await toggleWishlist(product.id)
+                  }}
+                  disabled={wishlistLoading}
+                >
+                  <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                 </Button>
                 <Button size="sm" variant="secondary" className="h-8 w-8 p-0 rounded-full">
                   <Share2 className="h-4 w-4" />

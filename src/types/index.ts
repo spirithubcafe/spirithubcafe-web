@@ -253,9 +253,9 @@ export interface ProductTag {
 
 // Wishlist Interface
 export interface Wishlist {
-  id: number
+  id: string
   user_id: string
-  product_id: number
+  product_id: string
   created_at: string
   product?: Product
 }

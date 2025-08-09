@@ -18,6 +18,7 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import DashboardPage from '@/pages/DashboardPage'
 import { AdminPage } from '@/pages/AdminPage'
+import { WishlistPage } from '@/pages/WishlistPage'
 import './App.css'
 
 function App() {
@@ -40,6 +41,14 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route 
+                      path="/wishlist" 
+                      element={
+                        <ProtectedRoute>
+                          <WishlistPage />
+                        </ProtectedRoute>
+                      } 
+                    />
                     <Route 
                       path="/dashboard" 
                       element={

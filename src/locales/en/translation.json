@@ -208,6 +208,18 @@
       "newProducts": "new products",
       "goldLevel": "Gold Level"
     },
+    "wishlist": {
+      "title": "My Wishlist",
+      "emptyTitle": "Your wishlist is empty",
+      "emptyDescription": "Start adding products you love to your wishlist",
+      "shopNow": "Shop Now",
+      "addToCart": "Add to Cart",
+      "removeFromWishlist": "Remove from wishlist",
+      "viewAll": "View all items",
+      "addedToWishlist": "Added to wishlist",
+      "removedFromWishlist": "Removed from wishlist",
+      "loginRequired": "Please login to manage wishlist"
+    },
     "orders": {
       "title": "All Orders",
       "description": "History of all your orders",
@@ -257,6 +269,8 @@
       "allOrders": "All Orders",
       "allOrdersDesc": "Manage all user orders",
       "analytics": "Analytics",
+      "footerManagement": "Footer Management",
+      "footerManagementDesc": "Manage all information displayed in the website footer",
       "totalSales": "Total Sales",
       "totalOrders": "Total Orders",
       "customers": "Customers",
@@ -278,7 +292,33 @@
       "edit": "Edit",
       "view": "View",
       "update": "Update",
-      "delete": "Delete"
+      "delete": "Delete",
+      "footerSettings": "Footer Settings",
+      "footerTabs": {
+        "general": "General",
+        "contact": "Contact", 
+        "social": "Social Media",
+        "hours": "Working Hours"
+      },
+      "footerForm": {
+        "companyNameEn": "Company Name (English)",
+        "companyNameAr": "Company Name (Arabic)",
+        "descriptionEn": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "addressEn": "Address (English)",
+        "addressAr": "Address (Arabic)",
+        "mainPhone": "Main Phone",
+        "secondPhone": "Second Phone",
+        "email": "Email",
+        "whatsapp": "WhatsApp Number",
+        "instagram": "Instagram Account",
+        "facebook": "Facebook Account",
+        "twitter": "Twitter Account",
+        "workingHoursEn": "Working Hours (English)",
+        "workingHoursAr": "Working Hours (Arabic)",
+        "saveChanges": "Save Changes",
+        "saving": "Saving..."
+      }
     }
   },
   "contact": {
@@ -367,6 +407,14 @@
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "success": "Success",
+    "failed": "Failed",
+    "yes": "Yes",
+    "no": "No",
     "toggleTheme": "Toggle theme",
     "themeLight": "Light",
     "themeDark": "Dark",
