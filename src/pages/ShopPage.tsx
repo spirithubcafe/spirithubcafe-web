@@ -419,7 +419,11 @@ export function ShopPage() {
                       {/* Description */}
                       {productDescription && (
                         <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                          <HTMLContent content={productDescription || ''} />
+                          <HTMLContent 
+                            content={productDescription || ''} 
+                            className="!max-w-none !text-sm !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                            maxLength={150}
+                          />
                         </div>
                       )}
 

@@ -1146,12 +1146,19 @@
   color: oklch(0.9 0.01 50) !important;
 }
 
+/* Rich Text Editor Styles */
+.rich-text-textarea {
+  font-family: inherit;
+  line-height: 1.6;
+}
+
 /* HTML Content Global Styles - Apply everywhere HTMLContent is used */
 .html-content {
-  line-height: 1.7;
+  line-height: 1.6;
   color: inherit;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .html-content.rtl {
@@ -1164,16 +1171,30 @@
   text-align: left;
 }
 
+.html-content p {
+  margin: 0 0 1em 0;
+  line-height: 1.6;
+  display: block;
+}
+
+.html-content p:last-child {
+  margin-bottom: 0;
+}
+
+.html-content p:first-child {
+  margin-top: 0;
+}
+
 .html-content h1, 
 .html-content h2, 
 .html-content h3, 
 .html-content h4, 
 .html-content h5, 
 .html-content h6 {
-  margin-top: 1.5em;
-  margin-bottom: 0.75em;
+  margin: 1.2em 0 0.6em 0;
   font-weight: 600;
   line-height: 1.3;
+  display: block;
 }
 
 .html-content h1:first-child,
@@ -1192,30 +1213,23 @@
 .html-content h5 { font-size: 1em; }
 .html-content h6 { font-size: 0.875em; }
 
-.html-content p {
-  margin-bottom: 1.25em;
-  line-height: 1.7;
-}
-
-.html-content p:last-child {
-  margin-bottom: 0;
-}
-
 .html-content ul, 
 .html-content ol {
-  margin-bottom: 1.25em;
-  padding-left: 2em;
-  line-height: 1.7;
+  margin: 0 0 1em 0;
+  padding-left: 1.5em;
+  line-height: 1.6;
+  display: block;
 }
 
 .html-content.rtl ul, 
 .html-content.rtl ol {
-  padding-right: 2em;
+  padding-right: 1.5em;
   padding-left: 0;
 }
 
 .html-content li {
   margin-bottom: 0.5em;
+  display: list-item;
 }
 
 .html-content li:last-child {
@@ -1247,18 +1261,25 @@
 
 .html-content br {
   line-height: 1;
+  display: inline;
 }
 
 .html-content div[style*="text-align"] {
-  margin-bottom: 1.25em;
+  margin: 0 0 1em 0;
+  display: block;
+}
+
+.html-content div[style*="text-align"]:last-child {
+  margin-bottom: 0;
 }
 
 .html-content blockquote {
   border-left: 4px solid hsl(var(--border));
   padding-left: 1em;
-  margin: 1.25em 0;
+  margin: 1em 0;
   font-style: italic;
   color: hsl(var(--muted-foreground));
+  display: block;
 }
 
 .html-content.rtl blockquote {
@@ -1275,6 +1296,23 @@
 }
 
 .rich-text-editor .ltr {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Rich text textarea styling */
+.rich-text-textarea {
+  font-family: inherit;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.rich-text-textarea.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.rich-text-textarea.ltr {
   direction: ltr;
   text-align: left;
 }

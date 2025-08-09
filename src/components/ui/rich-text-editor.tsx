@@ -118,10 +118,16 @@ export function RichTextEditor({
       <div className="p-3">
         {isPreview ? (
           <div className={`min-h-[200px] ${direction === 'rtl' ? 'rtl' : 'ltr'}`}>
-            <HTMLContent 
-              content={value || '<p>No content to preview</p>'} 
-              className={direction === 'rtl' ? 'rtl' : 'ltr'}
-            />
+            {value && value.trim() ? (
+              <HTMLContent 
+                content={value} 
+                className={`${direction === 'rtl' ? 'rtl' : 'ltr'} text-sm`}
+              />
+            ) : (
+              <div className="text-muted-foreground text-sm italic p-4 border-2 border-dashed rounded-lg text-center">
+                {direction === 'rtl' ? 'لا يوجد محتوى للمعاينة' : 'No content to preview'}
+              </div>
+            )}
           </div>
         ) : (
           <textarea
@@ -129,7 +135,7 @@ export function RichTextEditor({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full min-h-[200px] resize-none border-0 outline-none bg-transparent ${direction === 'rtl' ? 'rtl' : 'ltr'}`}
+            className={`w-full min-h-[200px] resize-none border-0 outline-none bg-transparent text-sm leading-relaxed rich-text-textarea ${direction === 'rtl' ? 'rtl' : 'ltr'}`}
           />
         )}
       </div>
