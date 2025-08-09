@@ -17,7 +17,11 @@ export function Footer() {
     ? (settings?.addressAr || settings?.address || t('contact.info.address'))
     : (settings?.address || t('contact.info.address'))
   const phone = settings?.phone || t('contact.info.phone')
+  const phone2 = settings?.phone2
   const email = settings?.email || t('contact.info.email')
+  const workingHours = isArabic 
+    ? (settings?.workingHoursAr || settings?.workingHours || t('contact.info.hours'))
+    : (settings?.workingHours || t('contact.info.hours'))
 
   return (
     <footer className="border-t border-border/40 bg-gradient-to-b from-background to-muted/20 shadow-inner w-full">
@@ -61,12 +65,14 @@ export function Footer() {
           {/* Contact Info */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold">{t('navigation.contact')}</h3>
-            <div className="space-y-2 text-sm text-muted-foreground">
+            <div className="space-y-3 text-sm text-muted-foreground">
               <p>{address}</p>
               <div className="space-y-1">
-                <p className="currency">{phone}</p>
-                <p className="currency">{email}</p>
+                <p>{phone}</p>
+                {phone2 && <p>{phone2}</p>}
               </div>
+              <p>{email}</p>
+              <p>{workingHours}</p>
             </div>
           </div>
 
