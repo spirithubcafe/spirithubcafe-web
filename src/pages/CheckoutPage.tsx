@@ -1,4 +1,3 @@
-import { getPropertyPrice } from '@/utils/propertyUtils'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, ShoppingCart, CreditCard, MapPin } from 'lucide-react'
@@ -31,27 +30,93 @@ export default function CheckoutPage() {
 
   const isArabic = i18n.language === 'ar'
 
-  // Helper function to get product price in current currency with properties
+  // Helper: get item unit price in CURRENT currency (no base+modifier sums)
   const getProductPrice = (product: any, selectedProperties?: Record<string, string>): number => {
-    let basePrice = product.price_omr || 0
-    
-    // Apply property-based price modifications
-    if (product.properties && selectedProperties && Object.keys(selectedProperties).length > 0) {
-      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
-        const property = product.properties.find((p: any) => p.name === propertyName)
-        if (property && property.affects_price) {
-          const option = property.options.find((opt: any) => opt.value === selectedValue)
-          if (option?.price_modifier_omr || option?.price_modifier) {
-            basePrice += getPropertyPrice(option)
+    let finalPrice = 0
+
+    const withPricingProps = product.properties && product.properties.some((p: any) => p.affects_price && p.options && p.options.length > 0)
+
+    // If product has advanced properties, use selected option's absolute price or modifier-only
+    if (withPricingProps) {
+      // Use selected property if available
+      if (selectedProperties && Object.keys(selectedProperties).length > 0) {
+        for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+          const property = product.properties.find((p: any) => p.name === propertyName)
+          if (property && property.affects_price) {
+            const option = property.options.find((opt: any) => opt.value === selectedValue)
+            if (option) {
+              const onSale = option.on_sale && (!option.sale_start_date || new Date(option.sale_start_date) <= new Date()) && (!option.sale_end_date || new Date(option.sale_end_date) >= new Date())
+              if (currency === 'OMR') {
+                if (option.price_omr) {
+                  finalPrice = onSale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
+                } else if (option.price_modifier_omr || option.price_modifier) {
+                  // Legacy: modifier is standalone price
+                  finalPrice = option.price_modifier_omr ?? option.price_modifier ?? 0
+                }
+              } else if (currency === 'SAR') {
+                if (option.price_sar) {
+                  finalPrice = onSale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
+                } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
+                  const modifier = option.price_modifier_sar ?? ((option.price_modifier_omr ?? option.price_modifier ?? 0) * 9.75)
+                  finalPrice = modifier
+                }
+              } else {
+                if (option.price_usd) {
+                  finalPrice = onSale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
+                } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
+                  const modifier = option.price_modifier_usd ?? ((option.price_modifier_omr ?? option.price_modifier ?? 0) * 2.6)
+                  finalPrice = modifier
+                }
+              }
+              break
+            }
+          }
+        }
+      }
+
+      // If nothing selected or no valid price found, use first option of first pricing property
+      if (finalPrice === 0) {
+        const firstProp = product.properties.find((p: any) => p.affects_price && p.options && p.options.length > 0)
+        const firstOption = firstProp?.options?.[0]
+        if (firstOption) {
+          const onSale = firstOption.on_sale && (!firstOption.sale_start_date || new Date(firstOption.sale_start_date) <= new Date()) && (!firstOption.sale_end_date || new Date(firstOption.sale_end_date) >= new Date())
+          if (currency === 'OMR') {
+            if (firstOption.price_omr) {
+              finalPrice = onSale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
+            } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
+              finalPrice = firstOption.price_modifier_omr ?? firstOption.price_modifier ?? 0
+            }
+          } else if (currency === 'SAR') {
+            if (firstOption.price_sar) {
+              finalPrice = onSale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
+            } else if (firstOption.price_modifier_sar || firstOption.price_modifier_omr || firstOption.price_modifier) {
+              const modifier = firstOption.price_modifier_sar ?? ((firstOption.price_modifier_omr ?? firstOption.price_modifier ?? 0) * 9.75)
+              finalPrice = modifier
+            }
+          } else {
+            if (firstOption.price_usd) {
+              finalPrice = onSale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
+            } else if (firstOption.price_modifier_usd || firstOption.price_modifier_omr || firstOption.price_modifier) {
+              const modifier = firstOption.price_modifier_usd ?? ((firstOption.price_modifier_omr ?? firstOption.price_modifier ?? 0) * 2.6)
+              finalPrice = modifier
+            }
           }
         }
       }
     }
-    
-    if (product.sale_price_omr && product.sale_price_omr < (product.price_omr || 0)) {
-      basePrice = product.sale_price_omr
+
+    // If still zero (no advanced pricing), use base product price in current currency
+    if (finalPrice === 0) {
+      if (currency === 'OMR') {
+        finalPrice = (product.sale_price_omr && product.sale_price_omr < (product.price_omr || 0)) ? product.sale_price_omr : (product.price_omr || 0)
+      } else if (currency === 'SAR') {
+        finalPrice = product.sale_price_sar ?? product.price_sar ?? ((product.sale_price_omr ?? product.price_omr ?? 0) * 9.75)
+      } else {
+        finalPrice = product.sale_price_usd ?? product.price_usd ?? ((product.sale_price_omr ?? product.price_omr ?? 0) * 2.6)
+      }
     }
-    return basePrice * conversionRates[currency]
+
+    return finalPrice
   }
 
   const [formData, setFormData] = useState({

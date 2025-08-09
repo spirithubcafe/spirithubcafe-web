@@ -30,7 +30,7 @@ export function getPropertyPriceInCurrency(
       case 'usd': 
         return option.sale_price_modifier_usd || option.price_modifier_usd || getPropertyPrice(option) * 2.6
       case 'sar': 
-        return option.sale_price_modifier_sar || option.price_modifier_sar || getPropertyPrice(option) * 3.75
+        return option.sale_price_modifier_sar || option.price_modifier_sar || getPropertyPrice(option) * 9.75
       default: 
         return option.sale_price_modifier_omr || option.price_modifier_omr || getPropertyPrice(option)
     }
@@ -40,7 +40,7 @@ export function getPropertyPriceInCurrency(
       case 'usd': 
         return option.price_modifier_usd || getPropertyPrice(option) * 2.6
       case 'sar': 
-        return option.price_modifier_sar || getPropertyPrice(option) * 3.75
+        return option.price_modifier_sar || getPropertyPrice(option) * 9.75
       default: 
         return option.price_modifier_omr || getPropertyPrice(option)
     }

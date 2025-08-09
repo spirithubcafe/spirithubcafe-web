@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { firestoreService, type Product } from '@/lib/firebase'
+import { HTMLContent } from '@/components/ui/html-content'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { conversionRates } from '@/lib/currency'
@@ -310,9 +311,9 @@ export function HomePage() {
                           </h3>
                         </Link>
                         
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                          {isArabic ? (product.description_ar || product.description) : product.description}
-                        </p>
+                        <div className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                          <HTMLContent content={isArabic ? (product.description_ar || product.description || '') : (product.description || '')} />
+                        </div>
                         
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">

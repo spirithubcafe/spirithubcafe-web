@@ -954,6 +954,9 @@ export interface Database {
           caffeine_content: string | null
           grind_options: string[] | null
           package_size: string[] | null
+          variety: string | null
+          notes: string | null
+          farm: string | null
           stock: number
           low_stock_threshold: number
           weight_grams: number | null
@@ -995,6 +998,9 @@ export interface Database {
           caffeine_content?: string | null
           grind_options?: string[] | null
           package_size?: string[] | null
+          variety?: string | null
+          notes?: string | null
+          farm?: string | null
           stock?: number
           low_stock_threshold?: number
           weight_grams?: number | null
@@ -1036,6 +1042,9 @@ export interface Database {
           caffeine_content?: string | null
           grind_options?: string[] | null
           package_size?: string[] | null
+          variety?: string | null
+          notes?: string | null
+          farm?: string | null
           stock?: number
           low_stock_threshold?: number
           weight_grams?: number | null
@@ -1479,11 +1488,11 @@ export interface Database {
     }
     Functions: {
       generate_order_number: {
-        Args: {}
+        Args: object
         Returns: string
       }
       generate_ticket_number: {
-        Args: {}
+        Args: object
         Returns: string
       }
       update_product_stock: {

@@ -82,14 +82,59 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Auto-select lowest-priced option when product has pricing properties and none were provided
+      let effectiveSelectedProps = selectedProperties
+      if ((!effectiveSelectedProps || Object.keys(effectiveSelectedProps).length === 0) && product.properties && product.properties.length > 0) {
+        const pricingProperty = product.properties.find(p => p.affects_price && p.options && p.options.length > 0)
+        if (pricingProperty) {
+          const getOptionPriceOMR = (opt: any): number => {
+            const now = new Date()
+            const onSale = opt.on_sale && (!opt.sale_start_date || new Date(opt.sale_start_date) <= now) && (!opt.sale_end_date || new Date(opt.sale_end_date) >= now)
+            if (typeof opt.price_omr === 'number' && opt.price_omr > 0) {
+              return onSale && typeof opt.sale_price_omr === 'number' && opt.sale_price_omr > 0 ? opt.sale_price_omr : opt.price_omr
+            }
+            const modifier = onSale ? (opt.sale_price_modifier_omr ?? opt.price_modifier_omr ?? opt.price_modifier) : (opt.price_modifier_omr ?? opt.price_modifier)
+            return typeof modifier === 'number' && modifier > 0 ? modifier : Number.MAX_SAFE_INTEGER
+          }
+          let best = pricingProperty.options[0]
+          let bestPrice = getOptionPriceOMR(best)
+          for (const opt of pricingProperty.options) {
+            const p = getOptionPriceOMR(opt)
+            if (p < bestPrice) { best = opt; bestPrice = p }
+          }
+          effectiveSelectedProps = { [pricingProperty.name]: best.value }
+        }
+      }
+
       // Ensure product ID is a string
       const productId = String(product.id);
-      await firestoreService.cart.addItem(currentUser.id, productId, quantity, selectedProperties)
+      await firestoreService.cart.addItem(currentUser.id, productId, quantity, effectiveSelectedProps)
       // Reload cart to reflect changes
       await loadCart()
 
       const productName = i18n.language === 'ar' ? product.name_ar || product.name : product.name
-      toast.success(i18n.language === 'ar' ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
+      // Build selected property summary for toast (e.g., Weight: 250g)
+      let propSummary = ''
+      if (effectiveSelectedProps && product.properties && Object.keys(effectiveSelectedProps).length > 0) {
+        const parts: string[] = []
+        for (const [propName, selectedValue] of Object.entries(effectiveSelectedProps)) {
+          const prop = product.properties.find(p => p.name === propName)
+          const option = prop?.options?.find(opt => opt.value === selectedValue)
+          if (prop && option) {
+            const propLabel = i18n.language === 'ar' ? (prop.name_ar || prop.name) : prop.name
+            const optionLabel = i18n.language === 'ar' ? (option.label_ar || option.label) : option.label
+            parts.push(`${propLabel}: ${optionLabel}`)
+          }
+        }
+        if (parts.length > 0) {
+          propSummary = ` (${parts.join(', ')})`
+        }
+      }
+      toast.success(
+        i18n.language === 'ar' 
+          ? `تمت إضافة ${productName}${propSummary} إلى السلة`
+          : `${productName}${propSummary} added to cart`
+      )
     } catch (error) {
       console.error('Error adding to cart:', error)
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء الإضافة إلى السلة' : 'Error adding to cart')
@@ -157,35 +202,67 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return cartItems.reduce((total, item) => {
       if (!item.product) return total
       
-      // Base price is always in OMR, convert to current currency
-      let basePrice = item.product.price_omr || 0
-      let baseSalePrice = item.product.sale_price_omr || basePrice
+      let finalPrice = 0
       
-      // Apply property-based price modifications
-      if (item.product.properties && item.selectedProperties && Object.keys(item.selectedProperties).length > 0) {
-        for (const [propertyName, selectedValue] of Object.entries(item.selectedProperties)) {
-          const property = item.product.properties.find(p => p.name === propertyName)
-          if (property && property.affects_price) {
-            const option = property.options.find(opt => opt.value === selectedValue)
-            if (option) {
-              // Check if option has sale price and use it, otherwise use regular price
-              const regularModifier = option.price_modifier_omr || option.price_modifier || 0
-              let saleModifier = regularModifier
-              
-              if (option.on_sale && option.sale_price_modifier_omr !== undefined) {
-                saleModifier = option.sale_price_modifier_omr
+      // Check if product has advanced properties that affect price
+      const hasAdvancedProperties = item.product.properties && 
+        item.product.properties.some(p => p.affects_price)
+      
+      if (hasAdvancedProperties && item.product.properties) {
+        // Use property-based pricing if properties are selected
+        if (item.selectedProperties && Object.keys(item.selectedProperties).length > 0) {
+          // Find the first property that affects price and use its absolute price
+          for (const [propertyName, selectedValue] of Object.entries(item.selectedProperties)) {
+            const property = item.product.properties.find(p => p.name === propertyName)
+            if (property && property.affects_price) {
+              const option = property.options.find(opt => opt.value === selectedValue)
+              if (option) {
+                // Check if option has absolute prices (new system) or modifiers (old system)
+                if (option.price_omr) {
+                  // New system: absolute price only
+                  if (option.on_sale && option.sale_price_omr) {
+                    finalPrice = option.sale_price_omr
+                  } else {
+                    finalPrice = option.price_omr
+                  }
+                } else if (option.price_modifier_omr || option.price_modifier) {
+                  // Legacy: modifier is treated as standalone price
+                  const modifier = option.price_modifier_omr || option.price_modifier || 0
+                  finalPrice = modifier
+                }
+                break // Use first property that affects price
               }
-              
-              // Apply the appropriate modifier to both prices
-              basePrice += regularModifier
-              baseSalePrice += saleModifier
             }
           }
         }
+        // If no properties selected but product has advanced properties, use the first property's first option price
+        if (finalPrice === 0) {
+          const priceProperty = item.product.properties.find(p => p.affects_price)
+          if (priceProperty && priceProperty.options.length > 0) {
+            const firstOption = priceProperty.options[0]
+            // Check if first option has absolute prices (new system) or modifiers (old system)
+            if (firstOption.price_omr) {
+              // New system: absolute price only
+              if (firstOption.on_sale && firstOption.sale_price_omr) {
+                finalPrice = firstOption.sale_price_omr
+              } else {
+                finalPrice = firstOption.price_omr
+              }
+            } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
+              // Legacy: modifier is treated as standalone price
+              const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
+              finalPrice = modifier
+            }
+          }
+        }
+      } else {
+        // Use product base price if no advanced properties
+        if (item.product.sale_price_omr && item.product.sale_price_omr < (item.product.price_omr || 0)) {
+          finalPrice = item.product.sale_price_omr
+        } else {
+          finalPrice = item.product.price_omr || 0
+        }
       }
-      
-      // Use the sale price if it's lower than the regular price
-      const finalPrice = baseSalePrice < basePrice ? baseSalePrice : basePrice
       
       const price = finalPrice * conversionRates[currency]
       return total + (price * item.quantity)

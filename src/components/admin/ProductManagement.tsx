@@ -445,32 +445,52 @@ export default function ProductManagement() {
 
       {/* View Product Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isArabic ? 'تفاصيل المنتج' : 'Product Details'}
             </DialogTitle>
           </DialogHeader>
           {viewingProduct && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-6">
+              {/* Basic Product Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img 
-                    src={viewingProduct.image || '/placeholder.jpg'} 
+                    src={viewingProduct.image || viewingProduct.image_url || '/placeholder.jpg'} 
                     alt={viewingProduct.name}
                     className="w-full h-48 object-cover rounded-lg"
                   />
+                  {viewingProduct.gallery && viewingProduct.gallery.length > 0 && (
+                    <div className="mt-2 grid grid-cols-4 gap-2">
+                      {viewingProduct.gallery.slice(0, 4).map((img, idx) => (
+                        <img 
+                          key={idx}
+                          src={img} 
+                          alt={`Gallery ${idx + 1}`}
+                          className="w-full h-12 object-cover rounded"
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <h3 className="text-xl font-bold">
                     {isArabic ? (viewingProduct.name_ar || viewingProduct.name) : viewingProduct.name}
                   </h3>
                   <p className="text-muted-foreground">
                     {getCategoryName(viewingProduct.category_id)}
                   </p>
-                  <p className="text-2xl font-bold">
-                    {formatPrice(viewingProduct.price_omr)}
-                  </p>
+                  <div className="space-y-2">
+                    <p className="text-2xl font-bold">
+                      {formatPrice(viewingProduct.price_omr)}
+                    </p>
+                    {viewingProduct.is_on_sale && viewingProduct.sale_price_omr && (
+                      <p className="text-lg text-red-600 font-semibold">
+                        {isArabic ? 'سعر التخفيض: ' : 'Sale Price: '}{formatPrice(viewingProduct.sale_price_omr)}
+                      </p>
+                    )}
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {getProductBadges(viewingProduct).map((badge, index) => (
                       <span
@@ -483,29 +503,240 @@ export default function ProductManagement() {
                   </div>
                 </div>
               </div>
-              {viewingProduct.description && (
-                <div>
-                  <h4 className="font-semibold mb-2">{isArabic ? 'الوصف' : 'Description'}</h4>
-                  <p className="text-muted-foreground">
-                    {isArabic ? (viewingProduct.description_ar || viewingProduct.description) : viewingProduct.description}
-                  </p>
+
+              {/* Inventory Information */}
+              <div className="border rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  {isArabic ? 'معلومات المخزون' : 'Inventory Information'}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold text-muted-foreground">
+                      {isArabic ? 'الكمية المتوفرة:' : 'Current Stock:'}
+                    </span>
+                    <p className="text-lg font-bold">{viewingProduct.stock_quantity || viewingProduct.stock || 0}</p>
+                  </div>
+                  {viewingProduct.sku && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'رمز المنتج:' : 'SKU:'}
+                      </span>
+                      <p className="font-mono">{viewingProduct.sku}</p>
+                    </div>
+                  )}
+                  {(viewingProduct.weight || viewingProduct.weight_grams) && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'الوزن:' : 'Weight:'}
+                      </span>
+                      <p>
+                        {viewingProduct.weight_grams 
+                          ? `${viewingProduct.weight_grams}g` 
+                          : `${viewingProduct.weight}kg`
+                        }
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <span className="font-semibold text-muted-foreground">
+                      {isArabic ? 'الحالة:' : 'Status:'}
+                    </span>
+                    <p className={viewingProduct.is_active ? 'text-green-600' : 'text-red-600'}>
+                      {viewingProduct.is_active 
+                        ? (isArabic ? 'نشط' : 'Active') 
+                        : (isArabic ? 'غير نشط' : 'Inactive')
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coffee Properties */}
+              <div className="border rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  {isArabic ? 'خصائص القهوة' : 'Coffee Properties'}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  {viewingProduct.bean_type && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'نوع الحبة:' : 'Bean Type:'}
+                      </span>
+                      <p>{viewingProduct.bean_type}</p>
+                    </div>
+                  )}
+                  {viewingProduct.roast_level && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'درجة التحميص:' : 'Roast Level:'}
+                      </span>
+                      <p>{viewingProduct.roast_level}</p>
+                    </div>
+                  )}
+                  {viewingProduct.processing_method && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'طريقة المعالجة:' : 'Processing Method:'}
+                      </span>
+                      <p>{viewingProduct.processing_method}</p>
+                    </div>
+                  )}
+                  {viewingProduct.altitude && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'الارتفاع:' : 'Altitude:'}
+                      </span>
+                      <p>{viewingProduct.altitude}</p>
+                    </div>
+                  )}
+                  {viewingProduct.harvest_year && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'سنة الحصاد:' : 'Harvest Year:'}
+                      </span>
+                      <p>{viewingProduct.harvest_year}</p>
+                    </div>
+                  )}
+                  {viewingProduct.caffeine_content && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'محتوى الكافيين:' : 'Caffeine Content:'}
+                      </span>
+                      <p>{viewingProduct.caffeine_content}</p>
+                    </div>
+                  )}
+                  {viewingProduct.variety && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'الصنف:' : 'Variety:'}
+                      </span>
+                      <p>{viewingProduct.variety}</p>
+                    </div>
+                  )}
+                  {viewingProduct.farm && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'المزرعة:' : 'Farm:'}
+                      </span>
+                      <p>{viewingProduct.farm}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Advanced Options */}
+              {(viewingProduct.grind_options?.length || viewingProduct.package_size?.length) && (
+                <div className="border rounded-lg p-4">
+                  <h4 className="text-lg font-semibold mb-3">
+                    {isArabic ? 'خيارات المنتج' : 'Product Options'}
+                  </h4>
+                  <div className="space-y-3">
+                    {viewingProduct.grind_options && viewingProduct.grind_options.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-muted-foreground">
+                          {isArabic ? 'خيارات الطحن:' : 'Grind Options:'}
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {viewingProduct.grind_options.map((option, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-muted rounded text-xs">
+                              {option}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {viewingProduct.package_size && viewingProduct.package_size.length > 0 && (
+                      <div>
+                        <span className="font-semibold text-muted-foreground">
+                          {isArabic ? 'أحجام التعبئة:' : 'Package Sizes:'}
+                        </span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {viewingProduct.package_size.map((size, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-muted rounded text-xs">
+                              {size}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-semibold">{isArabic ? 'المخزون:' : 'Stock:'}</span> {viewingProduct.stock_quantity || viewingProduct.stock || 0}
+
+              {/* Pricing Details */}
+              <div className="border rounded-lg p-4">
+                <h4 className="text-lg font-semibold mb-3">
+                  {isArabic ? 'تفاصيل التسعير' : 'Pricing Details'}
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold text-muted-foreground">
+                      {isArabic ? 'السعر (ريال عماني):' : 'Price (OMR):'}
+                    </span>
+                    <p className="text-lg font-bold">{viewingProduct.price_omr} OMR</p>
+                  </div>
+                  {viewingProduct.price_usd && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'السعر (دولار):' : 'Price (USD):'}
+                      </span>
+                      <p className="text-lg font-bold">${viewingProduct.price_usd}</p>
+                    </div>
+                  )}
+                  {viewingProduct.price_sar && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'السعر (ريال سعودي):' : 'Price (SAR):'}
+                      </span>
+                      <p className="text-lg font-bold">{viewingProduct.price_sar} SAR</p>
+                    </div>
+                  )}
+                  {viewingProduct.sale_price_omr && (
+                    <div>
+                      <span className="font-semibold text-muted-foreground">
+                        {isArabic ? 'سعر التخفيض (ريال عماني):' : 'Sale Price (OMR):'}
+                      </span>
+                      <p className="text-lg font-bold text-red-600">{viewingProduct.sale_price_omr} OMR</p>
+                    </div>
+                  )}
                 </div>
-                {viewingProduct.sku && (
-                  <div>
-                    <span className="font-semibold">{isArabic ? 'رمز المنتج:' : 'SKU:'}</span> {viewingProduct.sku}
-                  </div>
-                )}
-                {viewingProduct.weight && (
-                  <div>
-                    <span className="font-semibold">{isArabic ? 'الوزن:' : 'Weight:'}</span> {viewingProduct.weight} kg
-                  </div>
-                )}
               </div>
+ 
+
+              {/* Product Properties */}
+              {viewingProduct.properties && viewingProduct.properties.length > 0 && (
+                <div className="border rounded-lg p-4">
+                  <h4 className="text-lg font-semibold mb-3">
+                    {isArabic ? 'خصائص المنتج المتقدمة' : 'Advanced Product Properties'}
+                  </h4>
+                  <div className="space-y-3">
+                    {viewingProduct.properties.map((property, idx) => (
+                      <div key={idx} className="border-l-2 border-muted pl-3">
+                        <span className="font-semibold text-sm">
+                          {isArabic ? (property.name_ar || property.name) : property.name}
+                        </span>
+                        <p className="text-xs text-muted-foreground mb-2">
+                          {isArabic ? 'النوع:' : 'Type:'} {property.type} | 
+                          {property.required ? (isArabic ? ' مطلوب' : ' Required') : (isArabic ? ' اختياري' : ' Optional')} |
+                          {property.affects_price ? (isArabic ? ' يؤثر على السعر' : ' Affects Price') : ''}
+                        </p>
+                        {property.options && property.options.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {property.options.map((option, optIdx) => (
+                              <span key={optIdx} className="px-2 py-1 bg-muted rounded text-xs">
+                                {isArabic ? (option.label_ar || option.label) : option.label}
+                                {option.price_omr && ` (+${option.price_omr} OMR)`}
+                                {option.stock && ` (${option.stock} ${isArabic ? 'قطعة' : 'units'})`}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+ 
             </div>
           )}
         </DialogContent>

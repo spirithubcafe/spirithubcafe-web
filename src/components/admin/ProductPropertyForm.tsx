@@ -36,6 +36,14 @@ interface OptionFormData {
   value: string
   label: string
   label_ar: string
+  // Absolute pricing (new system)
+  price_omr?: number
+  price_usd?: number
+  price_sar?: number
+  sale_price_omr?: number
+  sale_price_usd?: number
+  sale_price_sar?: number
+  // Modifier pricing (legacy system)
   price_modifier?: number
   price_modifier_omr?: number
   price_modifier_usd?: number
@@ -77,6 +85,14 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
     value: '',
     label: '',
     label_ar: '',
+    // Absolute pricing fields (new system)
+    price_omr: 0,
+    price_usd: 0,
+    price_sar: 0,
+    sale_price_omr: 0,
+    sale_price_usd: 0,
+    sale_price_sar: 0,
+    // Modifier pricing fields (legacy system)
     price_modifier_omr: 0,
     price_modifier_usd: 0,
     price_modifier_sar: 0,
@@ -134,6 +150,14 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
   const handleEditOption = (option: ProductPropertyOption) => {
     setEditingOption({
       ...option,
+      // Absolute pricing fields (new system)
+      price_omr: option.price_omr || 0,
+      price_usd: option.price_usd || 0,
+      price_sar: option.price_sar || 0,
+      sale_price_omr: option.sale_price_omr || 0,
+      sale_price_usd: option.sale_price_usd || 0,
+      sale_price_sar: option.sale_price_sar || 0,
+      // Modifier pricing fields (legacy system)
       price_modifier: option.price_modifier || 0,
       price_modifier_omr: option.price_modifier_omr || option.price_modifier || 0,
       price_modifier_usd: option.price_modifier_usd || 0,
@@ -266,24 +290,30 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                         
                         {/* Pricing Display */}
                         <div className="mt-2 space-y-1">
-                          {(option.price_modifier || option.price_modifier_omr) && (
+                          {(option.price_modifier || option.price_modifier_omr || option.price_omr) && (
                             <div className="flex items-center gap-2">
                               <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
                                 {isArabic ? 'السعر' : 'Price'}
                               </span>
                               <span className="text-xs font-mono">
-                                +{option.price_modifier_omr || option.price_modifier} OMR
+                                {option.price_omr ? 
+                                  `${option.price_omr} OMR` : 
+                                  `${option.price_modifier_omr || option.price_modifier} OMR`
+                                }
                               </span>
                             </div>
                           )}
                           
-                          {option.on_sale && (option.sale_price_modifier_omr) && (
+                          {option.on_sale && (option.sale_price_modifier_omr || option.sale_price_omr) && (
                             <div className="flex items-center gap-2">
                               <span className="text-xs px-2 py-1 bg-destructive/10 text-destructive rounded">
                                 {isArabic ? 'التخفيض' : 'Sale'}
                               </span>
                               <span className="text-xs font-mono text-destructive">
-                                +{option.sale_price_modifier_omr} OMR
+                                {option.sale_price_omr ? 
+                                  `${option.sale_price_omr} OMR` : 
+                                  `${option.sale_price_modifier_omr} OMR`
+                                }
                               </span>
                             </div>
                           )}
@@ -452,9 +482,12 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                         </div>
                         <div className="text-sm text-muted-foreground">
                           Value: {option.value}
-                          {(option.price_modifier || option.price_modifier_omr) && (
+                          {(option.price_modifier || option.price_modifier_omr || option.price_omr) && (
                             <span className="ml-2">
-                              (+{option.price_modifier_omr || option.price_modifier} OMR)
+                              {option.price_omr ? 
+                                `(${option.price_omr} OMR)` : 
+                                `(${option.price_modifier_omr || option.price_modifier} OMR)`
+                              }
                             </span>
                           )}
                         </div>
@@ -559,7 +592,10 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-primary rounded-full"></div>
-                    <h6 className="font-medium">{isArabic ? 'السعر الأساسي' : 'Regular Price'}</h6>
+                    <h6 className="font-medium">{isArabic ? 'السعر المطلق' : 'Absolute Price'}</h6>
+                    <p className="text-xs text-muted-foreground ml-2">
+                      {isArabic ? '(يحل محل سعر المنتج الأساسي)' : '(Replaces base product price)'}
+                    </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
@@ -568,15 +604,14 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                         type="number"
                         step="0.001"
                         min="0"
-                        value={editingOption.price_modifier_omr || 0}
+                        value={editingOption.price_omr || 0}
                         onChange={(e) => {
                           const omrPrice = parseFloat(e.target.value) || 0
                           setEditingOption({ 
                             ...editingOption, 
-                            price_modifier_omr: omrPrice,
-                            price_modifier_usd: convertPrice(omrPrice, 'USD'),
-                            price_modifier_sar: convertPrice(omrPrice, 'SAR'),
-                            price_modifier: omrPrice // backward compatibility
+                            price_omr: omrPrice,
+                            price_usd: convertPrice(omrPrice, 'USD'),
+                            price_sar: convertPrice(omrPrice, 'SAR')
                           })
                         }}
                         className="font-mono"
@@ -587,7 +622,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                       <Input
                         type="number"
                         step="0.01"
-                        value={editingOption.price_modifier_usd || 0}
+                        value={editingOption.price_usd || 0}
                         disabled
                         className="bg-muted font-mono"
                       />
@@ -600,7 +635,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                       <Input
                         type="number"
                         step="0.01"
-                        value={editingOption.price_modifier_sar || 0}
+                        value={editingOption.price_sar || 0}
                         disabled
                         className="bg-muted font-mono"
                       />

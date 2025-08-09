@@ -89,7 +89,55 @@ export interface ProductPropertyOption {
   value: string
   label: string
   label_ar: string
-  price_modifier?: number // Price change in OMR
+  price_modifier?: number // Price change in OMR (for backward compatibility)
+  // Price modifiers (for relative pricing - adds to base price)
+  price_modifier_omr?: number
+  price_modifier_usd?: number
+  price_modifier_sar?: number
+  sale_price_modifier_omr?: number
+  sale_price_modifier_usd?: number
+  sale_price_modifier_sar?: number
+  // Absolute prices (for property-based pricing - replaces base price)
+  price_omr?: number
+  price_usd?: number
+  price_sar?: number
+  sale_price_omr?: number
+  sale_price_usd?: number
+  sale_price_sar?: number
+  on_sale?: boolean
+  is_on_sale?: boolean
+}
+
+// Coffee Property Option Interface (for coffee-specific properties with individual pricing)
+export interface CoffeePropertyOption {
+  id: string
+  value: string
+  label: string
+  label_ar: string
+  price_omr: number
+  price_usd: number
+  price_sar: number
+  sale_price_omr?: number
+  sale_price_usd?: number
+  sale_price_sar?: number
+  is_on_sale: boolean
+  stock?: number
+  sku?: string
+  is_active: boolean
+  sort_order: number
+}
+
+// Coffee Property Interface (for coffee-specific properties)
+export interface CoffeeProperty {
+  id: string
+  name: string
+  name_ar: string
+  type: 'roast_level' | 'process' | 'variety' | 'altitude' | 'notes' | 'farm'
+  required: boolean
+  multiple_selection: boolean // Allow multiple options
+  options: CoffeePropertyOption[]
+  is_active: boolean
+  sort_order: number
 }
 
 // Product Property Interface (for dynamic properties)
@@ -124,6 +172,9 @@ export interface Product {
   caffeine_content?: string
   grind_options?: string[]
   package_size?: string[]
+  variety?: string
+  notes?: string
+  farm?: string
   stock: number
   low_stock_threshold: number
   weight_grams?: number
@@ -153,6 +204,9 @@ export interface Product {
   properties?: ProductProperty[]
   average_rating?: number
   review_count?: number
+  // Coffee-specific properties with individual pricing
+  coffee_properties?: CoffeeProperty[]
+  selected_coffee_options?: { [property_id: string]: string[] } // property_id -> option IDs
 }
 
 // Product Variant Interface
@@ -516,6 +570,9 @@ export interface ProductForm {
   caffeine_content?: string
   grind_options?: string[]
   package_size?: string[]
+  variety?: string
+  notes?: string
+  farm?: string
   stock: number
   weight_grams?: number
   featured: boolean

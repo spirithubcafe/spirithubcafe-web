@@ -56,14 +56,14 @@ export default function ReviewManagement() {
     return isArabic ? (product.name_ar || product.name) : product.name
   }
 
-  const handleApproveReview = async (reviewId: number) => {
+  const handleApproveReview = async (reviewId: string) => {
     try {
       // Update the review in Firebase
-      await firestoreService.reviews.update(reviewId.toString(), { is_approved: true })
+      await firestoreService.reviews.update(reviewId, { is_approved: true })
       
       // Update the review in state
       setReviews(prev => prev.map(review => 
-        Number(review.id) === reviewId 
+        review.id === reviewId 
           ? { ...review, is_approved: true }
           : review
       ))
@@ -75,14 +75,14 @@ export default function ReviewManagement() {
     }
   }
 
-  const handleRejectReview = async (reviewId: number) => {
+  const handleRejectReview = async (reviewId: string) => {
     try {
       // Update the review in Firebase
-      await firestoreService.reviews.update(reviewId.toString(), { is_approved: false })
+      await firestoreService.reviews.update(reviewId, { is_approved: false })
       
       // Update the review in state
       setReviews(prev => prev.map(review => 
-        Number(review.id) === reviewId 
+        review.id === reviewId 
           ? { ...review, is_approved: false }
           : review
       ))
@@ -99,7 +99,7 @@ export default function ReviewManagement() {
     
     try {
       // Delete the review from Firebase
-      await firestoreService.reviews.delete(selectedReview.id.toString())
+      await firestoreService.reviews.delete(selectedReview.id)
       
       // Remove the review from state
       setReviews(prev => prev.filter(review => review.id !== selectedReview.id))
@@ -281,7 +281,7 @@ export default function ReviewManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleApproveReview(Number(review.id))}
+                            onClick={() => handleApproveReview(review.id)}
                             className="text-green-600 hover:text-green-700"
                           >
                             <Check className="h-4 w-4" />
@@ -292,7 +292,7 @@ export default function ReviewManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleRejectReview(Number(review.id))}
+                            onClick={() => handleRejectReview(review.id)}
                             className="text-orange-600 hover:text-orange-700"
                           >
                             <X className="h-4 w-4" />

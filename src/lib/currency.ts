@@ -8,7 +8,7 @@ export const currencySymbols = {
 
 export const conversionRates = {
   USD: 2.6,
-  SAR: 3.75,
+  SAR: 9.75,
   OMR: 1
 } as const
 

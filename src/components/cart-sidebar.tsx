@@ -27,29 +27,69 @@ export function CartSidebar() {
 
   // Helper function to get product price with selected properties
   const getProductPriceWithProperties = (product: Product, selectedProperties?: Record<string, string>): number => {
-    let basePrice = (product.price_omr || 0) * conversionRates[currency]
+    let finalPrice = 0
     
-    // Apply property-based price modifications
-    if (product.properties && selectedProperties && Object.keys(selectedProperties).length > 0) {
-      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
-        const property = product.properties.find(p => p.name === propertyName)
-        if (property && property.affects_price) {
-          const option = property.options.find(opt => opt.value === selectedValue)
-          if (option?.price_modifier_omr) {
-            // Convert price modifier from OMR to current currency
-            basePrice += option.price_modifier_omr * conversionRates[currency]
+    // Check if product has advanced properties that affect price
+    const hasAdvancedProperties = product.properties && 
+      product.properties.some(p => p.affects_price)
+    
+    if (hasAdvancedProperties && product.properties) {
+      // Use property-based pricing if properties are selected
+      if (selectedProperties && Object.keys(selectedProperties).length > 0) {
+        // Find the first property that affects price and use its absolute price
+        for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
+          const property = product.properties.find(p => p.name === propertyName)
+          if (property && property.affects_price) {
+            const option = property.options.find(opt => opt.value === selectedValue)
+            if (option) {
+              // Check if option has absolute prices (new system) or modifiers (old system)
+              if (option.price_omr) {
+                // New system: absolute price only
+                if (option.on_sale && option.sale_price_omr) {
+                  finalPrice = option.sale_price_omr
+                } else {
+                  finalPrice = option.price_omr
+                }
+              } else if (option.price_modifier_omr || option.price_modifier) {
+                // Legacy: modifier is treated as standalone price
+                const modifier = option.price_modifier_omr || option.price_modifier || 0
+                finalPrice = modifier
+              }
+              break // Use first property that affects price
+            }
           }
         }
       }
+      // If no properties selected but product has advanced properties, use the first property's first option price
+      if (finalPrice === 0) {
+        const priceProperty = product.properties.find(p => p.affects_price)
+        if (priceProperty && priceProperty.options.length > 0) {
+          const firstOption = priceProperty.options[0]
+          // Check if first option has absolute prices (new system) or modifiers (old system)
+          if (firstOption.price_omr) {
+            // New system: absolute price only
+            if (firstOption.on_sale && firstOption.sale_price_omr) {
+              finalPrice = firstOption.sale_price_omr
+            } else {
+              finalPrice = firstOption.price_omr
+            }
+          } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
+            // Legacy: modifier is treated as standalone price
+            const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
+            finalPrice = modifier
+          }
+        }
+      }
+    } else {
+      // Use product base price if no advanced properties
+      if (product.sale_price_omr && product.sale_price_omr < (product.price_omr || 0)) {
+        finalPrice = product.sale_price_omr
+      } else {
+        finalPrice = product.price_omr || 0
+      }
     }
     
-    return basePrice
-  }
-
-  // Helper function to get sale price in current currency  
-  const getSalePrice = (product: Product): number | null => {
-    if (!product.sale_price_omr || product.sale_price_omr >= (product.price_omr || 0)) return null
-    return product.sale_price_omr * conversionRates[currency]
+    return finalPrice * conversionRates[currency]
   }
 
   // Load categories when component mounts
@@ -208,9 +248,7 @@ export function CartSidebar() {
                           
                           <p className="font-semibold text-amber-600">
                             {item.product && (() => {
-                              const salePrice = getSalePrice(item.product)
-                              const regularPrice = getProductPriceWithProperties(item.product, item.selectedProperties)
-                              const finalPrice = salePrice || regularPrice
+                              const finalPrice = getProductPriceWithProperties(item.product, item.selectedProperties)
                               return formatPrice(finalPrice * item.quantity)
                             })()}
                           </p>

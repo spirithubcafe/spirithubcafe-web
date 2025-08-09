@@ -12,6 +12,7 @@ import { useCart } from '@/hooks/useCart'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
+import { HTMLContent } from '@/components/ui/html-content'
 
 export function ShopPage() {
   const { i18n } = useTranslation()
@@ -415,9 +416,9 @@ export function ShopPage() {
 
                       {/* Description */}
                       {productDescription && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
-                          {productDescription}
-                        </p>
+                        <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                          <HTMLContent content={productDescription || ''} />
+                        </div>
                       )}
 
                       {/* Price */}

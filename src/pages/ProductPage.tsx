@@ -12,6 +12,8 @@ import { useCart } from '@/hooks/useCart'
 import { firestoreService, type Product, type ProductReview } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { ProductReviews } from '@/components/product-reviews'
+import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
+import { HTMLContent } from '@/components/ui/html-content'
 import toast from 'react-hot-toast'
 
 export default function ProductPage() {
@@ -91,6 +93,82 @@ export default function ProductPage() {
     loadProduct()
   }, [loadProduct])
 
+  // Initialize default selections for property-based pricing
+  useEffect(() => {
+    if (product && product.properties) {
+      const pricingProperties = product.properties.filter(p => p.affects_price && p.options && p.options.length > 0)
+      
+      // Only auto-select if product has advanced properties and no selections made yet
+      if (pricingProperties.length > 0 && Object.keys(selectedProperties).length === 0) {
+        // Find the combination that gives the minimum price
+        let minPrice = Infinity
+        let bestCombination: Record<string, string> = {}
+        
+        const findBestCombination = (propertyIndex: number, currentSelections: Record<string, string>): void => {
+          if (propertyIndex >= pricingProperties.length) {
+            // Calculate price for this combination
+            let totalPrice = 0
+            for (const property of pricingProperties) {
+              const selectedValue = currentSelections[property.name]
+              const option = property.options.find(opt => opt.value === selectedValue)
+              if (option) {
+                let optionPrice = 0
+                // Check if option has absolute prices (new system) or modifiers (old system)
+                if (currency === 'OMR') {
+                  if (option.price_omr) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
+                  } else if (option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_omr || option.price_modifier || 0
+                    optionPrice = modifier
+                  }
+                } else if (currency === 'SAR') {
+                  if (option.price_sar) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
+                  } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
+                    optionPrice = modifier
+                  }
+                } else {
+                  if (option.price_usd) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
+                  } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+                    optionPrice = modifier
+                  }
+                }
+                totalPrice = optionPrice // Use absolute price, not cumulative
+                break // Only use first property that affects price
+              }
+            }
+            
+            if (totalPrice < minPrice) {
+              minPrice = totalPrice
+              bestCombination = { ...currentSelections }
+            }
+            return
+          }
+
+          const property = pricingProperties[propertyIndex]
+          for (const option of property.options) {
+            findBestCombination(
+              propertyIndex + 1,
+              { ...currentSelections, [property.name]: option.value }
+            )
+          }
+        }
+
+        findBestCombination(0, {})
+        setSelectedProperties(bestCombination)
+      }
+    }
+  }, [product, currency, selectedProperties])
+
   const handleAddToCart = async () => {
     if (!product) return
     
@@ -106,119 +184,132 @@ export default function ProductPage() {
   const getProductPrice = (): number => {
     if (!product) return 0
     
-    let basePrice: number
+    // If product has properties with pricing, try property-based pricing first
+    if (product.properties && product.properties.some(p => p.affects_price && p.options && p.options.length > 0)) {
+      const price = getPropertyBasedPrice()
+      
+      // If property-based pricing returned a valid price, use it
+      if (price > 0) {
+        return price
+      }
+    }
+    
+    // Fallback to base pricing for products without property-based pricing or when property pricing fails
     let baseSalePrice: number
     
     switch (currency) {
       case 'OMR':
-        basePrice = product.price_omr || 0
-        baseSalePrice = product.sale_price_omr || basePrice
+        baseSalePrice = product.sale_price_omr || product.price_omr || 0
         break
       case 'SAR':
-        basePrice = product.price_sar || (product.price_omr || 0) * 3.75
-        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 3.75 : basePrice)
+        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 9.75 : (product.price_omr || 0) * 9.75)
         break
       case 'USD':
       default:
-        basePrice = product.price_usd || (product.price_omr || 0) * 2.6
-        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : basePrice)
+        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : (product.price_omr || 0) * 2.6)
         break
     }
 
-    // Apply property-based price modifications
-    if (product.properties && Object.keys(selectedProperties).length > 0) {
-      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
-        const property = product.properties.find(p => p.name === propertyName)
-        if (property && property.affects_price) {
+    return baseSalePrice
+  }
+
+  const getPropertyBasedPrice = (): number => {
+    if (!product || !product.properties) return 0
+
+    // Find properties that affect price
+    const pricingProperties = product.properties.filter(p => p.affects_price && p.options && p.options.length > 0)
+    
+    if (pricingProperties.length === 0) return 0
+
+    // If user has selected properties, use the first property that affects price
+    if (Object.keys(selectedProperties).length > 0) {
+      for (const property of pricingProperties) {
+        const selectedValue = selectedProperties[property.name]
+        
+        if (selectedValue) {
           const option = property.options.find(opt => opt.value === selectedValue)
           if (option) {
-            let regularModifier = 0
-            let saleModifier = 0
-            
-            // Get regular price modifier
+            // Check if option has absolute prices (new system) or modifiers (old system)
+            let price = 0
             if (currency === 'OMR') {
-              regularModifier = option.price_modifier_omr || option.price_modifier || 0
+              if (option.price_omr) {
+                // New system: absolute price only
+                price = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
+              } else if (option.price_modifier_omr || option.price_modifier) {
+                // Legacy: treat modifier as standalone price (do not add base)
+                const modifier = option.price_modifier_omr || option.price_modifier || 0
+                price = modifier
+              }
             } else if (currency === 'SAR') {
-              regularModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
-            } else {
-              regularModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
-            }
-            
-            // Get sale price modifier
-            if (option.on_sale && option.sale_price_modifier_omr !== undefined) {
-              if (currency === 'OMR') {
-                saleModifier = option.sale_price_modifier_omr
-              } else if (currency === 'SAR') {
-                saleModifier = option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75
-              } else {
-                saleModifier = option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6
+              if (option.price_sar) {
+                // New system: absolute price only
+                price = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
+              } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
+                // Legacy: treat modifier as standalone price (do not add base)
+                const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
+                price = modifier
               }
             } else {
-              // Use regular modifier if no sale modifier
-              saleModifier = regularModifier
+              if (option.price_usd) {
+                // New system: absolute price only
+                price = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
+              } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
+                const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+                price =  modifier
+              }
             }
             
-            basePrice += regularModifier
-            baseSalePrice += saleModifier
-          }
-        }
-      }
-    }
-
-    // Return the lower price (sale price if it's lower than regular price)
-    return Math.min(basePrice, baseSalePrice)
-  }
-
-  const getRegularPrice = (): number => {
-    if (!product) return 0
-    
-    let basePrice: number
-    
-    switch (currency) {
-      case 'OMR':
-        basePrice = product.price_omr || 0
-        break
-      case 'SAR':
-        basePrice = product.price_sar || (product.price_omr || 0) * 3.75
-        break
-      case 'USD':
-      default:
-        basePrice = product.price_usd || (product.price_omr || 0) * 2.6
-        break
-    }
-
-    // Apply property-based price modifications (regular prices only)
-    if (product.properties && Object.keys(selectedProperties).length > 0) {
-      for (const [propertyName, selectedValue] of Object.entries(selectedProperties)) {
-        const property = product.properties.find(p => p.name === propertyName)
-        if (property && property.affects_price) {
-          const option = property.options.find(opt => opt.value === selectedValue)
-          if (option) {
-            let regularModifier = 0
-            
-            if (currency === 'OMR') {
-              regularModifier = option.price_modifier_omr || option.price_modifier || 0
-            } else if (currency === 'SAR') {
-              regularModifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75
+            // If property option has no price, fallback to base price
+            if (price > 0) {
+              return price
             } else {
-              regularModifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+              break
             }
-            
-            basePrice += regularModifier
           }
         }
       }
     }
 
-    return basePrice
-  }
+    // If no properties selected or no valid price found, use first option of first property
+    const firstProperty = pricingProperties[0]
+    if (firstProperty && firstProperty.options.length > 0) {
+      const firstOption = firstProperty.options[0]
+      // Check if first option has absolute prices (new system) or modifiers (old system)
+      let price = 0
+      if (currency === 'OMR') {
+        if (firstOption.price_omr) {
+          // New system: absolute price only
+          price = firstOption.on_sale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
+        } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
+          // Legacy: treat modifier as standalone price (do not add base)
+          const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
+          price = modifier
+        }
+      } else if (currency === 'SAR') {
+        if (firstOption.price_sar) {
+          // New system: absolute price only
+          price = firstOption.on_sale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
+        } else if (firstOption.price_modifier_sar || firstOption.price_modifier_omr || firstOption.price_modifier) {
+          // Legacy: treat modifier as standalone price (do not add base)
+          const modifier = firstOption.price_modifier_sar || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 9.75
+          price = modifier
+        }
+      } else {
+        if (firstOption.price_usd) {
+          // New system: absolute price only
+          price = firstOption.on_sale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
+        } else if (firstOption.price_modifier_usd || firstOption.price_modifier_omr || firstOption.price_modifier) {
+          // Legacy: treat modifier as standalone price (do not add base)
+          const modifier = firstOption.price_modifier_usd || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 2.6
+          price = modifier
+        }
+      }
+      
+      // If first option has no price, return 0 (will fallback to base price in main function)
+      return price
+    }
 
-  const getSalePrice = (): number | null => {
-    const regularPrice = getRegularPrice()
-    const currentPrice = getProductPrice()
-    
-    // Return sale price only if it's lower than regular price
-    return currentPrice < regularPrice ? currentPrice : null
+    return 0
   }
 
   const getProductBadges = () => {
@@ -229,7 +320,6 @@ export default function ProductPage() {
     if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
     if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
     if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
-    if (getSalePrice()) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
     
     return badges
   }
@@ -291,10 +381,7 @@ export default function ProductPage() {
     )
   }
 
-  const productPrice = getProductPrice()
-  const regularPrice = getRegularPrice()
-  const hasDiscount = productPrice < regularPrice
-  const finalPrice = productPrice
+  const finalPrice = getProductPrice()
   const badges = getProductBadges()
 
   return (
@@ -401,40 +488,15 @@ export default function ProductPage() {
               )}
             </div>
 
-            {/* Price */}
-            <div className="space-y-2">
-              {hasDiscount ? (
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl font-bold text-red-600">
-                      {formatPrice(productPrice)}
-                    </span>
-                    <span className="text-xl text-muted-foreground line-through">
-                      {formatPrice(regularPrice)}
-                    </span>
-                    {(() => {
-                      const discountPercent = Math.round(((regularPrice - productPrice) / regularPrice) * 100)
-                      return discountPercent > 0 ? (
-                        <Badge variant="destructive">
-                          {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
-                        </Badge>
-                      ) : null
-                    })()}
-                  </div>
-                </div>
-              ) : (
-                <span className="text-3xl font-bold">
-                  {formatPrice(productPrice)}
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            <div>
-              <p className="text-muted-foreground leading-relaxed">
-                {isArabic ? product.description_ar : product.description}
-              </p>
-            </div>
+            {/* Coffee Information */}
+            <CoffeeInfoDisplay
+              roastLevel={product.roast_level}
+              process={product.processing_method}
+              variety={product.variety}
+              altitude={product.altitude}
+              notes={product.notes}
+              farm={product.farm}
+            />
 
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
@@ -472,14 +534,14 @@ export default function ProductPage() {
                                       const regularModifier = currency === 'OMR' ? 
                                         (option.price_modifier_omr || option.price_modifier || 0) :
                                         currency === 'SAR' ? 
-                                        (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 3.75) :
+                                        (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75) :
                                         (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
                                       
                                       const saleModifier = option.on_sale && option.sale_price_modifier_omr !== undefined ?
                                         (currency === 'OMR' ? 
                                           option.sale_price_modifier_omr :
                                           currency === 'SAR' ? 
-                                          (option.sale_price_modifier_sar || option.sale_price_modifier_omr * 3.75) :
+                                          (option.sale_price_modifier_sar || option.sale_price_modifier_omr * 9.75) :
                                           (option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6)) :
                                         null
                                       
@@ -491,15 +553,15 @@ export default function ProductPage() {
                                             {saleModifier !== null && saleModifier < regularModifier ? (
                                               <>
                                                 <span className="line-through text-muted-foreground">
-                                                  ({regularModifier > 0 ? '+' : ''}{formatPrice(regularModifier)})
+                                                  ({formatPrice(regularModifier)})
                                                 </span>
                                                 <span className="text-red-600 ml-1">
-                                                  ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                                  ({formatPrice(displayModifier)})
                                                 </span>
                                               </>
                                             ) : (
                                               <span className="text-muted-foreground">
-                                                ({displayModifier > 0 ? '+' : ''}{formatPrice(displayModifier)})
+                                                ({formatPrice(displayModifier)})
                                               </span>
                                             )}
                                           </span>
@@ -569,10 +631,27 @@ export default function ProductPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="text-lg font-semibold">
-                  {isArabic ? 'المجموع:' : 'Total:'} {formatPrice(finalPrice * quantity)}
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg w-full">
+                  <span className="font-medium text-lg">{isArabic ? 'المجموع' : 'Total'}</span>
+                  <span className="text-2xl font-bold text-amber-600">
+                    {formatPrice(finalPrice * quantity)}
+                  </span>
                 </div>
               </div>
+              {product.properties && Object.keys(selectedProperties).length > 0 && (
+                <div className="text-sm text-muted-foreground">
+                  {Object.entries(selectedProperties).map(([propName, val]) => {
+                    const prop = product.properties!.find(p => p.name === propName)
+                    const opt = prop?.options?.find(o => o.value === val)
+                    if (!prop || !opt) return null
+                    const propLabel = isArabic ? (prop.name_ar || prop.name) : prop.name
+                    const optLabel = isArabic ? (opt.label_ar || opt.label) : opt.label
+                    return (
+                      <div key={propName}>{propLabel}: {optLabel}</div>
+                    )
+                  })}
+                </div>
+              )}
 
               <Button
                 onClick={handleAddToCart}
@@ -604,38 +683,74 @@ export default function ProductPage() {
             <TabsContent value="description" className="mt-6">
               <Card>
                 <CardContent className="p-6">
-                  <div className="prose max-w-none">
-                    <p className="text-muted-foreground leading-relaxed">
-                      {isArabic ? product.description_ar : product.description}
-                    </p>
-                  </div>
+                  <HTMLContent 
+                    content={isArabic ? (product.description_ar || product.description || '') : (product.description || '')}
+                    className={isArabic ? "text-right" : "text-left"}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
 
             <TabsContent value="specifications" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  {product.properties && product.properties.length > 0 ? (
-                    <div className="space-y-4">
-                      {product.properties.map((property: any, index: number) => (
-                        <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
-                          <span className="font-medium">
-                            {isArabic ? property.name_ar : property.name}
-                          </span>
-                          <span className="text-muted-foreground">
-                            {isArabic ? property.value_ar : property.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">
-                      {isArabic ? 'لا توجد مواصفات متاحة' : 'No specifications available'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                {/* Coffee Information */}
+                <CoffeeInfoDisplay
+                  roastLevel={product.roast_level}
+                  process={product.processing_method}
+                  variety={product.variety}
+                  altitude={product.altitude}
+                  notes={product.notes}
+                  farm={product.farm}
+                />
+
+                {/* Product Properties */}
+                <Card>
+                  <CardContent className="p-6">
+                    {product.properties && product.properties.length > 0 ? (
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-sm text-muted-foreground mb-3">
+                          {isArabic ? 'المواصفات الإضافية' : 'Additional Specifications'}
+                        </h3>
+                        {product.properties.map((property: any, index: number) => (
+                          <div key={index} className="py-2 border-b last:border-b-0">
+                            <div className="flex justify-between items-start">
+                              <span className="font-medium">
+                                {isArabic ? property.name_ar : property.name}
+                              </span>
+                              <div className="text-muted-foreground text-right max-w-[60%]">
+                                {property.options && property.options.length > 0 ? (
+                                  <div className="space-y-1">
+                                    {property.options.map((option: any, optIndex: number) => (
+                                      <div key={optIndex} className="text-sm">
+                                        {isArabic ? (option.label_ar || option.label) : option.label}
+                                        {option.price_omr && (
+                                          <span className="text-amber-600 ml-2">
+                                            ({option.price_omr} {isArabic ? 'ريال عماني' : 'OMR'})
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span>-</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* Only show "no specifications" if there's also no coffee info */
+                      !product.roast_level && !product.processing_method && !product.variety && 
+                      !product.altitude && !product.notes && !product.farm && (
+                        <p className="text-muted-foreground text-center py-8">
+                          {isArabic ? 'لا توجد مواصفات متاحة' : 'No specifications available'}
+                        </p>
+                      )
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-6">

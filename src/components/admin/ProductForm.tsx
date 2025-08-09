@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { X, Upload, Save, ArrowLeft, Image, Grid, Settings } from 'lucide-react'
+import { X, Upload, Save, ArrowLeft, Image, Grid, Settings, Coffee } from 'lucide-react'
 import { firestoreService, storageService, type Category, type ProductProperty } from '@/lib/firebase'
 import ProductPropertyForm from './ProductPropertyForm'
 import toast from 'react-hot-toast'
@@ -28,6 +29,13 @@ interface ProductForm {
   properties: ProductProperty[]
   stock_quantity: number
   slug: string
+  // Coffee information fields
+  roast_level: string
+  process: string
+  variety: string
+  altitude: string
+  notes: string
+  farm: string
 }
 
 interface ProductFormProps {
@@ -60,7 +68,14 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     is_bestseller: false,
     properties: [],
     stock_quantity: 0,
-    slug: ''
+    slug: '',
+    // Coffee information fields
+    roast_level: '',
+    process: '',
+    variety: '',
+    altitude: '',
+    notes: '',
+    farm: ''
   })
 
   const handlePropertiesChange = (properties: ProductProperty[]) => {
@@ -95,7 +110,14 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         is_bestseller: editingProduct.is_bestseller || false,
         properties: editingProduct.properties || [],
         stock_quantity: editingProduct.stock_quantity || 0,
-        slug: editingProduct.slug || ''
+        slug: editingProduct.slug || '',
+        // Coffee information fields
+        roast_level: editingProduct.roast_level || '',
+        process: editingProduct.processing_method || '',
+        variety: editingProduct.variety || '',
+        altitude: editingProduct.altitude || '',
+        notes: editingProduct.notes || '',
+        farm: editingProduct.farm || ''
       })
     }
   }, [editingProduct, isArabic])
@@ -145,6 +167,13 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         is_new_arrival: false,
         is_on_sale: (form.sale_price_omr || 0) > 0,
         stock: form.stock_quantity,
+        // Coffee information fields
+        roast_level: form.roast_level,
+        processing_method: form.process,
+        variety: form.variety,
+        altitude: form.altitude,
+        notes: form.notes,
+        farm: form.farm,
         updated_at: new Date()
       }
 
@@ -280,21 +309,6 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     toast.success(isArabic ? 'تمت إضافة الصورة بنجاح' : 'Image added successfully')
   }
 
-  // Test Firebase Storage connection
-  const testStorageConnection = async () => {
-    try {
-      const canUse = await storageService.canUseFirebaseStorage()
-      if (canUse) {
-        toast.success(isArabic ? 'Firebase Storage متصل بنجاح' : 'Firebase Storage connected successfully')
-      } else {
-        toast.error(isArabic ? 'فشل الاتصال بـ Firebase Storage' : 'Failed to connect to Firebase Storage')
-      }
-    } catch (error) {
-      console.error('Storage test failed:', error)
-      toast.error(isArabic ? 'خطأ في اختبار Firebase Storage' : 'Error testing Firebase Storage')
-    }
-  }
-
   const removeGalleryImage = (index: number) => {
     setForm(prev => ({
       ...prev,
@@ -326,10 +340,14 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             {isArabic ? 'المعلومات الأساسية' : 'Basic Info'}
+          </TabsTrigger>
+          <TabsTrigger value="coffee" className="flex items-center gap-2">
+            <Coffee className="h-4 w-4" />
+            {isArabic ? 'معلومات القهوة' : 'Coffee Info'}
           </TabsTrigger>
           <TabsTrigger value="gallery" className="flex items-center gap-2">
             <Grid className="h-4 w-4" />
@@ -382,29 +400,26 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="description-en">{isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
-                  <Textarea
-                    id="description-en"
+                  <RichTextEditor
                     value={form.description}
-                    onChange={(e) => setForm(prev => ({
+                    onChange={(value) => setForm(prev => ({
                       ...prev,
-                      description: e.target.value
+                      description: value
                     }))}
                     placeholder={isArabic ? 'أدخل وصف المنتج بالإنجليزية' : 'Enter product description in English'}
-                    rows={4}
+                    direction="ltr"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description-ar">{isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
-                  <Textarea
-                    id="description-ar"
+                  <RichTextEditor
                     value={form.description_ar}
-                    onChange={(e) => setForm(prev => ({
+                    onChange={(value) => setForm(prev => ({
                       ...prev,
-                      description_ar: e.target.value
+                      description_ar: value
                     }))}
                     placeholder={isArabic ? 'أدخل وصف المنتج بالعربية' : 'Enter product description in Arabic'}
-                    dir="rtl"
-                    rows={4}
+                    direction="rtl"
                   />
                 </div>
               </div>
@@ -498,6 +513,128 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
           </Card>
         </TabsContent>
 
+        <TabsContent value="coffee" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Coffee className="h-5 w-5 text-amber-600" />
+                {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+              </CardTitle>
+              <CardDescription>
+                {isArabic ? 'أدخل معلومات القهوة التي ستظهر للعملاء' : 'Enter coffee information that will be displayed to customers'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="roast-level">{isArabic ? 'درجة التحميص' : 'Roast Level'}</Label>
+                  <Input
+                    id="roast-level"
+                    value={form.roast_level}
+                    onChange={(e) => setForm(prev => ({ ...prev, roast_level: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: تحميص خفيف' : 'e.g., Light'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="process">{isArabic ? 'المعالجة' : 'Process'}</Label>
+                  <Input
+                    id="process"
+                    value={form.process}
+                    onChange={(e) => setForm(prev => ({ ...prev, process: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: طبيعي' : 'e.g., Natural'}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="variety">{isArabic ? 'النوع' : 'Variety'}</Label>
+                  <Input
+                    id="variety"
+                    value={form.variety}
+                    onChange={(e) => setForm(prev => ({ ...prev, variety: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: موكا' : 'e.g., Mokka'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="altitude">{isArabic ? 'الارتفاع' : 'Altitude'}</Label>
+                  <Input
+                    id="altitude"
+                    value={form.altitude}
+                    onChange={(e) => setForm(prev => ({ ...prev, altitude: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: 1,450-1,530 متر' : 'e.g., 1,450-1,530 masl'}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="notes">{isArabic ? 'الملاحظات' : 'Notes'}</Label>
+                  <Textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: جريب فروت، خوخ، كاكاو' : 'e.g., Grapefruit, Plum, Cacao'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="farm">{isArabic ? 'المزرعة' : 'Farm'}</Label>
+                  <Input
+                    id="farm"
+                    value={form.farm}
+                    onChange={(e) => setForm(prev => ({ ...prev, farm: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: هاواي' : 'e.g., Hawaii'}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{isArabic ? 'معاينة المعلومات' : 'Information Preview'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'كيف ستظهر معلومات القهوة للعملاء' : 'How the coffee information will appear to customers'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Coffee className="h-4 w-4 text-amber-600" />
+                  <h3 className="font-medium text-sm">
+                    {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: isArabic ? 'درجة التحميص' : 'Roast Level', value: form.roast_level },
+                    { label: isArabic ? 'المعالجة' : 'Process', value: form.process },
+                    { label: isArabic ? 'النوع' : 'Variety', value: form.variety },
+                    { label: isArabic ? 'الارتفاع' : 'Altitude', value: form.altitude },
+                    { label: isArabic ? 'الملاحظات' : 'Notes', value: form.notes },
+                    { label: isArabic ? 'المزرعة' : 'Farm', value: form.farm }
+                  ].filter(item => item.value && item.value.trim()).map((item, index) => (
+                    <div key={index} className="flex justify-between items-start text-sm">
+                      <span className="text-muted-foreground font-medium">
+                        {item.label}:
+                      </span>
+                      <span className="text-right flex-1 ml-2" dir={isArabic ? 'rtl' : 'ltr'}>
+                        {item.value}
+                      </span>
+                    </div>
+                  ))}
+                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.farm].some(v => v && v.trim()) && (
+                    <p className="text-muted-foreground text-sm text-center py-4">
+                      {isArabic ? 'لا توجد معلومات قهوة مضافة بعد' : 'No coffee information added yet'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="gallery" className="space-y-6">
           <Card>
             <CardHeader>
@@ -507,23 +644,6 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Debug button for development */}
-              {import.meta.env.DEV && (
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    {isArabic ? 'أدوات التطوير' : 'Development Tools'}
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={testStorageConnection}
-                  >
-                    {isArabic ? 'اختبار اتصال التخزين' : 'Test Storage Connection'}
-                  </Button>
-                </div>
-              )}
-              
               <div className="space-y-2">
                 <Label htmlFor="main-image-url">{isArabic ? 'رابط الصورة الرئيسية' : 'Main Image URL'}</Label>
                 <Input

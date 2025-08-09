@@ -75,6 +75,7 @@ export interface ProductPropertyOption {
   value: string;
   label: string;
   label_ar: string;
+  // Price modifiers (for relative pricing - adds to base price)
   price_modifier?: number; // Backward compatibility - in OMR
   price_modifier_omr?: number; // New explicit pricing
   price_modifier_usd?: number; 
@@ -82,6 +83,13 @@ export interface ProductPropertyOption {
   sale_price_modifier_omr?: number;
   sale_price_modifier_usd?: number;
   sale_price_modifier_sar?: number;
+  // Absolute prices (for property-based pricing - replaces base price)
+  price_omr?: number;
+  price_usd?: number;
+  price_sar?: number;
+  sale_price_omr?: number;
+  sale_price_usd?: number;
+  sale_price_sar?: number;
   on_sale?: boolean;
   sale_start_date?: string;
   sale_end_date?: string;
@@ -145,6 +153,11 @@ export interface Product {
   grind_options?: string[];
   package_size?: string[];
   weight_grams?: number;
+  // Coffee information fields
+  roast_level?: string;
+  variety?: string;
+  notes?: string;
+  farm?: string;
   // Rating fields
   average_rating?: number;
   total_reviews?: number;
@@ -312,29 +325,137 @@ export function getProductFinalPrice(
   selectedOptions: SelectedPropertyOption[] = [], 
   currency: 'omr' | 'usd' | 'sar' = 'omr'
 ): number {
-  let basePrice = 0;
+  // Check if product has properties that affect pricing
+  const pricingProperties = product.properties?.filter(p => p.affects_price && p.options && p.options.length > 0) || []
   
-  // Get base price (check if product is on sale)
-  const isProductOnSale = product.is_on_sale || false;
-  
-  if (isProductOnSale) {
-    switch (currency) {
-      case 'usd': basePrice = product.sale_price_usd || product.price_usd || 0; break;
-      case 'sar': basePrice = product.sale_price_sar || product.price_sar || 0; break;
-      default: basePrice = product.sale_price_omr || product.price_omr || 0; break;
+  if (pricingProperties.length > 0 && selectedOptions.length > 0) {
+    // Use property-based pricing - find the first property that affects price
+    for (const selectedOption of selectedOptions) {
+      const property = product.properties?.find(p => p.name === selectedOption.property_name)
+      if (property && property.affects_price) {
+        const option = property.options.find(opt => opt.value === selectedOption.option_value)
+        if (option) {
+          // Check if option has absolute prices (new system) or modifiers (old system)
+          const isOnSale = option.on_sale && 
+            (!option.sale_start_date || new Date(option.sale_start_date) <= new Date()) &&
+            (!option.sale_end_date || new Date(option.sale_end_date) >= new Date())
+          
+          let absolutePrice = 0
+          switch (currency) {
+            case 'usd':
+              if (option.price_usd) {
+                absolutePrice = isOnSale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
+              }
+              break
+            case 'sar':
+              if (option.price_sar) {
+                absolutePrice = isOnSale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
+              }
+              break
+            default: // omr
+              if (option.price_omr) {
+                absolutePrice = isOnSale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
+              }
+              break
+          }
+          
+          // If absolute price exists, use it (new system)
+          if (absolutePrice > 0) {
+            return absolutePrice
+          }
+          
+          // Fall back to modifier system (old system) — no base price added
+          // legacy modifier-only branch
+          
+          let modifier = 0
+          switch (currency) {
+            case 'usd': 
+              modifier = isOnSale && option.sale_price_modifier_usd ? option.sale_price_modifier_usd : (option.price_modifier_usd || 0)
+              break
+            case 'sar':
+              modifier = isOnSale && option.sale_price_modifier_sar ? option.sale_price_modifier_sar : (option.price_modifier_sar || 0)
+              break
+            default: // omr
+              modifier = isOnSale && option.sale_price_modifier_omr ? option.sale_price_modifier_omr : (option.price_modifier_omr || 0)
+              break
+          }
+          
+          // Legacy: treat modifier as standalone price (do not add base)
+          return modifier
+        }
+      }
     }
-  } else {
-    switch (currency) {
-      case 'usd': basePrice = product.price_usd || 0; break;
-      case 'sar': basePrice = product.price_sar || 0; break;
-      default: basePrice = product.price_omr || 0; break;
+    
+    // If no matching selected option found, use first option of first property
+    const firstProperty = pricingProperties[0]
+    if (firstProperty && firstProperty.options.length > 0) {
+      const firstOption = firstProperty.options[0]
+      
+      const isOnSale = firstOption.on_sale && 
+        (!firstOption.sale_start_date || new Date(firstOption.sale_start_date) <= new Date()) &&
+        (!firstOption.sale_end_date || new Date(firstOption.sale_end_date) >= new Date())
+      
+      let absolutePrice = 0
+      switch (currency) {
+        case 'usd':
+          if (firstOption.price_usd) {
+            absolutePrice = isOnSale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
+          }
+          break
+        case 'sar':
+          if (firstOption.price_sar) {
+            absolutePrice = isOnSale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
+          }
+          break
+        default: // omr
+          if (firstOption.price_omr) {
+            absolutePrice = isOnSale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
+          }
+          break
+      }
+      
+      // If absolute price exists, use it (new system)
+      if (absolutePrice > 0) {
+        return absolutePrice
+      }
+      
+  // Fall back to modifier system (old system) — no base price added
+  // legacy modifier-only branch
+      
+  let modifier = 0
+      switch (currency) {
+        case 'usd': 
+          modifier = isOnSale && firstOption.sale_price_modifier_usd ? firstOption.sale_price_modifier_usd : (firstOption.price_modifier_usd || 0)
+          break
+        case 'sar':
+          modifier = isOnSale && firstOption.sale_price_modifier_sar ? firstOption.sale_price_modifier_sar : (firstOption.price_modifier_sar || 0)
+          break
+        default: // omr
+          modifier = isOnSale && firstOption.sale_price_modifier_omr ? firstOption.sale_price_modifier_omr : (firstOption.price_modifier_omr || 0)
+          break
+      }
+      
+  // Legacy: treat modifier as standalone price (do not add base)
+  return modifier
     }
   }
   
-  // Add property prices
-  const propertyPrice = calculatePropertyPrice(selectedOptions, currency);
+  // Fallback: Use base product price if no pricing properties
+  const isProductOnSale = product.is_on_sale || false
   
-  return basePrice + propertyPrice;
+  if (isProductOnSale) {
+    switch (currency) {
+      case 'usd': return product.sale_price_usd || product.price_usd || 0;
+      case 'sar': return product.sale_price_sar || product.price_sar || 0;
+      default: return product.sale_price_omr || product.price_omr || 0;
+    }
+  } else {
+    switch (currency) {
+      case 'usd': return product.price_usd || 0;
+      case 'sar': return product.price_sar || 0;
+      default: return product.price_omr || 0;
+    }
+  }
 }
 
 export function isPropertyOptionAvailable(option: ProductPropertyOption): boolean {
