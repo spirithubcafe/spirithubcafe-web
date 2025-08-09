@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
 import { X, Upload, Save, ArrowLeft, Image, Grid, Settings, Coffee } from 'lucide-react'
-import { firestoreService, storageService, type Category, type ProductProperty } from '@/lib/firebase'
+import { firestoreService, storageService, auth, type Category, type ProductProperty } from '@/lib/firebase'
 import ProductPropertyForm from './ProductPropertyForm'
 import toast from 'react-hot-toast'
 
@@ -48,7 +48,8 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
   const { i18n } = useTranslation()
   const [categories, setCategories] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
+  const [mainImageUploadProgress, setMainImageUploadProgress] = useState(0)
+  const [galleryUploadProgress, setGalleryUploadProgress] = useState(0)
   const [activeTab, setActiveTab] = useState('basic')
 
   const isArabic = i18n.language === 'ar'
@@ -197,6 +198,8 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
   const handleImageUpload = async (file: File, isGallery = false) => {
     if (!file) return
 
+    const isArabic = i18n.language === 'ar'
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error(isArabic ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file')
@@ -209,38 +212,59 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
       return
     }
 
-    setUploadProgress(0)
+    // Choose the appropriate progress setter
+    const setProgress = isGallery ? setGalleryUploadProgress : setMainImageUploadProgress
+    setProgress(0)
+    
     try {
-      // Simulate upload progress
-      const interval = setInterval(() => {
-        setUploadProgress(prev => {
+      // Check authentication first
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        toast.error(isArabic ? 'يجب تسجيل الدخول أولاً' : 'Please login first')
+        return
+      }
+
+      // Show progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev: number) => {
           if (prev >= 90) {
-            clearInterval(interval)
+            clearInterval(progressInterval)
             return 90
           }
           return prev + 10
         })
       }, 200)
 
-      let url: string;
+      let url: string
       
       try {
-        // Try Firebase Storage first
-        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-        url = await storageService.upload(`products/${fileName}`, file)
+        // Generate safe filename
+        const timestamp = Date.now()
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const fileName = `${timestamp}_${safeFileName}`
+        const filePath = isGallery ? `products/gallery/${fileName}` : `products/${fileName}`
+        
+        // Try Firebase Storage upload
+        console.log('Attempting Firebase Storage upload...')
+        url = await storageService.upload(filePath, file)
+        console.log('Firebase Storage upload successful:', url)
+        
       } catch (storageError) {
         console.warn('Firebase Storage failed, using fallback:', storageError)
-        // Fallback to data URL for development
-        clearInterval(interval)
-        setUploadProgress(50)
+        clearInterval(progressInterval)
+        setProgress(50)
         
-        toast.success(isArabic ? 'استخدام طريقة بديلة للرفع...' : 'Using fallback upload method...')
+        // Use fallback method (base64)
+        console.log('Using fallback upload method...')
         url = await storageService.uploadAsDataURL(file)
+        
+        toast.success(isArabic ? 'تم استخدام طريقة بديلة للرفع' : 'Used fallback upload method')
       }
       
-      clearInterval(interval)
-      setUploadProgress(100)
+      clearInterval(progressInterval)
+      setProgress(100)
 
+      // Update form data
       if (isGallery) {
         setForm(prev => ({
           ...prev,
@@ -250,26 +274,28 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         setForm(prev => ({ ...prev, image: url }))
       }
 
-      setTimeout(() => setUploadProgress(0), 1000)
+      setTimeout(() => setProgress(0), 1000)
       toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      setUploadProgress(0)
       
-      // More specific error messages
+    } catch (error) {
+      console.error('Upload error:', error)
+      setProgress(0)
+      
+      let errorMessage = isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image'
+      
       if (error instanceof Error) {
-        if (error.message.includes('CORS')) {
-          toast.error(isArabic ? 'خطأ CORS: يرجى التحقق من إعدادات Firebase Storage' : 'CORS error: Please check Firebase Storage configuration')
-        } else if (error.message.includes('Unauthorized')) {
-          toast.error(isArabic ? 'غير مصرح برفع الصور' : 'Unauthorized to upload images')
-        } else if (error.message.includes('quota-exceeded')) {
-          toast.error(isArabic ? 'تم تجاوز حصة التخزين' : 'Storage quota exceeded')
-        } else {
-          toast.error(isArabic ? `خطأ في رفع الصورة: ${error.message}` : `Error uploading image: ${error.message}`)
+        if (error.message.includes('authentication') || error.message.includes('Unauthorized')) {
+          errorMessage = isArabic ? 'يجب تسجيل الدخول لرفع الصور' : 'Login required to upload images'
+        } else if (error.message.includes('quota')) {
+          errorMessage = isArabic ? 'تم تجاوز حصة التخزين' : 'Storage quota exceeded'
+        } else if (error.message.includes('CORS')) {
+          errorMessage = isArabic ? 'خطأ CORS: يرجى التحقق من إعدادات Firebase' : 'CORS error: Please check Firebase configuration'
+        } else if (error.message.includes('permission')) {
+          errorMessage = isArabic ? 'ليس لديك صلاحية لرفع الصور' : 'No permission to upload images'
         }
-      } else {
-        toast.error(isArabic ? 'خطأ غير معروف في رفع الصورة' : 'Unknown error uploading image')
       }
+      
+      toast.error(errorMessage)
     }
   }
 
@@ -693,8 +719,8 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     {isArabic ? 'رفع' : 'Upload'}
                   </Button>
                 </div>
-                {uploadProgress > 0 && (
-                  <Progress value={uploadProgress} className="w-full" />
+                {mainImageUploadProgress > 0 && (
+                  <Progress value={mainImageUploadProgress} className="w-full" />
                 )}
               </div>
 
@@ -799,6 +825,9 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     {isArabic ? 'رفع' : 'Upload'}
                   </Button>
                 </div>
+                {galleryUploadProgress > 0 && (
+                  <Progress value={galleryUploadProgress} className="w-full" />
+                )}
               </div>
 
               {form.gallery && form.gallery.length > 0 && (

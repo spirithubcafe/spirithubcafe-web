@@ -341,14 +341,14 @@ export function ShopPage() {
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
-                        {(product.images?.[0] || product.gallery?.[0] || product.gallery_images?.[0] || product.image_url || product.image) ? (
+                        {(product.image_url || product.image || product.images?.[0] || product.gallery?.[0] || product.gallery_images?.[0]) ? (
                           <img
                             src={
+                              product.image_url || 
+                              product.image || 
                               product.images?.[0] || 
                               product.gallery?.[0] || 
                               product.gallery_images?.[0] || 
-                              product.image_url || 
-                              product.image || 
                               '/images/logo.png'
                             }
                             alt={productName}

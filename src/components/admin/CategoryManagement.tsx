@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
 import { useTranslation } from 'react-i18next'
-import { firestoreService, type Category } from '@/lib/firebase'
+import { firestoreService, storageService, auth, type Category } from '@/lib/firebase'
+import toast from 'react-hot-toast'
 
 interface CategoryFormData {
   name: string
@@ -31,6 +33,7 @@ export default function CategoryManagement() {
   const [formLoading, setFormLoading] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
@@ -55,6 +58,99 @@ export default function CategoryManagement() {
       console.error('Error loading categories:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(isArabic ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isArabic ? 'حجم الصورة كبير جداً (الحد الأقصى 5 ميجابايت)' : 'Image size too large (max 5MB)')
+      return
+    }
+
+    setUploadProgress(0)
+    
+    try {
+      // Check authentication first
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        toast.error(isArabic ? 'يجب تسجيل الدخول أولاً' : 'Please login first')
+        return
+      }
+
+      // Show progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 200)
+
+      let url: string
+      
+      try {
+        // Generate safe filename
+        const timestamp = Date.now()
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const fileName = `${timestamp}_${safeFileName}`
+        const filePath = `categories/${fileName}`
+        
+        // Try Firebase Storage upload
+        console.log('Attempting Firebase Storage upload...')
+        url = await storageService.upload(filePath, file)
+        console.log('Firebase Storage upload successful:', url)
+        
+      } catch (storageError) {
+        console.warn('Firebase Storage failed, using fallback:', storageError)
+        clearInterval(progressInterval)
+        setUploadProgress(50)
+        
+        // Use fallback method (base64)
+        console.log('Using fallback upload method...')
+        url = await storageService.uploadAsDataURL(file)
+        
+        toast.success(isArabic ? 'تم استخدام طريقة بديلة للرفع' : 'Used fallback upload method')
+      }
+      
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      // Update form data
+      setFormData(prev => ({ ...prev, image: url }))
+
+      setTimeout(() => setUploadProgress(0), 1000)
+      toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
+      
+    } catch (error) {
+      console.error('Upload error:', error)
+      setUploadProgress(0)
+      
+      let errorMessage = isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('authentication') || error.message.includes('Unauthorized')) {
+          errorMessage = isArabic ? 'يجب تسجيل الدخول لرفع الصور' : 'Login required to upload images'
+        } else if (error.message.includes('quota')) {
+          errorMessage = isArabic ? 'تم تجاوز حصة التخزين' : 'Storage quota exceeded'
+        } else if (error.message.includes('CORS')) {
+          errorMessage = isArabic ? 'خطأ CORS: يرجى التحقق من إعدادات Firebase' : 'CORS error: Please check Firebase configuration'
+        } else if (error.message.includes('permission')) {
+          errorMessage = isArabic ? 'ليس لديك صلاحية لرفع الصور' : 'No permission to upload images'
+        }
+      }
+      
+      toast.error(errorMessage)
     }
   }
 
@@ -447,15 +543,89 @@ export default function CategoryManagement() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="image" className="mb-2 block">{isArabic ? 'رابط الصورة' : 'Image URL'}</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder={isArabic ? 'رابط صورة الفئة' : 'Category image URL'}
-                />
+              <div className="space-y-4">
+                <Label htmlFor="image" className="mb-2 block">{isArabic ? 'صورة الفئة' : 'Category Image'}</Label>
+                
+                {/* URL Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="image-url" className="text-sm">{isArabic ? 'رابط الصورة' : 'Image URL'}</Label>
+                  <Input
+                    id="image-url"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder={isArabic ? 'أدخل رابط صورة الفئة' : 'Enter category image URL'}
+                  />
+                </div>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                      {isArabic ? 'أو' : 'Or'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* File Upload */}
+                <div className="space-y-2">
+                  <Label htmlFor="image-file" className="text-sm">{isArabic ? 'رفع صورة' : 'Upload Image'}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="image-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleImageUpload(file)
+                      }}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById('image-file')?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      {isArabic ? 'اختر صورة' : 'Choose Image'}
+                    </Button>
+                  </div>
+                  
+                  {uploadProgress > 0 && (
+                    <Progress value={uploadProgress} className="w-full" />
+                  )}
+                </div>
+
+                {/* Image Preview */}
+                {formData.image && (
+                  <div className="space-y-2">
+                    <Label className="text-sm">{isArabic ? 'معاينة الصورة' : 'Image Preview'}</Label>
+                    <div className="relative inline-block">
+                      <img
+                        src={formData.image}
+                        alt="Category preview"
+                        className="w-24 h-24 object-cover rounded-lg border"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/images/placeholder-category.png'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, image: '' }))}
+                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                        title={isArabic ? 'حذف الصورة' : 'Remove image'}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
+              
               <div>
                 <Label htmlFor="sort_order" className="mb-2 block">{isArabic ? 'ترتيب العرض' : 'Sort Order'}</Label>
                 <Input

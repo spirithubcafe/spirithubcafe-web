@@ -48,7 +48,15 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const getProductImages = (product: Product): string[] => {
     const images: string[] = []
     
-    // Add images from different fields
+    // Add main image first (highest priority)
+    if (product.image_url) {
+      images.push(product.image_url)
+    }
+    if (product.image) {
+      images.push(product.image)
+    }
+    
+    // Then add gallery images
     if (product.images && Array.isArray(product.images)) {
       images.push(...product.images)
     }
@@ -57,12 +65,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     }
     if (product.gallery_images && Array.isArray(product.gallery_images)) {
       images.push(...product.gallery_images)
-    }
-    if (product.image) {
-      images.push(product.image)
-    }
-    if (product.image_url) {
-      images.push(product.image_url)
     }
     
     // Remove duplicates and empty strings

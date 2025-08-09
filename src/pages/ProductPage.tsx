@@ -400,23 +400,20 @@ export default function ProductPage() {
           {/* Product Images */}
           <div className="space-y-4">
             {(() => {
-              // Get all available images
-              const availableImages = [
-                ...(product.images || []),
-                ...(product.gallery || []),
-                ...(product.gallery_images || [])
-              ].filter(img => img && img.trim() !== '')
+              // Get all available images, starting with main image
+              const availableImages = []
               
-              // Add main image if it exists and not already in the list
-              if (product.image && !availableImages.includes(product.image)) {
-                availableImages.unshift(product.image)
-              }
-              if (product.image_url && !availableImages.includes(product.image_url)) {
-                availableImages.unshift(product.image_url)
-              }
+              // Add main image first (highest priority)
+              if (product.image_url) availableImages.push(product.image_url)
+              if (product.image) availableImages.push(product.image)
               
-              // Remove duplicates
-              const uniqueImages = [...new Set(availableImages)]
+              // Then add gallery images
+              if (product.images) availableImages.push(...product.images)
+              if (product.gallery) availableImages.push(...product.gallery)
+              if (product.gallery_images) availableImages.push(...product.gallery_images)
+              
+              // Remove duplicates and empty strings
+              const uniqueImages = [...new Set(availableImages.filter(img => img && img.trim() !== ''))]
               
               return (
                 <>
