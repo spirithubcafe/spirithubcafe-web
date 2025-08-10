@@ -84,6 +84,33 @@
     "noProducts": "No products found",
     "noProductsDescription": "Try adjusting your filters or search criteria"
   },
+  "product": {
+    "coffeeInformation": "Coffee Information",
+    "options": "Options",
+    "chooseSize": "Choose Size",
+    "affectsPrice": "affects price",
+    "selectOption": "Select...",
+    "specifications": "Specifications",
+    "additionalSpecifications": "Additional Specifications",
+    "noSpecifications": "No specifications available",
+    "backToShop": "Back to Shop",
+    "productNotFound": "Product Not Found",
+    "featured": "Featured",
+    "bestseller": "Bestseller",
+    "newArrival": "New",
+    "description": "Description",
+    "reviews": "Reviews",
+    "review": "review",
+    "addedToCart": "Product added to cart",
+    "errorAddingToCart": "Error adding product to cart",
+    "loading": "Loading...",
+    "errorLoading": "Error loading product",
+    "notFound": "Product not found",
+    "coffeeProperties": "Coffee Properties",
+    "required": "Required",
+    "pleaseSelectRequired": "Please select required properties",
+    "selectionSummary": "Selection Summary"
+  },
   "auth": {
     "login": {
       "title": "Login to Your Account",

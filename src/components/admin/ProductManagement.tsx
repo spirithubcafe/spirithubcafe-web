@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Search, Filter, Eye, Package2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Filter, Eye, Package2, Grid3X3, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -34,6 +34,7 @@ export default function ProductManagement() {
   const [viewDialogOpen, setViewDialogOpen] = useState(false)
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   const [filters, setFilters] = useState<ProductFilters>({
     category_id: 'all',
@@ -193,10 +194,31 @@ export default function ProductManagement() {
             {isArabic ? 'إدارة وتنظيم المنتجات' : 'Manage and organize products'}
           </p>
         </div>
-        <Button onClick={handleAdd}>
-          <Plus className="h-4 w-4 mr-2" />
-          {isArabic ? 'إضافة منتج جديد' : 'Add New Product'}
-        </Button>
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-8 w-8 p-0"
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 w-8 p-0"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          <Button onClick={handleAdd}>
+            <Plus className="h-4 w-4 mr-2" />
+            {isArabic ? 'إضافة منتج جديد' : 'Add New Product'}
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -307,114 +329,220 @@ export default function ProductManagement() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
-            <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0">
-              <CardContent className="p-4">
-                {/* Product Image */}
-                <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
-                  {product.image ? (
-                    <img 
-                      src={product.image} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
-                      <Package2 className="h-8 w-8" />
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0">
+                <CardContent className="p-4">
+                  {/* Product Image */}
+                  <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
+                    {product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground">
+                        <Package2 className="h-8 w-8" />
+                      </div>
+                    )}
+                    
+                    {/* Status Badge */}
+                    <div className="absolute top-2 right-2">
+                      <Badge variant={product.is_active ? 'default' : 'secondary'} className="text-xs">
+                        {product.is_active ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive')}
+                      </Badge>
                     </div>
-                  )}
-                  
-                  {/* Status Badge */}
-                  <div className="absolute top-2 right-2">
-                    <Badge variant={product.is_active ? 'default' : 'secondary'} className="text-xs">
-                      {product.is_active ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive')}
-                    </Badge>
                   </div>
-                </div>
 
-                {/* Product Info */}
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm line-clamp-1">
-                    {isArabic ? (product.name_ar || product.name) : product.name}
-                  </h3>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    {getCategoryName(product.category_id)}
-                  </p>
+                  {/* Product Info */}
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm line-clamp-1">
+                      {isArabic ? (product.name_ar || product.name) : product.name}
+                    </h3>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      {getCategoryName(product.category_id)}
+                    </p>
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr ? (
-                        <>
-                          <p className="font-semibold text-lg text-red-600">
-                            {formatPrice(product.sale_price_omr)}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-through">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr ? (
+                          <>
+                            <p className="font-semibold text-lg text-red-600">
+                              {formatPrice(product.sale_price_omr)}
+                            </p>
+                            <p className="text-xs text-muted-foreground line-through">
+                              {formatPrice(product.price_omr)}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="font-semibold text-lg">
                             {formatPrice(product.price_omr)}
                           </p>
-                        </>
-                      ) : (
-                        <p className="font-semibold text-lg">
-                          {formatPrice(product.price_omr)}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">
-                        {isArabic ? 'المخزون:' : 'Stock:'} {product.stock_quantity || product.stock || 0}
-                      </p>
-                      {product.sku && (
+                        )}
+                      </div>
+                      <div className="text-right">
                         <p className="text-xs text-muted-foreground">
-                          {product.sku}
+                          {isArabic ? 'المخزون:' : 'Stock:'} {product.stock_quantity || product.stock || 0}
                         </p>
-                      )}
+                        {product.sku && (
+                          <p className="text-xs text-muted-foreground">
+                            {product.sku}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Product Badges */}
+                    <div className="flex flex-wrap gap-1">
+                      {getProductBadges(product).map((badge, index) => (
+                        <span
+                          key={index}
+                          className={`text-xs px-2 py-0.5 rounded text-white ${badge.color}`}
+                        >
+                          {badge.text}
+                        </span>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Product Badges */}
-                  <div className="flex flex-wrap gap-1">
-                    {getProductBadges(product).map((badge, index) => (
-                      <span
-                        key={index}
-                        className={`text-xs px-2 py-0.5 rounded text-white ${badge.color}`}
-                      >
-                        {badge.text}
-                      </span>
-                    ))}
+                  {/* Actions */}
+                  <div className="flex gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => openViewDialog(product)}
+                    >
+                      <Eye className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleEdit(product)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => openDeleteDialog(product)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          /* List View */
+          <div className="space-y-4">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-4">
+                    {/* Product Image */}
+                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                      {product.image ? (
+                        <img 
+                          src={product.image} 
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground">
+                          <Package2 className="h-6 w-6" />
+                        </div>
+                      )}
+                    </div>
 
-                {/* Actions */}
-                <div className="flex gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => openViewDialog(product)}
-                  >
-                    <Eye className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={() => handleEdit(product)}
-                  >
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => openDeleteDialog(product)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-base truncate">
+                            {isArabic ? (product.name_ar || product.name) : product.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {getCategoryName(product.category_id)}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant={product.is_active ? 'default' : 'secondary'} className="text-xs">
+                              {product.is_active ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive')}
+                            </Badge>
+                            {getProductBadges(product).map((badge, index) => (
+                              <span
+                                key={index}
+                                className={`text-xs px-2 py-0.5 rounded text-white ${badge.color}`}
+                              >
+                                {badge.text}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Price and Stock */}
+                        <div className="text-right ml-4">
+                          {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr ? (
+                            <>
+                              <p className="font-semibold text-lg text-red-600">
+                                {formatPrice(product.sale_price_omr)}
+                              </p>
+                              <p className="text-sm text-muted-foreground line-through">
+                                {formatPrice(product.price_omr)}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="font-semibold text-lg">
+                              {formatPrice(product.price_omr)}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {isArabic ? 'المخزون:' : 'Stock:'} {product.stock_quantity || product.stock || 0}
+                          </p>
+                          {product.sku && (
+                            <p className="text-xs text-muted-foreground font-mono">
+                              {product.sku}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-1 ml-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => openViewDialog(product)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEdit(product)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => openDeleteDialog(product)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
       )}
 
       {/* Delete Confirmation Dialog */}

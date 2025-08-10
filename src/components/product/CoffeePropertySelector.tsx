@@ -34,7 +34,7 @@ export default function CoffeePropertySelector({
   onPricingChange,
   baseProduct
 }: CoffeePropertySelectorProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { currency } = useCurrency()
   const isArabic = i18n.language === 'ar'
 
@@ -144,20 +144,20 @@ export default function CoffeePropertySelector({
   const validation = getPropertyValidation()
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center gap-2">
         <Coffee className="h-5 w-5 text-amber-600" />
         <h3 className="text-lg font-semibold">
-          {isArabic ? 'خصائص القهوة' : 'Coffee Properties'}
+          {t('product.coffeeProperties')}
         </h3>
       </div>
 
       {!validation.isValid && (
-        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+        <div className="flex items-start gap-2 p-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
           <div className="text-sm">
             <p className="font-medium text-amber-800 dark:text-amber-200">
-              {isArabic ? 'يرجى اختيار الخصائص المطلوبة' : 'Please select required properties'}
+              {t('product.pleaseSelectRequired')}
             </p>
             <ul className="mt-1 text-amber-700 dark:text-amber-300">
               {validation.missingProperties.map(property => (
@@ -172,18 +172,18 @@ export default function CoffeePropertySelector({
 
       {activeProperties.map((property) => (
         <Card key={property.id} className="border-l-4 border-l-amber-500">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Coffee className="h-4 w-4 text-amber-600" />
               {isArabic ? property.name_ar : property.name}
               {property.required && (
                 <Badge variant="destructive" className="text-xs">
-                  {isArabic ? 'مطلوب' : 'Required'}
+                  {t('product.required')}
                 </Badge>
               )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {renderPropertyOptions(property)}
           </CardContent>
         </Card>
@@ -191,14 +191,14 @@ export default function CoffeePropertySelector({
 
       {Object.keys(selectedOptions).length > 0 && (
         <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Coffee className="h-4 w-4 text-amber-600" />
-              {isArabic ? 'ملخص الاختيارات' : 'Selection Summary'}
+              {t('product.selectionSummary')}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+          <CardContent className="pt-0">
+            <div className="space-y-1.5">
               {Object.entries(selectedOptions).map(([propertyId, optionIds]) => {
                 const property = activeProperties.find(p => p.id === propertyId)
                 if (!property) return null

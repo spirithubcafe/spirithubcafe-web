@@ -115,6 +115,33 @@
     "noProducts": "لم يتم العثور على منتجات",
     "noProductsDescription": "جرب تعديل المرشحات أو معايير البحث"
   },
+  "product": {
+    "coffeeInformation": "معلومات القهوة",
+    "options": "الخيارات",
+    "chooseSize": "اختر الحجم",
+    "affectsPrice": "يؤثر على السعر",
+    "selectOption": "اختر...",
+    "specifications": "المواصفات",
+    "additionalSpecifications": "المواصفات الإضافية",
+    "noSpecifications": "لا توجد مواصفات متاحة",
+    "backToShop": "العودة إلى المتجر",
+    "productNotFound": "المنتج غير موجود",
+    "featured": "مميز",
+    "bestseller": "الأكثر مبيعاً",
+    "newArrival": "وصل حديثاً",
+    "description": "الوصف",
+    "reviews": "التقييمات",
+    "review": "تقييم",
+    "addedToCart": "تم إضافة المنتج إلى السلة",
+    "errorAddingToCart": "حدث خطأ أثناء إضافة المنتج",
+    "loading": "جاري التحميل...",
+    "errorLoading": "حدث خطأ في تحميل المنتج",
+    "notFound": "المنتج غير موجود",
+    "coffeeProperties": "خصائص القهوة",
+    "required": "مطلوب",
+    "pleaseSelectRequired": "يرجى اختيار الخصائص المطلوبة",
+    "selectionSummary": "ملخص الاختيارات"
+  },
   "auth": {
     "login": {
       "title": "تسجيل الدخول إلى حسابك",

@@ -18,7 +18,7 @@ import toast from 'react-hot-toast'
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>()
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { currency, formatPrice } = useCurrency()
   const { addToCart } = useCart()
   const [product, setProduct] = useState<Product | null>(null)
@@ -71,7 +71,7 @@ export default function ProductPage() {
       const foundProduct = result.items.find((p: Product) => p.slug === slug || p.id === slug)
       
       if (!foundProduct) {
-        toast.error(isArabic ? 'المنتج غير موجود' : 'Product not found')
+        toast.error(t('product.notFound'))
         return
       }
       
@@ -79,11 +79,11 @@ export default function ProductPage() {
       await loadReviews(foundProduct.id)
     } catch (error) {
       console.error('Error loading product:', error)
-      toast.error(isArabic ? 'حدث خطأ في تحميل المنتج' : 'Error loading product')
+      toast.error(t('product.errorLoading'))
     } finally {
       setLoading(false)
     }
-  }, [slug, isArabic, loadReviews])
+  }, [slug, t, loadReviews])
 
   const handleReviewAdded = (productId: string) => {
     loadReviews(productId)
@@ -174,10 +174,10 @@ export default function ProductPage() {
     
     try {
       await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
-      toast.success(isArabic ? 'تم إضافة المنتج إلى السلة' : 'Product added to cart')
+      toast.success(t('product.addedToCart'))
     } catch (error) {
       console.error('Error adding to cart:', error)
-      toast.error(isArabic ? 'حدث خطأ أثناء إضافة المنتج' : 'Error adding product to cart')
+      toast.error(t('product.errorAddingToCart'))
     }
   }
 
@@ -229,41 +229,40 @@ export default function ProductPage() {
         if (selectedValue) {
           const option = property.options.find(opt => opt.value === selectedValue)
           if (option) {
-            // Check if option has absolute prices (new system) or modifiers (old system)
+            // Check for absolute prices first (new system)
             let price = 0
             if (currency === 'OMR') {
               if (option.price_omr) {
-                // New system: absolute price only
+                // New system: absolute price
                 price = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
               } else if (option.price_modifier_omr || option.price_modifier) {
-                // Legacy: treat modifier as standalone price (do not add base)
+                // Legacy: modifier as absolute price
                 const modifier = option.price_modifier_omr || option.price_modifier || 0
                 price = modifier
               }
             } else if (currency === 'SAR') {
               if (option.price_sar) {
-                // New system: absolute price only
+                // New system: absolute price
                 price = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
               } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
-                // Legacy: treat modifier as standalone price (do not add base)
+                // Legacy: modifier as absolute price
                 const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
                 price = modifier
               }
             } else {
               if (option.price_usd) {
-                // New system: absolute price only
+                // New system: absolute price
                 price = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
               } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
+                // Legacy: modifier as absolute price
                 const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
-                price =  modifier
+                price = modifier
               }
             }
             
-            // If property option has no price, fallback to base price
+            // If property option has valid price, return it
             if (price > 0) {
               return price
-            } else {
-              break
             }
           }
         }
@@ -274,39 +273,39 @@ export default function ProductPage() {
     const firstProperty = pricingProperties[0]
     if (firstProperty && firstProperty.options.length > 0) {
       const firstOption = firstProperty.options[0]
-      // Check if first option has absolute prices (new system) or modifiers (old system)
+      // Check for absolute prices first (new system)
       let price = 0
       if (currency === 'OMR') {
         if (firstOption.price_omr) {
-          // New system: absolute price only
+          // New system: absolute price
           price = firstOption.on_sale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
         } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: treat modifier as standalone price (do not add base)
+          // Legacy: modifier as absolute price
           const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
           price = modifier
         }
       } else if (currency === 'SAR') {
         if (firstOption.price_sar) {
-          // New system: absolute price only
+          // New system: absolute price
           price = firstOption.on_sale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
         } else if (firstOption.price_modifier_sar || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: treat modifier as standalone price (do not add base)
+          // Legacy: modifier as absolute price
           const modifier = firstOption.price_modifier_sar || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 9.75
           price = modifier
         }
       } else {
         if (firstOption.price_usd) {
-          // New system: absolute price only
+          // New system: absolute price
           price = firstOption.on_sale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
         } else if (firstOption.price_modifier_usd || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: treat modifier as standalone price (do not add base)
+          // Legacy: modifier as absolute price
           const modifier = firstOption.price_modifier_usd || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 2.6
           price = modifier
         }
       }
       
-      // If first option has no price, return 0 (will fallback to base price in main function)
-      return price
+      // Return the price if valid
+      return price > 0 ? price : 0
     }
 
     return 0
@@ -317,9 +316,9 @@ export default function ProductPage() {
     
     const badges: Array<{ text: string; color: string }> = []
     
-    if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
-    if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
-    if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
+    if (product.is_featured) badges.push({ text: t('product.featured'), color: 'bg-blue-500' })
+    if (product.is_bestseller) badges.push({ text: t('product.bestseller'), color: 'bg-green-500' })
+    if (product.is_new_arrival) badges.push({ text: t('product.newArrival'), color: 'bg-purple-500' })
     
     return badges
   }
@@ -369,11 +368,11 @@ export default function ProductPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">
-            {isArabic ? 'المنتج غير موجود' : 'Product Not Found'}
+            {t('product.productNotFound')}
           </h1>
           <Link to="/shop">
             <Button>
-              {isArabic ? 'العودة إلى المتجر' : 'Back to Shop'}
+              {t('product.backToShop')}
             </Button>
           </Link>
         </div>
@@ -393,7 +392,7 @@ export default function ProductPage() {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          {isArabic ? 'العودة إلى المتجر' : 'Back to Shop'}
+          {t('product.backToShop')}
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
@@ -468,7 +467,7 @@ export default function ProductPage() {
                     />
                   ))}
                   <span className="text-sm text-muted-foreground ml-2">
-                    ({averageRating.toFixed(1)}) • {totalReviews} {isArabic ? 'تقييم' : 'reviews'}
+                    ({averageRating.toFixed(1)}) • {totalReviews} {t('shop.reviews')}
                   </span>
                 </div>
               </div>
@@ -493,86 +492,196 @@ export default function ProductPage() {
               altitude={product.altitude}
               notes={product.notes}
               farm={product.farm}
+              className="py-0"
             />
 
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-3">
-                    {isArabic ? 'الخيارات' : 'Options'}
-                  </h3>
-                  <div className="space-y-4">
+              <Card className="py-0">
+                <CardContent className="p-3">
+                  <div className="space-y-3">
                     {product.properties
                       .filter(property => property.options && property.options.length > 0)
-                      .map((property) => (
-                        <div key={property.name} className="space-y-2">
-                          <label className="text-sm font-medium block mb-2">
-                            {isArabic ? (property.name_ar || property.name) : property.name}
-                            {property.affects_price && (
-                              <span className="text-muted-foreground text-xs ml-1">
-                                ({isArabic ? 'يؤثر على السعر' : 'affects price'})
-                              </span>
-                            )}
-                          </label>
-                          <Select
-                            value={selectedProperties[property.name] || ''}
-                            onValueChange={(value) => setSelectedProperties(prev => ({ ...prev, [property.name]: value }))}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={isArabic ? 'اختر...' : 'Select...'} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {property.options?.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  <span>
-                                    {isArabic ? (option.label_ar || option.label) : option.label}
-                                    {(() => {
-                                      const regularModifier = currency === 'OMR' ? 
-                                        (option.price_modifier_omr || option.price_modifier || 0) :
-                                        currency === 'SAR' ? 
-                                        (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75) :
-                                        (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
-                                      
-                                      const saleModifier = option.on_sale && option.sale_price_modifier_omr !== undefined ?
-                                        (currency === 'OMR' ? 
-                                          option.sale_price_modifier_omr :
-                                          currency === 'SAR' ? 
-                                          (option.sale_price_modifier_sar || option.sale_price_modifier_omr * 9.75) :
-                                          (option.sale_price_modifier_usd || option.sale_price_modifier_omr * 2.6)) :
-                                        null
-                                      
-                                      const displayModifier = saleModifier !== null ? saleModifier : regularModifier
-                                      
-                                      if (displayModifier !== 0) {
-                                        return (
-                                          <span className="ml-2 text-sm">
-                                            {saleModifier !== null && saleModifier < regularModifier ? (
-                                              <>
-                                                <span className="line-through text-muted-foreground">
-                                                  ({formatPrice(regularModifier)})
-                                                </span>
-                                                <span className="text-red-600 ml-1">
-                                                  ({formatPrice(displayModifier)})
-                                                </span>
-                                              </>
-                                            ) : (
-                                              <span className="text-muted-foreground">
-                                                ({formatPrice(displayModifier)})
-                                              </span>
-                                            )}
-                                          </span>
-                                        )
+                      .map((property) => {
+                        const renderPropertyInput = () => {
+                          const propertyType = property.type || 'select'
+                          const displayType = property.display_type || 'dropdown'
+                          
+                          // Get property price for option
+                          const getOptionPrice = (option: any) => {
+                            let regularPrice = 0
+                            let salePrice = 0
+                            
+                            if (currency === 'OMR') {
+                              regularPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
+                              salePrice = option.sale_price_omr || 0
+                            } else if (currency === 'SAR') {
+                              regularPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
+                              salePrice = option.sale_price_sar || 0
+                            } else {
+                              regularPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+                              salePrice = option.sale_price_usd || 0
+                            }
+                            
+                            const displayPrice = (option.on_sale && salePrice > 0) ? salePrice : regularPrice
+                            const hasDiscount = option.on_sale && salePrice > 0 && salePrice < regularPrice
+                            
+                            if (regularPrice > 0) {
+                              return (
+                                <span className="ml-2 text-sm">
+                                  {hasDiscount ? (
+                                    <>
+                                      <span className="line-through text-muted-foreground">
+                                        ({formatPrice(regularPrice)})
+                                      </span>
+                                      <span className="text-red-600 ml-1">
+                                        ({formatPrice(displayPrice)})
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="text-muted-foreground">
+                                      ({formatPrice(displayPrice)})
+                                    </span>
+                                  )}
+                                </span>
+                              )
+                            }
+                            return null
+                          }
+
+                          // Render based on type and display_type
+                          if (propertyType === 'radio' || displayType === 'buttons') {
+                            return (
+                              <div className="flex flex-wrap gap-2">
+                                {property.options?.map((option) => {
+                                  const isSelected = selectedProperties[property.name] === option.value
+                                  return (
+                                    <button
+                                      key={option.value}
+                                      type="button"
+                                      onClick={() => setSelectedProperties(prev => ({ ...prev, [property.name]: option.value }))}
+                                      className={`px-4 py-2 rounded-md border text-sm font-medium transition-all ${
+                                        isSelected 
+                                          ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
+                                          : 'bg-background border-border hover:bg-muted hover:border-muted-foreground/20'
+                                      }`}
+                                    >
+                                      <div className="text-center">
+                                        <div>{isArabic ? (option.label_ar || option.label) : option.label}</div>
+                                        {getOptionPrice(option) && (
+                                          <div className="text-xs mt-1 font-medium text-foreground/90">
+                                            {getOptionPrice(option)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )
+                          }
+
+                          // Color swatches
+                          if (propertyType === 'color' || displayType === 'color_swatches') {
+                            return (
+                              <div className="flex flex-wrap gap-2">
+                                {property.options?.map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setSelectedProperties(prev => ({ ...prev, [property.name]: option.value }))}
+                                    className={`
+                                      w-8 h-8 rounded-full border-2 relative
+                                      ${selectedProperties[property.name] === option.value 
+                                        ? 'border-primary scale-110' 
+                                        : 'border-gray-300 hover:border-gray-400'
                                       }
-                                      return null
-                                    })()}
-                                  </span>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ))}
+                                      transition-all duration-200
+                                    `}
+                                    style={{ backgroundColor: option.value }}
+                                    data-color={option.value}
+                                    title={`${isArabic ? (option.label_ar || option.label) : option.label}${(() => {
+                                      const priceEl = getOptionPrice(option)
+                                      return priceEl ? ` ${priceEl.props.children}` : ''
+                                    })()}`}
+                                  >
+                                    {selectedProperties[property.name] === option.value && (
+                                      <div className="absolute inset-0 rounded-full flex items-center justify-center">
+                                        <div className="w-2 h-2 bg-white rounded-full shadow"></div>
+                                      </div>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            )
+                          }
+
+                          // Size grid
+                          if (propertyType === 'size' || displayType === 'size_grid') {
+                            return (
+                              <div className="grid grid-cols-3 gap-2">
+                                {property.options?.map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setSelectedProperties(prev => ({ ...prev, [property.name]: option.value }))}
+                                    className={`
+                                      px-3 py-2 text-sm font-medium rounded-md border transition-colors
+                                      ${selectedProperties[property.name] === option.value
+                                        ? 'bg-primary text-primary-foreground border-primary'
+                                        : 'bg-background hover:bg-muted border-input'
+                                      }
+                                    `}
+                                  >
+                                    <div className="text-center">
+                                      <div>{isArabic ? (option.label_ar || option.label) : option.label}</div>
+                                      {getOptionPrice(option) && (
+                                        <div className="text-xs mt-1">
+                                          {getOptionPrice(option)}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )
+                          }
+
+                          // Default to Select (dropdown)
+                          return (
+                            <Select
+                              value={selectedProperties[property.name] || ''}
+                              onValueChange={(value) => setSelectedProperties(prev => ({ ...prev, [property.name]: value }))}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={t('product.selectOption')} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {property.options?.map((option) => (
+                                  <SelectItem key={option.value} value={option.value}>
+                                    <span>
+                                      {isArabic ? (option.label_ar || option.label) : option.label}
+                                      {getOptionPrice(option)}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )
+                        }
+
+                        return (
+                          <div key={property.name} className="space-y-1.5">
+                            <label className="text-sm font-medium block mb-1">
+                              {property.name.toLowerCase().includes('size') ? 
+                                t('product.chooseSize') : 
+                                (isArabic ? (property.name_ar || property.name) : property.name)
+                              }
+                            </label>
+                            {renderPropertyInput()}
+                          </div>
+                        )
+                      })}
                   </div>
                 </CardContent>
               </Card>
@@ -581,11 +690,11 @@ export default function ProductPage() {
             {/* Static Properties */}
             {product.properties && product.properties.some(p => !p.options || p.options.length === 0) && (
               <Card>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold mb-3">
-                    {isArabic ? 'المواصفات' : 'Specifications'}
+                <CardContent className="p-3">
+                  <h3 className="font-semibold mb-2 text-sm">
+                    {t('product.specifications')}
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {product.properties
                       .filter(property => !property.options || property.options.length === 0)
                       .map((property: any, index: number) => (
@@ -602,10 +711,10 @@ export default function ProductPage() {
             )}
 
             {/* Quantity and Add to Cart */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <label className="text-sm font-medium">
-                  {isArabic ? 'الكمية:' : 'Quantity:'}
+                  {t('shop.quantity')}:
                 </label>
                 <div className="flex items-center border rounded-lg">
                   <Button
@@ -628,8 +737,8 @@ export default function ProductPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg w-full">
-                  <span className="font-medium text-lg">{isArabic ? 'المجموع' : 'Total'}</span>
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg w-full">
+                  <span className="font-medium text-lg">{t('shop.total')}</span>
                   <span className="text-2xl font-bold text-amber-600">
                     {formatPrice(finalPrice * quantity)}
                   </span>
@@ -656,7 +765,7 @@ export default function ProductPage() {
                 className="w-full"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                {isArabic ? 'أضف إلى السلة' : 'Add to Cart'}
+                {t('shop.addToCart')}
               </Button>
             </div>
           </div>
@@ -667,13 +776,13 @@ export default function ProductPage() {
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="description">
-                {isArabic ? 'الوصف' : 'Description'}
+                {t('product.description')}
               </TabsTrigger>
               <TabsTrigger value="specifications">
-                {isArabic ? 'المواصفات' : 'Specifications'}
+                {t('product.specifications')}
               </TabsTrigger>
               <TabsTrigger value="reviews">
-                {isArabic ? 'التقييمات' : 'Reviews'} ({reviews.length})
+                {t('product.reviews')} ({reviews.length})
               </TabsTrigger>
             </TabsList>
 
@@ -698,6 +807,7 @@ export default function ProductPage() {
                   altitude={product.altitude}
                   notes={product.notes}
                   farm={product.farm}
+                  className="py-0"
                 />
 
                 {/* Product Properties */}
@@ -706,7 +816,7 @@ export default function ProductPage() {
                     {product.properties && product.properties.length > 0 ? (
                       <div className="space-y-4">
                         <h3 className="font-medium text-sm text-muted-foreground mb-3">
-                          {isArabic ? 'المواصفات الإضافية' : 'Additional Specifications'}
+                          {t('product.additionalSpecifications')}
                         </h3>
                         {product.properties.map((property: any, index: number) => (
                           <div key={index} className="py-2 border-b last:border-b-0">
@@ -741,7 +851,7 @@ export default function ProductPage() {
                       !product.roast_level && !product.processing_method && !product.variety && 
                       !product.altitude && !product.notes && !product.farm && (
                         <p className="text-muted-foreground text-center py-8">
-                          {isArabic ? 'لا توجد مواصفات متاحة' : 'No specifications available'}
+                          {t('product.noSpecifications')}
                         </p>
                       )
                     )}

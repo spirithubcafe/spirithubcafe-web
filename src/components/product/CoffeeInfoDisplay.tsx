@@ -21,7 +21,7 @@ export default function CoffeeInfoDisplay({
   farm,
   className
 }: CoffeeInfoDisplayProps) {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
 
   // Filter out empty fields
@@ -39,15 +39,15 @@ export default function CoffeeInfoDisplay({
   }
 
   return (
-    <Card className={className}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-3">
+    <Card className={className} >
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2 mb-2">
           <Coffee className="h-4 w-4 text-amber-600" />
           <h3 className="font-medium text-sm">
-            {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+            {t('product.coffeeInformation')}
           </h3>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {coffeeInfo.map((item, index) => (
             <div key={index} className="flex justify-between items-start text-sm">
               <span className="text-muted-foreground font-medium">

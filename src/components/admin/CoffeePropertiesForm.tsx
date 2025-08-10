@@ -543,7 +543,7 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>SKU</Label>
+                    <Label>Stock Keeping Unit</Label>
                     <Input
                       value={editingOption.sku || ''}
                       onChange={(e) =>

@@ -356,7 +356,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               altitude={product.altitude}
               notes={product.notes}
               farm={product.farm}
-              className="mb-4"
+              className="mb-4 py-0"
             />
 
             {/* Dynamic Properties */}
