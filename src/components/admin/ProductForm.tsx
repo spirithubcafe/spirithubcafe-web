@@ -35,6 +35,7 @@ interface ProductForm {
   variety: string
   altitude: string
   notes: string
+  uses: string
   farm: string
 }
 
@@ -76,6 +77,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     variety: '',
     altitude: '',
     notes: '',
+    uses: '',
     farm: ''
   })
 
@@ -118,6 +120,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         variety: editingProduct.variety || '',
         altitude: editingProduct.altitude || '',
         notes: editingProduct.notes || '',
+        uses: editingProduct.uses || '',
         farm: editingProduct.farm || ''
       })
     }
@@ -174,6 +177,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         variety: form.variety,
         altitude: form.altitude,
         notes: form.notes,
+        uses: form.uses,
         farm: form.farm,
         updated_at: new Date()
       }
@@ -605,6 +609,19 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="uses">{isArabic ? 'الاستخدامات' : 'Uses'}</Label>
+                  <Textarea
+                    id="uses"
+                    value={form.uses}
+                    onChange={(e) => setForm(prev => ({ ...prev, uses: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: إسبريسو، قهوة مقطرة، فرنش برس' : 'e.g., Espresso, Drip Coffee, French Press'}
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="farm">{isArabic ? 'المزرعة' : 'Farm'}</Label>
                   <Input
                     id="farm"
@@ -639,6 +656,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     { label: isArabic ? 'النوع' : 'Variety', value: form.variety },
                     { label: isArabic ? 'الارتفاع' : 'Altitude', value: form.altitude },
                     { label: isArabic ? 'الملاحظات' : 'Notes', value: form.notes },
+                    { label: isArabic ? 'الاستخدامات' : 'Uses', value: form.uses },
                     { label: isArabic ? 'المزرعة' : 'Farm', value: form.farm }
                   ].filter(item => item.value && item.value.trim()).map((item, index) => (
                     <div key={index} className="flex justify-between items-start text-sm">
@@ -650,7 +668,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                       </span>
                     </div>
                   ))}
-                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.farm].some(v => v && v.trim()) && (
+                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.uses, form.farm].some(v => v && v.trim()) && (
                     <p className="text-muted-foreground text-sm text-center py-4">
                       {isArabic ? 'لا توجد معلومات قهوة مضافة بعد' : 'No coffee information added yet'}
                     </p>

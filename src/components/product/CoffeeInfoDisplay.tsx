@@ -8,6 +8,7 @@ interface CoffeeInfoDisplayProps {
   variety?: string
   altitude?: string
   notes?: string
+  uses?: string
   farm?: string
   className?: string
 }
@@ -18,6 +19,7 @@ export default function CoffeeInfoDisplay({
   variety,
   altitude,
   notes,
+  uses,
   farm,
   className
 }: CoffeeInfoDisplayProps) {
@@ -31,6 +33,7 @@ export default function CoffeeInfoDisplay({
     { label: isArabic ? 'النوع' : 'Variety', value: variety },
     { label: isArabic ? 'الارتفاع' : 'Altitude', value: altitude },
     { label: isArabic ? 'الملاحظات' : 'Notes', value: notes },
+    { label: isArabic ? 'الاستخدامات' : 'Uses', value: uses },
     { label: isArabic ? 'المزرعة' : 'Farm', value: farm }
   ].filter(item => item.value && item.value.trim())
 

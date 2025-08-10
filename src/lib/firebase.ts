@@ -157,6 +157,7 @@ export interface Product {
   roast_level?: string;
   variety?: string;
   notes?: string;
+  uses?: string;
   farm?: string;
   // Rating fields
   average_rating?: number;

@@ -174,6 +174,7 @@ export interface Product {
   package_size?: string[]
   variety?: string
   notes?: string
+  uses?: string
   farm?: string
   stock: number
   low_stock_threshold: number
@@ -572,6 +573,7 @@ export interface ProductForm {
   package_size?: string[]
   variety?: string
   notes?: string
+  uses?: string
   farm?: string
   stock: number
   weight_grams?: number

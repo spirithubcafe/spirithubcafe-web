@@ -32,6 +32,7 @@ const COFFEE_PROPERTY_TYPES = [
   { value: 'variety', label: 'Variety', label_ar: 'النوع' },
   { value: 'altitude', label: 'Altitude', label_ar: 'الارتفاع' },
   { value: 'notes', label: 'Notes', label_ar: 'الملاحظات' },
+  { value: 'uses', label: 'Uses', label_ar: 'الاستخدامات' },
   { value: 'farm', label: 'Farm', label_ar: 'المزرعة' }
 ] as const
 
@@ -192,7 +193,7 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
             <Coffee className="h-12 w-12 mx-auto mb-2 text-amber-400" />
             <p>{isArabic ? 'لا توجد خصائص قهوة مضافة' : 'No coffee properties added'}</p>
             <p className="text-xs mt-1">
-              {isArabic ? 'أضف خصائص مثل درجة التحميص، المعالجة، النوع، الارتفاع، الملاحظات، والمزرعة' : 'Add properties like Roast Level, Process, Variety, Altitude, Notes, and Farm'}
+              {isArabic ? 'أضف خصائص مثل درجة التحميص، المعالجة، النوع، الارتفاع، الملاحظات، الاستخدامات، والمزرعة' : 'Add properties like Roast Level, Process, Variety, Altitude, Notes, Uses, and Farm'}
             </p>
           </CardContent>
         </Card>

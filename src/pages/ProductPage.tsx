@@ -491,6 +491,7 @@ export default function ProductPage() {
               variety={product.variety}
               altitude={product.altitude}
               notes={product.notes}
+              uses={product.uses}
               farm={product.farm}
               className="py-0"
             />
@@ -498,8 +499,8 @@ export default function ProductPage() {
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
               <Card className="py-0">
-                <CardContent className="p-3">
-                  <div className="space-y-3">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {product.properties
                       .filter(property => property.options && property.options.length > 0)
                       .map((property) => {
@@ -552,7 +553,7 @@ export default function ProductPage() {
                           // Render based on type and display_type
                           if (propertyType === 'radio' || displayType === 'buttons') {
                             return (
-                              <div className="flex flex-wrap gap-2">
+                              <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 sm:gap-3">
                                 {property.options?.map((option) => {
                                   const isSelected = selectedProperties[property.name] === option.value
                                   return (
@@ -560,16 +561,18 @@ export default function ProductPage() {
                                       key={option.value}
                                       type="button"
                                       onClick={() => setSelectedProperties(prev => ({ ...prev, [property.name]: option.value }))}
-                                      className={`px-4 py-2 rounded-md border text-sm font-medium transition-all ${
+                                      className={`flex-1 lg:flex-none px-3 py-3 sm:px-4 sm:py-4 rounded-lg border text-sm font-medium transition-all duration-200 min-h-[60px] sm:min-h-[70px] lg:min-h-[auto] ${
                                         isSelected 
-                                          ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
-                                          : 'bg-background border-border hover:bg-muted hover:border-muted-foreground/20'
+                                          ? 'bg-primary text-primary-foreground border-primary shadow-md scale-[0.98] sm:scale-100' 
+                                          : 'bg-background border-border hover:bg-muted hover:border-muted-foreground/30 hover:shadow-sm active:scale-[0.97]'
                                       }`}
                                     >
-                                      <div className="text-center">
-                                        <div>{isArabic ? (option.label_ar || option.label) : option.label}</div>
+                                      <div className="text-center w-full">
+                                        <div className="font-semibold text-sm sm:text-base">
+                                          {isArabic ? (option.label_ar || option.label) : option.label}
+                                        </div>
                                         {getOptionPrice(option) && (
-                                          <div className="text-xs mt-1 font-medium text-foreground/90">
+                                          <div className="text-xs sm:text-sm mt-1 font-medium text-foreground/80 opacity-90">
                                             {getOptionPrice(option)}
                                           </div>
                                         )}
@@ -584,27 +587,30 @@ export default function ProductPage() {
                           // Color swatches
                           if (propertyType === 'color' || displayType === 'color_swatches') {
                             return (
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex flex-wrap gap-3 sm:gap-4">
                                 {property.options?.map((option) => (
                                   <button
                                     key={option.value}
                                     type="button"
                                     onClick={() => setSelectedProperties(prev => ({ ...prev, [property.name]: option.value }))}
                                     className={`
-                                      w-8 h-8 rounded-full border-2 relative
+                                      w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 relative
                                       ${selectedProperties[property.name] === option.value 
-                                        ? 'border-primary scale-110' 
-                                        : 'border-gray-300 hover:border-gray-400'
+                                        ? 'border-primary scale-110 shadow-lg' 
+                                        : 'border-gray-300 hover:border-gray-400 hover:scale-105'
                                       }
-                                      transition-all duration-200
+                                      transition-all duration-200 active:scale-95
                                     `}
-                                    style={{ backgroundColor: option.value }}
                                     data-color={option.value}
                                     title={`${isArabic ? (option.label_ar || option.label) : option.label}${(() => {
                                       const priceEl = getOptionPrice(option)
                                       return priceEl ? ` ${priceEl.props.children}` : ''
                                     })()}`}
                                   >
+                                    <div 
+                                      className="w-full h-full rounded-full border border-white/20"
+                                      style={{ backgroundColor: option.value }}
+                                    />
                                     {selectedProperties[property.name] === option.value && (
                                       <div className="absolute inset-0 rounded-full flex items-center justify-center">
                                         <div className="w-2 h-2 bg-white rounded-full shadow"></div>
@@ -671,8 +677,8 @@ export default function ProductPage() {
                         }
 
                         return (
-                          <div key={property.name} className="space-y-1.5">
-                            <label className="text-sm font-medium block mb-1">
+                          <div key={property.name} className="space-y-2 sm:space-y-3">
+                            <label className="text-sm sm:text-base font-semibold block mb-2 text-foreground">
                               {property.name.toLowerCase().includes('size') ? 
                                 t('product.chooseSize') : 
                                 (isArabic ? (property.name_ar || property.name) : property.name)
@@ -810,6 +816,7 @@ export default function ProductPage() {
                   variety={product.variety}
                   altitude={product.altitude}
                   notes={product.notes}
+                  uses={product.uses}
                   farm={product.farm}
                   className="py-0"
                 />
