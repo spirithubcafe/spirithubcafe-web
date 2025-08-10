@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
-import { convertPrice } from '@/lib/currency'
+import { convertPrice, formatPrice } from '@/lib/currency'
 import type { CoffeeProperty, CoffeePropertyOption } from '@/types/index'
 
 interface CoffeePropertiesFormProps {
@@ -270,7 +270,7 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
                               {isArabic ? 'السعر' : 'Price'}
                             </span>
                             <span className="text-sm font-mono font-bold text-amber-800 dark:text-amber-200">
-                              {option.price_omr.toFixed(3)} OMR
+                              {formatPrice(option.price_omr, 'OMR', isArabic)}
                             </span>
                           </div>
                           
@@ -280,7 +280,7 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
                                 {isArabic ? 'سعر البيع' : 'Sale Price'}
                               </span>
                               <span className="text-sm font-mono font-bold text-red-600">
-                                {option.sale_price_omr.toFixed(3)} OMR
+                                {formatPrice(option.sale_price_omr, 'OMR', isArabic)}
                               </span>
                             </div>
                           )}
@@ -420,10 +420,10 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
                           {isArabic ? option.label_ar : option.label}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Value: {option.value} | Price: {option.price_omr.toFixed(3)} OMR
+                          Value: {option.value} | Price: {formatPrice(option.price_omr, 'OMR', isArabic)}
                           {option.is_on_sale && option.sale_price_omr && (
                             <span className="text-red-600 ml-2">
-                              | Sale: {option.sale_price_omr.toFixed(3)} OMR
+                              | Sale: {formatPrice(option.sale_price_omr, 'OMR', isArabic)}
                             </span>
                           )}
                         </div>
@@ -670,8 +670,8 @@ export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropert
                         {editingOption.sale_price_omr && editingOption.sale_price_omr < editingOption.price_omr && (
                           <p className="text-xs text-green-600 dark:text-green-400">
                             {isArabic ? 
-                              `توفير: ${(editingOption.price_omr - editingOption.sale_price_omr).toFixed(3)} OMR` : 
-                              `Savings: ${(editingOption.price_omr - editingOption.sale_price_omr).toFixed(3)} OMR`
+                              `توفير: ${formatPrice(editingOption.price_omr - editingOption.sale_price_omr, 'OMR', isArabic)}` : 
+                              `Savings: ${formatPrice(editingOption.price_omr - editingOption.sale_price_omr, 'OMR', isArabic)}`
                             }
                           </p>
                         )}

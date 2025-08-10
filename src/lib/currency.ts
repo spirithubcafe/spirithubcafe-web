@@ -6,6 +6,12 @@ export const currencySymbols = {
   OMR: 'ر.ع'
 } as const
 
+export const currencySymbolsEnglish = {
+  USD: '$',
+  SAR: 'SAR',
+  OMR: 'OMR'
+} as const
+
 export const conversionRates = {
   USD: 2.6,
   SAR: 9.75,
@@ -19,8 +25,8 @@ export type CurrencyProviderState = {
   getSymbol: () => string
 }
 
-export const formatPrice = (price: number, currency: Currency): string => {
-  const symbol = currencySymbols[currency]
+export const formatPrice = (price: number, currency: Currency, isArabic: boolean = true): string => {
+  const symbol = isArabic ? currencySymbols[currency] : currencySymbolsEnglish[currency]
   
   // Format based on currency
   const formattedPrice = new Intl.NumberFormat('en-US', {
@@ -28,9 +34,8 @@ export const formatPrice = (price: number, currency: Currency): string => {
     maximumFractionDigits: currency === 'OMR' ? 3 : 2,
   }).format(price)
 
-  if (currency === 'OMR') {
-    return `${symbol} ${formattedPrice}`
-  } else if (currency === 'SAR') {
+  // For Arabic currencies and OMR, put symbol after number
+  if (currency === 'SAR' || currency === 'OMR') {
     return `${formattedPrice} ${symbol}`
   }
   

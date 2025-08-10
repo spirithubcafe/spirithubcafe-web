@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useTranslation } from 'react-i18next'
-import { convertPrice } from '@/lib/currency'
+import { convertPrice, formatPrice } from '@/lib/currency'
 import type { ProductProperty, ProductPropertyOption } from '@/lib/firebase'
 
 interface ProductPropertyFormProps {
@@ -297,8 +297,8 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                               </span>
                               <span className="text-xs font-mono">
                                 {option.price_omr ? 
-                                  `${option.price_omr} OMR` : 
-                                  `${option.price_modifier_omr || option.price_modifier} OMR`
+                                  formatPrice(option.price_omr, 'OMR', isArabic) : 
+                                  formatPrice(option.price_modifier_omr || option.price_modifier || 0, 'OMR', isArabic)
                                 }
                               </span>
                             </div>
@@ -311,8 +311,8 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                               </span>
                               <span className="text-xs font-mono text-destructive">
                                 {option.sale_price_omr ? 
-                                  `${option.sale_price_omr} OMR` : 
-                                  `${option.sale_price_modifier_omr} OMR`
+                                  formatPrice(option.sale_price_omr, 'OMR', isArabic) : 
+                                  formatPrice(option.sale_price_modifier_omr || 0, 'OMR', isArabic)
                                 }
                               </span>
                             </div>
@@ -485,8 +485,8 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                           {(option.price_modifier || option.price_modifier_omr || option.price_omr) && (
                             <span className="ml-2">
                               {option.price_omr ? 
-                                `(${option.price_omr} OMR)` : 
-                                `(${option.price_modifier_omr || option.price_modifier} OMR)`
+                                `(${formatPrice(option.price_omr, 'OMR', isArabic)})` : 
+                                `(${formatPrice(option.price_modifier_omr || option.price_modifier || 0, 'OMR', isArabic)})`
                               }
                             </span>
                           )}
@@ -699,8 +699,8 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
                          editingOption.sale_price_modifier_omr < editingOption.price_modifier_omr && (
                           <p className="text-xs text-green-600 dark:text-green-400">
                             {isArabic ? 
-                              `توفير: ${(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr).toFixed(3)} OMR` : 
-                              `Savings: ${(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr).toFixed(3)} OMR`
+                              `توفير: ${formatPrice(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr, 'OMR', isArabic)}` : 
+                              `Savings: ${formatPrice(editingOption.price_modifier_omr - editingOption.sale_price_modifier_omr, 'OMR', isArabic)}`
                             }
                           </p>
                         )}

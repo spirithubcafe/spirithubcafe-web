@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import { formatPrice as formatPriceLib } from '@/lib/currency'
 import ProductForm from './ProductForm'
 import toast from 'react-hot-toast'
 
@@ -804,7 +805,9 @@ export default function ProductManagement() {
                     <span className="font-semibold text-muted-foreground">
                       {isArabic ? 'السعر (ريال عماني):' : 'Price (OMR):'}
                     </span>
-                    <p className="text-lg font-bold">{viewingProduct.price_omr} OMR</p>
+                    <p className="text-lg font-bold">
+                      {formatPrice(viewingProduct.price_omr)}
+                    </p>
                   </div>
                   {viewingProduct.price_usd && (
                     <div>
@@ -827,7 +830,9 @@ export default function ProductManagement() {
                       <span className="font-semibold text-muted-foreground">
                         {isArabic ? 'سعر التخفيض (ريال عماني):' : 'Sale Price (OMR):'}
                       </span>
-                      <p className="text-lg font-bold text-red-600">{viewingProduct.sale_price_omr} OMR</p>
+                      <p className="text-lg font-bold text-red-600">
+                        {formatPrice(viewingProduct.sale_price_omr)}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -856,7 +861,7 @@ export default function ProductManagement() {
                             {property.options.map((option, optIdx) => (
                               <span key={optIdx} className="px-2 py-1 bg-muted rounded text-xs">
                                 {isArabic ? (option.label_ar || option.label) : option.label}
-                                {option.price_omr && ` (+${option.price_omr} OMR)`}
+                                {option.price_omr && ` (+${formatPriceLib(option.price_omr, 'OMR', isArabic)})`}
                                 {option.stock && ` (${option.stock} ${isArabic ? 'قطعة' : 'units'})`}
                               </span>
                             ))}

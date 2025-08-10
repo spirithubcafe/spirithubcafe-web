@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import type { Currency } from '@/lib/currency'
-import { currencySymbols } from '@/lib/currency'
+import { currencySymbols, currencySymbolsEnglish } from '@/lib/currency'
 import { CurrencyProviderContext } from '@/hooks/useCurrency'
+import { useTranslation } from 'react-i18next'
 
 type CurrencyProviderProps = {
   children: React.ReactNode
@@ -18,6 +19,8 @@ export function CurrencyProvider({
   const [currency, setCurrency] = useState<Currency>(
     () => (localStorage.getItem(storageKey) as Currency) || defaultCurrency
   )
+  
+  const { i18n } = useTranslation()
 
   useEffect(() => {
     localStorage.setItem(storageKey, currency)
@@ -26,7 +29,8 @@ export function CurrencyProvider({
   const formatPrice = (price: number): string => {
     // Price is already converted in the component level (getProductPrice)
     // We just need to format and add the symbol
-    const symbol = currencySymbols[currency]
+    const isArabic = i18n.language === 'ar'
+    const symbol = isArabic ? currencySymbols[currency] : currencySymbolsEnglish[currency]
     
     // Format based on currency
     const formattedPrice = new Intl.NumberFormat('en-US', {
@@ -34,7 +38,7 @@ export function CurrencyProvider({
       maximumFractionDigits: currency === 'OMR' ? 3 : 2,
     }).format(price)
 
-    // For Arabic currencies, put symbol after number
+    // For Arabic currencies and OMR, put symbol after number
     if (currency === 'SAR' || currency === 'OMR') {
       return `${formattedPrice} ${symbol}`
     }
@@ -43,7 +47,8 @@ export function CurrencyProvider({
   }
 
   const getSymbol = (): string => {
-    return currencySymbols[currency]
+    const isArabic = i18n.language === 'ar'
+    return isArabic ? currencySymbols[currency] : currencySymbolsEnglish[currency]
   }
 
   const value = {
