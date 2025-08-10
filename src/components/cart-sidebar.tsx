@@ -223,24 +223,24 @@ export function CartSidebar() {
                         )}
                         
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center">
                             <Button
                               variant="outline"
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 rounded-r-none"
                               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="h-8 w-8 p-0"
                               disabled={item.quantity <= 1}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="text-sm font-medium w-8 text-center">
+                            <div className="flex h-8 w-12 items-center justify-center border-t border-b bg-background text-sm font-medium">
                               {item.quantity}
-                            </span>
+                            </div>
                             <Button
                               variant="outline"
-                              size="sm"
+                              size="icon"
+                              className="h-8 w-8 rounded-l-none"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="h-8 w-8 p-0"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>

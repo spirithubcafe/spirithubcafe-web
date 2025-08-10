@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, ShoppingCart, Eye, Trash2, Package } from 'lucide-react'
+import { Heart, ShoppingCart, Trash2, Package } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product } from '@/lib/firebase'
 
 export default function DashboardWishlist() {
@@ -160,12 +159,6 @@ export default function DashboardWishlist() {
                     >
                       <ShoppingCart className="h-3 w-3" />
                     </Button>
-                    
-                    <ProductQuickView product={product}>
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                    </ProductQuickView>
                     
                     <Button
                       onClick={() => handleRemoveFromWishlist(product.id)}

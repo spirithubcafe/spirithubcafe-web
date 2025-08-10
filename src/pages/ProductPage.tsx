@@ -716,19 +716,23 @@ export default function ProductPage() {
                 <label className="text-sm font-medium">
                   {t('shop.quantity')}:
                 </label>
-                <div className="flex items-center border rounded-lg">
+                <div className="flex items-center">
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-r-none"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="px-4 py-2 min-w-[60px] text-center">{quantity}</span>
+                  <div className="flex h-9 w-16 items-center justify-center border-t border-b bg-background text-sm font-medium">
+                    {quantity}
+                  </div>
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    variant="outline"
+                    size="icon"
+                    className="rounded-l-none"
                     onClick={() => setQuantity(quantity + 1)}
                   >
                     <Plus className="h-4 w-4" />

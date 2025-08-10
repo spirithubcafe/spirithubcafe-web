@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Heart, ShoppingCart, Eye, Trash2 } from 'lucide-react'
+import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { ProductQuickView } from '@/components/product-quick-view'
 import { firestoreService, type Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
@@ -210,12 +209,6 @@ export function WishlistPage() {
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         {isArabic ? 'أضف للسلة' : 'Add to Cart'}
                       </Button>
-                      
-                      <ProductQuickView product={product}>
-                        <Button variant="outline" size="icon">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </ProductQuickView>
                     </div>
                   </CardContent>
                 </Card>

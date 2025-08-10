@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Star, ShoppingCart, Plus, Minus, Heart } from 'lucide-react'
+import { Star, ShoppingCart, Plus, Minus, Heart, Share2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +9,7 @@ import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
-// import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
+import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
 import toast from 'react-hot-toast'
 
 interface ProductQuickViewProps {
@@ -113,7 +113,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product, currency])
 
   // Get all product images from different fields
@@ -358,15 +357,16 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
           <label className="text-sm font-medium">{isArabic ? (property.label_ar || property.label) : property.label}</label>
           <div className="flex flex-wrap gap-2">
             {property.options.map((option: any) => (
-              <div
+              <button
                 key={option.value}
                 onClick={() => setSelectedProperties(prev => ({
                   ...prev,
                   [property.name]: option.value
                 }))}
-                className={`w-8 h-8 rounded-full border-2 cursor-pointer ${
+                className={`w-8 h-8 rounded-full border-2 ${
                   selectedValue === option.value ? 'border-primary ring-2 ring-primary/30' : 'border-gray-300'
-                } swatch-${option.value.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                }`}
+                style={{ backgroundColor: option.color_value || option.value }}
                 title={isArabic ? (option.label_ar || option.label) : option.label}
               />
             ))}
@@ -485,7 +485,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                   <Star
                     key={i}
                     className={`h-4 w-4 ${
-                      i < Math.floor((product as any).rating || 0)
+                      i < Math.floor(product.rating || 0)
                         ? 'text-yellow-400 fill-current'
                         : 'text-gray-300'
                     }`}
@@ -493,7 +493,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">
-                ({(product as any).rating || 0})
+                ({product.rating || 0})
               </span>
             </div>
 
@@ -593,8 +593,8 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               </Button>
             </div>
 
-            {/* Coffee Info Display - Comment out for now */}
-            {/* <CoffeeInfoDisplay product={product} /> */}
+            {/* Coffee Info Display */}
+            <CoffeeInfoDisplay product={product} />
           </div>
         </div>
       </DialogContent>
