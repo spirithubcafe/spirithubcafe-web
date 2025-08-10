@@ -4,7 +4,7 @@
     "shop": "المتجر",
     "about": "من نحن",
     "contact": "تواصل معنا",
-    "brandName": "سبيريت هاب",
+    "brandName": "SPIRITHUB ROASTERY",
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "dashboard": "لوحة التحكم",
@@ -46,7 +46,7 @@
   "homepage": {
     "hero": {
       "badge": "تجربة قهوة فاخرة",
-      "title": "مرحباً بكم في سبيريت هاب",
+      "title": "مرحباً بكم في SPIRITHUB ROASTERY",
       "subtitle": "قهوة فاخرة محمصة بإتقان",
       "description": "اكتشف حبوب القهوة المختارة بعناية من جميع أنحاء العالم، محمصة بشغف وخبرة لتقديم الكوب المثالي في كل مرة.",
       "shopNow": "تسوق الآن",
@@ -481,6 +481,6 @@
     "themeSystem": "النظام",
     "toggleLanguage": "تغيير اللغة",
     "pleaseLogin": "يرجى تسجيل الدخول",
-    "brandName": "سبيريت هاب"
+    "brandName": "SPIRITHUB ROASTERY"
   }
 }

@@ -403,7 +403,7 @@ export default function ProductPage() {
             />
 
             {/* Price Display */}
-            <Card>
+            <Card className='py-0'>
               <CardContent className="p-4 sm:p-6">
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold">{t('product.price')}</h3>
@@ -763,7 +763,7 @@ export default function ProductPage() {
                 />
 
                 {/* Product Properties */}
-                <Card>
+                <Card className='py-0'>
                   <CardContent className="p-6">
                     {product.properties && product.properties.length > 0 ? (
                       <div className="space-y-4">

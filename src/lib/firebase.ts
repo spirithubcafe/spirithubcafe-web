@@ -537,18 +537,6 @@ export function getProductPriceDetails(
           const discountAmount = isOnSale && salePrice > 0 && salePrice < originalPrice ? originalPrice - salePrice : 0
           const discountPercentage = discountAmount > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0
           
-          // Debug log
-          console.log('🔍 Property Option Pricing:', {
-            optionValue: option.value,
-            isOnSale,
-            originalPrice,
-            salePrice,
-            finalPrice,
-            discountAmount,
-            discountPercentage,
-            currency
-          })
-          
           return {
             finalPrice,
             originalPrice,

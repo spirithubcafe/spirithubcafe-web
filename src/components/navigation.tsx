@@ -89,7 +89,7 @@ export function Navigation() {
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
                 <img 
                   src="/images/logo-s.png" 
-                  alt="SpiritHub Cafe Logo" 
+                  alt="SPIRITHUB ROASTERY Logo" 
                   className="h-8 w-8 object-contain no-flip"
                 />
                 <span className={cn(

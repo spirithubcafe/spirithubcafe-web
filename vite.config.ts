@@ -68,8 +68,8 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Spirit Hub Cafe',
-        short_name: 'Spirit Hub',
+        name: 'SPIRITHUB ROASTERY',
+        short_name: 'SPIRITHUB',
         description: 'Premium Coffee Experience',
         theme_color: '#d97706',
         icons: [
