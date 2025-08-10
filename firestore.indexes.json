@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION", 
+      "fields": [
+        {
+          "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "sort_order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "categories",
       "queryScope": "COLLECTION",
       "fields": [
@@ -33,11 +47,25 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "category_id",
+          "fieldPath": "is_active",
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "sort_order",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "is_active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "category_id",
           "order": "ASCENDING"
         },
         {
@@ -61,10 +89,6 @@
         {
           "fieldPath": "sort_order",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -76,20 +100,6 @@
           "fieldPath": "is_active",
           "order": "ASCENDING"
         },
-        {
-          "fieldPath": "sort_order",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
         {
           "fieldPath": "is_bestseller",
           "order": "ASCENDING"
@@ -97,10 +107,6 @@
         {
           "fieldPath": "sort_order",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created",
-          "order": "DESCENDING"
         }
       ]
     },
@@ -109,23 +115,9 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "is_featured",
+          "fieldPath": "is_active",
           "order": "ASCENDING"
         },
-        {
-          "fieldPath": "sort_order",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "products",
-      "queryScope": "COLLECTION",
-      "fields": [
         {
           "fieldPath": "is_new_arrival",
           "order": "ASCENDING"
@@ -133,10 +125,6 @@
         {
           "fieldPath": "sort_order",
           "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "created",
-          "order": "DESCENDING"
         }
       ]
     },

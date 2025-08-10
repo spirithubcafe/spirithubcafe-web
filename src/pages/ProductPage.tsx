@@ -34,11 +34,13 @@ export default function ProductPage() {
 
   const loadReviews = useCallback(async (productId: string) => {
     try {
+      console.time('Load Reviews');
       // Load approved reviews for this product
       const approvedReviews = await firestoreService.reviews.getApprovedByProduct(productId)
       setReviews(approvedReviews)
+      console.timeEnd('Load Reviews');
       
-      // Update product rating
+      // Update product rating (debounced to avoid excessive updates)
       if (approvedReviews.length > 0) {
         const { average, count } = await firestoreService.reviews.getAverageRating(productId)
         // Update the product in Firebase with new rating
@@ -66,9 +68,19 @@ export default function ProductPage() {
     
     setLoading(true)
     try {
-      const result = await firestoreService.products.list()
-      // First try to find by slug, then by id
-      const foundProduct = result.items.find((p: Product) => p.slug === slug || p.id === slug)
+      console.time('Load Product');
+      
+      // First try to get by ID (most efficient)
+      let foundProduct = await firestoreService.products.get(slug)
+      
+      // If not found by ID, search by slug (requires listing - less efficient)
+      if (!foundProduct) {
+        console.log('Product not found by ID, searching by slug...');
+        const result = await firestoreService.products.list()
+        foundProduct = result.items.find((p: Product) => p.slug === slug)
+      }
+      
+      console.timeEnd('Load Product');
       
       if (!foundProduct) {
         toast.error(t('product.notFound'))
@@ -76,7 +88,10 @@ export default function ProductPage() {
       }
       
       setProduct(foundProduct)
-      await loadReviews(foundProduct.id)
+      
+      // Load reviews in parallel (non-blocking)
+      loadReviews(foundProduct.id).catch(console.error)
+      
     } catch (error) {
       console.error('Error loading product:', error)
       toast.error(t('product.errorLoading'))

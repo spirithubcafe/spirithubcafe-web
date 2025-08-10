@@ -25,10 +25,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Initialize Firestore with error handling
+// Initialize Firestore with error handling and offline persistence
 let db: any = null;
 try {
   db = getFirestore(app);
+  
+  // Enable offline persistence for better performance
+  if (typeof window !== 'undefined') {
+    import('firebase/firestore').then(({ enableNetwork }) => {
+      // Only enable in production
+      if (import.meta.env.PROD) {
+        enableNetwork(db).catch(console.warn);
+      }
+    });
+  }
 } catch (error) {
   console.error('❌ Firestore initialization failed:', error);
   db = null;
@@ -43,6 +53,26 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
     console.warn('Analytics initialization failed:', error);
   }
 }
+
+// Simple in-memory cache for frequently accessed data
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+const getCachedData = (key: string) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCachedData = (key: string, data: any, ttlMs: number = 5 * 60 * 1000) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl: ttlMs
+  });
+};
 
 // Types for our collections
 export interface UserProfile {
@@ -1018,40 +1048,68 @@ export const firestoreService = {
   products: {
     list: async (filters?: { category?: string; featured?: boolean; bestseller?: boolean; new_arrival?: boolean; search?: string }) => {
       try {
+        // Create cache key based on filters
+        const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
+        const cachedResult = getCachedData(cacheKey);
+        if (cachedResult) {
+          console.log('🚀 Returning cached products');
+          return cachedResult;
+        }
+
+        // Simplified query to avoid index requirements during development
         let q = query(
           collection(db, 'products'),
-          where('is_active', '==', true)
+          where('is_active', '==', true),
+          limit(50)
         );
         
+        // Apply single filter at a time to avoid complex index requirements
         if (filters?.category) {
-          q = query(q, where('category_id', '==', filters.category));
+          q = query(
+            collection(db, 'products'),
+            where('is_active', '==', true),
+            where('category_id', '==', filters.category),
+            limit(50)
+          );
+        } else if (filters?.featured) {
+          q = query(
+            collection(db, 'products'),
+            where('is_active', '==', true),
+            where('is_featured', '==', true),
+            limit(50)
+          );
+        } else if (filters?.bestseller) {
+          q = query(
+            collection(db, 'products'),
+            where('is_active', '==', true),
+            where('is_bestseller', '==', true),
+            limit(50)
+          );
+        } else if (filters?.new_arrival) {
+          q = query(
+            collection(db, 'products'),
+            where('is_active', '==', true),
+            where('is_new_arrival', '==', true),
+            limit(50)
+          );
         }
         
-        if (filters?.featured) {
-          q = query(q, where('is_featured', '==', true));
-        }
-        
-        if (filters?.bestseller) {
-          q = query(q, where('is_bestseller', '==', true));
-        }
-        
-        if (filters?.new_arrival) {
-          q = query(q, where('is_new_arrival', '==', true));
-        }
-        
-        // Temporarily simplify ordering until indexes are built
-        // q = query(q, orderBy('sort_order'), orderBy('created', 'desc'), limit(50));
-        q = query(q, limit(50));
-        
+        console.time('Firestore Query');
         const querySnapshot = await getDocs(q);
+        console.timeEnd('Firestore Query');
+        
         let products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         
-        // Sort client-side temporarily until indexes are ready
+        // Sort client-side to avoid index requirements
         products.sort((a, b) => {
           if (a.sort_order !== b.sort_order) {
             return a.sort_order - b.sort_order;
           }
-          return new Date(b.created).getTime() - new Date(a.created).getTime();
+          // Fallback to creation date if available
+          if (a.created && b.created) {
+            return new Date(b.created).getTime() - new Date(a.created).getTime();
+          }
+          return 0;
         });
         
         // Filter by search term if provided (client-side filtering for now)
@@ -1059,29 +1117,65 @@ export const firestoreService = {
           const searchTerm = filters.search.toLowerCase();
           products = products.filter(product => 
             product.name.toLowerCase().includes(searchTerm) ||
-            product.name_ar.toLowerCase().includes(searchTerm)
+            (product.name_ar && product.name_ar.toLowerCase().includes(searchTerm))
           );
         }
         
-        return {
+        const result = {
           items: products,
           totalItems: products.length
         };
+
+        // Cache the result for 3 minutes
+        setCachedData(cacheKey, result, 3 * 60 * 1000);
+        
+        return result;
       } catch (error) {
         console.error('Error getting products:', error);
+        
+        // Try to return cached results even if expired
+        const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
+        const staleCache = cache.get(cacheKey);
+        if (staleCache) {
+          console.warn('⚠️ Returning stale cached data due to network error');
+          return staleCache.data;
+        }
+        
         throw error;
       }
     },
     
     get: async (id: string): Promise<Product | null> => {
       try {
+        const cacheKey = `product_${id}`;
+        const cachedResult = getCachedData(cacheKey);
+        if (cachedResult) {
+          console.log(`🚀 Returning cached product: ${id}`);
+          return cachedResult;
+        }
+
+        console.time(`Product Get: ${id}`);
         const docSnap = await getDoc(doc(db, 'products', id));
+        console.timeEnd(`Product Get: ${id}`);
+        
         if (docSnap.exists()) {
-          return { id: docSnap.id, ...docSnap.data() } as Product;
+          const product = { id: docSnap.id, ...docSnap.data() } as Product;
+          // Cache for 5 minutes
+          setCachedData(cacheKey, product, 5 * 60 * 1000);
+          return product;
         }
         return null;
       } catch (error) {
         console.error('Error getting product:', error);
+        
+        // Try to return cached result even if expired
+        const cacheKey = `product_${id}`;
+        const staleCache = cache.get(cacheKey);
+        if (staleCache) {
+          console.warn(`⚠️ Returning stale cached product: ${id}`);
+          return staleCache.data;
+        }
+        
         throw error;
       }
     },

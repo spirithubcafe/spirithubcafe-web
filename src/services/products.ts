@@ -112,7 +112,7 @@ export const productsService = {
   async getOnSaleProducts(limit = 8): Promise<Product[]> {
     try {
       const result = await firestoreService.products.list()
-      const onSaleProducts = result.items.filter(product => product.is_on_sale)
+      const onSaleProducts = result.items.filter((product: any) => product.is_on_sale)
       return onSaleProducts.slice(0, limit)
     } catch (error) {
       console.error('Error fetching on sale products:', error)
@@ -124,7 +124,7 @@ export const productsService = {
   async getRelatedProducts(productId: string, categoryId: string, limit = 4): Promise<Product[]> {
     try {
       const result = await firestoreService.products.list({ category: categoryId })
-      const relatedProducts = result.items.filter(product => product.id !== productId)
+      const relatedProducts = result.items.filter((product: any) => product.id !== productId)
       return relatedProducts.slice(0, limit)
     } catch (error) {
       console.error('Error fetching related products:', error)

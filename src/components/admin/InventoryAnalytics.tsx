@@ -66,7 +66,7 @@ export default function InventoryAnalytics() {
         const totalUsers = allUsers.length
 
         // Low stock products (stock < 10)
-        const lowStockProducts = allProducts.filter(product => 
+        const lowStockProducts = allProducts.filter((product: Product) => 
           (product.stock_quantity || product.stock || 0) < 10
         )
 
@@ -95,11 +95,11 @@ export default function InventoryAnalytics() {
         // Top selling products (mock calculation - would need order items data)
         const topSellingProducts = allProducts
           .slice(0, 5)
-          .map(product => ({
+          .map((product: Product) => ({
             product,
             salesCount: Math.floor(Math.random() * 100) + 1 // Mock data
           }))
-          .sort((a, b) => b.salesCount - a.salesCount)
+          .sort((a: any, b: any) => b.salesCount - a.salesCount)
 
         setAnalyticsData({
           totalRevenue,
