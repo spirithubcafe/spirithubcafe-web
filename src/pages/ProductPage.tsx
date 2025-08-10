@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Star, ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
-import { firestoreService, type Product, type ProductReview } from '@/lib/firebase'
+import { firestoreService, type Product, type ProductReview, getProductPriceDetails } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { ProductReviews } from '@/components/product-reviews'
 import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
@@ -196,134 +196,25 @@ export default function ProductPage() {
     }
   }
 
+  // Get detailed pricing information including sale status
+  const priceDetails = useMemo(() => {
+    if (!product) return {
+      finalPrice: 0,
+      originalPrice: 0,
+      isOnSale: false,
+      discountAmount: 0,
+      discountPercentage: 0
+    }
+
+    // Get currency mapping
+    const currencyKey = currency === 'OMR' ? 'omr' : currency === 'SAR' ? 'sar' : 'usd'
+    
+    return getProductPriceDetails(product, selectedProperties, currencyKey)
+  }, [product, selectedProperties, currency])
+
+
   const getProductPrice = (): number => {
-    if (!product) return 0
-    
-    // If product has properties with pricing, try property-based pricing first
-    if (product.properties && product.properties.some(p => p.affects_price && p.options && p.options.length > 0)) {
-      const price = getPropertyBasedPrice()
-      
-      // If property-based pricing returned a valid price, use it
-      if (price > 0) {
-        return price
-      }
-    }
-    
-    // Fallback to base pricing for products without property-based pricing or when property pricing fails
-    let baseSalePrice: number
-    
-    switch (currency) {
-      case 'OMR':
-        baseSalePrice = product.sale_price_omr || product.price_omr || 0
-        break
-      case 'SAR':
-        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 9.75 : (product.price_omr || 0) * 9.75)
-        break
-      case 'USD':
-      default:
-        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : (product.price_omr || 0) * 2.6)
-        break
-    }
-
-    return baseSalePrice
-  }
-
-  const getPropertyBasedPrice = (): number => {
-    if (!product || !product.properties) return 0
-
-    // Find properties that affect price
-    const pricingProperties = product.properties.filter(p => p.affects_price && p.options && p.options.length > 0)
-    
-    if (pricingProperties.length === 0) return 0
-
-    // If user has selected properties, use the first property that affects price
-    if (Object.keys(selectedProperties).length > 0) {
-      for (const property of pricingProperties) {
-        const selectedValue = selectedProperties[property.name]
-        
-        if (selectedValue) {
-          const option = property.options.find(opt => opt.value === selectedValue)
-          if (option) {
-            // Check for absolute prices first (new system)
-            let price = 0
-            if (currency === 'OMR') {
-              if (option.price_omr) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
-              } else if (option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_omr || option.price_modifier || 0
-                price = modifier
-              }
-            } else if (currency === 'SAR') {
-              if (option.price_sar) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
-              } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
-                price = modifier
-              }
-            } else {
-              if (option.price_usd) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
-              } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
-                price = modifier
-              }
-            }
-            
-            // If property option has valid price, return it
-            if (price > 0) {
-              return price
-            }
-          }
-        }
-      }
-    }
-
-    // If no properties selected or no valid price found, use first option of first property
-    const firstProperty = pricingProperties[0]
-    if (firstProperty && firstProperty.options.length > 0) {
-      const firstOption = firstProperty.options[0]
-      // Check for absolute prices first (new system)
-      let price = 0
-      if (currency === 'OMR') {
-        if (firstOption.price_omr) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
-        } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
-          price = modifier
-        }
-      } else if (currency === 'SAR') {
-        if (firstOption.price_sar) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
-        } else if (firstOption.price_modifier_sar || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_sar || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 9.75
-          price = modifier
-        }
-      } else {
-        if (firstOption.price_usd) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
-        } else if (firstOption.price_modifier_usd || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_usd || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 2.6
-          price = modifier
-        }
-      }
-      
-      // Return the price if valid
-      return price > 0 ? price : 0
-    }
-
-    return 0
+    return priceDetails.finalPrice
   }
 
   const getProductBadges = () => {
@@ -511,6 +402,39 @@ export default function ProductPage() {
               className="py-0"
             />
 
+            {/* Price Display */}
+            <Card>
+              <CardContent className="p-4 sm:p-6">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold">{t('product.price')}</h3>
+                  <div className="flex items-center gap-3">
+                    {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
+                      <>
+                        <span className="text-3xl font-bold text-red-600">
+                          {formatPrice(priceDetails.finalPrice)}
+                        </span>
+                        <span className="text-xl text-muted-foreground line-through">
+                          {formatPrice(priceDetails.originalPrice)}
+                        </span>
+                        <Badge variant="destructive" className="text-sm">
+                          -{priceDetails.discountPercentage}%
+                        </Badge>
+                      </>
+                    ) : (
+                      <span className="text-3xl font-bold text-amber-600">
+                        {formatPrice(priceDetails.finalPrice)}
+                      </span>
+                    )}
+                  </div>
+                  {priceDetails.isOnSale && priceDetails.discountAmount > 0 && (
+                    <p className="text-sm text-green-600 font-medium">
+                      {t('product.youSave')} {formatPrice(priceDetails.discountAmount)}
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
               <Card className="py-0">
@@ -530,17 +454,19 @@ export default function ProductPage() {
                             
                             if (currency === 'OMR') {
                               regularPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
-                              salePrice = option.sale_price_omr || 0
+                              salePrice = option.sale_price_omr || option.sale_price_modifier_omr || 0
                             } else if (currency === 'SAR') {
                               regularPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
-                              salePrice = option.sale_price_sar || 0
+                              salePrice = option.sale_price_sar || (option.sale_price_modifier_sar || (option.sale_price_modifier_omr || 0) * 9.75)
                             } else {
                               regularPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
-                              salePrice = option.sale_price_usd || 0
+                              salePrice = option.sale_price_usd || (option.sale_price_modifier_usd || (option.sale_price_modifier_omr || 0) * 2.6)
                             }
                             
-                            const displayPrice = (option.on_sale && salePrice > 0) ? salePrice : regularPrice
-                            const hasDiscount = option.on_sale && salePrice > 0 && salePrice < regularPrice
+                            const isOnSale = option.on_sale
+                            
+                            const finalPrice = isOnSale ? salePrice : regularPrice
+                            const hasDiscount = isOnSale && salePrice < regularPrice
                             
                             if (regularPrice > 0) {
                               return (
@@ -550,13 +476,13 @@ export default function ProductPage() {
                                       <span className="line-through text-muted-foreground">
                                         ({formatPrice(regularPrice)})
                                       </span>
-                                      <span className="text-red-600 ml-1">
-                                        ({formatPrice(displayPrice)})
+                                      <span className="text-red-600 ml-1 font-semibold">
+                                        ({formatPrice(finalPrice)})
                                       </span>
                                     </>
                                   ) : (
                                     <span className="text-muted-foreground">
-                                      ({formatPrice(displayPrice)})
+                                      ({formatPrice(finalPrice)})
                                     </span>
                                   )}
                                 </span>

@@ -140,7 +140,9 @@
     "coffeeProperties": "خصائص القهوة",
     "required": "مطلوب",
     "pleaseSelectRequired": "يرجى اختيار الخصائص المطلوبة",
-    "selectionSummary": "ملخص الاختيارات"
+    "selectionSummary": "ملخص الاختيارات",
+    "price": "السعر",
+    "youSave": "توفر:"
   },
   "auth": {
     "login": {

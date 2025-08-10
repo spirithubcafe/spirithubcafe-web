@@ -156,6 +156,8 @@ export interface Product {
   sale_price_omr?: number; 
   sale_price_usd?: number; 
   sale_price_sar?: number; 
+  sale_start_date?: string;
+  sale_end_date?: string;
   image?: string;
   image_url?: string;
   images?: string[];
@@ -366,7 +368,7 @@ export function getProductFinalPrice(
       if (property && property.affects_price) {
         const option = property.options.find(opt => opt.value === selectedOption.option_value)
         if (option) {
-          // Check if option has absolute prices (new system) or modifiers (old system)
+          // Check if option has sale price and is currently on sale
           const isOnSale = option.on_sale && 
             (!option.sale_start_date || new Date(option.sale_start_date) <= new Date()) &&
             (!option.sale_end_date || new Date(option.sale_end_date) >= new Date())
@@ -422,6 +424,7 @@ export function getProductFinalPrice(
     if (firstProperty && firstProperty.options.length > 0) {
       const firstOption = firstProperty.options[0]
       
+      // Check if option has sale price and is currently on sale
       const isOnSale = firstOption.on_sale && 
         (!firstOption.sale_start_date || new Date(firstOption.sale_start_date) <= new Date()) &&
         (!firstOption.sale_end_date || new Date(firstOption.sale_end_date) >= new Date())
@@ -486,6 +489,149 @@ export function getProductFinalPrice(
       case 'sar': return product.price_sar || 0;
       default: return product.price_omr || 0;
     }
+  }
+}
+
+// Function to get detailed pricing information including sale status
+export function getProductPriceDetails(
+  product: Product, 
+  selectedProperties: Record<string, string> = {}, 
+  currency: 'omr' | 'usd' | 'sar' = 'omr'
+): {
+  finalPrice: number
+  originalPrice: number
+  isOnSale: boolean
+  discountAmount: number
+  discountPercentage: number
+} {
+  const pricingProperties = product.properties?.filter(p => p.affects_price && p.options && p.options.length > 0) || []
+  
+  if (pricingProperties.length > 0) {
+    // Use property-based pricing
+    for (const property of pricingProperties) {
+      const selectedValue = selectedProperties[property.name]
+      if (selectedValue) {
+        const option = property.options.find(opt => opt.value === selectedValue)
+        if (option) {
+          const isOnSale = option.on_sale
+          
+          let originalPrice = 0
+          let salePrice = 0
+          
+          switch (currency) {
+            case 'usd':
+              originalPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+              salePrice = option.sale_price_usd || (option.sale_price_modifier_usd || (option.sale_price_modifier_omr || 0) * 2.6)
+              break
+            case 'sar':
+              originalPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
+              salePrice = option.sale_price_sar || (option.sale_price_modifier_sar || (option.sale_price_modifier_omr || 0) * 9.75)
+              break
+            default: // omr
+              originalPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
+              salePrice = option.sale_price_omr || option.sale_price_modifier_omr || 0
+              break
+          }
+          
+          const finalPrice = isOnSale && salePrice > 0 ? salePrice : originalPrice
+          const discountAmount = isOnSale && salePrice > 0 && salePrice < originalPrice ? originalPrice - salePrice : 0
+          const discountPercentage = discountAmount > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0
+          
+          // Debug log
+          console.log('🔍 Property Option Pricing:', {
+            optionValue: option.value,
+            isOnSale,
+            originalPrice,
+            salePrice,
+            finalPrice,
+            discountAmount,
+            discountPercentage,
+            currency
+          })
+          
+          return {
+            finalPrice,
+            originalPrice,
+            isOnSale: !!(isOnSale && salePrice > 0 && salePrice < originalPrice),
+            discountAmount,
+            discountPercentage
+          }
+        }
+      }
+    }
+    
+    // Fallback to first option if no selection
+    const firstProperty = pricingProperties[0]
+    if (firstProperty && firstProperty.options.length > 0) {
+      const firstOption = firstProperty.options[0]
+      
+      const isOnSale = firstOption.on_sale
+      
+      let originalPrice = 0
+      let salePrice = 0
+      
+      switch (currency) {
+        case 'usd':
+          originalPrice = firstOption.price_usd || (firstOption.price_modifier_usd || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 2.6)
+          salePrice = firstOption.sale_price_usd || (firstOption.sale_price_modifier_usd || (firstOption.sale_price_modifier_omr || 0) * 2.6)
+          break
+        case 'sar':
+          originalPrice = firstOption.price_sar || (firstOption.price_modifier_sar || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 9.75)
+          salePrice = firstOption.sale_price_sar || (firstOption.sale_price_modifier_sar || (firstOption.sale_price_modifier_omr || 0) * 9.75)
+          break
+        default: // omr
+          originalPrice = firstOption.price_omr || (firstOption.price_modifier_omr || firstOption.price_modifier || 0)
+          salePrice = firstOption.sale_price_omr || firstOption.sale_price_modifier_omr || 0
+          break
+      }
+      
+      const finalPrice = isOnSale && salePrice > 0 ? salePrice : originalPrice
+      const discountAmount = isOnSale && salePrice > 0 && salePrice < originalPrice ? originalPrice - salePrice : 0
+      const discountPercentage = discountAmount > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0
+      
+      return {
+        finalPrice,
+        originalPrice,
+        isOnSale: !!(isOnSale && salePrice > 0 && salePrice < originalPrice),
+        discountAmount,
+        discountPercentage
+      }
+    }
+  }
+  
+  // Fallback to base product price
+  let basePrice = 0
+  let baseSalePrice = 0
+  
+  switch (currency) {
+    case 'usd':
+      basePrice = product.price_usd || 0
+      baseSalePrice = product.sale_price_usd || 0
+      break
+    case 'sar':
+      basePrice = product.price_sar || 0
+      baseSalePrice = product.sale_price_sar || 0
+      break
+    default: // omr
+      basePrice = product.price_omr || 0
+      baseSalePrice = product.sale_price_omr || 0
+      break
+  }
+  
+  const isProductOnSale = product.is_on_sale && baseSalePrice > 0 &&
+    (!product.sale_start_date || new Date(product.sale_start_date) <= new Date()) &&
+    (!product.sale_end_date || new Date(product.sale_end_date) >= new Date())
+  
+  const finalPrice = isProductOnSale && baseSalePrice < basePrice ? baseSalePrice : basePrice
+  const discountAmount = isProductOnSale && baseSalePrice < basePrice ? basePrice - baseSalePrice : 0
+  const discountPercentage = discountAmount > 0 ? Math.round((discountAmount / basePrice) * 100) : 0
+  
+  return {
+    finalPrice,
+    originalPrice: basePrice,
+    isOnSale: !!(isProductOnSale && baseSalePrice < basePrice),
+    discountAmount,
+    discountPercentage
   }
 }
 

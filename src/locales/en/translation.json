@@ -109,7 +109,9 @@
     "coffeeProperties": "Coffee Properties",
     "required": "Required",
     "pleaseSelectRequired": "Please select required properties",
-    "selectionSummary": "Selection Summary"
+    "selectionSummary": "Selection Summary",
+    "price": "Price",
+    "youSave": "You save:"
   },
   "auth": {
     "login": {
