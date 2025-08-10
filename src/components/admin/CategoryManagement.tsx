@@ -604,15 +604,17 @@ export default function CategoryManagement() {
                   <div className="space-y-2">
                     <Label className="text-sm">{isArabic ? 'معاينة الصورة' : 'Image Preview'}</Label>
                     <div className="relative inline-block">
-                      <img
-                        src={formData.image}
-                        alt="Category preview"
-                        className="w-24 h-24 object-cover rounded-lg border"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = '/images/placeholder-category.png'
-                        }}
-                      />
+                      <div className="w-24 h-24 aspect-square overflow-hidden rounded-lg border">
+                        <img
+                          src={formData.image}
+                          alt="Category preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = '/images/placeholder-category.png'
+                          }}
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, image: '' }))}

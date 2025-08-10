@@ -307,7 +307,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`flex-shrink-0 w-16 h-16 aspect-square rounded-lg overflow-hidden border-2 transition-colors ${
                       selectedImage === index ? 'border-amber-500' : 'border-gray-200'
                     }`}
                   >

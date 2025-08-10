@@ -728,15 +728,17 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                 <div className="space-y-2">
                   <Label>{isArabic ? 'الصورة الرئيسية الحالية' : 'Current Main Image'}</Label>
                   <div className="relative inline-block">
-                    <img
-                      src={form.image}
-                      alt="Main product image"
-                      className="w-32 h-32 object-cover rounded-lg border"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = '/images/placeholder-product.png'
-                      }}
-                    />
+                    <div className="w-32 h-32 aspect-square overflow-hidden rounded-lg border">
+                      <img
+                        src={form.image}
+                        alt="Main product image"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/images/placeholder-product.png'
+                        }}
+                      />
+                    </div>
                     <button
                       onClick={() => setForm(prev => ({ ...prev, image: '' }))}
                       className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
@@ -836,15 +838,17 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {form.gallery.map((image, index) => (
                       <div key={index} className="relative">
-                        <img
-                          src={image}
-                          alt={`Gallery image ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg border"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.src = '/images/placeholder-product.png'
-                          }}
-                        />
+                        <div className="aspect-square overflow-hidden rounded-lg border">
+                          <img
+                            src={image}
+                            alt={`Gallery image ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/images/placeholder-product.png'
+                            }}
+                          />
+                        </div>
                         <button
                           onClick={() => removeGalleryImage(index)}
                           className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"

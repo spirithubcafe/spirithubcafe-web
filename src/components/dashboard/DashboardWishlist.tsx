@@ -118,11 +118,13 @@ export default function DashboardWishlist() {
               return (
                 <div key={product.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                   <Link to={`/product/${product.slug || product.id}`} className="flex-shrink-0">
-                    <img
-                      src={product.image || product.image_url || '/api/placeholder/64/64'}
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
+                    <div className="w-16 h-16 aspect-square overflow-hidden rounded">
+                      <img
+                        src={product.image || product.image_url || '/api/placeholder/64/64'}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </Link>
                   
                   <div className="flex-1 min-w-0">

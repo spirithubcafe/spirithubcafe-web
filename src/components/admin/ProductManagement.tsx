@@ -335,7 +335,7 @@ export default function ProductManagement() {
               <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0">
                 <CardContent className="p-4">
                   {/* Product Image */}
-                  <div className="relative h-32 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
+                  <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
                     {product.image ? (
                       <img 
                         src={product.image} 
@@ -446,7 +446,7 @@ export default function ProductManagement() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     {/* Product Image */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-16 h-16 aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg overflow-hidden flex-shrink-0">
                       {product.image ? (
                         <img 
                           src={product.image} 
@@ -584,20 +584,23 @@ export default function ProductManagement() {
               {/* Basic Product Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <img 
-                    src={viewingProduct.image || viewingProduct.image_url || '/placeholder.jpg'} 
-                    alt={viewingProduct.name}
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
+                  <div className="aspect-square overflow-hidden rounded-lg bg-muted">
+                    <img 
+                      src={viewingProduct.image || viewingProduct.image_url || '/placeholder.jpg'} 
+                      alt={viewingProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   {viewingProduct.gallery && viewingProduct.gallery.length > 0 && (
                     <div className="mt-2 grid grid-cols-4 gap-2">
                       {viewingProduct.gallery.slice(0, 4).map((img, idx) => (
-                        <img 
-                          key={idx}
-                          src={img} 
-                          alt={`Gallery ${idx + 1}`}
-                          className="w-full h-12 object-cover rounded"
-                        />
+                        <div key={idx} className="aspect-square overflow-hidden rounded">
+                          <img 
+                            src={img} 
+                            alt={`Gallery ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
