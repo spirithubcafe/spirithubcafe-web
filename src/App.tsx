@@ -17,8 +17,8 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import CheckoutPage from '@/pages/CheckoutPage'
 import DashboardPage from '@/pages/DashboardPage'
-import { AdminPage } from '@/pages/AdminPage'
 import { WishlistPage } from '@/pages/WishlistPage'
+import { HeroSlidePage } from '@/pages/HeroSlidePage'
 import './App.css'
 
 function App() {
@@ -58,10 +58,18 @@ function App() {
                       } 
                     />
                     <Route 
-                      path="/admin" 
+                      path="/hero-slide/add" 
                       element={
-                        <ProtectedRoute requiredRole="admin">
-                          <AdminPage />
+                        <ProtectedRoute>
+                          <HeroSlidePage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/hero-slide/edit/:id" 
+                      element={
+                        <ProtectedRoute>
+                          <HeroSlidePage />
                         </ProtectedRoute>
                       } 
                     />

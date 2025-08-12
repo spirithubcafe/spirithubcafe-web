@@ -322,6 +322,14 @@
       "edit": "تحرير"
     },
     "admin": {
+      "sidebar": {
+        "dashboard": "لوحة التحكم",
+        "users": "إدارة المستخدمين",
+        "heroSlider": "شريط العرض الرئيسي", 
+        "products": "المنتجات",
+        "orders": "الطلبات",
+        "analytics": "التحليلات"
+      },
       "userManagement": "إدارة المستخدمين",
       "userManagementDesc": "إدارة حسابات المستخدمين والأدوار",
       "productManagement": "إدارة المنتجات",

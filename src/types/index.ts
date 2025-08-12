@@ -513,6 +513,54 @@ export interface Settings {
   updated_at: string
 }
 
+// Hero Slide Interface
+export interface HeroSlide {
+  id: string
+  title: string
+  title_ar?: string
+  subtitle?: string
+  subtitle_ar?: string
+  description?: string
+  description_ar?: string
+  media_type: 'image' | 'video'
+  media_url: string
+  media_thumbnail?: string // For videos
+  blur_intensity: number // 0-100
+  brightness: number // 0-200, default 100
+  contrast: number // 0-200, default 100
+  saturation: number // 0-200, default 100
+  button_text?: string
+  button_text_ar?: string
+  button_link?: string
+  button_variant?: 'primary' | 'secondary' | 'outline'
+  secondary_button_text?: string
+  secondary_button_text_ar?: string
+  secondary_button_link?: string
+  text_position: 'left' | 'center' | 'right'
+  text_alignment: 'left' | 'center' | 'right'
+  overlay_opacity: number // 0-100
+  overlay_color: string // hex color
+  is_active: boolean
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+// Hero Settings Interface
+export interface HeroSettings {
+  autoplay: boolean
+  autoplay_delay: number // in milliseconds
+  show_arrows: boolean
+  show_dots: boolean
+  show_progress: boolean
+  transition_effect: 'slide' | 'fade' | 'zoom'
+  transition_duration: number // in milliseconds
+  enable_swipe: boolean
+  pause_on_hover: boolean
+  infinite_loop: boolean
+  slides: HeroSlide[]
+}
+
 // Inventory Movement Interface
 export interface InventoryMovement {
   id: number

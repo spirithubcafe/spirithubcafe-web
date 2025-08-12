@@ -3,8 +3,9 @@ import { ArrowRight, Star, Clock, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { firestoreService, type Product } from '@/lib/firebase'
 import { HTMLContent } from '@/components/ui/html-content'
@@ -14,8 +15,6 @@ import { conversionRates } from '@/lib/currency'
 
 export function HomePage() {
   const { t } = useTranslation()
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const [textVisible, setTextVisible] = useState(false)
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const { formatPrice, currency } = useCurrency()
@@ -34,16 +33,6 @@ export function HomePage() {
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
-
-  useEffect(() => {
-    const video = videoRef.current
-    if (video) {
-      video.addEventListener('loadeddata', () => {
-        // Start text animation after video loads
-        setTimeout(() => setTextVisible(true), 1000)
-      })
-    }
-  }, [])
 
   // Load featured products (products with discounts or high ratings)
   useEffect(() => {
@@ -74,93 +63,8 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Hero Section */}
-      <section className="relative w-full min-h-screen flex items-center overflow-hidden">
-        {/* Video Background */}
-        <div className="absolute inset-0 z-0">
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className={`w-full h-full object-cover transition-all duration-[4000ms] ease-out ${
-              textVisible ? 'blur-[6px] scale-105' : 'blur-[12px] scale-110'
-            }`}
-            style={{
-              filter: `blur(${textVisible ? '6px' : '12px'}) brightness(0.5) contrast(1.3) saturate(0.8)`
-            }}
-          >
-            <source src="/video/back.mp4" type="video/mp4" />
-          </video>
-          
-          {/* Enhanced overlay gradients for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/70"></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/60"></div>
-          
-          {/* Additional overlay when text is visible */}
-          <div className={`absolute inset-0 bg-black/20 transition-opacity duration-2000 ${
-            textVisible ? 'opacity-100' : 'opacity-0'
-          }`}></div>
-          
-          {/* Animated particles overlay */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(251,191,36,0.1),transparent_50%)]"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(249,115,22,0.08),transparent_50%)]"></div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="w-full relative z-10 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto text-center space-y-8">
-            <div className={`space-y-6 transition-all duration-1000 ease-out ${
-              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
-              <div className="inline-flex items-center px-6 py-3 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-sm font-medium shadow-xl">
-                <img 
-                  src="/images/logo-s.png" 
-                  alt="SpiritHub Cafe Logo" 
-                  className="h-5 w-5 mr-2 object-contain no-flip"
-                />
-                {t('homepage.hero.badge', 'Premium Coffee Experience')}
-              </div>
-              
-              <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white drop-shadow-2xl text-shadow-coffee leading-relaxed">
-                <span className="block bg-gradient-to-r from-amber-200 via-orange-200 to-yellow-200 bg-clip-text text-transparent">
-                  {t('homepage.hero.title')}
-                </span>
-              </h1>
-            </div>
-            
-            <div className={`space-y-6 transition-all duration-1000 ease-out delay-300 ${
-              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
-              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
-                {t('homepage.hero.subtitle')}
-              </p>
-              <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
-                {t('homepage.hero.description')}
-              </p>
-            </div>
-            
-            <div className={`flex flex-col sm:flex-row gap-4 justify-center pt-6 transition-all duration-1000 ease-out delay-500 ${
-              textVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            }`}>
-              <Button asChild size="lg" className="btn-coffee shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm">
-                <Link to="/shop" className="flex items-center justify-center">
-                  {t('homepage.hero.shopNow')}
-                  <ArrowRight className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 no-flip" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" className="border-white/30 text-coffee-dark hover:bg-white/30 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300" asChild>
-                <Link to="/about">
-                  {t('homepage.hero.aboutUs', 'About Us')}
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Section with Advanced Slider */}
+      <HeroSlider />
 
       {/* Features Section */}
       <section className="py-20 lg:py-32 bg-gradient-to-b from-background via-muted/10 to-accent/5 bg-coffee-pattern w-full">

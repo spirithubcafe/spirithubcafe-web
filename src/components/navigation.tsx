@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, LogOut, ShoppingCart, Heart } from 'lucide-react'
+import { Menu, X, User, LogOut, ShoppingCart, Heart, Crown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -366,6 +366,17 @@ export function Navigation() {
                           {t('navigation.dashboard')}
                         </Link>
                       </Button>
+                      {auth.currentUser?.role === 'admin' && (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
+                            "flex items-center gap-2 justify-center",
+                            isArabic ? "flex-row-reverse" : "flex-row"
+                          )}>
+                            <Crown className="h-4 w-4" />
+                            {isArabic ? 'الإدارة' : 'Admin Panel'}
+                          </Link>
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className={cn(
                           "flex items-center gap-2 justify-center relative",

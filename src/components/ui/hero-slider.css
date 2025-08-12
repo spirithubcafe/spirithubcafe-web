@@ -1,0 +1,57 @@
+/* Hero Slider Styles */
+.hero-slider-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 1000ms ease-out;
+}
+
+.hero-slider-progress {
+  transition: all 100ms linear;
+}
+
+/* Dynamic Filter Classes */
+.hero-filter-blur-0 { filter: blur(0px); }
+.hero-filter-blur-1 { filter: blur(1px); }
+.hero-filter-blur-2 { filter: blur(2px); }
+.hero-filter-blur-3 { filter: blur(3px); }
+.hero-filter-blur-4 { filter: blur(4px); }
+.hero-filter-blur-5 { filter: blur(5px); }
+.hero-filter-blur-6 { filter: blur(6px); }
+.hero-filter-blur-7 { filter: blur(7px); }
+.hero-filter-blur-8 { filter: blur(8px); }
+.hero-filter-blur-9 { filter: blur(9px); }
+.hero-filter-blur-10 { filter: blur(10px); }
+.hero-filter-blur-12 { filter: blur(12px); }
+.hero-filter-blur-15 { filter: blur(15px); }
+.hero-filter-blur-20 { filter: blur(20px); }
+
+/* Brightness Classes */
+.hero-brightness-0 { filter: brightness(0%); }
+.hero-brightness-25 { filter: brightness(25%); }
+.hero-brightness-50 { filter: brightness(50%); }
+.hero-brightness-75 { filter: brightness(75%); }
+.hero-brightness-100 { filter: brightness(100%); }
+.hero-brightness-125 { filter: brightness(125%); }
+.hero-brightness-150 { filter: brightness(150%); }
+.hero-brightness-200 { filter: brightness(200%); }
+
+/* Contrast Classes */
+.hero-contrast-0 { filter: contrast(0%); }
+.hero-contrast-25 { filter: contrast(25%); }
+.hero-contrast-50 { filter: contrast(50%); }
+.hero-contrast-75 { filter: contrast(75%); }
+.hero-contrast-100 { filter: contrast(100%); }
+.hero-contrast-125 { filter: contrast(125%); }
+.hero-contrast-150 { filter: contrast(150%); }
+.hero-contrast-200 { filter: contrast(200%); }
+
+/* Saturation Classes */
+.hero-saturate-0 { filter: saturate(0%); }
+.hero-saturate-25 { filter: saturate(25%); }
+.hero-saturate-50 { filter: saturate(50%); }
+.hero-saturate-75 { filter: saturate(75%); }
+.hero-saturate-100 { filter: saturate(100%); }
+.hero-saturate-125 { filter: saturate(125%); }
+.hero-saturate-150 { filter: saturate(150%); }
+.hero-saturate-200 { filter: saturate(200%); }

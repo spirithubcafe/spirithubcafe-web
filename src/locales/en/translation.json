@@ -291,6 +291,14 @@
       "edit": "Edit"
     },
     "admin": {
+      "sidebar": {
+        "dashboard": "Dashboard",
+        "users": "Users Management", 
+        "heroSlider": "Hero Slider",
+        "products": "Products",
+        "orders": "Orders",
+        "analytics": "Analytics"
+      },
       "userManagement": "User Management",
       "userManagementDesc": "Manage user accounts and roles",
       "productManagement": "Product Management",

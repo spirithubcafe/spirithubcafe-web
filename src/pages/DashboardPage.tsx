@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   MessageSquare,
-  Globe
+  Globe,
+  Presentation
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +38,7 @@ import ReviewManagement from '@/components/admin/ReviewManagement'
 import OrderManagement from '@/components/admin/OrderManagement'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
+import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -178,6 +180,12 @@ export default function DashboardPage() {
         show: true
       },
       {
+        id: 'hero-slider',
+        label: isArabic ? 'شريط العرض الرئيسي' : 'Hero Slider',
+        icon: Presentation,
+        show: true
+      },
+      {
         id: 'categories',
         label: isArabic ? 'الفئات' : 'Categories',
         icon: Tags,
@@ -241,6 +249,8 @@ export default function DashboardPage() {
             loading={loading}
           />
         )
+      case 'hero-slider':
+        return user?.role === 'admin' && <HeroSlideManagement />
       case 'categories':
         return user?.role === 'admin' && <CategoryManagement />
       case 'products':
