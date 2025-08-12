@@ -43,6 +43,7 @@ export function HeroSlidePage() {
     brightness: 100,
     contrast: 100,
     saturation: 100,
+    duration: 5, // Default 5 seconds
     button_text: '',
     button_text_ar: '',
     button_link: '',
@@ -78,6 +79,7 @@ export function HeroSlidePage() {
           brightness: slide.brightness || 100,
           contrast: slide.contrast || 100,
           saturation: slide.saturation || 100,
+          duration: slide.duration || 5,
           button_text: slide.button_text || '',
           button_text_ar: slide.button_text_ar || '',
           button_link: slide.button_link || '',
@@ -431,7 +433,7 @@ export function HeroSlidePage() {
               <Label>{isRTL ? 'نوع الوسائط' : 'Media Type'}</Label>
               <Select
                 value={slideForm.media_type}
-                onValueChange={(value: 'image' | 'video') => handleInputChange('media_type', value)}
+                onValueChange={(value) => handleInputChange('media_type', value as 'image' | 'video')}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -612,6 +614,27 @@ export function HeroSlidePage() {
                   title={isRTL ? `التشبع: ${slideForm.saturation}%` : `Saturation: ${slideForm.saturation}%`}
                 />
               </div>
+
+              {/* Duration */}
+              <div className="space-y-2">
+                <Label htmlFor="duration">
+                  {isRTL ? `مدة العرض: ${slideForm.duration} ثانية` : `Display Duration: ${slideForm.duration} seconds`}
+                </Label>
+                <input
+                  type="range"
+                  id="duration"
+                  min="2"
+                  max="15"
+                  value={slideForm.duration}
+                  onChange={(e) => handleInputChange('duration', parseInt(e.target.value))}
+                  className="w-full h-2 bg-amber-200 rounded-lg appearance-none cursor-pointer"
+                  title={isRTL ? `مدة العرض: ${slideForm.duration} ثانية` : `Display Duration: ${slideForm.duration} seconds`}
+                />
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>{isRTL ? 'سريع (2 ثانية)' : 'Fast (2s)'}</span>
+                  <span>{isRTL ? 'بطيء (15 ثانية)' : 'Slow (15s)'}</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -660,7 +683,7 @@ export function HeroSlidePage() {
               <Label>{isRTL ? 'نمط الزر الأساسي' : 'Primary Button Style'}</Label>
               <Select
                 value={slideForm.button_variant}
-                onValueChange={(value: 'primary' | 'secondary' | 'outline') => handleInputChange('button_variant', value)}
+                onValueChange={(value) => handleInputChange('button_variant', value as 'primary' | 'secondary' | 'outline')}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -723,7 +746,7 @@ export function HeroSlidePage() {
               <Label>{isRTL ? 'موضع النص' : 'Text Position'}</Label>
               <Select
                 value={slideForm.text_position}
-                onValueChange={(value: 'left' | 'center' | 'right') => handleInputChange('text_position', value)}
+                onValueChange={(value) => handleInputChange('text_position', value as 'left' | 'center' | 'right')}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -740,7 +763,7 @@ export function HeroSlidePage() {
               <Label>{isRTL ? 'محاذاة النص' : 'Text Alignment'}</Label>
               <Select
                 value={slideForm.text_alignment}
-                onValueChange={(value: 'left' | 'center' | 'right') => handleInputChange('text_alignment', value)}
+                onValueChange={(value) => handleInputChange('text_alignment', value as 'left' | 'center' | 'right')}
               >
                 <SelectTrigger>
                   <SelectValue />

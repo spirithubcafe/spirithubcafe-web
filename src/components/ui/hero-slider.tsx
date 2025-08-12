@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
@@ -40,7 +40,10 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     loadSettings()
   }, [])
 
-  const activeSlides = settings?.slides.filter(slide => slide.is_active) || []
+  const activeSlides = useMemo(() => 
+    settings?.slides.filter(slide => slide.is_active) || [], 
+    [settings?.slides]
+  )
 
   // Auto-play functionality
   const nextSlide = useCallback(() => {
@@ -79,14 +82,19 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
       return
     }
 
-    autoplayTimer.current = setInterval(nextSlide, settings.autoplay_delay)
+    // Get current slide duration (in seconds) or use default autoplay_delay (in ms)
+    const currentSlideDuration = activeSlides[currentSlide]?.duration 
+      ? activeSlides[currentSlide].duration * 1000 // Convert seconds to milliseconds
+      : settings.autoplay_delay
+
+    autoplayTimer.current = setInterval(nextSlide, currentSlideDuration)
     
     return () => {
       if (autoplayTimer.current) {
         clearInterval(autoplayTimer.current)
       }
     }
-  }, [settings, isPlaying, isHovered, nextSlide])
+  }, [settings, isPlaying, isHovered, nextSlide, currentSlide, activeSlides])
 
   // Progress bar animation
   useEffect(() => {
@@ -96,9 +104,12 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     }
 
     setLoadProgress(0)
-    const duration = settings.autoplay_delay
+    // Get current slide duration (in seconds) or use default autoplay_delay (in ms)
+    const currentSlideDuration = activeSlides[currentSlide]?.duration 
+      ? activeSlides[currentSlide].duration * 1000 // Convert seconds to milliseconds
+      : settings.autoplay_delay
     const interval = 50
-    const increment = (interval / duration) * 100
+    const increment = (interval / currentSlideDuration) * 100
 
     progressTimer.current = setInterval(() => {
       setLoadProgress(prev => {
@@ -114,7 +125,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
         clearInterval(progressTimer.current)
       }
     }
-  }, [settings, isPlaying, isHovered, currentSlide])
+  }, [settings, isPlaying, isHovered, currentSlide, activeSlides])
 
   // Initialize text animation
   useEffect(() => {
@@ -174,10 +185,20 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
 
   if (!settings || activeSlides.length === 0) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-br from-gray-900 to-gray-700 flex items-center justify-center">
-        <div className="text-white text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>{t('common.loading', 'Loading...')}</p>
+      <div className="w-full min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="relative mx-auto mb-8 w-16 h-16">
+            <div className="hero-loading-spinner mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-xl opacity-60">☕</span>
+            </div>
+          </div>
+          <h3 className="text-foreground font-semibold text-xl mb-2">
+            {t('common.loading', 'Loading...')}
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            {isRTL ? 'جاري تحضير تجربتك المميزة...' : 'Preparing your premium experience...'}
+          </p>
         </div>
       </div>
     )
@@ -333,9 +354,8 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
                 )}
                 {currentSlideData.secondary_button_text && (
                   <Button 
-                    variant="outline" 
                     size="lg" 
-                    className="border-white/30 text-white hover:bg-white/20 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300" 
+                    className="hero-secondary-btn shadow-lg hover:shadow-xl transition-all duration-300" 
                     asChild
                   >
                     <a href={currentSlideData.secondary_button_link || '#'}>

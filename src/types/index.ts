@@ -529,6 +529,7 @@ export interface HeroSlide {
   brightness: number // 0-200, default 100
   contrast: number // 0-200, default 100
   saturation: number // 0-200, default 100
+  duration: number // Display duration in seconds, default 5
   button_text?: string
   button_text_ar?: string
   button_link?: string

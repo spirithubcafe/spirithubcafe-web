@@ -159,6 +159,7 @@ class HeroService {
           brightness: 50,
           contrast: 130,
           saturation: 80,
+          duration: 6,
           button_text: 'Shop Now',
           button_text_ar: 'تسوق الآن',
           button_link: '/shop',
