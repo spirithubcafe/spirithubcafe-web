@@ -70,7 +70,8 @@ export function AddHeroSlidePage() {
         ...slideForm,
         sort_order: 0, // Will be set by the service
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        duration: 0 // Set a default value or add to form if needed
       }
 
       await heroService.addSlide(newSlide)
