@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { heroService } from '@/services/hero'
-import { storageService } from '@/lib/firebase'
+import { storageService, authService } from '@/lib/firebase'
 import type { HeroSlide } from '@/types'
 import toast from 'react-hot-toast'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
@@ -136,10 +136,11 @@ export function HeroSlidePage() {
       return
     }
 
-    // Validate file size (10MB limit)
-    const maxSize = 10 * 1024 * 1024 // 10MB in bytes
+    // Validate file size (50MB limit for videos, 10MB for images)
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024
     if (file.size > maxSize) {
-      toast.error(isRTL ? 'حجم الملف كبير جداً (الحد الأقصى 10MB)' : 'File size too large (max 10MB)')
+      const sizeLimit = isVideo ? '50MB' : '10MB'
+      toast.error(isRTL ? `حجم الملف كبير جداً (الحد الأقصى ${sizeLimit})` : `File size too large (max ${sizeLimit})`)
       return
     }
 
@@ -150,22 +151,53 @@ export function HeroSlidePage() {
       const preview = URL.createObjectURL(file)
       setPreviewUrl(preview)
       
+      // Check if user is authenticated
+      const currentUser = authService.getCurrentUser()
+      if (!currentUser) {
+        toast.error(isRTL ? 'يجب تسجيل الدخول أولاً' : 'Please login first to upload files')
+        return
+      }
+      
       // Generate unique filename
       const timestamp = Date.now()
       const extension = file.name.split('.').pop()
       const fileName = `hero-slides/${timestamp}.${extension}`
       
-      // Upload to Firebase Storage
-      const uploadedUrl = await storageService.upload(fileName, file)
-      
-      // Update form data with permanent URL
-      handleInputChange('media_url', uploadedUrl)
-      handleInputChange('media_type', isVideo ? 'video' : 'image')
-      
-      // Update preview to use the permanent URL
-      setPreviewUrl(uploadedUrl)
-      
-      toast.success(isRTL ? 'تم رفع الملف بنجاح' : 'File uploaded successfully')
+      try {
+        // Try to upload to Firebase Storage
+        const uploadedUrl = await storageService.upload(fileName, file)
+        
+        // Update form data with permanent URL
+        handleInputChange('media_url', uploadedUrl)
+        handleInputChange('media_type', isVideo ? 'video' : 'image')
+        
+        // Update preview to use the permanent URL
+        setPreviewUrl(uploadedUrl)
+        
+        toast.success(isRTL ? 'تم رفع الملف بنجاح' : 'File uploaded successfully')
+      } catch (uploadError) {
+        console.error('Firebase Storage upload failed:', uploadError)
+        
+        // Fallback: Use data URL for preview (local only)
+        try {
+          const dataUrl = await storageService.uploadAsDataURL(file)
+          
+          handleInputChange('media_url', dataUrl)
+          handleInputChange('media_type', isVideo ? 'video' : 'image')
+          setPreviewUrl(dataUrl)
+          
+          toast.error(isRTL ? 'تم حفظ الملف محلياً فقط. يرجى التحقق من إعدادات Firebase' : 'File saved locally only. Please check Firebase settings')
+        } catch (fallbackError) {
+          console.error('Fallback upload failed:', fallbackError)
+          toast.error(isRTL ? 'خطأ في رفع الملف' : 'Error uploading file')
+          
+          // Clear the preview on error
+          if (previewUrl && previewUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(previewUrl)
+          }
+          setPreviewUrl(null)
+        }
+      }
     } catch (error) {
       console.error('Error uploading file:', error)
       toast.error(isRTL ? 'خطأ في رفع الملف' : 'Error uploading file')
