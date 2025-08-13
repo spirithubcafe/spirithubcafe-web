@@ -19,6 +19,7 @@ import CheckoutPage from '@/pages/CheckoutPage'
 import DashboardPage from '@/pages/DashboardPage'
 import { WishlistPage } from '@/pages/WishlistPage'
 import { HeroSlidePage } from '@/pages/HeroSlidePage'
+import PageDisplayPage from '@/pages/PageDisplayPage'
 import './App.css'
 
 function App() {
@@ -73,6 +74,14 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    {/* Dynamic Page Routes */}
+                    <Route path="/page/:slug" element={<PageDisplayPage />} />
+                    {/* Fallback routes for direct access */}
+                    <Route path="/privacy-policy" element={<PageDisplayPage />} />
+                    <Route path="/terms-and-conditions" element={<PageDisplayPage />} />
+                    <Route path="/refund-policy" element={<PageDisplayPage />} />
+                    <Route path="/delivery-policy" element={<PageDisplayPage />} />
+                    <Route path="/faq" element={<PageDisplayPage />} />
                   </Routes>
                 </main>
                 <Footer />

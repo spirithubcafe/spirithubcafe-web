@@ -100,6 +100,22 @@ export interface Category {
   updated: Date;
 }
 
+export interface Page {
+  id: string;
+  title: string;
+  title_ar: string;
+  content: string;
+  content_ar: string;
+  slug: string;
+  meta_description?: string;
+  meta_description_ar?: string;
+  is_active: boolean;
+  show_in_footer: boolean;
+  sort_order: number;
+  created: Date;
+  updated: Date;
+}
+
 export interface ProductPropertyOption {
   id?: string;
   value: string;
@@ -1661,6 +1677,154 @@ export const firestoreService = {
         console.error('Error creating order item:', error);
         throw error;
       }
+    }
+  },
+
+  // Pages management
+  pages: {
+    list: async (): Promise<{ items: Page[]; total: number }> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const q = query(
+            collection(db, 'pages'),
+            orderBy('sort_order', 'asc')
+          );
+          const querySnapshot = await getDocs(q);
+          const pages = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            created: doc.data().created?.toDate() || new Date(),
+            updated: doc.data().updated?.toDate() || new Date()
+          } as Page));
+          
+          return {
+            items: pages,
+            total: pages.length
+          };
+        },
+        { items: [], total: 0 },
+        'getPagesList'
+      );
+    },
+
+    get: async (id: string): Promise<Page | null> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const docSnap = await getDoc(doc(db, 'pages', id));
+          if (docSnap.exists()) {
+            return {
+              id: docSnap.id,
+              ...docSnap.data(),
+              created: docSnap.data().created?.toDate() || new Date(),
+              updated: docSnap.data().updated?.toDate() || new Date()
+            } as Page;
+          }
+          return null;
+        },
+        null,
+        'getPage'
+      );
+    },
+
+    getBySlug: async (slug: string): Promise<Page | null> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const q = query(
+            collection(db, 'pages'),
+            where('slug', '==', slug),
+            where('is_active', '==', true),
+            limit(1)
+          );
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const doc = querySnapshot.docs[0];
+            return {
+              id: doc.id,
+              ...doc.data(),
+              created: doc.data().created?.toDate() || new Date(),
+              updated: doc.data().updated?.toDate() || new Date()
+            } as Page;
+          }
+          return null;
+        },
+        null,
+        'getPageBySlug'
+      );
+    },
+
+    getFooterPages: async (): Promise<Page[]> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const q = query(
+            collection(db, 'pages'),
+            where('is_active', '==', true),
+            where('show_in_footer', '==', true),
+            orderBy('sort_order', 'asc')
+          );
+          const querySnapshot = await getDocs(q);
+          return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            created: doc.data().created?.toDate() || new Date(),
+            updated: doc.data().updated?.toDate() || new Date()
+          } as Page));
+        },
+        [],
+        'getFooterPages'
+      );
+    },
+
+    create: async (data: Omit<Page, 'id' | 'created' | 'updated'>): Promise<Page | null> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const pageData = {
+            ...data,
+            created: serverTimestamp(),
+            updated: serverTimestamp()
+          };
+          const docRef = await addDoc(collection(db, 'pages'), pageData);
+          return {
+            id: docRef.id,
+            ...data,
+            created: new Date(),
+            updated: new Date()
+          } as Page;
+        },
+        null,
+        'createPage'
+      );
+    },
+
+    update: async (id: string, data: Partial<Page>): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const updateData = {
+            ...data,
+            updated: serverTimestamp()
+          };
+          // Remove fields that shouldn't be updated directly
+          delete updateData.id;
+          delete updateData.created;
+          
+          await updateDoc(doc(db, 'pages', id), updateData);
+          console.log(`✅ Page ${id} updated`);
+          return true;
+        },
+        false,
+        'updatePage'
+      );
+    },
+
+    delete: async (id: string): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          await deleteDoc(doc(db, 'pages', id));
+          console.log(`✅ Page ${id} deleted`);
+          return true;
+        },
+        false,
+        'deletePage'
+      );
     }
   },
 
