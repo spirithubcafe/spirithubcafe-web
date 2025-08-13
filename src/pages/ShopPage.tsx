@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ShoppingCart, Heart, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,7 @@ export function ShopPage() {
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
   const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
+  const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
@@ -35,6 +36,14 @@ export function ShopPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // Check for category parameter in URL
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setSelectedCategory(categoryParam)
+    }
+  }, [searchParams])
 
   const loadData = async () => {
     try {

@@ -74,6 +74,35 @@
       "subtitle": "اكتشف أفضل العروض والمنتجات الأعلى تقييماً",
       "noProducts": "لا توجد منتجات مميزة متاحة في الوقت الحالي",
       "viewAll": "عرض جميع المنتجات"
+    },
+    "latestRelease": {
+      "title": "أحدث الإصدارات",
+      "subtitle": "اكتشف أحدث وصولات القهوة لدينا",
+      "noProducts": "لا توجد منتجات جديدة متاحة في الوقت الحالي",
+      "viewShop": "عرض المتجر"
+    },
+    "ourCoffees": {
+      "title": "قهوتنا",
+      "subtitle": "قريباً",
+      "comingSoon": "قريباً",
+      "description": "نحن نحضر شيئاً مميزاً لكم. ترقبوا!"
+    },
+    "categories": {
+      "title": "فئات SpiritHub",
+      "subtitle": "استكشف فئات القهوة لدينا",
+      "noCategories": "لا توجد فئات متاحة في الوقت الحالي"
+    },
+    "coffeeCapsules": {
+      "title": "كبسولات القهوة SpiritHub",
+      "subtitle": "قريباً",
+      "comingSoon": "قريباً",
+      "description": "نحن نحضر شيئاً مميزاً لكم. ترقبوا!"
+    },
+    "coldBrew": {
+      "title": "مجموعة القهوة الباردة",
+      "subtitle": "قريباً",
+      "comingSoon": "قريباً",
+      "description": "نحن نحضر شيئاً مميزاً لكم. ترقبوا!"
     }
   },
   "shop": {

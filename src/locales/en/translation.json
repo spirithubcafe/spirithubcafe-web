@@ -43,6 +43,35 @@
       "subtitle": "Discover our best deals and top-rated products",
       "noProducts": "No featured products available at the moment",
       "viewAll": "View All Products"
+    },
+    "latestRelease": {
+      "title": "Latest Release",
+      "subtitle": "Discover our newest coffee arrivals",
+      "noProducts": "No new products available at the moment",
+      "viewShop": "View Shop"
+    },
+    "ourCoffees": {
+      "title": "Our Coffees",
+      "subtitle": "Coming Soon",
+      "comingSoon": "Coming Soon",
+      "description": "We are preparing something special for you. Stay tuned!"
+    },
+    "categories": {
+      "title": "SpiritHub Categories",
+      "subtitle": "Explore our coffee categories",
+      "noCategories": "No categories available at the moment"
+    },
+    "coffeeCapsules": {
+      "title": "SpiritHub Coffee Capsules",
+      "subtitle": "Coming Soon",
+      "comingSoon": "Coming Soon",
+      "description": "We are preparing something special for you. Stay tuned!"
+    },
+    "coldBrew": {
+      "title": "Cold Brew Selection",
+      "subtitle": "Coming Soon",
+      "comingSoon": "Coming Soon",
+      "description": "We are preparing something special for you. Stay tuned!"
     }
   },
   "shop": {

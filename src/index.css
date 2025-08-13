@@ -3,6 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Custom scrollbar styles */
+.categories-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  touch-action: pan-x;
+}
+
+.categories-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 /* Arabic Font - Tajawal */
 @font-face {
   font-family: 'Tajawal';
