@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'react-hot-toast'
-import { Loader2, Save, Settings, Globe, Phone, Mail, Clock, MapPin, Users } from 'lucide-react'
+import { Loader2, Save, Settings, Globe, Phone, Mail, Clock, MapPin, Users, Video } from 'lucide-react'
 import { settingsService, type FooterSettings } from '@/services/settings'
 
 export function FooterManagement() {
@@ -51,6 +51,7 @@ export function FooterManagement() {
 
     try {
       setSaving(true)
+      console.log('FooterManagement - Saving settings:', settings)
       await settingsService.updateFooterSettings(settings)
       toast.success(t('dashboard.admin.footerForm.saveChanges'))
     } catch (error) {
@@ -61,8 +62,9 @@ export function FooterManagement() {
     }
   }
 
-  const updateSetting = (key: keyof FooterSettings, value: string) => {
+  const updateSetting = (key: keyof FooterSettings, value: string | number) => {
     if (!settings) return
+    console.log('FooterManagement - Updating setting:', key, 'to:', value)
     setSettings({
       ...settings,
       [key]: value
@@ -103,7 +105,7 @@ export function FooterManagement() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general" className="flex items-center space-x-2">
               <Globe className="h-4 w-4" />
               <span>{t('dashboard.admin.footerTabs.general')}</span>
@@ -119,6 +121,10 @@ export function FooterManagement() {
             <TabsTrigger value="hours" className="flex items-center space-x-2">
               <Clock className="h-4 w-4" />
               <span>{t('dashboard.admin.footerTabs.hours')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="video" className="flex items-center space-x-2">
+              <Video className="h-4 w-4" />
+              <span>Video</span>
             </TabsTrigger>
           </TabsList>
 
@@ -301,6 +307,39 @@ export function FooterManagement() {
                   onChange={(e) => updateSetting('workingHoursAr', e.target.value)}
                   placeholder="كل أيام الأسبوع: 8 صباحاً - 11 مساءً"
                 />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="video" className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <Label htmlFor="backgroundVideoBlur" className="flex items-center space-x-2">
+                  <Video className="h-4 w-4" />
+                  <span>Background Video Blur (%)</span>
+                </Label>
+                <div className="space-y-2">
+                  <input
+                    id="backgroundVideoBlur"
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="5"
+                    value={settings.backgroundVideoBlur || 50}
+                    onChange={(e) => updateSetting('backgroundVideoBlur', parseInt(e.target.value))}
+                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    aria-label="Background video blur percentage"
+                    title={`Background video blur: ${settings.backgroundVideoBlur || 50}%`}
+                  />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>0% (No Blur)</span>
+                    <span className="font-medium">{settings.backgroundVideoBlur || 50}%</span>
+                    <span>100% (Maximum Blur)</span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Control the blur intensity of the background video to ensure text readability. Higher values provide more blur for better text contrast.
+                </p>
               </div>
             </div>
           </TabsContent>

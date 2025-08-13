@@ -15,12 +15,15 @@ export function useFooterSettings() {
       setLoading(true)
       setError(null)
       const footerSettings = await settingsService.getFooterSettings()
+      console.log('useFooterSettings - Loaded settings:', footerSettings)
       setSettings(footerSettings)
     } catch (err) {
       console.error('Error loading footer settings:', err)
       setError('Failed to load footer settings')
       // Use default settings as fallback
-      setSettings(settingsService.getDefaultFooterSettings())
+      const defaultSettings = settingsService.getDefaultFooterSettings()
+      console.log('useFooterSettings - Using default settings:', defaultSettings)
+      setSettings(defaultSettings)
     } finally {
       setLoading(false)
     }

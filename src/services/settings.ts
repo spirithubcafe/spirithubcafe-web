@@ -16,6 +16,7 @@ export interface FooterSettings {
   twitter?: string
   workingHours: string
   workingHoursAr: string
+  backgroundVideoBlur?: number // Blur percentage for background video (0-100)
 }
 
 export interface AppSettings {
@@ -29,20 +30,26 @@ class SettingsService {
     try {
       const doc = await firestoreService.getDocument(this.collection, 'footer')
       if (doc.exists()) {
-        return doc.data() as FooterSettings
+        const data = doc.data() as FooterSettings
+        console.log('SettingsService - Loaded settings from Firestore:', data)
+        return data
       }
       
       // Return default settings if not found
+      console.log('SettingsService - No settings found, returning defaults')
       return this.getDefaultFooterSettings()
     } catch (error) {
       console.error('Error getting footer settings:', error)
+      console.log('SettingsService - Error occurred, returning defaults')
       return this.getDefaultFooterSettings()
     }
   }
 
   async updateFooterSettings(settings: FooterSettings): Promise<void> {
     try {
+      console.log('SettingsService - Saving settings to Firestore:', settings)
       await firestoreService.setDocument(this.collection, 'footer', settings)
+      console.log('SettingsService - Settings saved successfully')
     } catch (error) {
       console.error('Error updating footer settings:', error)
       throw error
@@ -65,7 +72,8 @@ class SettingsService {
       facebook: 'spirithubcafe',
       twitter: 'spirithubcafe',
       workingHours: 'Daily: 8 AM - 11 PM',
-      workingHoursAr: 'كل أيام الأسبوع: 8 صباحاً - 11 مساءً'
+      workingHoursAr: 'كل أيام الأسبوع: 8 صباحاً - 11 مساءً',
+      backgroundVideoBlur: 50 // Default 50% blur
     }
   }
 }
