@@ -150,7 +150,7 @@ export function HomePage() {
   }
 
   // Handle category click - prevent navigation if dragging
-  const handleCategoryClick = (e: React.MouseEvent, _categoryId: string) => {
+  const handleCategoryClick = (e: React.MouseEvent) => {
     if (dragDistance > 10) { // If dragged more than 10px, prevent navigation
       e.preventDefault()
       e.stopPropagation()
@@ -405,7 +405,7 @@ export function HomePage() {
                         key={category.id}
                         to={`/shop?category=${category.id}`}
                         className="flex-shrink-0 group"
-                        onClick={(e) => handleCategoryClick(e, category.id)}
+                        onClick={handleCategoryClick}
                       >
                         <div className="text-center space-y-3 min-w-[100px]">
                           <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary/40 transition-colors shadow-lg mx-auto">
