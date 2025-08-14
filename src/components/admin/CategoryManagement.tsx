@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, Upload } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, Upload, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,8 +8,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
 import { firestoreService, storageService, auth, type Category } from '@/lib/firebase'
+import SEOForm from '@/components/seo/SEOForm'
+import type { SEOMeta } from '@/types/seo'
 import toast from 'react-hot-toast'
 
 interface CategoryFormData {
@@ -20,6 +23,7 @@ interface CategoryFormData {
   image: string
   is_active: boolean
   sort_order: number
+  seo?: SEOMeta
 }
 
 export default function CategoryManagement() {
@@ -34,6 +38,7 @@ export default function CategoryManagement() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [activeTab, setActiveTab] = useState('basic')
 
   const [formData, setFormData] = useState<CategoryFormData>({
     name: '',
@@ -42,7 +47,8 @@ export default function CategoryManagement() {
     description_ar: '',
     image: '',
     is_active: true,
-    sort_order: 1
+    sort_order: 1,
+    seo: {}
   })
 
   useEffect(() => {
@@ -164,7 +170,8 @@ export default function CategoryManagement() {
         description_ar: category.description_ar || '',
         image: category.image || '',
         is_active: category.is_active,
-        sort_order: category.sort_order
+        sort_order: category.sort_order,
+        seo: (category as any).seo || {}
       })
     } else {
       setEditingCategory(null)
@@ -175,7 +182,8 @@ export default function CategoryManagement() {
         description_ar: '',
         image: '',
         is_active: true,
-        sort_order: categories.length + 1
+        sort_order: categories.length + 1,
+        seo: {}
       })
     }
     setDialogOpen(true)
@@ -497,6 +505,19 @@ export default function CategoryManagement() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic" className="flex items-center gap-2">
+                  <Edit className="h-4 w-4" />
+                  {isArabic ? 'المعلومات الأساسية' : 'Basic Info'}
+                </TabsTrigger>
+                <TabsTrigger value="seo" className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  {isArabic ? 'تحسين محركات البحث' : 'SEO'}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="name" className="mb-2 block">{isArabic ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
@@ -652,6 +673,16 @@ export default function CategoryManagement() {
               />
               <Label htmlFor="is_active">{isArabic ? 'فئة نشطة' : 'Active Category'}</Label>
             </div>
+              </TabsContent>
+
+              <TabsContent value="seo" className="space-y-4">
+                <SEOForm
+                  initialData={formData.seo || {}}
+                  onChange={(seoData) => setFormData(prev => ({ ...prev, seo: seoData }))}
+                  entityType="category"
+                />
+              </TabsContent>
+            </Tabs>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>

@@ -9,9 +9,11 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Progress } from '@/components/ui/progress'
-import { X, Upload, Save, ArrowLeft, Image, Grid, Settings, Coffee } from 'lucide-react'
+import { X, Upload, Save, ArrowLeft, Image, Grid, Settings, Coffee, Search } from 'lucide-react'
 import { firestoreService, storageService, auth, type Category, type ProductProperty } from '@/lib/firebase'
 import ProductPropertyForm from './ProductPropertyForm'
+import SEOForm from '@/components/seo/SEOForm'
+import type { SEOMeta } from '@/types/seo'
 import toast from 'react-hot-toast'
 
 interface ProductForm {
@@ -37,6 +39,8 @@ interface ProductForm {
   notes: string
   uses: string
   farm: string
+  // SEO fields
+  seo?: SEOMeta
 }
 
 interface ProductFormProps {
@@ -370,7 +374,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="basic" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             {isArabic ? 'المعلومات الأساسية' : 'Basic Info'}
@@ -382,6 +386,10 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
           <TabsTrigger value="gallery" className="flex items-center gap-2">
             <Grid className="h-4 w-4" />
             {isArabic ? 'الصور' : 'Gallery'}
+          </TabsTrigger>
+          <TabsTrigger value="seo" className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            {isArabic ? 'تحسين محركات البحث' : 'SEO'}
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Image className="h-4 w-4" />
@@ -881,6 +889,14 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="seo" className="space-y-6">
+          <SEOForm
+            initialData={form.seo || {}}
+            onChange={(seoData) => setForm(prev => ({ ...prev, seo: seoData }))}
+            entityType="product"
+          />
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-6">

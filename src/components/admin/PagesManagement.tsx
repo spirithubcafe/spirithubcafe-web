@@ -22,6 +22,8 @@ import {
   Upload
 } from 'lucide-react'
 import { firestoreService, type Page } from '@/lib/firebase'
+import SEOForm from '@/components/seo/SEOForm'
+import type { SEOMeta } from '@/types/seo'
 import toast from 'react-hot-toast'
 
 interface PageForm {
@@ -35,6 +37,7 @@ interface PageForm {
   is_active: boolean
   show_in_footer: boolean
   sort_order: number
+  seo?: SEOMeta
 }
 
 // Default page templates with content from public/pages
@@ -98,7 +101,8 @@ export default function PagesManagement() {
     meta_description_ar: '',
     is_active: true,
     show_in_footer: false,
-    sort_order: 0
+    sort_order: 0,
+    seo: {}
   })
 
   const loadPages = useCallback(async () => {
@@ -219,7 +223,8 @@ export default function PagesManagement() {
       meta_description_ar: '',
       is_active: true,
       show_in_footer: false,
-      sort_order: pages.length
+      sort_order: pages.length,
+      seo: {}
     })
     setEditingPage(null)
     setActiveTab('basic')
@@ -236,7 +241,8 @@ export default function PagesManagement() {
       meta_description_ar: page.meta_description_ar || '',
       is_active: page.is_active,
       show_in_footer: page.show_in_footer,
-      sort_order: page.sort_order
+      sort_order: page.sort_order,
+      seo: (page as any).seo || {}
     })
     setEditingPage(page)
     setShowForm(true)
@@ -464,45 +470,11 @@ export default function PagesManagement() {
           </TabsContent>
 
           <TabsContent value="seo" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{isArabic ? 'إعدادات SEO' : 'SEO Settings'}</CardTitle>
-                <CardDescription>
-                  {isArabic ? 'حسّن ظهور الصفحة في محركات البحث' : 'Optimize page appearance in search engines'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="meta-desc-en">{isArabic ? 'وصف الميتا (إنجليزي)' : 'Meta Description (English)'}</Label>
-                    <Input
-                      id="meta-desc-en"
-                      value={form.meta_description || ''}
-                      onChange={(e) => setForm(prev => ({ ...prev, meta_description: e.target.value }))}
-                      placeholder={isArabic ? 'وصف مختصر للصفحة بالإنجليزية' : 'Short description in English'}
-                      maxLength={160}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {(form.meta_description || '').length}/160 {isArabic ? 'حرف' : 'characters'}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="meta-desc-ar">{isArabic ? 'وصف الميتا (عربي)' : 'Meta Description (Arabic)'}</Label>
-                    <Input
-                      id="meta-desc-ar"
-                      value={form.meta_description_ar || ''}
-                      onChange={(e) => setForm(prev => ({ ...prev, meta_description_ar: e.target.value }))}
-                      placeholder={isArabic ? 'وصف مختصر للصفحة بالعربية' : 'Short description in Arabic'}
-                      maxLength={160}
-                      dir="rtl"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {(form.meta_description_ar || '').length}/160 {isArabic ? 'حرف' : 'characters'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <SEOForm
+              initialData={form.seo || {}}
+              onChange={(seoData) => setForm(prev => ({ ...prev, seo: seoData }))}
+              entityType="page"
+            />
           </TabsContent>
         </Tabs>
 
