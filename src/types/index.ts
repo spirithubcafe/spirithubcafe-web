@@ -167,15 +167,21 @@ export interface Product {
   roast_level_id?: number
   bean_type?: BeanType
   processing_method?: string
+  processing_method_ar?: string
   altitude?: string
+  altitude_ar?: string
   harvest_year?: number
   caffeine_content?: string
   grind_options?: string[]
   package_size?: string[]
   variety?: string
+  variety_ar?: string
   notes?: string
+  notes_ar?: string
   uses?: string
+  uses_ar?: string
   farm?: string
+  farm_ar?: string
   stock: number
   low_stock_threshold: number
   weight_grams?: number

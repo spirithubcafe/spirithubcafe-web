@@ -37,7 +37,7 @@ export function StockIndicator({
     } else if (stock <= lowStockThreshold) {
       return {
         status: 'low-stock',
-        label: isArabic ? `${stock} فقط متبقي` : `Only ${stock} left`,
+        label: isArabic ? 'مخزون قليل' : 'Low Stock',
         color: 'secondary',
         bgColor: 'bg-amber-50 dark:bg-amber-950/20',
         textColor: 'text-amber-700 dark:text-amber-400',
@@ -61,6 +61,11 @@ export function StockIndicator({
   const Icon = stockInfo.icon
 
   if (variant === 'compact') {
+    // For compact variant, show exact count for low stock
+    const displayLabel = stockInfo.status === 'low-stock' 
+      ? (isArabic ? `${stock} فقط متبقي` : `Only ${stock} left`)
+      : stockInfo.label
+
     return (
       <div className={cn(
         "inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium border",
@@ -70,7 +75,7 @@ export function StockIndicator({
         className
       )}>
         {showIcon && <Icon className="h-3 w-3" />}
-        <span>{stockInfo.label}</span>
+        <span>{displayLabel}</span>
       </div>
     )
   }
@@ -97,6 +102,10 @@ export function StockIndicator({
   }
 
   // Default variant
+  const displayLabel = stockInfo.status === 'low-stock' 
+    ? (isArabic ? `${stock} فقط متبقي` : `Only ${stock} left`)
+    : stockInfo.label
+
   return (
     <Badge 
       variant={stockInfo.color as any}
@@ -109,7 +118,7 @@ export function StockIndicator({
       )}
     >
       {showIcon && <Icon className="h-3 w-3" />}
-      {stockInfo.label}
+      {displayLabel}
     </Badge>
   )
 }

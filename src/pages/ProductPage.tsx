@@ -395,11 +395,17 @@ export default function ProductPage() {
             <CoffeeInfoDisplay
               roastLevel={product.roast_level}
               process={product.processing_method}
+              process_ar={product.processing_method_ar}
               variety={product.variety}
+              variety_ar={product.variety_ar}
               altitude={product.altitude}
+              altitude_ar={product.altitude_ar}
               notes={product.notes}
+              notes_ar={product.notes_ar}
               uses={product.uses}
+              uses_ar={product.uses_ar}
               farm={product.farm}
+              farm_ar={product.farm_ar}
               className="py-0"
             />
 
@@ -763,11 +769,17 @@ export default function ProductPage() {
                 <CoffeeInfoDisplay
                   roastLevel={product.roast_level}
                   process={product.processing_method}
+                  process_ar={product.processing_method_ar}
                   variety={product.variety}
+                  variety_ar={product.variety_ar}
                   altitude={product.altitude}
+                  altitude_ar={product.altitude_ar}
                   notes={product.notes}
+                  notes_ar={product.notes_ar}
                   uses={product.uses}
+                  uses_ar={product.uses_ar}
                   farm={product.farm}
+                  farm_ar={product.farm_ar}
                   className="py-0"
                 />
 

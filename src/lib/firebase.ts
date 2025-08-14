@@ -194,19 +194,25 @@ export interface Product {
   meta_title?: string;
   meta_description?: string;
   bean_type?: string;
+  // Coffee information fields
+  roast_level?: string;
+  variety?: string;
+  variety_ar?: string;
+  notes?: string;
+  notes_ar?: string;
+  uses?: string;
+  uses_ar?: string;
+  farm?: string;
+  farm_ar?: string;
   processing_method?: string;
+  processing_method_ar?: string;
   altitude?: string;
+  altitude_ar?: string;
   harvest_year?: number;
   caffeine_content?: string;
   grind_options?: string[];
   package_size?: string[];
   weight_grams?: number;
-  // Coffee information fields
-  roast_level?: string;
-  variety?: string;
-  notes?: string;
-  uses?: string;
-  farm?: string;
   // Rating fields
   average_rating?: number;
   total_reviews?: number;
