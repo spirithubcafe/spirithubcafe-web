@@ -173,9 +173,12 @@ export default function DashboardOverview({ orders, products }: DashboardOvervie
                 {products.slice(0, 3).map((product) => (
                   <div key={product.id} className="flex items-center space-x-4">
                     <img
-                      src={product.image}
-                      alt={product.name}
+                      src={product.image || '/images/logo-s.png'}
+                      alt={isArabic ? (product.name_ar || product.name) : product.name}
                       className="h-10 w-10 rounded-md object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/logo-s.png'
+                      }}
                     />
                     <div className="flex-1">
                       <p className="text-sm font-medium leading-none">

@@ -333,8 +333,8 @@ export default function ProductManagement() {
         viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0">
-                <CardContent className="p-4">
+              <Card key={product.id} className="group hover:shadow-lg transition-shadow py-0 h-full flex flex-col">
+                <CardContent className="p-4 flex-1 flex flex-col">
                   {/* Product Image */}
                   <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-lg mb-4 overflow-hidden">
                     {product.image ? (
@@ -410,7 +410,7 @@ export default function ProductManagement() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-1 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 mt-auto pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button 
                       variant="outline" 
                       size="sm" 

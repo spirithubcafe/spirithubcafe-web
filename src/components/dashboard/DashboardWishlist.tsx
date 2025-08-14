@@ -120,7 +120,7 @@ export default function DashboardWishlist() {
                     <div className="w-16 h-16 aspect-square overflow-hidden rounded">
                       <img
                         src={product.image || product.image_url || '/api/placeholder/64/64'}
-                        alt={product.name}
+                        alt={isArabic ? (product.name_ar || product.name) : product.name}
                         className="w-full h-full object-cover"
                       />
                     </div>

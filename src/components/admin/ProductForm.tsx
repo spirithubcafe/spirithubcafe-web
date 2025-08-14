@@ -757,7 +757,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     <div className="w-32 h-32 aspect-square overflow-hidden rounded-lg border">
                       <img
                         src={form.image}
-                        alt="Main product image"
+                        alt={`${isArabic ? 'صورة المنتج الرئيسية' : 'Main product image'}: ${form.name || form.name_ar || ''}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
@@ -867,7 +867,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                         <div className="aspect-square overflow-hidden rounded-lg border">
                           <img
                             src={image}
-                            alt={`Gallery image ${index + 1}`}
+                            alt={`${form.name || form.name_ar || (isArabic ? 'منتج' : 'Product')} - ${isArabic ? 'صورة' : 'Image'} ${index + 1}`}
                             className="w-full h-full object-cover"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement

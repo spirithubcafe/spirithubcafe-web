@@ -336,14 +336,14 @@ export function HomePage() {
                         )}
                       </div>
                       
-                      <CardContent className="p-6">
+                      <CardContent className="p-6 flex-1 flex flex-col">
                         <Link to={`/product/${product.slug || product.id}`}>
                           <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-2">
                             {isArabic ? (product.name_ar || product.name) : product.name}
                           </h3>
                         </Link>
                         
-                        <div className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                        <div className="text-muted-foreground text-sm mb-4 line-clamp-2 flex-1">
                           {product.notes ? (
                             <span>{product.notes}</span>
                           ) : (
@@ -353,36 +353,36 @@ export function HomePage() {
                           )}
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              {salePrice && salePrice < productPrice ? (
-                                <>
-                                  <span className="text-lg font-bold text-red-600">
-                                    {formatPrice(salePrice)}
-                                  </span>
-                                  <span className="text-sm text-muted-foreground line-through">
-                                    {formatPrice(productPrice)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-lg font-bold text-primary">
+                        <div className="mt-auto">
+                          <div className="flex items-center gap-2">
+                            {salePrice && salePrice < productPrice ? (
+                              <>
+                                <span className="text-lg font-bold text-red-600">
+                                  {formatPrice(salePrice)}
+                                </span>
+                                <span className="text-sm text-muted-foreground line-through">
                                   {formatPrice(productPrice)}
                                 </span>
-                              )}
-                            </div>
+                              </>
+                            ) : (
+                              <span className="text-lg font-bold text-primary">
+                                {formatPrice(productPrice)}
+                              </span>
+                            )}
                           </div>
-                          
-                          <Button 
-                            size="sm" 
-                            className="btn-coffee"
-                            onClick={() => addToCart(product, 1)}
-                          >
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            {t('common.addToCart', 'Add to Cart')}
-                          </Button>
                         </div>
                       </CardContent>
+                      
+                      <div className="p-6 pt-0">
+                        <Button 
+                          size="sm" 
+                          className="btn-coffee w-full"
+                          onClick={() => addToCart(product, 1)}
+                        >
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          {t('common.addToCart', 'Add to Cart')}
+                        </Button>
+                      </div>
                     </Card>
                   )
                 })}

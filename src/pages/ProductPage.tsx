@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Star, ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { StockIndicator } from '@/components/ui/stock-indicator'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -402,29 +403,37 @@ export default function ProductPage() {
               className="py-0"
             />
 
-            {/* Price Display */}
+            {/* Price & Stock Display */}
             <Card className='py-0'>
               <CardContent className="p-4 sm:p-6">
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <h3 className="text-lg font-semibold">{t('product.price')}</h3>
-                  <div className="flex items-center gap-3">
-                    {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
-                      <>
-                        <span className="text-3xl font-bold text-red-600">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
+                        <>
+                          <span className="text-3xl font-bold text-red-600">
+                            {formatPrice(priceDetails.finalPrice)}
+                          </span>
+                          <span className="text-xl text-muted-foreground line-through">
+                            {formatPrice(priceDetails.originalPrice)}
+                          </span>
+                          <Badge variant="destructive" className="text-sm">
+                            -{priceDetails.discountPercentage}%
+                          </Badge>
+                        </>
+                      ) : (
+                        <span className="text-3xl font-bold text-amber-600">
                           {formatPrice(priceDetails.finalPrice)}
                         </span>
-                        <span className="text-xl text-muted-foreground line-through">
-                          {formatPrice(priceDetails.originalPrice)}
-                        </span>
-                        <Badge variant="destructive" className="text-sm">
-                          -{priceDetails.discountPercentage}%
-                        </Badge>
-                      </>
-                    ) : (
-                      <span className="text-3xl font-bold text-amber-600">
-                        {formatPrice(priceDetails.finalPrice)}
-                      </span>
-                    )}
+                      )}
+                    </div>
+                    <StockIndicator 
+                      stock={product.stock_quantity || product.stock || 0} 
+                      variant="detailed"
+                      lowStockThreshold={10}
+                      className="flex-shrink-0"
+                    />
                   </div>
                   {priceDetails.isOnSale && priceDetails.discountAmount > 0 && (
                     <p className="text-sm text-green-600 font-medium">

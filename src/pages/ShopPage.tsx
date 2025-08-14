@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, Star } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { StockIndicator } from '@/components/ui/stock-indicator'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
@@ -18,12 +19,11 @@ export function ShopPage() {
   const { i18n } = useTranslation()
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
-  const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
+  const { toggleWishlist, isInWishlist } = useWishlist()
   const [searchParams] = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
-  const [isLoading, setIsLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
 
   // Smooth scroll to top when page loads
@@ -137,18 +137,6 @@ export function ShopPage() {
       label: isArabic ? (category.name_ar || category.name) : category.name
     }))
   ]
-
-  const handleAddToCart = async (product: Product) => {
-    setIsLoading(true)
-    try {
-      // Just pass the product directly to addToCart
-      await addToCart(product, 1)
-    } catch (error) {
-      console.error('Error adding to cart:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const getProductBadges = (product: Product) => {
     const badges = []
@@ -344,8 +332,8 @@ export function ShopPage() {
 
             return (
               <div key={product.id} className="group">
-                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 py-0">
-                  <Link to={`/product/${product.slug || product.id}`} className="block">
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 py-0 h-full flex flex-col">
+                  <Link to={`/product/${product.slug || product.id}`} className="block flex-1 flex flex-col">
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
@@ -398,7 +386,7 @@ export function ShopPage() {
                       )}
                     </div>
 
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
                       {/* Category */}
                       <div className="flex items-center justify-between">
                         <Badge variant="outline" className="text-xs">
@@ -426,7 +414,7 @@ export function ShopPage() {
 
                       {/* Description */}
                       {productDescription && (
-                        <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                        <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] flex-1">
                           <HTMLContent 
                             content={productDescription || ''} 
                             className="!max-w-none !text-sm !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
@@ -435,73 +423,68 @@ export function ShopPage() {
                         </div>
                       )}
 
-                      {/* Price */}
-                      <div className="flex items-center gap-2">
-                        {salePrice && salePrice < (productPrice ?? 0) ? (
-                          <>
-                            <span className="text-xl font-bold text-red-600">
-                              {formatPrice(salePrice)}
-                            </span>
-                            <span className="text-sm line-through text-muted-foreground">
+                      {/* Price & Stock */}
+                      <div className="mt-auto space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {salePrice && salePrice < (productPrice ?? 0) ? (
+                              <>
+                                <span className="text-xl font-bold text-red-600">
+                                  {formatPrice(salePrice)}
+                                </span>
+                                <span className="text-sm line-through text-muted-foreground">
+                                  {formatPrice(productPrice ?? 0)}
+                                </span>
+                                {(() => {
+                                  const discountPercent = Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)
+                                  return discountPercent > 0 ? (
+                                    <Badge variant="destructive" className="text-xs">
+                                      {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
+                                    </Badge>
+                                ) : null
+                              })()}
+                            </>
+                          ) : (
+                            <span className="text-xl font-bold text-amber-600">
                               {formatPrice(productPrice ?? 0)}
                             </span>
-                            {(() => {
-                              const discountPercent = Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)
-                              return discountPercent > 0 ? (
-                                <Badge variant="destructive" className="text-xs">
-                                  {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
-                                </Badge>
-                              ) : null
-                            })()}
-                          </>
-                        ) : (
-                          <span className="text-xl font-bold text-amber-600">
-                            {formatPrice(productPrice ?? 0)}
-                          </span>
-                        )}
+                          )}
+                        </div>
+                        <StockIndicator 
+                          stock={product.stock_quantity || product.stock || 0} 
+                          variant="compact"
+                          lowStockThreshold={5}
+                        />
                       </div>
-
-                      {/* Stock Info */}
-                      {product.stock_quantity > 0 && product.stock_quantity <= 10 && (
-                        <p className="text-sm text-orange-600 font-medium">
-                          {isArabic ? `متبقي ${product.stock_quantity} قطع فقط` : `Only ${product.stock_quantity} left!`}
-                        </p>
-                      )}
+                      </div>
                     </CardContent>
                   </Link>
-
-                  {/* Actions - Outside of Link to prevent nested buttons */}
-                  <CardContent className="px-4 pb-4 pt-0">
+                  
+                  <div className="p-4 pt-0">
                     <div className="flex gap-2">
                       <Button
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          handleAddToCart(product)
+                        onClick={() => {
+                          if (product.stock_quantity > 0) {
+                            addToCart(product, 1)
+                          }
                         }}
-                        className="flex-1 h-10"
-                        disabled={product.stock_quantity <= 0 || isLoading}
+                        disabled={product.stock_quantity <= 0}
+                        className="flex-1 btn-coffee"
+                        size="sm"
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         {isArabic ? 'أضف للسلة' : 'Add to Cart'}
                       </Button>
-                      
-                      {/* Quick Action Buttons */}
                       <Button
-                        onClick={async (e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          await toggleWishlist(product.id)
-                        }}
-                        size="icon"
                         variant="outline"
-                        className={`h-10 w-10 ${isInWishlist(product.id) ? 'text-red-500 bg-red-50 hover:bg-red-100' : ''}`}
-                        disabled={wishlistLoading}
+                        size="sm"
+                        onClick={() => toggleWishlist(product.id)}
+                        className={`${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
                       >
                         <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                       </Button>
                     </div>
-                  </CardContent>
+                  </div>
                 </Card>
               </div>
             )

@@ -4,6 +4,7 @@ import { Heart, ShoppingCart, Trash2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { StockIndicator } from '@/components/ui/stock-indicator'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
@@ -134,15 +135,15 @@ export function WishlistPage() {
               if (product.is_on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
 
               return (
-                <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
+                <Card key={product.id} className="group hover:shadow-lg transition-shadow h-full flex flex-col">
+                  <CardContent className="p-4 flex-1 flex flex-col">
                     <Link to={`/product/${product.slug || product.id}`}>
                       {/* Product Image */}
                       <div className="relative mb-4">
                         <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
                           <img
                             src={product.image || product.image_url || '/api/placeholder/300/300'}
-                            alt={product.name}
+                            alt={isArabic ? (product.name_ar || product.name) : product.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
@@ -172,29 +173,28 @@ export function WishlistPage() {
                       </div>
 
                       {/* Product Info */}
-                      <div className="space-y-2">
-                        <h3 className="font-semibold line-clamp-2">
+                      <div className="space-y-2 flex-1 flex flex-col">
+                        <h3 className="font-semibold line-clamp-2 min-h-[3rem]">
                           {isArabic ? (product.name_ar || product.name) : product.name}
                         </h3>
                         
-                        {/* Price */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg font-bold text-amber-600">
-                            {formatPrice(displayPrice)}
-                          </span>
-                          {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
-                            <span className="text-sm text-muted-foreground line-through">
-                              {formatPrice(product.price_omr)}
+                        {/* Price & Stock */}
+                        <div className="flex items-center justify-between mt-auto">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg font-bold text-amber-600">
+                              {formatPrice(displayPrice)}
                             </span>
-                          )}
-                        </div>
-
-                        {/* Stock status */}
-                        <div className="text-sm text-muted-foreground">
-                          {product.stock_quantity > 0 
-                            ? (isArabic ? `متوفر (${product.stock_quantity})` : `In stock (${product.stock_quantity})`)
-                            : (isArabic ? 'نفدت الكمية' : 'Out of stock')
-                          }
+                            {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
+                              <span className="text-sm text-muted-foreground line-through">
+                                {formatPrice(product.price_omr)}
+                              </span>
+                            )}
+                          </div>
+                          <StockIndicator 
+                            stock={product.stock_quantity || product.stock || 0} 
+                            variant="compact"
+                            lowStockThreshold={5}
+                          />
                         </div>
                       </div>
                     </Link>
@@ -203,7 +203,8 @@ export function WishlistPage() {
                     <div className="flex gap-2 mt-4">
                       <Button 
                         onClick={() => handleAddToCart(product)}
-                        className="flex-1"
+                        className="flex-1 btn-coffee"
+                        size="sm"
                         disabled={product.stock_quantity <= 0}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />

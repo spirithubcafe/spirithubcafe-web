@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { ShoppingCart, Plus, Minus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { StockIndicator } from '@/components/ui/stock-indicator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
@@ -178,12 +179,29 @@ export function CartSidebar() {
                 <div className="flex-1 overflow-y-auto py-2 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                   {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
-                      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
-                        <img 
-                          src="/images/logo-s.png" 
-                          alt="SpiritHub Cafe Logo" 
-                          className="h-10 w-10 object-contain"
-                        />
+                      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {item.product?.image || item.product?.image_url || item.product?.images?.[0] || item.product?.gallery?.[0] ? (
+                          <img 
+                            src={
+                              item.product.image || 
+                              item.product.image_url || 
+                              item.product.images?.[0] || 
+                              item.product.gallery?.[0] || 
+                              '/images/logo-s.png'
+                            }
+                            alt={i18n.language === 'ar' ? (item.product.name_ar || item.product.name) : item.product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/logo-s.png'
+                            }}
+                          />
+                        ) : (
+                          <img 
+                            src="/images/logo-s.png" 
+                            alt="SpiritHub Cafe Logo" 
+                            className="h-10 w-10 object-contain"
+                          />
+                        )}
                       </div>
                       
                       <div className="flex-1 space-y-2 min-w-0">
@@ -246,12 +264,19 @@ export function CartSidebar() {
                             </Button>
                           </div>
                           
-                          <p className="font-semibold text-amber-600">
-                            {item.product && (() => {
-                              const finalPrice = getProductPriceWithProperties(item.product, item.selectedProperties)
-                              return formatPrice(finalPrice * item.quantity)
-                            })()}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-amber-600">
+                              {item.product && (() => {
+                                const finalPrice = getProductPriceWithProperties(item.product, item.selectedProperties)
+                                return formatPrice(finalPrice * item.quantity)
+                              })()}
+                            </p>
+                            <StockIndicator 
+                              stock={item.product?.stock_quantity || item.product?.stock || 0} 
+                              variant="compact"
+                              lowStockThreshold={5}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
