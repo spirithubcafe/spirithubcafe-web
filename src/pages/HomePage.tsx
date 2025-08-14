@@ -10,6 +10,7 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
+import { useCategoriesSettings } from '@/hooks/useCategoriesSettings'
 import { conversionRates } from '@/lib/currency'
 
 export function HomePage() {
@@ -20,7 +21,98 @@ export function HomePage() {
   const [loadingCategories, setLoadingCategories] = useState(true)
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
+  const { settings: categoriesSettings, refetch: refetchCategoriesSettings } = useCategoriesSettings()
   const categoriesScrollRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  
+  // Parallax effect for categories background video
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!videoRef.current) return
+      
+      const scrolled = window.pageYOffset
+      const rate = scrolled * -0.3 // Reduced parallax speed to prevent gaps
+      
+      // Apply parallax transform with larger scale to prevent gaps
+      videoRef.current.style.transform = `translate3d(0, ${rate}px, 0) scale(1.2)`
+    }
+
+    // Add throttling for better performance
+    let ticking = false
+    const requestTick = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+
+    window.addEventListener('scroll', requestTick, { passive: true })
+    return () => window.removeEventListener('scroll', requestTick)
+  }, [])
+
+  // Ensure video loops continuously
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    const handleVideoEnd = () => {
+      video.currentTime = 0
+      video.play()
+    }
+
+    const handleVideoError = () => {
+      console.error('Video playback error, attempting to restart')
+      setTimeout(() => {
+        video.currentTime = 0
+        video.play()
+      }, 1000)
+    }
+
+    video.addEventListener('ended', handleVideoEnd)
+    video.addEventListener('error', handleVideoError)
+    
+    // Ensure video starts playing
+    video.play().catch(console.error)
+
+    return () => {
+      video.removeEventListener('ended', handleVideoEnd)
+      video.removeEventListener('error', handleVideoError)
+    }
+  }, [categoriesSettings?.backgroundVideo])
+
+  // Update video source when settings change
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !categoriesSettings?.backgroundVideo) return
+
+    // Force video to reload with new source
+    video.pause()
+    video.src = categoriesSettings.backgroundVideo
+    video.load()
+    
+    // Wait a bit then play
+    setTimeout(() => {
+      video.play().catch(console.error)
+    }, 100)
+
+    console.log('Video source updated to:', categoriesSettings.backgroundVideo)
+  }, [categoriesSettings?.backgroundVideo])
+
+  // Listen for categories settings updates
+  useEffect(() => {
+    const handleSettingsUpdate = () => {
+      console.log('Categories settings updated, refreshing...')
+      refetchCategoriesSettings()
+    }
+
+    window.addEventListener('categoriesSettingsUpdated', handleSettingsUpdate)
+    return () => {
+      window.removeEventListener('categoriesSettingsUpdated', handleSettingsUpdate)
+    }
+  }, [refetchCategoriesSettings])
   
   // Touch/drag state for categories
   const [isDragging, setIsDragging] = useState(false)
@@ -344,11 +436,68 @@ export function HomePage() {
       </section>
 
       {/* SpiritHub Categories Section */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/10 via-background to-accent/5 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
+      <section className="py-16 lg:py-24 relative overflow-hidden">
+        {/* Background Video */}
+        {(categoriesSettings?.showBackgroundVideo !== false) && (
+          <div className="absolute inset-0 w-full h-full overflow-hidden">
+            <video
+              key={categoriesSettings?.backgroundVideo || 'default-video'}
+              ref={videoRef}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              disablePictureInPicture
+              src={categoriesSettings?.backgroundVideo || '/video/back.mp4'}
+              className={`absolute -top-[15%] -left-[15%] min-w-[130%] min-h-[130%] object-cover transition-all duration-300 ${
+                (categoriesSettings?.backgroundVideoBlur || 30) <= 12.5 
+                  ? 'blur-none' 
+                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 25 
+                  ? 'blur-sm' 
+                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 50 
+                  ? 'blur' 
+                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 75 
+                  ? 'blur-lg' 
+                  : 'blur-xl'
+              }`}
+            >
+              Your browser does not support the video tag.
+            </video>
+            {/* Overlay */}
+            <div 
+              className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+                (categoriesSettings?.overlayOpacity || 70) <= 10 
+                  ? 'opacity-10'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 20
+                  ? 'opacity-20'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 30
+                  ? 'opacity-30'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 40
+                  ? 'opacity-40'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 50
+                  ? 'opacity-50'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 60
+                  ? 'opacity-60'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 70
+                  ? 'opacity-70'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 80
+                  ? 'opacity-80'
+                  : (categoriesSettings?.overlayOpacity || 70) <= 90
+                  ? 'opacity-90'
+                  : 'opacity-70'
+              }`}
+            />
+            {/* Theme-aware gradient overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-background/60 to-background/80"></div>
+          </div>
+        )}
+        
+        {/* Content */}
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground drop-shadow-lg">
                 {t('homepage.categories.title', 'SpiritHub Categories')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -372,18 +521,18 @@ export function HomePage() {
                 {/* Scroll buttons */}
                 <button
                   onClick={() => scrollCategories('left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-black transition-colors"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/20 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background/30 transition-colors border border-border/20"
                   aria-label="Scroll left"
                 >
-                  <ChevronLeft className="h-5 w-5" />
+                  <ChevronLeft className="h-5 w-5 text-foreground" />
                 </button>
                 
                 <button
                   onClick={() => scrollCategories('right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white dark:hover:bg-black transition-colors"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/20 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background/30 transition-colors border border-border/20"
                   aria-label="Scroll right"
                 >
-                  <ChevronRight className="h-5 w-5" />
+                  <ChevronRight className="h-5 w-5 text-foreground" />
                 </button>
 
                 {/* Categories scroll container */}
@@ -398,7 +547,7 @@ export function HomePage() {
                   onMouseUp={handleMouseUp}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {categories.map((category) => {
+                  {categories.map((category: Category) => {
                     const isArabic = localStorage.getItem('i18nextLng') === 'ar'
                     return (
                       <Link
@@ -419,7 +568,7 @@ export function HomePage() {
                               }}
                             />
                           </div>
-                          <p className="text-sm font-medium text-center whitespace-nowrap overflow-hidden text-ellipsis px-2">
+                          <p className="text-sm font-medium text-center whitespace-nowrap overflow-hidden text-ellipsis px-2 text-foreground">
                             {isArabic ? (category.name_ar || category.name) : category.name}
                           </p>
                         </div>
