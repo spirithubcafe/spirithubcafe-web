@@ -91,11 +91,6 @@ export default function CoffeeInfoDisplay({
       icon: <Flower2 className="h-5 w-5 text-amber-800 dark:text-amber-200" />
     },
     { 
-      label: isArabic ? 'الاستخدامات' : 'Uses', 
-      value: isArabic ? (uses_ar || uses) : uses, 
-      icon: <Coffee className="h-5 w-5 text-amber-800 dark:text-amber-200" />
-    },
-    { 
       label: isArabic ? 'المزرعة' : 'Farm', 
       value: isArabic ? (farm_ar || farm) : farm, 
       icon: <Home className="h-5 w-5 text-amber-800 dark:text-amber-200" />
@@ -114,6 +109,12 @@ export default function CoffeeInfoDisplay({
       label: isArabic ? 'التوافق' : 'Compatibility', 
       value: isArabic ? (compatibility_ar || compatibility) : compatibility, 
       icon: <Target className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+    },
+    { 
+      label: isArabic ? 'الاستخدامات' : 'Uses', 
+      value: isArabic ? (uses_ar || uses) : uses, 
+      icon: <Coffee className="h-5 w-5 text-red-600 dark:text-red-400 font-bold" />,
+      highlight: true
     }
   ].filter(item => item.value && item.value.trim())
 
@@ -124,32 +125,34 @@ export default function CoffeeInfoDisplay({
   return (
     <Card className={className}>
       <CardContent className="p-5" dir={isArabic ? 'rtl' : 'ltr'}>
-        <div className={`flex items-center gap-2 mb-4 ${isArabic ? 'flex-row-reverse' : ''}`}>
-          <Coffee className="h-5 w-5 text-amber-800 dark:text-amber-200" />
-          <h3 className="font-medium text-sm">
-            {t('product.coffeeInformation')}
-          </h3>
+        <div className={`w-full mb-4 ${isArabic ? 'text-right' : 'text-left'}`}>
+          <div className={`flex items-center gap-2 ${isArabic ? 'justify-end' : 'justify-start'}`}>
+            <Coffee className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+            <h3 className="font-medium text-sm">
+              {t('product.coffeeInformation')}
+            </h3>
+          </div>
         </div>
         <div className="space-y-3">
           {coffeeInfo.map((item, index) => (
-            <div key={index} className="w-full">
+            <div key={index} className={`w-full ${(item as any).highlight ? 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3' : ''}`}>
               {isArabic ? (
-                <div className="flex items-center text-sm" dir="rtl">
+                <div className="flex items-center text-sm text-right" dir="rtl">
                   {item.icon}
-                  <span className="text-muted-foreground font-medium mx-2">
+                  <span className={`font-medium mx-2 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
                     {item.label}:
                   </span>
-                  <span className="font-medium text-foreground mr-auto">
+                  <span className={`font-medium mr-auto text-right ${(item as any).highlight ? 'text-red-800 dark:text-red-200 font-semibold' : 'text-foreground'}`}>
                     {item.value}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center text-sm">
                   {item.icon}
-                  <span className="text-muted-foreground font-medium mx-2">
+                  <span className={`font-medium mx-2 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
                     {item.label}:
                   </span>
-                  <span className="font-medium text-foreground ml-auto">
+                  <span className={`font-medium ml-auto ${(item as any).highlight ? 'text-red-800 dark:text-red-200 font-semibold' : 'text-foreground'}`}>
                     {item.value}
                   </span>
                 </div>
