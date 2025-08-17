@@ -140,10 +140,10 @@ export function HomePage() {
       try {
         const products = await firestoreService.products.list()
         
-        // Get the latest 3 products
+        // Get the latest 4 products
         const latest = products.items
           .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
-          .slice(0, 3)
+          .slice(0, 4)
         
         setLatestProducts(latest)
       } catch (error) {
@@ -271,12 +271,12 @@ export function HomePage() {
             </div>
             
             {loadingProducts ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[1, 2, 3].map((i) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
                   <Card key={i} className="card-clean py-0">
-                    <CardContent className="p-6">
-                      <div className="animate-pulse space-y-4">
-                        <div className="bg-muted h-48 rounded-lg"></div>
+                    <CardContent className="p-4">
+                      <div className="animate-pulse space-y-3">
+                        <div className="bg-muted h-40 rounded-lg"></div>
                         <div className="space-y-2">
                           <div className="h-4 bg-muted rounded w-3/4"></div>
                           <div className="h-4 bg-muted rounded w-1/2"></div>
@@ -287,7 +287,7 @@ export function HomePage() {
                 ))}
               </div>
             ) : latestProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {latestProducts.map((product) => {
                   const productPrice = getProductPrice(product)
                   const salePrice = getSalePrice(product)
@@ -320,14 +320,14 @@ export function HomePage() {
                         
                         {/* Discount Badge */}
                         {discountPercent > 0 && (
-                          <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg">
+                          <Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg text-xs">
                             {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
                           </Badge>
                         )}
                         
                         {/* Rating */}
                         {product.average_rating && product.average_rating > 0 && (
-                          <div className="absolute top-3 left-3 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
+                          <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                             <span className="text-white text-xs font-medium">
                               {product.average_rating.toFixed(1)}
@@ -336,14 +336,14 @@ export function HomePage() {
                         )}
                       </div>
                       
-                      <CardContent className="p-6 flex-1 flex flex-col">
+                      <CardContent className="p-4 flex-1 flex flex-col">
                         <Link to={`/product/${product.slug || product.id}`}>
-                          <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-2">
+                          <h3 className="font-semibold text-base mb-2 hover:text-primary transition-colors line-clamp-2">
                             {isArabic ? (product.name_ar || product.name) : product.name}
                           </h3>
                         </Link>
                         
-                        <div className="text-muted-foreground text-sm mb-4 line-clamp-2 flex-1">
+                        <div className="text-muted-foreground text-sm mb-3 line-clamp-2 flex-1">
                           {product.notes ? (
                             <span>{product.notes}</span>
                           ) : (
@@ -357,7 +357,7 @@ export function HomePage() {
                           <div className="flex items-center gap-2">
                             {salePrice && salePrice < productPrice ? (
                               <>
-                                <span className="text-lg font-bold text-red-600">
+                                <span className="text-base font-bold text-red-600">
                                   {formatPrice(salePrice)}
                                 </span>
                                 <span className="text-sm text-muted-foreground line-through">
@@ -365,7 +365,7 @@ export function HomePage() {
                                 </span>
                               </>
                             ) : (
-                              <span className="text-lg font-bold text-primary">
+                              <span className="text-base font-bold text-primary">
                                 {formatPrice(productPrice)}
                               </span>
                             )}
@@ -373,10 +373,10 @@ export function HomePage() {
                         </div>
                       </CardContent>
                       
-                      <div className="p-6 pt-0">
+                      <div className="p-4 pt-0">
                         <Button 
                           size="sm" 
-                          className="btn-coffee w-full"
+                          className="btn-coffee w-full text-sm"
                           onClick={() => addToCart(product, 1)}
                         >
                           <ShoppingCart className="h-4 w-4 mr-2" />

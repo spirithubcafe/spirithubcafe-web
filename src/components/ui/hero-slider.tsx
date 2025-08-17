@@ -234,9 +234,9 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     const letterSpacing = getStyleValue(`${baseKey}letter_spacing${suffix}`, `${baseKey}letter_spacing${suffix}`)
     const textTransform = getStyleValue(`${baseKey}text_transform${suffix}`, `${baseKey}text_transform${suffix}`)
     
-    // Force all text to be white with black shadow
+    // Force all text to be white with subtle black shadow
     style.color = '#ffffff'
-    style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.8)'
+    style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.4)'
     
     if (fontFamily && typeof fontFamily === 'string') style.fontFamily = fontFamily
     if (fontSize && typeof fontSize === 'string') style.fontSize = fontSize
@@ -292,9 +292,9 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     
     if (buttonStyle.background_color) style.backgroundColor = buttonStyle.background_color
     if (buttonStyle.background_gradient) style.backgroundImage = buttonStyle.background_gradient
-    // Force button text to be white with black shadow
+    // Force button text to be white with subtle black shadow
     style.color = '#ffffff'
-    style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.8)'
+    style.textShadow = '0.5px 0.5px 1px rgba(0, 0, 0, 0.3)'
     if (buttonStyle.border_color) style.borderColor = buttonStyle.border_color
     if (buttonStyle.border_width) style.borderWidth = `${buttonStyle.border_width}px`
     if (buttonStyle.border_radius) style.borderRadius = buttonStyle.border_radius
@@ -477,7 +477,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
               )}
               
               <h1 
-                className={`text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-2xl leading-tight ${
+                className={`text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight text-white drop-shadow-md leading-tight ${
                   currentSlideData.text_alignment === 'left' ? 'text-left' :
                   currentSlideData.text_alignment === 'right' ? 'text-right' :
                   'text-center'
@@ -495,7 +495,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
             
             {(currentSlideData.description || currentSlideData.description_ar) && (
               <p 
-                className={`text-xl md:text-2xl text-white/90 max-w-3xl leading-relaxed drop-shadow-lg ${
+                className={`text-xl md:text-2xl text-white/90 max-w-3xl leading-relaxed drop-shadow-sm ${
                   currentSlideData.text_position === 'left' ? 'mx-0' :
                   currentSlideData.text_position === 'right' ? 'ml-auto' :
                   'mx-auto'
