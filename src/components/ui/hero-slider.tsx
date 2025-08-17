@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 import type { HeroSettings, HeroSlide } from '@/types'
 import { heroService } from '@/services/hero'
@@ -20,10 +18,12 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [loadProgress, setLoadProgress] = useState(0)
   const [textVisible, setTextVisible] = useState(false)
+  const [cursorSide, setCursorSide] = useState<'left' | 'right'>('right')
   
   const autoplayTimer = useRef<NodeJS.Timeout | null>(null)
   const progressTimer = useRef<NodeJS.Timeout | null>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  const sliderRef = useRef<HTMLElement>(null)
 
   // Load hero settings
   useEffect(() => {
@@ -159,6 +159,44 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [nextSlide, prevSlide, isRTL])
 
+  // Mouse tracking for custom cursor
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (!sliderRef.current) return
+    
+    const rect = sliderRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const centerX = rect.width / 2
+    
+    setCursorSide(x < centerX ? 'left' : 'right')
+  }, [])
+
+  // Handle click navigation
+  const handleSliderClick = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    if (activeSlides.length <= 1) return
+    
+    if (!sliderRef.current) return
+    
+    const rect = sliderRef.current.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const centerX = rect.width / 2
+    
+    if (x < centerX) {
+      // Left side clicked
+      if (isRTL) {
+        nextSlide()
+      } else {
+        prevSlide()
+      }
+    } else {
+      // Right side clicked
+      if (isRTL) {
+        prevSlide()
+      } else {
+        nextSlide()
+      }
+    }
+  }, [activeSlides.length, isRTL, nextSlide, prevSlide])
+
   const getFilterClasses = (slide: HeroSlide) => {
     const blurClass = `hero-filter-blur-${slide.blur_intensity}`
     const brightnessClass = `hero-brightness-${slide.brightness}`
@@ -209,9 +247,14 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
 
   return (
     <section 
-      className={`relative w-full min-h-screen flex items-center overflow-hidden ${className}`}
+      ref={sliderRef}
+      className={`relative w-full min-h-screen flex items-center overflow-hidden hero-slider-container ${
+        activeSlides.length > 1 ? (cursorSide === 'left' ? 'cursor-left' : 'cursor-right') : ''
+      } ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onMouseMove={handleMouseMove}
+      onClick={handleSliderClick}
     >
       {/* Media Background */}
       <div className="absolute inset-0 z-0">
@@ -258,30 +301,6 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
         <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
       </div>
-
-      {/* Navigation Arrows */}
-      {settings.show_arrows && activeSlides.length > 1 && (
-        <>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300 w-12 h-12"
-            onClick={isRTL ? nextSlide : prevSlide}
-            aria-label={isRTL ? t('common.nextSlide', 'Next slide') : t('common.prevSlide', 'Previous slide')}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300 w-12 h-12"
-            onClick={isRTL ? prevSlide : nextSlide}
-            aria-label={isRTL ? t('common.prevSlide', 'Previous slide') : t('common.nextSlide', 'Next slide')}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </Button>
-        </>
-      )}
 
       {/* Content */}
       <div className="w-full relative z-10 px-4 sm:px-6 lg:px-8">
@@ -338,30 +357,24 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
                 'justify-center'
               }`}>
                 {currentSlideData.button_text && (
-                  <Button 
-                    asChild 
-                    size="lg" 
-                    className={`shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm ${
-                      currentSlideData.button_variant === 'primary' ? 'btn-coffee' :
-                      currentSlideData.button_variant === 'secondary' ? 'btn-secondary' :
-                      'btn-outline'
+                  <a 
+                    href={currentSlideData.button_link || '#'}
+                    className={`inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md shadow-xl hover:shadow-2xl transition-all duration-300 backdrop-blur-sm ${
+                      currentSlideData.button_variant === 'primary' ? 'bg-amber-600 hover:bg-amber-700 text-white' :
+                      currentSlideData.button_variant === 'secondary' ? 'bg-white/20 hover:bg-white/30 text-white border border-white/30' :
+                      'bg-transparent hover:bg-white/10 text-white border border-white/50'
                     }`}
                   >
-                    <a href={currentSlideData.button_link || '#'}>
-                      {isRTL ? currentSlideData.button_text_ar || currentSlideData.button_text : currentSlideData.button_text}
-                    </a>
-                  </Button>
+                    {isRTL ? currentSlideData.button_text_ar || currentSlideData.button_text : currentSlideData.button_text}
+                  </a>
                 )}
                 {currentSlideData.secondary_button_text && (
-                  <Button 
-                    size="lg" 
-                    className="hero-secondary-btn shadow-lg hover:shadow-xl transition-all duration-300" 
-                    asChild
+                  <a 
+                    href={currentSlideData.secondary_button_link || '#'}
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-md bg-white/10 hover:bg-white/20 text-white border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    <a href={currentSlideData.secondary_button_link || '#'}>
-                      {isRTL ? currentSlideData.secondary_button_text_ar || currentSlideData.secondary_button_text : currentSlideData.secondary_button_text}
-                    </a>
-                  </Button>
+                    {isRTL ? currentSlideData.secondary_button_text_ar || currentSlideData.secondary_button_text : currentSlideData.secondary_button_text}
+                  </a>
                 )}
               </div>
             )}
@@ -395,19 +408,6 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
             style={{ width: `${loadProgress}%` }}
           />
         </div>
-      )}
-
-      {/* Play/Pause Button */}
-      {activeSlides.length > 1 && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute top-4 right-4 z-20 bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300"
-          onClick={() => setIsPlaying(prev => !prev)}
-          aria-label={isPlaying ? t('common.pause', 'Pause') : t('common.play', 'Play')}
-        >
-          {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-        </Button>
       )}
     </section>
   )
