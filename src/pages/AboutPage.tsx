@@ -1,8 +1,87 @@
+import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { aboutService, type AboutSectionData, type AboutHeaderData } from '@/services/about';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function AboutPage() {
+  const { i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+  const [header, setHeader] = useState<AboutHeaderData | null>(null);
+  const [sections, setSections] = useState<AboutSectionData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
+
+  useEffect(() => {
+    initializePage();
+  }, []);
+
+  const initializePage = async () => {
+    try {
+      // First try to load existing header and sections
+      console.log('Loading about header and sections...');
+      
+      const [headerData, sectionsData] = await Promise.all([
+        aboutService.getHeader(),
+        aboutService.getSections()
+      ]);
+
+      if (!headerData) {
+        console.log('No header found, initializing defaults...');
+        await aboutService.initializeDefaultHeader();
+        const newHeaderData = await aboutService.getHeader();
+        setHeader(newHeaderData);
+      } else {
+        setHeader(headerData);
+      }
+      
+      if (sectionsData.length === 0) {
+        console.log('No sections found, initializing default sections...');
+        await aboutService.initializeDefaultSections();
+        const newSectionsData = await aboutService.getSections();
+        setSections(newSectionsData);
+      } else {
+        setSections(sectionsData);
+      }
+      
+      console.log('Loaded header:', headerData);
+      console.log('Loaded sections:', sectionsData);
+    } catch (err) {
+      console.error('Error loading about page data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load about page data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-6 w-6" />
+            <span>{error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
@@ -12,126 +91,83 @@ export function AboutPage() {
           {/* Header */}
           <div className="space-y-6 text-center">
             <h1 className="text-5xl font-bold tracking-tight text-shadow-coffee bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              About Us
+              {header ? (isRTL ? header.title_ar : header.title_en) : (isRTL ? 'من نحن' : 'About Us')}
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Who We Are
+              {header ? (isRTL ? header.subtitle_ar : header.subtitle_en) : (isRTL ? 'من نحن' : 'Who We Are')}
             </p>
           </div>
 
-          {/* Section 1: Our Mission - Text Right, Image Left */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <img 
-                src="/images/about/1.webp" 
-                alt="Our Mission" 
-                className="w-full h-auto object-contain rounded-xl shadow-lg"
-              />
-            </div>
-            <div className="order-1 lg:order-2 space-y-6">
-              <h2 className="text-3xl font-bold text-foreground">OUR MISSION</h2>
-              <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                <p>
-                  At SPIRIT HUB Coffee, we take great care in selecting only the finest specialty coffees to be part of our exclusive blend. Our team of experienced Q Graders and Roasters carefully manage the roast to create a unique selection of flavors and aromas that are sure to please the most discerning coffee lover.
-                </p>
-                <p>
-                  We believe that quality is of the utmost importance, which is why we strictly adhere to the highest protocols and quality controls during the cupping and testing process. This ensures that every cup of SPIRIT HUB Coffee meets our high standards and delivers a truly exceptional taste experience.
-                </p>
-                <p>
-                  Our commitment to quality extends beyond the coffee itself. We are dedicated to providing our customers with the best possible service and coffee experience. Whether you are enjoying a cup at one of our cafés or brewing a fresh pot at home, we want you to be completely satisfied with your SPIRIT HUB Coffee experience.
-                </p>
-                <p>
-                  In short, at SPIRIT HUB Coffee, we are passionate about coffee and dedicated to providing our customers with the finest quality coffee experience possible. We invite you to try our exclusive blend and taste the difference for yourself.
-                </p>
-              </div>
-            </div>
-          </div>
+          {/* Dynamic Sections */}
+          {sections.map((section) => (
+            <section
+              key={section.id}
+              className={
+                section.layout === 'full-width' 
+                  ? 'card-clean rounded-xl p-8 space-y-8' 
+                  : 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'
+              }
+            >
+              {section.layout === 'full-width' ? (
+                // Full Width Layout
+                <div className="text-center space-y-4">
+                  <h2 className="text-3xl font-bold text-foreground">
+                    {isRTL ? section.title_ar : section.title_en}
+                  </h2>
+                  <div className="prose prose-lg dark:prose-invert max-w-none">
+                    <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
+                      {(isRTL ? section.content_ar : section.content_en)
+                        .split('\n\n')
+                        .map((paragraph, pIndex) => (
+                          <p key={pIndex}>
+                            {paragraph}
+                          </p>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Side by Side Layout
+                <>
+                  {/* Image */}
+                  {section.image_url && (
+                    <div className={section.layout === 'text-right' ? 'order-2 lg:order-1' : (section.layout === 'text-left' ? 'order-1 lg:order-2' : 'order-1')}>
+                      <img 
+                        src={section.image_url} 
+                        alt={isRTL ? section.title_ar : section.title_en}
+                        className="w-full h-auto object-contain rounded-xl shadow-lg"
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Text Content */}
+                  <div className={section.layout === 'text-right' ? 'order-1 lg:order-2 space-y-6' : (section.layout === 'text-left' ? 'order-2 lg:order-1 space-y-6' : 'space-y-6')}>
+                    <h2 className="text-3xl font-bold text-foreground">
+                      {isRTL ? section.title_ar : section.title_en}
+                    </h2>
+                    <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
+                      {(isRTL ? section.content_ar : section.content_en)
+                        .split('\n\n')
+                        .map((paragraph, pIndex) => (
+                          <p key={pIndex}>
+                            {paragraph}
+                          </p>
+                        ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </section>
+          ))}
 
-          {/* Section 2: Quality - Text Left, Image Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <h2 className="text-3xl font-bold text-foreground">QUALITY</h2>
-              <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                <p>
-                  Coffee, a beloved beverage globally, is enjoyed by millions daily. The flavor and aroma of coffee depend on factors like bean type, roasting, and brewing method.
-                </p>
-                <p>
-                  Many roasters ensure high standards by closely following harvesting seasons. This helps in selecting the freshest, highest quality beans, meticulously roasted to bring out unique flavors and aromas.
-                </p>
-                <p>
-                  The roasting process, considered an art, requires skilled roasters to create the perfect roast profile. They control temperature, time, and air flow to achieve the desired flavor and aroma for each batch of beans.
-                </p>
-                <p>
-                  After roasting, freshly roasted coffee beans contain a high level of CO2, which can affect their flavor and aroma. To allow the CO2 to dissipate and the flavors to fully develop, it is recommended that coffee be allowed to rest for 7 to 10 days before brewing.
-                </p>
-                <p>
-                  Following these steps, roasters produce high-quality coffee rich in flavor and aroma. When you savor your next cup, appreciate the care and attention behind that perfect brew.
-                </p>
-              </div>
+          {/* No Sections Fallback */}
+          {sections.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground text-lg">
+                No sections available
+              </p>
             </div>
-            <div>
-              <img 
-                src="/images/about/2.webp" 
-                alt="Quality" 
-                className="w-full h-auto object-contain rounded-xl shadow-lg"
-              />
-            </div>
-          </div>
-
-          {/* Section 3: Accountability - Text Right, Image Left */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="order-2 lg:order-1">
-              <img 
-                src="/images/about/3.webp" 
-                alt="Accountability" 
-                className="w-full h-auto object-contain rounded-xl shadow-lg"
-              />
-            </div>
-            <div className="order-1 lg:order-2 space-y-6">
-              <h2 className="text-3xl font-bold text-foreground">Accountability</h2>
-              <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                <p>
-                  Accountability and transparency are crucial for building trust and maintaining a positive reputation in business. At SPIRIT HUB Coffee, we take pride in sharing information and educating our community, customers, and clients about our unique coffee.
-                </p>
-                <p>
-                  By sharing this information, we aim to create openness and trust, fostering strong and lasting relationships with our audience. Excitingly, we publish details about our coffee on various media platforms, such as our website, social media, and newsletter.
-                </p>
-                <p>
-                  Moreover, our commitment extends beyond information sharing to being accountable for our actions and decisions. This entails taking responsibility for the quality of our coffee, as well as addressing our environmental and social impact.
-                </p>
-                <p>
-                  Transparent and accountable practices enable us to build a positive reputation and nurture long-term relationships with our customers and clients. Proudly presenting SPIRIT HUB Coffee to the world, we eagerly anticipate sharing our unique coffee with the community.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Section 4: Values - Full Width */}
-          <div className="card-clean rounded-xl p-8 space-y-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-3xl font-bold text-foreground">Values</h2>
-            </div>
-            <div className="prose prose-lg dark:prose-invert max-w-none">
-              <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                <p>
-                  Established in Oman, SPIRIT HUB Roastery & Specialty Coffee is committed to enhancing the coffee experience for its customers. By focusing on specialty coffee, the team at SPIRIT HUB skillfully highlights the unique flavors and aromas of each batch of beans.
-                </p>
-                <p>
-                  A crucial aspect of specialty coffee is the meticulous attention to detail and hard work invested by the farmers in growing and harvesting the beans. SPIRIT HUB not only recognizes but also appreciates the efforts of these farmers, actively striving to showcase their significant contributions to the coffee industry.
-                </p>
-                <p>
-                  In addition to supporting farmers, SPIRIT HUB places a strong emphasis on the scientific aspects of coffee. From the roasting process to the brewing method, the SPIRIT HUB team is dedicated to understanding the intricacies that make each cup of coffee special. This commitment enables them to craft a distinctive and satisfying experience for their customers.
-                </p>
-                <p>
-                  As a business exclusively operated by an OMANI team, SPIRIT HUB contributes significantly to the local economy and community. This support is vital for fostering the growth and sustainability of the specialty coffee industry in Oman.
-                </p>
-                <p>
-                  Overall, SPIRIT HUB Roastery & Specialty Coffee is unwavering in its dedication to delivering a high-quality coffee experience. Simultaneously, the business plays a pivotal role in supporting the local community and the farmers whose hard work makes it all possible.
-                </p>
-              </div>
-            </div>
-          </div>
-
+          )}
         </div>
       </div>
     </div>

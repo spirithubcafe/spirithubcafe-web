@@ -44,6 +44,7 @@ import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
+import { AboutManagement } from '@/components/admin/AboutManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -247,8 +248,14 @@ export default function DashboardPage() {
       },
       {
         id: 'contact',
-        label: isArabic ? 'إدارة التواصل' : 'Contact Management',
+        label: t('dashboard.tabs.contact'),
         icon: Phone,
+        show: true
+      },
+      {
+        id: 'about',
+        label: t('dashboard.tabs.about'),
+        icon: FileText,
         show: true
       }
     ] : [])
@@ -298,6 +305,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <PagesManagement />
       case 'contact':
         return user?.role === 'admin' && <ContactManagement />
+      case 'about':
+        return user?.role === 'admin' && <AboutManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }

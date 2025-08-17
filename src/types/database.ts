@@ -303,7 +303,83 @@ export interface Database {
         }
         Relationships: []
       }
-      contact_messages: {
+      about_sections: {
+      Row: {
+        id: string
+        section_key: string
+        title_en: string
+        title_ar: string
+        content_en: string
+        content_ar: string
+        image_url: string | null
+        layout: 'text-left' | 'text-right' | 'full-width'
+        order_index: number
+        is_active: boolean
+        created_at: string
+        updated_at: string
+      }
+      Insert: {
+        id?: string
+        section_key: string
+        title_en: string
+        title_ar: string
+        content_en: string
+        content_ar: string
+        image_url?: string | null
+        layout: 'text-left' | 'text-right' | 'full-width'
+        order_index: number
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        section_key?: string
+        title_en?: string
+        title_ar?: string
+        content_en?: string
+        content_ar?: string
+        image_url?: string | null
+        layout?: 'text-left' | 'text-right' | 'full-width'
+        order_index?: number
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+    }
+    about_header: {
+      Row: {
+        id: string
+        title_en: string
+        title_ar: string
+        subtitle_en: string
+        subtitle_ar: string
+        is_active: boolean
+        created_at: string
+        updated_at: string
+      }
+      Insert: {
+        id?: string
+        title_en: string
+        title_ar: string
+        subtitle_en: string
+        subtitle_ar: string
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+      Update: {
+        id?: string
+        title_en?: string
+        title_ar?: string
+        subtitle_en?: string
+        subtitle_ar?: string
+        is_active?: boolean
+        created_at?: string
+        updated_at?: string
+      }
+    }
+    contact_messages: {
         Row: {
           id: number
           name: string

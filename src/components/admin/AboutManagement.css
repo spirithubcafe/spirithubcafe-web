@@ -1,0 +1,38 @@
+/* RTL Support for AboutManagement Component */
+
+/* Switch component RTL support */
+.rtl .switch-container {
+  flex-direction: row-reverse;
+}
+
+.rtl .switch-container .switch-label {
+  margin-right: 0.75rem;
+  margin-left: 0;
+}
+
+/* Form labels spacing */
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+/* RTL form field spacing */
+.rtl .form-field-container {
+  direction: rtl;
+}
+
+.rtl .form-field-container input {
+  text-align: right;
+}
+
+/* Switch and label alignment for RTL */
+[dir="rtl"] .switch-wrapper {
+  flex-direction: row-reverse;
+  gap: 0.75rem;
+}
+
+[dir="rtl"] .switch-wrapper .switch-label {
+  margin-right: 0;
+  margin-left: 0;
+}
