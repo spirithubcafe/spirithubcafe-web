@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, User, LogOut, ShoppingCart, Heart, Crown } from 'lucide-react'
+import { Menu, X, User, LogOut, ShoppingCart, Heart, Crown, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
+import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 
 export function Navigation() {
@@ -21,10 +22,29 @@ export function Navigation() {
   const { wishlistCount } = useWishlist()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(true)
   const isArabic = i18n.language === 'ar'
 
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
+
+  // Load categories from Firestore
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const result = await firestoreService.categories.list()
+        setCategories(result.items)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -56,7 +76,6 @@ export function Navigation() {
 
   const navigationItems = [
     { href: '/', label: t('navigation.home') },
-    { href: '/shop', label: t('navigation.shop') },
     { href: '/about', label: t('navigation.about') },
     { href: '/contact', label: t('navigation.contact') },
   ]
@@ -105,7 +124,120 @@ export function Navigation() {
               "hidden md:flex items-center gap-1",
               isArabic ? "order-2" : "order-2"
             )}>
-              {navigationItems.map((item) => (
+              {/* Home Link */}
+              <Button
+                variant={isActive('/') ? "secondary" : "ghost"}
+                size="sm"
+                asChild
+                className={cn(
+                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
+                  isActive('/')
+                    ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
+                    : "text-foreground hover:text-primary hover:bg-accent/10",
+                  "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
+                )}
+              >
+                <Link to="/">
+                  {t('navigation.home')}
+                </Link>
+              </Button>
+              
+              {/* Shop Dropdown */}
+              <div className="relative group">
+                <Button
+                  variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1",
+                    location.pathname.startsWith('/shop')
+                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
+                      : "text-foreground hover:text-primary hover:bg-accent/10",
+                    "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
+                  )}
+                >
+                  <Link to="/shop" className="flex items-center gap-1">
+                    {t('navigation.shop')}
+                    <ChevronDown className="h-3 w-3 transition-transform group-hover:rotate-180" />
+                  </Link>
+                </Button>
+                
+                {/* Dropdown Menu */}
+                <div 
+                  className={cn(
+                    "absolute top-full mt-1 w-64 bg-background border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200",
+                    isArabic ? "right-0" : "left-0"
+                  )}
+                >
+                  <div className="p-2 space-y-1">
+                    {/* All Products Link */}
+                    <Link
+                      to="/shop"
+                      className={cn(
+                        "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                        isArabic ? "text-right" : "text-left"
+                      )}
+                    >
+                      <div className="font-medium">
+                        {isArabic ? 'جميع المنتجات' : 'All Products'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {isArabic ? 'تصفح جميع منتجاتنا' : 'Browse all our products'}
+                      </div>
+                    </Link>
+                    
+                    {/* Categories Divider */}
+                    {categories.length > 0 && (
+                      <div className="border-t my-2" />
+                    )}
+                    
+                    {/* Category Links */}
+                    {loadingCategories ? (
+                      <div className="px-3 py-2 text-sm text-muted-foreground">
+                        {isArabic ? 'جارٍ التحميل...' : 'Loading...'}
+                      </div>
+                    ) : (
+                      categories.slice(0, 6).map((category) => (
+                        <Link
+                          key={category.id}
+                          to={`/shop?category=${category.id}`}
+                          className={cn(
+                            "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                            isArabic ? "text-right" : "text-left"
+                          )}
+                        >
+                          <div className="font-medium">
+                            {isArabic ? (category.name_ar || category.name) : category.name}
+                          </div>
+                          {category.description && (
+                            <div className="text-xs text-muted-foreground line-clamp-1">
+                              {isArabic ? (category.description_ar || category.description) : category.description}
+                            </div>
+                          )}
+                        </Link>
+                      ))
+                    )}
+                    
+                    {/* Show more link if there are more than 6 categories */}
+                    {categories.length > 6 && (
+                      <>
+                        <div className="border-t my-2" />
+                        <Link
+                          to="/shop"
+                          className={cn(
+                            "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors text-primary font-medium",
+                            isArabic ? "text-right" : "text-left"
+                          )}
+                        >
+                          {isArabic ? `عرض جميع الفئات (${categories.length})` : `View all categories (${categories.length})`}
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Other Navigation Items */}
+              {navigationItems.slice(1).map((item) => (
                 <Button
                   key={item.href}
                   variant={isActive(item.href) ? "secondary" : "ghost"}
@@ -246,7 +378,108 @@ export function Navigation() {
                       {t('navigation.menu', 'Menu')}
                     </h3>
                     <div className="space-y-2">
-                      {navigationItems.map((item, index) => (
+                      {/* Home Link */}
+                      <Button
+                        variant={isActive('/') ? "secondary" : "ghost"}
+                        size="sm"
+                        asChild
+                        className={cn(
+                          "w-full h-12 text-base font-medium mobile-nav-link",
+                          isArabic ? "justify-end text-right" : "justify-start text-left",
+                          isActive('/') && "tab-active-light dark:super-bright-tab font-semibold"
+                        )}
+                        style={{ animationDelay: `0ms` }}
+                      >
+                        <Link to="/" onClick={() => setMobileMenuOpen(false)} className={cn(
+                          "w-full flex",
+                          isArabic ? "text-right justify-end" : "text-left justify-start"
+                        )}>
+                          {t('navigation.home')}
+                        </Link>
+                      </Button>
+                      
+                      {/* Shop with Categories in Mobile */}
+                      <div className="space-y-1">
+                        <Button
+                          variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
+                          size="sm"
+                          asChild
+                          className={cn(
+                            "w-full h-12 text-base font-medium mobile-nav-link",
+                            isArabic ? "justify-end text-right" : "justify-start text-left",
+                            location.pathname.startsWith('/shop') && "tab-active-light dark:super-bright-tab font-semibold"
+                          )}
+                          style={{ animationDelay: `50ms` }}
+                        >
+                          <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className={cn(
+                            "w-full flex",
+                            isArabic ? "text-right justify-end" : "text-left justify-start"
+                          )}>
+                            {t('navigation.shop')}
+                          </Link>
+                        </Button>
+                        
+                        {/* Categories in Mobile */}
+                        {categories.length > 0 && (
+                          <div className={cn(
+                            "ml-4 space-y-1",
+                            isArabic ? "mr-4 ml-0" : "ml-4"
+                          )}>
+                            {categories.slice(0, 8).map((category, index) => (
+                              <Button
+                                key={category.id}
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className={cn(
+                                  "w-full h-10 text-sm font-normal mobile-nav-link text-muted-foreground",
+                                  isArabic ? "justify-end text-right" : "justify-start text-left"
+                                )}
+                                style={{ animationDelay: `${(index + 2) * 50}ms` }}
+                              >
+                                <Link 
+                                  to={`/shop?category=${category.id}`} 
+                                  onClick={() => setMobileMenuOpen(false)} 
+                                  className={cn(
+                                    "w-full flex",
+                                    isArabic ? "text-right justify-end" : "text-left justify-start"
+                                  )}
+                                >
+                                  <span className="truncate">
+                                    {isArabic ? (category.name_ar || category.name) : category.name}
+                                  </span>
+                                </Link>
+                              </Button>
+                            ))}
+                            
+                            {categories.length > 8 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                asChild
+                                className={cn(
+                                  "w-full h-10 text-sm font-normal mobile-nav-link text-primary",
+                                  isArabic ? "justify-end text-right" : "justify-start text-left"
+                                )}
+                              >
+                                <Link 
+                                  to="/shop" 
+                                  onClick={() => setMobileMenuOpen(false)} 
+                                  className={cn(
+                                    "w-full flex",
+                                    isArabic ? "text-right justify-end" : "text-left justify-start"
+                                  )}
+                                >
+                                  {isArabic ? `عرض جميع الفئات (${categories.length})` : `View all categories (${categories.length})`}
+                                </Link>
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Other Navigation Items */}
+                      {navigationItems.slice(1).map((item, index) => (
                         <Button
                           key={item.href}
                           variant={isActive(item.href) ? "secondary" : "ghost"}
@@ -257,7 +490,7 @@ export function Navigation() {
                             isArabic ? "justify-end text-right" : "justify-start text-left",
                             isActive(item.href) && "tab-active-light dark:super-bright-tab font-semibold"
                           )}
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          style={{ animationDelay: `${(index + 10) * 50}ms` }}
                         >
                           <Link to={item.href} onClick={() => setMobileMenuOpen(false)} className={cn(
                             "w-full flex",
