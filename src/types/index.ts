@@ -132,7 +132,7 @@ export interface CoffeeProperty {
   id: string
   name: string
   name_ar: string
-  type: 'roast_level' | 'process' | 'variety' | 'altitude' | 'notes' | 'farm'
+  type: 'roast_level' | 'process' | 'variety' | 'altitude' | 'notes' | 'uses' | 'farm' | 'aromatic_profile' | 'intensity' | 'compatibility'
   required: boolean
   multiple_selection: boolean // Allow multiple options
   options: CoffeePropertyOption[]
@@ -165,6 +165,7 @@ export interface Product {
   category_id?: number
   origin_id?: number
   roast_level_id?: number
+  roast_level_ar?: string
   bean_type?: BeanType
   processing_method?: string
   processing_method_ar?: string
@@ -182,6 +183,12 @@ export interface Product {
   uses_ar?: string
   farm?: string
   farm_ar?: string
+  aromatic_profile?: string
+  aromatic_profile_ar?: string
+  intensity?: string
+  intensity_ar?: string
+  compatibility?: string
+  compatibility_ar?: string
   stock: number
   low_stock_threshold: number
   weight_grams?: number

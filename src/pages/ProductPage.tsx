@@ -394,6 +394,7 @@ export default function ProductPage() {
             {/* Coffee Information */}
             <CoffeeInfoDisplay
               roastLevel={product.roast_level}
+              roastLevel_ar={product.roast_level_ar}
               process={product.processing_method}
               process_ar={product.processing_method_ar}
               variety={product.variety}
@@ -406,6 +407,12 @@ export default function ProductPage() {
               uses_ar={product.uses_ar}
               farm={product.farm}
               farm_ar={product.farm_ar}
+              aromatic_profile={product.aromatic_profile}
+              aromatic_profile_ar={product.aromatic_profile_ar}
+              intensity={product.intensity}
+              intensity_ar={product.intensity_ar}
+              compatibility={product.compatibility}
+              compatibility_ar={product.compatibility_ar}
               className="py-0"
             />
 
@@ -768,6 +775,7 @@ export default function ProductPage() {
                 {/* Coffee Information */}
                 <CoffeeInfoDisplay
                   roastLevel={product.roast_level}
+                  roastLevel_ar={product.roast_level_ar}
                   process={product.processing_method}
                   process_ar={product.processing_method_ar}
                   variety={product.variety}
@@ -780,6 +788,12 @@ export default function ProductPage() {
                   uses_ar={product.uses_ar}
                   farm={product.farm}
                   farm_ar={product.farm_ar}
+                  aromatic_profile={product.aromatic_profile}
+                  aromatic_profile_ar={product.aromatic_profile_ar}
+                  intensity={product.intensity}
+                  intensity_ar={product.intensity_ar}
+                  compatibility={product.compatibility}
+                  compatibility_ar={product.compatibility_ar}
                   className="py-0"
                 />
 

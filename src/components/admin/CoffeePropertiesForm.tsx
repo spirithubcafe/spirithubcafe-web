@@ -33,7 +33,10 @@ const COFFEE_PROPERTY_TYPES = [
   { value: 'altitude', label: 'Altitude', label_ar: 'الارتفاع' },
   { value: 'notes', label: 'Notes', label_ar: 'الملاحظات' },
   { value: 'uses', label: 'Uses', label_ar: 'الاستخدامات' },
-  { value: 'farm', label: 'Farm', label_ar: 'المزرعة' }
+  { value: 'farm', label: 'Farm', label_ar: 'المزرعة' },
+  { value: 'aromatic_profile', label: 'Aromatic Profile', label_ar: 'الملف العطري' },
+  { value: 'intensity', label: 'Intensity', label_ar: 'الكثافة' },
+  { value: 'compatibility', label: 'Compatibility', label_ar: 'التوافق' }
 ] as const
 
 export default function CoffeePropertiesForm({ coffeeProperties, onCoffeePropertiesChange }: CoffeePropertiesFormProps) {

@@ -33,12 +33,25 @@ interface ProductForm {
   slug: string
   // Coffee information fields
   roast_level: string
+  roast_level_ar: string
   process: string
+  process_ar: string
   variety: string
+  variety_ar: string
   altitude: string
+  altitude_ar: string
   notes: string
+  notes_ar: string
   uses: string
+  uses_ar: string
   farm: string
+  farm_ar: string
+  aromatic_profile: string
+  aromatic_profile_ar: string
+  intensity: string
+  intensity_ar: string
+  compatibility: string
+  compatibility_ar: string
   // SEO fields
   seo?: SEOMeta
 }
@@ -77,12 +90,25 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     slug: '',
     // Coffee information fields
     roast_level: '',
+    roast_level_ar: '',
     process: '',
+    process_ar: '',
     variety: '',
+    variety_ar: '',
     altitude: '',
+    altitude_ar: '',
     notes: '',
+    notes_ar: '',
     uses: '',
-    farm: ''
+    uses_ar: '',
+    farm: '',
+    farm_ar: '',
+    aromatic_profile: '',
+    aromatic_profile_ar: '',
+    intensity: '',
+    intensity_ar: '',
+    compatibility: '',
+    compatibility_ar: ''
   })
 
   const handlePropertiesChange = (properties: ProductProperty[]) => {
@@ -120,12 +146,25 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         slug: editingProduct.slug || '',
         // Coffee information fields
         roast_level: editingProduct.roast_level || '',
+        roast_level_ar: editingProduct.roast_level_ar || '',
         process: editingProduct.processing_method || '',
+        process_ar: editingProduct.processing_method_ar || '',
         variety: editingProduct.variety || '',
+        variety_ar: editingProduct.variety_ar || '',
         altitude: editingProduct.altitude || '',
+        altitude_ar: editingProduct.altitude_ar || '',
         notes: editingProduct.notes || '',
+        notes_ar: editingProduct.notes_ar || '',
         uses: editingProduct.uses || '',
-        farm: editingProduct.farm || ''
+        uses_ar: editingProduct.uses_ar || '',
+        farm: editingProduct.farm || '',
+        farm_ar: editingProduct.farm_ar || '',
+        aromatic_profile: editingProduct.aromatic_profile || '',
+        aromatic_profile_ar: editingProduct.aromatic_profile_ar || '',
+        intensity: editingProduct.intensity || '',
+        intensity_ar: editingProduct.intensity_ar || '',
+        compatibility: editingProduct.compatibility || '',
+        compatibility_ar: editingProduct.compatibility_ar || ''
       })
     }
   }, [editingProduct, isArabic])
@@ -177,12 +216,25 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         stock: form.stock_quantity,
         // Coffee information fields
         roast_level: form.roast_level,
+        roast_level_ar: form.roast_level_ar,
         processing_method: form.process,
+        processing_method_ar: form.process_ar,
         variety: form.variety,
+        variety_ar: form.variety_ar,
         altitude: form.altitude,
+        altitude_ar: form.altitude_ar,
         notes: form.notes,
+        notes_ar: form.notes_ar,
         uses: form.uses,
+        uses_ar: form.uses_ar,
         farm: form.farm,
+        farm_ar: form.farm_ar,
+        aromatic_profile: form.aromatic_profile,
+        aromatic_profile_ar: form.aromatic_profile_ar,
+        intensity: form.intensity,
+        intensity_ar: form.intensity_ar,
+        compatibility: form.compatibility,
+        compatibility_ar: form.compatibility_ar,
         updated_at: new Date()
       }
 
@@ -574,12 +626,35 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="roast-level-ar">{isArabic ? 'درجة التحميص (عربي)' : 'Roast Level (Arabic)'}</Label>
+                  <Input
+                    id="roast-level-ar"
+                    value={form.roast_level_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, roast_level_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: تحميص خفيف' : 'e.g., تحميص خفيف'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="process">{isArabic ? 'المعالجة' : 'Process'}</Label>
                   <Input
                     id="process"
                     value={form.process}
                     onChange={(e) => setForm(prev => ({ ...prev, process: e.target.value }))}
                     placeholder={isArabic ? 'مثال: طبيعي' : 'e.g., Natural'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="process-ar">{isArabic ? 'المعالجة (عربي)' : 'Process (Arabic)'}</Label>
+                  <Input
+                    id="process-ar"
+                    value={form.process_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, process_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: طبيعي' : 'e.g., طبيعي'}
+                    dir="rtl"
                   />
                 </div>
               </div>
@@ -595,12 +670,35 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="variety-ar">{isArabic ? 'النوع (عربي)' : 'Variety (Arabic)'}</Label>
+                  <Input
+                    id="variety-ar"
+                    value={form.variety_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, variety_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: موكا' : 'e.g., موكا'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="altitude">{isArabic ? 'الارتفاع' : 'Altitude'}</Label>
                   <Input
                     id="altitude"
                     value={form.altitude}
                     onChange={(e) => setForm(prev => ({ ...prev, altitude: e.target.value }))}
                     placeholder={isArabic ? 'مثال: 1,450-1,530 متر' : 'e.g., 1,450-1,530 masl'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="altitude-ar">{isArabic ? 'الارتفاع (عربي)' : 'Altitude (Arabic)'}</Label>
+                  <Input
+                    id="altitude-ar"
+                    value={form.altitude_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, altitude_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: 1,450-1,530 متر' : 'e.g., ١٤٥٠-١٥٣٠ متر'}
+                    dir="rtl"
                   />
                 </div>
               </div>
@@ -617,6 +715,20 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="notes-ar">{isArabic ? 'الملاحظات (عربي)' : 'Notes (Arabic)'}</Label>
+                  <Textarea
+                    id="notes-ar"
+                    value={form.notes_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, notes_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: جريب فروت، خوخ، كاكاو' : 'e.g., جريب فروت، خوخ، كاكاو'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
                   <Label htmlFor="uses">{isArabic ? 'الاستخدامات' : 'Uses'}</Label>
                   <Textarea
                     id="uses"
@@ -624,6 +736,17 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     onChange={(e) => setForm(prev => ({ ...prev, uses: e.target.value }))}
                     placeholder={isArabic ? 'مثال: إسبريسو، قهوة مقطرة، فرنش برس' : 'e.g., Espresso, Drip Coffee, French Press'}
                     rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="uses-ar">{isArabic ? 'الاستخدامات (عربي)' : 'Uses (Arabic)'}</Label>
+                  <Textarea
+                    id="uses-ar"
+                    value={form.uses_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, uses_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: إسبريسو، قهوة مقطرة، فرنش برس' : 'e.g., إسبريسو، قهوة مقطرة، فرنش برس'}
+                    rows={3}
+                    dir="rtl"
                   />
                 </div>
               </div>
@@ -636,6 +759,87 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     value={form.farm}
                     onChange={(e) => setForm(prev => ({ ...prev, farm: e.target.value }))}
                     placeholder={isArabic ? 'مثال: هاواي' : 'e.g., Hawaii'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="farm-ar">{isArabic ? 'المزرعة (عربي)' : 'Farm (Arabic)'}</Label>
+                  <Input
+                    id="farm-ar"
+                    value={form.farm_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, farm_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: هاواي' : 'e.g., هاواي'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* New Coffee Properties */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="aromatic-profile">{isArabic ? 'الملف العطري' : 'Aromatic Profile'}</Label>
+                  <Textarea
+                    id="aromatic-profile"
+                    value={form.aromatic_profile}
+                    onChange={(e) => setForm(prev => ({ ...prev, aromatic_profile: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: عطري، زهري، حمضي' : 'e.g., Fruity, Floral, Citrusy'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aromatic-profile-ar">{isArabic ? 'الملف العطري (عربي)' : 'Aromatic Profile (Arabic)'}</Label>
+                  <Textarea
+                    id="aromatic-profile-ar"
+                    value={form.aromatic_profile_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, aromatic_profile_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: عطري، زهري، حمضي' : 'e.g., عطري، زهري، حمضي'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="intensity">{isArabic ? 'الكثافة' : 'Intensity'}</Label>
+                  <Input
+                    id="intensity"
+                    value={form.intensity}
+                    onChange={(e) => setForm(prev => ({ ...prev, intensity: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: متوسط، قوي، خفيف' : 'e.g., Medium, Strong, Light'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="intensity-ar">{isArabic ? 'الكثافة (عربي)' : 'Intensity (Arabic)'}</Label>
+                  <Input
+                    id="intensity-ar"
+                    value={form.intensity_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, intensity_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: متوسط، قوي، خفيف' : 'e.g., متوسط، قوي، خفيف'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="compatibility">{isArabic ? 'التوافق' : 'Compatibility'}</Label>
+                  <Textarea
+                    id="compatibility"
+                    value={form.compatibility}
+                    onChange={(e) => setForm(prev => ({ ...prev, compatibility: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: يتناسب مع الحليب، السكر، العسل' : 'e.g., Pairs well with milk, sugar, honey'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="compatibility-ar">{isArabic ? 'التوافق (عربي)' : 'Compatibility (Arabic)'}</Label>
+                  <Textarea
+                    id="compatibility-ar"
+                    value={form.compatibility_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, compatibility_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: يتناسب مع الحليب، السكر، العسل' : 'e.g., يتناسب مع الحليب، السكر، العسل'}
+                    rows={3}
+                    dir="rtl"
                   />
                 </div>
               </div>

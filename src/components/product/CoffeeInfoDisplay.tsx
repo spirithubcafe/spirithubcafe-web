@@ -7,11 +7,15 @@ import {
   Wheat, 
   Mountain, 
   Flower2, 
-  Home 
+  Home,
+  Zap,
+  Target,
+  Sparkles
 } from 'lucide-react'
 
 interface CoffeeInfoDisplayProps {
   roastLevel?: string
+  roastLevel_ar?: string
   process?: string
   process_ar?: string
   variety?: string
@@ -24,11 +28,18 @@ interface CoffeeInfoDisplayProps {
   uses_ar?: string
   farm?: string
   farm_ar?: string
+  aromatic_profile?: string
+  aromatic_profile_ar?: string
+  intensity?: string
+  intensity_ar?: string
+  compatibility?: string
+  compatibility_ar?: string
   className?: string
 }
 
 export default function CoffeeInfoDisplay({
   roastLevel,
+  roastLevel_ar,
   process,
   process_ar,
   variety,
@@ -41,6 +52,12 @@ export default function CoffeeInfoDisplay({
   uses_ar,
   farm,
   farm_ar,
+  aromatic_profile,
+  aromatic_profile_ar,
+  intensity,
+  intensity_ar,
+  compatibility,
+  compatibility_ar,
   className
 }: CoffeeInfoDisplayProps) {
   const { t, i18n } = useTranslation()
@@ -50,7 +67,7 @@ export default function CoffeeInfoDisplay({
   const coffeeInfo = [
     { 
       label: isArabic ? 'درجة التحميص' : 'Roast Level', 
-      value: roastLevel, 
+      value: isArabic ? (roastLevel_ar || roastLevel) : roastLevel, 
       icon: <Flame className="h-5 w-5 text-amber-800 dark:text-amber-200" />
     },
     { 
@@ -82,6 +99,21 @@ export default function CoffeeInfoDisplay({
       label: isArabic ? 'المزرعة' : 'Farm', 
       value: isArabic ? (farm_ar || farm) : farm, 
       icon: <Home className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+    },
+    { 
+      label: isArabic ? 'الملف العطري' : 'Aromatic Profile', 
+      value: isArabic ? (aromatic_profile_ar || aromatic_profile) : aromatic_profile, 
+      icon: <Sparkles className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+    },
+    { 
+      label: isArabic ? 'الكثافة' : 'Intensity', 
+      value: isArabic ? (intensity_ar || intensity) : intensity, 
+      icon: <Zap className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+    },
+    { 
+      label: isArabic ? 'التوافق' : 'Compatibility', 
+      value: isArabic ? (compatibility_ar || compatibility) : compatibility, 
+      icon: <Target className="h-5 w-5 text-amber-800 dark:text-amber-200" />
     }
   ].filter(item => item.value && item.value.trim())
 
@@ -102,7 +134,6 @@ export default function CoffeeInfoDisplay({
           {coffeeInfo.map((item, index) => (
             <div key={index} className="w-full">
               {isArabic ? (
-                // Layout عربی: آیکون در ابتدا (راست)، برچسب بعد از آیکون، مقدار در چپ
                 <div className="flex items-center text-sm" dir="rtl">
                   {item.icon}
                   <span className="text-muted-foreground font-medium mx-2">
@@ -113,7 +144,6 @@ export default function CoffeeInfoDisplay({
                   </span>
                 </div>
               ) : (
-                // Layout انگلیسی: آیکون در ابتدا (چپ)، برچسب بعد از آیکون، مقدار در راست
                 <div className="flex items-center text-sm">
                   {item.icon}
                   <span className="text-muted-foreground font-medium mx-2">

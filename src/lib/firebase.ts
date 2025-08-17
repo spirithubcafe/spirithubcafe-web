@@ -196,6 +196,7 @@ export interface Product {
   bean_type?: string;
   // Coffee information fields
   roast_level?: string;
+  roast_level_ar?: string;
   variety?: string;
   variety_ar?: string;
   notes?: string;
@@ -204,6 +205,12 @@ export interface Product {
   uses_ar?: string;
   farm?: string;
   farm_ar?: string;
+  aromatic_profile?: string;
+  aromatic_profile_ar?: string;
+  intensity?: string;
+  intensity_ar?: string;
+  compatibility?: string;
+  compatibility_ar?: string;
   processing_method?: string;
   processing_method_ar?: string;
   altitude?: string;
