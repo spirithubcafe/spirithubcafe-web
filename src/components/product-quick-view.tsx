@@ -531,7 +531,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 <label className="text-sm font-medium">
                   {isArabic ? 'الكمية' : 'Quantity'}
                 </label>
-                <div className="flex items-center w-fit">
+                <div className="flex items-center w-fit ltr">
                   <Button
                     variant="outline"
                     size="icon"

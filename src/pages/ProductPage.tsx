@@ -685,7 +685,7 @@ export default function ProductPage() {
                 <label className="text-sm font-medium">
                   {t('shop.quantity')}:
                 </label>
-                <div className="flex items-center">
+                <div className="flex items-center ltr">
                   <Button
                     variant="outline"
                     size="icon"

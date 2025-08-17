@@ -241,7 +241,7 @@ export function CartSidebar() {
                         )}
                         
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center">
+                          <div className="flex items-center ltr">
                             <Button
                               variant="outline"
                               size="icon"

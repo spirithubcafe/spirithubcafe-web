@@ -1412,3 +1412,12 @@
   padding-left: 0;
   text-align: right;
 }
+
+/* Force LTR direction for quantity controls and similar components */
+.ltr {
+  direction: ltr !important;
+}
+
+.ltr * {
+  direction: ltr !important;
+}
