@@ -23,6 +23,210 @@
   cursor: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkgNkwxNSAxMkw5IDE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K"), auto;
 }
 
+/* Hero Animation Classes */
+.hero-animate-fadeIn {
+  animation: heroFadeIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-slideIn {
+  animation: heroSlideIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-zoomIn {
+  animation: heroZoomIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-bounceIn {
+  animation: heroBounceIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-rotateIn {
+  animation: heroRotateIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-flipIn {
+  animation: heroFlipIn var(--animation-duration, 1000ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+/* Hero Animation Keyframes */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes heroZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroRotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-200deg) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes heroFlipIn {
+  from {
+    opacity: 0;
+    transform: perspective(400px) rotateX(-90deg);
+  }
+  40% {
+    transform: perspective(400px) rotateX(-20deg);
+  }
+  60% {
+    transform: perspective(400px) rotateX(10deg);
+  }
+  80% {
+    transform: perspective(400px) rotateX(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(400px) rotateX(0deg);
+  }
+}
+
+/* Hero Animation Classes */
+.hero-animate-fadeIn {
+  animation: heroFadeIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-slideIn {
+  animation: heroSlideIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-zoomIn {
+  animation: heroZoomIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-bounceIn {
+  animation: heroBounceIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-rotateIn {
+  animation: heroRotateIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+.hero-animate-flipIn {
+  animation: heroFlipIn var(--animation-duration, 500ms) ease-out var(--animation-delay, 0ms) both;
+}
+
+/* Hero Animation Keyframes */
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes heroSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes heroRotateIn {
+  from {
+    opacity: 0;
+    transform: rotate(-200deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0);
+  }
+}
+
+@keyframes heroFlipIn {
+  from {
+    opacity: 0;
+    transform: perspective(400px) rotateY(90deg);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(400px) rotateY(0);
+  }
+}
+
 /* Dynamic Filter Classes */
 .hero-filter-blur-0 { filter: blur(0px); }
 .hero-filter-blur-1 { filter: blur(1px); }

@@ -519,7 +519,187 @@ export interface Settings {
   updated_at: string
 }
 
-// Hero Slide Interface
+// Hero Typography Settings Interface
+export interface HeroTypography {
+  // English Typography
+  title_font_family?: string
+  title_font_size?: string // CSS font-size values like '3rem', '48px'
+  title_font_weight?: number // 100-900
+  title_line_height?: number // 1.2, 1.5, etc.
+  title_letter_spacing?: string // CSS letter-spacing like '0.05em'
+  title_text_transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  title_color?: string // hex color
+  title_shadow?: string // CSS text-shadow
+  
+  subtitle_font_family?: string
+  subtitle_font_size?: string
+  subtitle_font_weight?: number
+  subtitle_line_height?: number
+  subtitle_letter_spacing?: string
+  subtitle_text_transform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  subtitle_color?: string
+  subtitle_shadow?: string
+  
+  description_font_family?: string
+  description_font_size?: string
+  description_font_weight?: number
+  description_line_height?: number
+  description_letter_spacing?: string
+  description_color?: string
+  description_shadow?: string
+  
+  // Arabic Typography
+  title_font_family_ar?: string
+  title_font_size_ar?: string
+  title_font_weight_ar?: number
+  title_line_height_ar?: number
+  title_letter_spacing_ar?: string
+  title_text_transform_ar?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  title_color_ar?: string
+  title_shadow_ar?: string
+  
+  subtitle_font_family_ar?: string
+  subtitle_font_size_ar?: string
+  subtitle_font_weight_ar?: number
+  subtitle_line_height_ar?: number
+  subtitle_letter_spacing_ar?: string
+  subtitle_text_transform_ar?: 'none' | 'uppercase' | 'lowercase' | 'capitalize'
+  subtitle_color_ar?: string
+  subtitle_shadow_ar?: string
+  
+  description_font_family_ar?: string
+  description_font_size_ar?: string
+  description_font_weight_ar?: number
+  description_line_height_ar?: number
+  description_letter_spacing_ar?: string
+  description_color_ar?: string
+  description_shadow_ar?: string
+}
+
+// Hero Animation Settings Interface
+export interface HeroAnimation {
+  title_animation?: 'none' | 'fadeIn' | 'slideIn' | 'zoomIn' | 'bounceIn' | 'rotateIn' | 'flipIn'
+  title_animation_delay?: number // in milliseconds
+  title_animation_duration?: number // in milliseconds
+  subtitle_animation?: 'none' | 'fadeIn' | 'slideIn' | 'zoomIn' | 'bounceIn' | 'rotateIn' | 'flipIn'
+  subtitle_animation_delay?: number
+  subtitle_animation_duration?: number
+  description_animation?: 'none' | 'fadeIn' | 'slideIn' | 'zoomIn' | 'bounceIn' | 'rotateIn' | 'flipIn'
+  description_animation_delay?: number
+  description_animation_duration?: number
+  buttons_animation?: 'none' | 'fadeIn' | 'slideIn' | 'zoomIn' | 'bounceIn' | 'rotateIn' | 'flipIn'
+  buttons_animation_delay?: number
+  buttons_animation_duration?: number
+}
+
+// Hero Button Settings Interface
+export interface HeroButtonSettings {
+  primary_button_style?: {
+    background_color?: string
+    background_gradient?: string // CSS gradient
+    text_color?: string
+    border_color?: string
+    border_width?: number
+    border_radius?: string
+    font_family?: string
+    font_size?: string
+    font_weight?: number
+    padding?: string
+    margin?: string
+    shadow?: string // CSS box-shadow
+    hover_background_color?: string
+    hover_background_gradient?: string
+    hover_text_color?: string
+    hover_border_color?: string
+    hover_shadow?: string
+    hover_transform?: string // CSS transform
+    transition_duration?: number // in milliseconds
+  }
+  
+  secondary_button_style?: {
+    background_color?: string
+    background_gradient?: string
+    text_color?: string
+    border_color?: string
+    border_width?: number
+    border_radius?: string
+    font_family?: string
+    font_size?: string
+    font_weight?: number
+    padding?: string
+    margin?: string
+    shadow?: string
+    hover_background_color?: string
+    hover_background_gradient?: string
+    hover_text_color?: string
+    hover_border_color?: string
+    hover_shadow?: string
+    hover_transform?: string
+    transition_duration?: number
+  }
+}
+
+// Hero Layout Settings Interface
+export interface HeroLayoutSettings {
+  container_max_width?: string // CSS max-width like '1200px', '100%'
+  content_padding?: string // CSS padding
+  content_margin?: string // CSS margin
+  vertical_alignment?: 'top' | 'center' | 'bottom'
+  horizontal_alignment?: 'left' | 'center' | 'right'
+  content_width?: string // CSS width for content area
+  background_overlay_shape?: 'none' | 'circle' | 'rectangle' | 'polygon' | 'custom'
+  background_overlay_shape_color?: string
+  background_overlay_shape_opacity?: number
+  responsive_breakpoints?: {
+    mobile?: {
+      title_font_size?: string
+      subtitle_font_size?: string
+      description_font_size?: string
+      content_padding?: string
+      content_margin?: string
+    }
+    tablet?: {
+      title_font_size?: string
+      subtitle_font_size?: string
+      description_font_size?: string
+      content_padding?: string
+      content_margin?: string
+    }
+    desktop?: {
+      title_font_size?: string
+      subtitle_font_size?: string
+      description_font_size?: string
+      content_padding?: string
+      content_margin?: string
+    }
+  }
+}
+
+// Hero Advanced Effects Interface
+export interface HeroAdvancedEffects {
+  parallax_enabled?: boolean
+  parallax_speed?: number // 0.1 to 2.0
+  ken_burns_effect?: boolean // Slow zoom effect on images
+  ken_burns_direction?: 'zoom-in' | 'zoom-out' | 'zoom-in-out'
+  ken_burns_duration?: number // in seconds
+  particle_system?: {
+    enabled?: boolean
+    type?: 'stars' | 'dots' | 'lines' | 'bubbles' | 'snow' | 'rain'
+    density?: number // 1-100
+    speed?: number // 1-10
+    color?: string
+    opacity?: number // 0-100
+  }
+  gradient_overlay?: {
+    enabled?: boolean
+    type?: 'linear' | 'radial' | 'conic'
+    colors?: string[] // Array of hex colors
+    direction?: string // CSS gradient direction
+    opacity?: number // 0-100
+  }
+}
+
+// Enhanced Hero Slide Interface
 export interface HeroSlide {
   id: string
   title: string
@@ -535,6 +715,10 @@ export interface HeroSlide {
   brightness: number // 0-200, default 100
   contrast: number // 0-200, default 100
   saturation: number // 0-200, default 100
+  hue_rotation?: number // 0-360 degrees
+  sepia?: number // 0-100
+  grayscale?: number // 0-100
+  invert?: boolean
   duration: number // Display duration in seconds, default 5
   button_text?: string
   button_text_ar?: string
@@ -547,24 +731,125 @@ export interface HeroSlide {
   text_alignment: 'left' | 'center' | 'right'
   overlay_opacity: number // 0-100
   overlay_color: string // hex color
+  
+  // Enhanced Typography for this slide
+  typography?: HeroTypography
+  
+  // Enhanced Animation for this slide
+  animation?: HeroAnimation
+  
+  // Enhanced Button Settings for this slide
+  button_settings?: HeroButtonSettings
+  
+  // Enhanced Layout for this slide
+  layout?: HeroLayoutSettings
+  
+  // Advanced Effects for this slide
+  effects?: HeroAdvancedEffects
+  
+  // Custom CSS for advanced users
+  custom_css?: string
+  custom_css_mobile?: string
+  custom_css_tablet?: string
+  
   is_active: boolean
   sort_order: number
   created_at: string
   updated_at: string
 }
 
-// Hero Settings Interface
+// Enhanced Hero Settings Interface
 export interface HeroSettings {
   autoplay: boolean
   autoplay_delay: number // in milliseconds
   show_arrows: boolean
   show_dots: boolean
   show_progress: boolean
-  transition_effect: 'slide' | 'fade' | 'zoom'
+  transition_effect: 'slide' | 'fade' | 'zoom' | 'flip' | 'cube' | 'coverflow'
   transition_duration: number // in milliseconds
+  transition_easing?: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'cubic-bezier'
   enable_swipe: boolean
   pause_on_hover: boolean
   infinite_loop: boolean
+  
+  // Global Typography Settings (defaults for all slides)
+  global_typography?: HeroTypography
+  
+  // Global Animation Settings
+  global_animation?: HeroAnimation
+  
+  // Global Button Settings
+  global_button_settings?: HeroButtonSettings
+  
+  // Global Layout Settings
+  global_layout?: HeroLayoutSettings
+  
+  // Global Advanced Effects
+  global_effects?: HeroAdvancedEffects
+  
+  // Navigation Settings
+  navigation_settings?: {
+    arrows_style?: {
+      color?: string
+      background_color?: string
+      border_color?: string
+      border_radius?: string
+      size?: string
+      padding?: string
+      shadow?: string
+      hover_color?: string
+      hover_background_color?: string
+      hover_shadow?: string
+      position_offset?: string // Distance from edges
+    }
+    dots_style?: {
+      color?: string
+      active_color?: string
+      size?: string
+      spacing?: string
+      border_radius?: string
+      border_color?: string
+      border_width?: number
+      shadow?: string
+      hover_color?: string
+      position_offset?: string // Distance from bottom
+    }
+    progress_style?: {
+      color?: string
+      background_color?: string
+      height?: string
+      border_radius?: string
+      shadow?: string
+      gradient?: string
+    }
+  }
+  
+  // Responsive Settings
+  responsive_settings?: {
+    mobile?: {
+      show_arrows?: boolean
+      show_dots?: boolean
+      show_progress?: boolean
+      autoplay?: boolean
+      transition_duration?: number
+    }
+    tablet?: {
+      show_arrows?: boolean
+      show_dots?: boolean
+      show_progress?: boolean
+      autoplay?: boolean
+      transition_duration?: number
+    }
+  }
+  
+  // Performance Settings
+  performance_settings?: {
+    lazy_loading?: boolean
+    preload_next_slide?: boolean
+    optimize_images?: boolean
+    reduce_motion_respect?: boolean // Respect user's prefers-reduced-motion
+  }
+  
   slides: HeroSlide[]
 }
 

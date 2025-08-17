@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, EyeOff, Move } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { heroService } from '@/services/hero'
 import type { HeroSettings } from '@/types'
+import { HeroSliderSettings } from './HeroSliderSettings'
 
 export function HeroSlideManagement() {
     const { i18n } = useTranslation()
@@ -15,6 +16,7 @@ export function HeroSlideManagement() {
   const [settings, setSettings] = useState<HeroSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [draggedSlide, setDraggedSlide] = useState<string | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
 
   const loadSettings = useCallback(async () => {
     try {
@@ -102,8 +104,32 @@ export function HeroSlideManagement() {
     )
   }
 
+  if (showSettings) {
+    return (
+      <HeroSliderSettings 
+        onClose={() => setShowSettings(false)}
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
+      {/* Header with Settings Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {isRTL ? 'إدارة الشريط الرئيسي' : 'Hero Slider Management'}
+          </h1>
+          <p className="text-muted-foreground">
+            {isRTL ? 'إدارة شرائح العرض والتنظیمات المتقدمة' : 'Manage slides and advanced settings'}
+          </p>
+        </div>
+        <Button onClick={() => setShowSettings(true)} variant="outline">
+          <Settings className="h-4 w-4 mr-2" />
+          {isRTL ? 'التنظیمات المتقدمة' : 'Advanced Settings'}
+        </Button>
+      </div>
+
       {/* Slides Management */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
