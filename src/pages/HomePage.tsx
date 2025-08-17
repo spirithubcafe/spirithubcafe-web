@@ -309,14 +309,7 @@ export function HomePage() {
               </div>
             )}
             
-            <div className="text-center mt-12">
-              <Button asChild size="lg" className="btn-coffee">
-                <Link to="/shop">
-                  {t('homepage.latestRelease.viewShop', 'View Shop')}
-                  <ArrowRight className="h-4 w-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180" />
-                </Link>
-              </Button>
-            </div>
+
           </div>
         </div>
       </section>
