@@ -14,7 +14,8 @@ import {
   MessageSquare,
   Globe,
   Presentation,
-  FileText
+  FileText,
+  Phone
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +43,7 @@ import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
+import { ContactManagement } from '@/components/admin/ContactManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -242,6 +244,12 @@ export default function DashboardPage() {
         label: isArabic ? 'إدارة الصفحات' : 'Pages Management',
         icon: FileText,
         show: true
+      },
+      {
+        id: 'contact',
+        label: isArabic ? 'إدارة التواصل' : 'Contact Management',
+        icon: Phone,
+        show: true
       }
     ] : [])
   ]
@@ -288,6 +296,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <FooterManagement />
       case 'pages':
         return user?.role === 'admin' && <PagesManagement />
+      case 'contact':
+        return user?.role === 'admin' && <ContactManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }

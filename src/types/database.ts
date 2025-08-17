@@ -303,6 +303,42 @@ export interface Database {
         }
         Relationships: []
       }
+      contact_messages: {
+        Row: {
+          id: number
+          name: string
+          email: string
+          subject: string
+          message: string
+          phone: string | null
+          is_read: boolean
+          replied_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          email: string
+          subject: string
+          message: string
+          phone?: string | null
+          is_read?: boolean
+          replied_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          email?: string
+          subject?: string
+          message?: string
+          phone?: string | null
+          is_read?: boolean
+          replied_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           id: number

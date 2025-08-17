@@ -503,7 +503,7 @@
   },
   "common": {
     "loading": "جاري التحميل...",
-    "error": "حدث خطأ ما",
+    "generalError": "حدث خطأ ما",
     "retry": "إعادة المحاولة",
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -518,6 +518,11 @@
     "themeSystem": "النظام",
     "toggleLanguage": "تغيير اللغة",
     "pleaseLogin": "يرجى تسجيل الدخول",
-    "brandName": "SPIRITHUB ROASTERY"
+    "brandName": "SPIRITHUB ROASTERY",
+    "error": {
+      "load": "فشل في تحميل البيانات",
+      "save": "فشل في حفظ البيانات",
+      "update": "فشل في تحديث البيانات"
+    }
   }
 }

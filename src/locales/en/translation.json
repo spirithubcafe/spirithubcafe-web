@@ -472,7 +472,7 @@
   },
   "common": {
     "loading": "Loading...",
-    "error": "Something went wrong",
+    "generalError": "Something went wrong",
     "retry": "Retry",
     "save": "Save",
     "cancel": "Cancel",
@@ -487,6 +487,11 @@
     "themeSystem": "System",
     "toggleLanguage": "Toggle language",
     "pleaseLogin": "Please login",
-    "brandName": "SPIRITHUB ROASTERY"
+    "brandName": "SPIRITHUB ROASTERY",
+    "error": {
+      "load": "Failed to load data",
+      "save": "Failed to save data",
+      "update": "Failed to update data"
+    }
   }
 }

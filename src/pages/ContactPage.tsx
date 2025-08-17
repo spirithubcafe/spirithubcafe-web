@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MapPin, Phone, Mail, Clock, MessageCircle, Instagram, Navigation, Locate, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
+import { contactService, type ContactFormData } from '@/services/contact'
 
-// Spirit Hub Cafe coordinates (Muscat, Oman - Al Mouj Street area)
-const STORE_COORDINATES = {
+// Default coordinates if not loaded from settings
+const DEFAULT_COORDINATES = {
   lat: 23.618926,
   lng: 58.256566
 }
@@ -20,14 +21,77 @@ export function ContactPage() {
   const isRTL = i18n.language === 'ar' || i18n.language === 'fa'
   const [userLocation, setUserLocation] = useState<string>('')
   const [isLocationLoading, setIsLocationLoading] = useState(false)
+  
+  // Contact settings state - will be loaded from database
+  const [contactSettings, setContactSettings] = useState<any>(null)
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  
+  // Contact form state
+  const [formData, setFormData] = useState<ContactFormData>({
+    name: '',
+    email: '',
+    subject: '',
+    message: '',
+    phone: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
   const [showDirections, setShowDirections] = useState(false)
   const [isCallModalOpen, setIsCallModalOpen] = useState(false)
 
+  // Load contact settings
+  useEffect(() => {
+    const loadContactSettings = async () => {
+      try {
+        setIsLoadingSettings(true)
+        const settings = await contactService.getContactSettings()
+        if (settings && Object.keys(settings).length > 0) {
+          // Use settings from database
+          setContactSettings(settings)
+        } else {
+          // Fallback to default values if no settings found
+          setContactSettings({
+            phone1: '+968 9190 0005',
+            phone2: '+968 7272 6999',
+            whatsapp: '+968 7272 6999',
+            email: 'info@spirithubcafe.com',
+            instagram: '@spirithubcafe',
+            address: 'Al Mouj Street, Muscat, Oman',
+            address_ar: 'شارع الموج، مسقط، عمان',
+            hours: 'Daily: 7 AM - 12 AM',
+            hours_ar: 'كل أيام الأسبوع: 7 صباحاً - 12 صباحاً',
+            coordinates: DEFAULT_COORDINATES
+          })
+        }
+      } catch (error) {
+        console.error('Error loading contact settings:', error)
+        // Use default values on error
+        setContactSettings({
+          phone1: '+968 9190 0005',
+          phone2: '+968 7272 6999',
+          whatsapp: '+968 7272 6999',
+          email: 'info@spirithubcafe.com',
+          instagram: '@spirithubcafe',
+          address: 'Al Mouj Street, Muscat, Oman',
+          address_ar: 'شارع الموج، مسقط، عمان',
+          hours: 'Mon-Sun: 7AM-12AM',
+          hours_ar: 'الإثنين-الأحد: 7ص-12م',
+          coordinates: DEFAULT_COORDINATES
+        })
+      } finally {
+        setIsLoadingSettings(false)
+      }
+    }
+
+    loadContactSettings()
+  }, [])
+
   const handleOpenMap = () => {
-    const mapUrl = `https://www.openstreetmap.org/?mlat=${STORE_COORDINATES.lat}&mlon=${STORE_COORDINATES.lng}&zoom=16#map=16/${STORE_COORDINATES.lat}/${STORE_COORDINATES.lng}`
+    const coords = contactSettings.coordinates
+    const mapUrl = `https://www.openstreetmap.org/?mlat=${coords.lat}&mlon=${coords.lng}&zoom=16#map=16/${coords.lat}/${coords.lng}`
     window.open(mapUrl, '_blank')
   }
 
@@ -60,7 +124,8 @@ export function ContactPage() {
       return
     }
 
-    const directionsUrl = `https://www.openstreetmap.org/directions?from=${userLocation}&to=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}&route=foot`
+    const coords = contactSettings.coordinates
+    const directionsUrl = `https://www.openstreetmap.org/directions?from=${userLocation}&to=${coords.lat},${coords.lng}&route=foot`
     window.open(directionsUrl, '_blank')
   }
 
@@ -84,6 +149,53 @@ export function ContactPage() {
     window.open(`https://instagram.com/${username.replace('@', '')}`, '_blank')
   }
 
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitMessage(null)
+
+    try {
+      await contactService.createMessage(formData)
+      setSubmitMessage({
+        type: 'success',
+        text: isRTL ? 'تم إرسال رسالتك بنجاح. سنتواصل معك قريباً!' : 'Your message has been sent successfully. We will contact you soon!'
+      })
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: '',
+        phone: ''
+      })
+    } catch (error) {
+      console.error('Error sending message:', error)
+      setSubmitMessage({
+        type: 'error',
+        text: isRTL ? 'عذراً، حدث خطأ في إرسال الرسالة. يرجى المحاولة مرة أخرى.' : 'Sorry, there was an error sending your message. Please try again.'
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleInputChange = (field: keyof ContactFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  // Show loading if contact settings are not loaded yet
+  if (isLoadingSettings || !contactSettings) {
+    return (
+      <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
@@ -104,32 +216,32 @@ export function ContactPage() {
               <CardContent className="p-6 text-center">
                 <Phone className="contact-icon h-8 w-8 mx-auto mb-3 text-green-600" />
                 <h3 className="font-semibold mb-2">{t('contact.info.callNow')}</h3>
-                <p className="text-sm text-muted-foreground currency">{t('contact.info.phone')}</p>
-                <p className="text-sm text-muted-foreground currency">{t('contact.info.phone2')}</p>
+                <p className="text-sm text-muted-foreground currency">{contactSettings.phone1}</p>
+                <p className="text-sm text-muted-foreground currency">{contactSettings.phone2}</p>
               </CardContent>
             </Card>
 
-            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleWhatsApp(t('contact.info.whatsapp'))}>
+            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleWhatsApp(contactSettings.whatsapp)}>
               <CardContent className="p-6 text-center">
                 <MessageCircle className="contact-icon h-8 w-8 mx-auto mb-3 text-green-500" />
                 <h3 className="font-semibold mb-2">{t('contact.info.sendWhatsApp')}</h3>
-                <p className="text-sm text-muted-foreground currency">{t('contact.info.whatsapp')}</p>
+                <p className="text-sm text-muted-foreground currency">{contactSettings.whatsapp}</p>
               </CardContent>
             </Card>
 
-            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleEmail(t('contact.info.email'))}>
+            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleEmail(contactSettings.email)}>
               <CardContent className="p-6 text-center">
                 <Mail className="contact-icon h-8 w-8 mx-auto mb-3 text-blue-600" />
                 <h3 className="font-semibold mb-2">{t('contact.info.sendEmail')}</h3>
-                <p className="text-sm text-muted-foreground currency">{t('contact.info.email')}</p>
+                <p className="text-sm text-muted-foreground currency">{contactSettings.email}</p>
               </CardContent>
             </Card>
 
-            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleInstagram(t('contact.info.instagram'))}>
+            <Card className="contact-card contact-action-btn hover:shadow-lg transition-all duration-300 cursor-pointer" onClick={() => handleInstagram(contactSettings.instagram)}>
               <CardContent className="p-6 text-center">
                 <Instagram className="contact-icon h-8 w-8 mx-auto mb-3 text-pink-600" />
                 <h3 className="font-semibold mb-2">{t('contact.info.followInstagram')}</h3>
-                <p className="text-sm text-muted-foreground currency">{t('contact.info.instagram')}</p>
+                <p className="text-sm text-muted-foreground currency">{contactSettings.instagram}</p>
               </CardContent>
             </Card>
           </div>
@@ -153,7 +265,7 @@ export function ContactPage() {
                       width="100%"
                       height="100%"
                       style={{ minHeight: '300px' }}
-                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${STORE_COORDINATES.lng-0.005},${STORE_COORDINATES.lat-0.005},${STORE_COORDINATES.lng+0.005},${STORE_COORDINATES.lat+0.005}&amp;layer=mapnik&amp;marker=${STORE_COORDINATES.lat},${STORE_COORDINATES.lng}`}
+                      src={`https://www.openstreetmap.org/export/embed.html?bbox=${contactSettings.coordinates.lng-0.005},${contactSettings.coordinates.lat-0.005},${contactSettings.coordinates.lng+0.005},${contactSettings.coordinates.lat+0.005}&amp;layer=mapnik&amp;marker=${contactSettings.coordinates.lat},${contactSettings.coordinates.lng}`}
                       allowFullScreen
                       className="border-0"
                       title="Spirit Hub Cafe Location"
@@ -165,7 +277,9 @@ export function ContactPage() {
                       <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                       <div>
                         <p className="font-medium">{t('contact.info.addressLabel')}</p>
-                        <p className="text-muted-foreground">{t('contact.info.address')}</p>
+                        <p className="text-muted-foreground">
+                          {isRTL ? contactSettings.address_ar : contactSettings.address}
+                        </p>
                       </div>
                     </div>
                     
@@ -173,7 +287,9 @@ export function ContactPage() {
                       <Clock className="h-5 w-5 text-muted-foreground mt-0.5 no-flip flex-shrink-0" />
                       <div>
                         <p className="font-medium">{t('contact.info.hoursLabel')}</p>
-                        <p className="text-muted-foreground">{t('contact.info.hours')}</p>
+                        <p className="text-muted-foreground">
+                          {isRTL ? contactSettings.hours_ar : contactSettings.hours}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -237,31 +353,77 @@ export function ContactPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="space-y-6">
+                {submitMessage && (
+                  <div className={`mb-4 p-3 rounded-md ${
+                    submitMessage.type === 'success' 
+                      ? 'bg-green-50 text-green-800 border border-green-200' 
+                      : 'bg-red-50 text-red-800 border border-red-200'
+                  }`}>
+                    {submitMessage.text}
+                  </div>
+                )}
+                
+                <form onSubmit={handleFormSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">{t('contact.form.name')}</Label>
-                      <Input id="name" placeholder={t('contact.form.namePlaceholder')} />
+                      <Input 
+                        id="name" 
+                        value={formData.name}
+                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        placeholder={t('contact.form.namePlaceholder')} 
+                        required
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">{t('contact.form.email')}</Label>
-                      <Input id="email" type="email" placeholder={t('contact.form.emailPlaceholder')} />
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={formData.email}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        placeholder={t('contact.form.emailPlaceholder')} 
+                        required
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
+                    <Label htmlFor="phone">{isRTL ? 'رقم الهاتف (اختياري)' : 'Phone Number (Optional)'}</Label>
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      placeholder="+968 9123 4567" 
+                      dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="subject">{t('contact.form.subject')}</Label>
-                    <Input id="subject" placeholder={t('contact.form.subjectPlaceholder')} />
+                    <Input 
+                      id="subject" 
+                      value={formData.subject}
+                      onChange={(e) => handleInputChange('subject', e.target.value)}
+                      placeholder={t('contact.form.subjectPlaceholder')} 
+                      required
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="message">{t('contact.form.message')}</Label>
                     <Textarea 
                       id="message" 
+                      value={formData.message}
+                      onChange={(e) => handleInputChange('message', e.target.value)}
                       placeholder={t('contact.form.messagePlaceholder')}
                       className="min-h-[120px]"
+                      required
                     />
                   </div>
-                  <Button type="submit" className="w-full">
-                    {t('contact.form.send')}
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting 
+                      ? (isRTL ? 'جاري الإرسال...' : 'Sending...') 
+                      : t('contact.form.send')
+                    }
                   </Button>
                 </form>
               </CardContent>
@@ -298,28 +460,28 @@ export function ContactPage() {
               variant="outline"
               className={`w-full h-12 ${isRTL ? 'justify-end text-right' : 'text-left justify-start'}`}
               onClick={() => {
-                handleCall(t('contact.info.phone'))
+                handleCall(contactSettings.phone1)
                 setIsCallModalOpen(false)
               }}
             >
               <Phone className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
               <div>
                 <div className="font-medium">{t('contact.modal.mainLine')}</div>
-                <div className="text-sm text-muted-foreground" dir="ltr" style={{direction:'ltr',unicodeBidi:'plaintext'}}>{t('contact.info.phone')}</div>
+                <div className="text-sm text-muted-foreground" dir="ltr">{contactSettings.phone1}</div>
               </div>
             </Button>
             <Button
               variant="outline"
               className={`w-full h-12 ${isRTL ? 'justify-end text-right' : 'text-left justify-start'}`}
               onClick={() => {
-                handleCall(t('contact.info.phone2'))
+                handleCall(contactSettings.phone2)
                 setIsCallModalOpen(false)
               }}
             >
               <Phone className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
               <div>
                 <div className="font-medium">{t('contact.modal.secondLine')}</div>
-                <div className="text-sm text-muted-foreground" dir="ltr" style={{direction:'ltr',unicodeBidi:'plaintext'}}>{t('contact.info.phone2')}</div>
+                <div className="text-sm text-muted-foreground" dir="ltr">{contactSettings.phone2}</div>
               </div>
             </Button>
           </div>
