@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Star, Clock, ShoppingCart, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowRight, Star, ShoppingCart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +22,6 @@ export function HomePage() {
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
   const { settings: homepageSettings, refetch: refetchHomepageSettings } = useHomepageSettings()
-  const categoriesScrollRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const isArabic = i18n.language === 'ar'
   
@@ -114,12 +113,6 @@ export function HomePage() {
       window.removeEventListener('homepageSettingsUpdated', handleSettingsUpdate)
     }
   }, [refetchHomepageSettings])
-  
-  // Touch/drag state for categories
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
-  const [dragDistance, setDragDistance] = useState(0)
 
   // Helper function to get product price in current currency
   const getProductPrice = (product: Product): number => {
@@ -172,86 +165,6 @@ export function HomePage() {
 
     loadCategories()
   }, [])
-
-  // Scroll categories horizontally
-  const scrollCategories = (direction: 'left' | 'right') => {
-    if (categoriesScrollRef.current) {
-      const scrollAmount = 200
-      const newScrollLeft = categoriesScrollRef.current.scrollLeft + 
-        (direction === 'right' ? scrollAmount : -scrollAmount)
-      
-      categoriesScrollRef.current.scrollTo({
-        left: newScrollLeft,
-        behavior: 'smooth'
-      })
-    }
-  }
-
-  // Touch/drag handlers for categories
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!categoriesScrollRef.current) return
-    setIsDragging(true)
-    setStartX(e.touches[0].pageX - categoriesScrollRef.current.offsetLeft)
-    setScrollLeft(categoriesScrollRef.current.scrollLeft)
-    setDragDistance(0)
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !categoriesScrollRef.current) return
-    e.preventDefault()
-    const x = e.touches[0].pageX - categoriesScrollRef.current.offsetLeft
-    const walk = (x - startX) * 2 // Scroll speed multiplier
-    setDragDistance(Math.abs(walk))
-    categoriesScrollRef.current.scrollLeft = scrollLeft - walk
-  }
-
-  const handleTouchEnd = () => {
-    setIsDragging(false)
-  }
-
-  // Mouse drag handlers (for desktop)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!categoriesScrollRef.current) return
-    setIsDragging(true)
-    setStartX(e.pageX - categoriesScrollRef.current.offsetLeft)
-    setScrollLeft(categoriesScrollRef.current.scrollLeft)
-    setDragDistance(0)
-    categoriesScrollRef.current.style.cursor = 'grabbing'
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !categoriesScrollRef.current) return
-    e.preventDefault()
-    const x = e.pageX - categoriesScrollRef.current.offsetLeft
-    const walk = (x - startX) * 2
-    setDragDistance(Math.abs(walk))
-    categoriesScrollRef.current.scrollLeft = scrollLeft - walk
-  }
-
-  const handleMouseUp = () => {
-    setIsDragging(false)
-    if (categoriesScrollRef.current) {
-      categoriesScrollRef.current.style.cursor = 'grab'
-    }
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
-    if (categoriesScrollRef.current) {
-      categoriesScrollRef.current.style.cursor = 'grab'
-    }
-  }
-
-  // Handle category click - prevent navigation if dragging
-  const handleCategoryClick = (e: React.MouseEvent) => {
-    if (dragDistance > 10) { // If dragged more than 10px, prevent navigation
-      e.preventDefault()
-      e.stopPropagation()
-      return false
-    }
-    // Allow normal navigation
-    return true
-  }
 
   return (
     <div className="flex flex-col min-h-screen w-full">
@@ -440,29 +353,29 @@ export function HomePage() {
             {/* Overlay */}
             <div 
               className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                (homepageSettings?.overlayOpacity || 70) <= 10 
+                (homepageSettings?.overlayOpacity || 30) <= 10 
+                  ? 'opacity-5'
+                  : (homepageSettings?.overlayOpacity || 30) <= 20
                   ? 'opacity-10'
-                  : (homepageSettings?.overlayOpacity || 70) <= 20
+                  : (homepageSettings?.overlayOpacity || 30) <= 30
                   ? 'opacity-20'
-                  : (homepageSettings?.overlayOpacity || 70) <= 30
+                  : (homepageSettings?.overlayOpacity || 30) <= 40
                   ? 'opacity-30'
-                  : (homepageSettings?.overlayOpacity || 70) <= 40
+                  : (homepageSettings?.overlayOpacity || 30) <= 50
                   ? 'opacity-40'
-                  : (homepageSettings?.overlayOpacity || 70) <= 50
+                  : (homepageSettings?.overlayOpacity || 30) <= 60
                   ? 'opacity-50'
-                  : (homepageSettings?.overlayOpacity || 70) <= 60
+                  : (homepageSettings?.overlayOpacity || 30) <= 70
                   ? 'opacity-60'
-                  : (homepageSettings?.overlayOpacity || 70) <= 70
+                  : (homepageSettings?.overlayOpacity || 30) <= 80
                   ? 'opacity-70'
-                  : (homepageSettings?.overlayOpacity || 70) <= 80
+                  : (homepageSettings?.overlayOpacity || 30) <= 90
                   ? 'opacity-80'
-                  : (homepageSettings?.overlayOpacity || 70) <= 90
-                  ? 'opacity-90'
-                  : 'opacity-70'
+                  : 'opacity-30'
               }`}
             />
             {/* Theme-aware gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-background/60 to-background/80"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-background/20 to-background/40"></div>
           </div>
         )}
         
@@ -509,76 +422,51 @@ export function HomePage() {
             </div>
             
             {loadingCategories ? (
-              <div className="flex gap-6 overflow-hidden">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex-shrink-0">
-                    <div className="animate-pulse space-y-4 text-center">
-                      <div className="w-20 h-20 md:w-24 md:h-24 bg-muted rounded-full mx-auto"></div>
-                      <div className="h-4 bg-muted rounded w-16 mx-auto"></div>
-                    </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
                   </div>
                 ))}
               </div>
             ) : categories.length > 0 ? (
-              <div className="relative">
-                {/* Scroll buttons */}
-                <button
-                  onClick={() => scrollCategories('left')}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/20 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background/30 transition-colors border border-border/20"
-                  aria-label="Scroll left"
-                >
-                  <ChevronLeft className="h-5 w-5 text-foreground" />
-                </button>
-                
-                <button
-                  onClick={() => scrollCategories('right')}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/20 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-background/30 transition-colors border border-border/20"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="h-5 w-5 text-foreground" />
-                </button>
-
-                {/* Categories scroll container */}
-                <div
-                  ref={categoriesScrollRef}
-                  className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth px-8 categories-scroll cursor-grab active:cursor-grabbing select-none"
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onMouseDown={handleMouseDown}
-                  onMouseMove={handleMouseMove}
-                  onMouseUp={handleMouseUp}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  {categories.map((category: Category) => {
-                    const isArabic = localStorage.getItem('i18nextLng') === 'ar'
-                    return (
-                      <Link
-                        key={category.id}
-                        to={`/shop?category=${category.id}`}
-                        className="flex-shrink-0 group"
-                        onClick={handleCategoryClick}
-                      >
-                        <div className="text-center space-y-3 min-w-[100px]">
-                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden border-4 border-primary/20 group-hover:border-primary/40 transition-colors shadow-lg mx-auto">
-                            <img
-                              src={category.image || '/images/logo.png'}
-                              alt={isArabic ? (category.name_ar || category.name) : category.name}
-                              className="w-full h-full object-cover"
-                              loading="lazy"
-                              onError={(e) => {
-                                e.currentTarget.src = '/images/logo.png'
-                              }}
-                            />
-                          </div>
-                          <p className="text-sm font-medium text-center whitespace-nowrap overflow-hidden text-ellipsis px-2 text-foreground">
-                            {isArabic ? (category.name_ar || category.name) : category.name}
-                          </p>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                {categories.map((category: Category) => {
+                  const isArabic = localStorage.getItem('i18nextLng') === 'ar'
+                  // Count products in this category
+                  const productCount = latestProducts.filter(product => product.category_id === category.id).length
+                  
+                  return (
+                    <Link
+                      key={category.id}
+                      to={`/shop?category=${category.id}`}
+                      className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                        <img
+                          src={category.image || '/images/logo.png'}
+                          alt={isArabic ? (category.name_ar || category.name) : category.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/logo.png'
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-base text-foreground group-hover:text-primary transition-colors">
+                          {isArabic ? (category.name_ar || category.name) : category.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {productCount} {isArabic ? 'منتج' : 'Products'}
+                        </p>
+                      </div>
+                    </Link>
+                  )
+                })}
               </div>
             ) : (
               <div className="text-center py-12">
@@ -591,61 +479,50 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* SpiritHub Coffee Capsules Section - Placeholder */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-accent/5 via-background to-muted/10 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center space-y-4 mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
-                {t('homepage.coffeeCapsules.title', 'SpiritHub Coffee Capsules')}
+      {/* Mission Statement Section with Fixed Background */}
+      <section className="py-32 lg:py-40 relative overflow-hidden">
+        {/* Fixed Background Image */}
+        <div 
+          className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: 'url(/images/back.jpg)' }}
+        />
+        
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Scrolling Content */}
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="space-y-8">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-2xl">
+                {isArabic ? 'الاستدامة والجودة والالتزام' : 'SUSTAINABILITY, QUALITY, COMMITMENT'}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('homepage.coffeeCapsules.subtitle', 'Coming Soon')}
+              
+              <p className="text-lg md:text-xl lg:text-2xl text-white/95 leading-relaxed drop-shadow-lg font-medium">
+                {isArabic 
+                  ? 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.'
+                  : 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.'
+                }
               </p>
-            </div>
-            
-            <div className="text-center py-20 bg-muted/20 rounded-lg border-2 border-dashed border-muted">
-              <div className="space-y-4">
-                <Clock className="h-16 w-16 text-muted-foreground mx-auto" />
-                <h3 className="text-xl font-semibold text-muted-foreground">
-                  {t('homepage.coffeeCapsules.comingSoon', 'Coming Soon')}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t('homepage.coffeeCapsules.description', 'We are preparing something special for you. Stay tuned!')}
-                </p>
+              
+              <div className="pt-8">
+                <Button 
+                  size="lg" 
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-10 py-4 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 border-2 border-amber-500"
+                  asChild
+                >
+                  <Link to="/shop" className="flex items-center gap-3">
+                    {isArabic ? 'تسوق الآن' : 'SHOP NOW'}
+                    <ArrowRight className="h-5 w-5" />
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Cold Brew Selection Section - Placeholder */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-muted/10 via-background to-accent/5 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center space-y-4 mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
-                {t('homepage.coldBrew.title', 'Cold Brew Selection')}
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('homepage.coldBrew.subtitle', 'Coming Soon')}
-              </p>
-            </div>
-            
-            <div className="text-center py-20 bg-muted/20 rounded-lg border-2 border-dashed border-muted">
-              <div className="space-y-4">
-                <Clock className="h-16 w-16 text-muted-foreground mx-auto" />
-                <h3 className="text-xl font-semibold text-muted-foreground">
-                  {t('homepage.coldBrew.comingSoon', 'Coming Soon')}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t('homepage.coldBrew.description', 'We are preparing something special for you. Stay tuned!')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
     </div>
   )
 }

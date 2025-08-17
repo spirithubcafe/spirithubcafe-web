@@ -222,7 +222,7 @@ class SettingsService {
       backgroundVideo: '/video/back.mp4',
       backgroundVideoBlur: 30,
       showBackgroundVideo: true,
-      overlayOpacity: 70
+      overlayOpacity: 30
     }
   }
 
