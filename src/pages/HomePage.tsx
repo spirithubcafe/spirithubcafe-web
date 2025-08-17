@@ -344,11 +344,11 @@ export function HomePage() {
                         </Link>
                         
                         <div className="text-muted-foreground text-sm mb-3 line-clamp-2 flex-1">
-                          {product.notes ? (
-                            <span>{product.notes}</span>
+                          {(isArabic ? product.uses_ar : product.uses) ? (
+                            <span>{isArabic ? (product.uses_ar || product.uses) : product.uses}</span>
                           ) : (
                             <span className="italic opacity-70">
-                              {isArabic ? 'لا توجد ملاحظات' : 'No notes available'}
+                              {isArabic ? 'لا توجد استخدامات' : 'No uses available'}
                             </span>
                           )}
                         </div>

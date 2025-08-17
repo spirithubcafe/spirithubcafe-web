@@ -84,7 +84,7 @@ export default function ProductsList() {
             const productPrice = getProductPrice(product)
             const salePrice = getSalePrice(product)
             const productName = isArabic ? (product.name_ar || product.name) : product.name
-            const productDescription = isArabic ? (product.description_ar || product.description) : product.description
+            const productUses = isArabic ? (product.uses_ar || product.uses) : product.uses
 
             return (
               <div key={product.id} className="border rounded-lg p-4 shadow-sm">
@@ -97,8 +97,8 @@ export default function ProductsList() {
                   )}
                 </div>
                 
-                {productDescription && (
-                  <p className="text-gray-600 mb-2">{productDescription}</p>
+                {productUses && (
+                  <p className="text-gray-600 mb-2">{productUses}</p>
                 )}
                 
                 {/* Price */}

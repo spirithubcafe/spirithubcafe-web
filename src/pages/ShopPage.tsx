@@ -327,7 +327,6 @@ export function ShopPage() {
             const salePrice = getSalePrice(product)
             const badges = getProductBadges(product)
             const productName = isArabic ? (product.name_ar || product.name) : product.name
-            const productDescription = isArabic ? (product.description_ar || product.description) : product.description
             const categoryName = getCategoryName(product.category_id)
 
             return (
@@ -412,11 +411,11 @@ export function ShopPage() {
                         {productName}
                       </h3>
 
-                      {/* Description */}
-                      {productDescription && (
+                      {/* Uses */}
+                      {(isArabic ? product.uses_ar : product.uses) && (
                         <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] flex-1">
                           <HTMLContent 
-                            content={productDescription || ''} 
+                            content={isArabic ? (product.uses_ar || product.uses || '') : (product.uses || '')} 
                             className="!max-w-none !text-sm !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                             maxLength={150}
                           />

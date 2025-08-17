@@ -320,7 +320,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
   const productImages = getProductImages(product)
   const productName = isArabic ? (product.name_ar || product.name) : product.name
-  const productDescription = isArabic ? (product.description_ar || product.description) : product.description
+  const productUses = isArabic ? (product.uses_ar || product.uses) : product.uses
 
   // Render property input based on display type
   const renderPropertyInput = (property: any) => {
@@ -469,7 +469,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
           <div className="space-y-4">
             <div>
               <h1 className="text-2xl font-bold mb-2">{productName}</h1>
-              <p className="text-muted-foreground">{productDescription}</p>
+              <p className="text-muted-foreground">{productUses}</p>
             </div>
 
             {/* Category */}
