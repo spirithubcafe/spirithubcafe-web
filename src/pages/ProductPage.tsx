@@ -421,7 +421,7 @@ export default function ProductPage() {
               <CardContent className="p-4 sm:p-6">
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">{t('product.price')}</h3>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center justify-between gap-4 ltr">
                     <div className="flex items-center gap-3">
                       {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
                         <>
@@ -710,7 +710,7 @@ export default function ProductPage() {
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg w-full">
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg w-full ltr">
                   <span className="font-medium text-lg">{t('shop.total')}</span>
                   <span className="text-2xl font-bold text-amber-600">
                     {formatPrice(finalPrice * quantity)}
