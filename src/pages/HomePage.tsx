@@ -10,20 +10,21 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
-import { useCategoriesSettings } from '@/hooks/useCategoriesSettings'
+import { useHomepageSettings } from '@/hooks/useHomepageSettings'
 import { conversionRates } from '@/lib/currency'
 
 export function HomePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [latestProducts, setLatestProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [loadingCategories, setLoadingCategories] = useState(true)
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
-  const { settings: categoriesSettings, refetch: refetchCategoriesSettings } = useCategoriesSettings()
+  const { settings: homepageSettings, refetch: refetchHomepageSettings } = useHomepageSettings()
   const categoriesScrollRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const isArabic = i18n.language === 'ar'
   
   // Parallax effect for categories background video
   useEffect(() => {
@@ -81,16 +82,16 @@ export function HomePage() {
       video.removeEventListener('ended', handleVideoEnd)
       video.removeEventListener('error', handleVideoError)
     }
-  }, [categoriesSettings?.backgroundVideo])
+  }, [homepageSettings?.backgroundVideo])
 
   // Update video source when settings change
   useEffect(() => {
     const video = videoRef.current
-    if (!video || !categoriesSettings?.backgroundVideo) return
+    if (!video || !homepageSettings?.backgroundVideo) return
 
     // Force video to reload with new source
     video.pause()
-    video.src = categoriesSettings.backgroundVideo
+    video.src = homepageSettings.backgroundVideo
     video.load()
     
     // Wait a bit then play
@@ -98,21 +99,21 @@ export function HomePage() {
       video.play().catch(console.error)
     }, 100)
 
-    console.log('Video source updated to:', categoriesSettings.backgroundVideo)
-  }, [categoriesSettings?.backgroundVideo])
+    console.log('Video source updated to:', homepageSettings.backgroundVideo)
+  }, [homepageSettings?.backgroundVideo])
 
-  // Listen for categories settings updates
+  // Listen for homepage settings updates
   useEffect(() => {
     const handleSettingsUpdate = () => {
-      console.log('Categories settings updated, refreshing...')
-      refetchCategoriesSettings()
+      console.log('Homepage settings updated, refreshing...')
+      refetchHomepageSettings()
     }
 
-    window.addEventListener('categoriesSettingsUpdated', handleSettingsUpdate)
+    window.addEventListener('homepageSettingsUpdated', handleSettingsUpdate)
     return () => {
-      window.removeEventListener('categoriesSettingsUpdated', handleSettingsUpdate)
+      window.removeEventListener('homepageSettingsUpdated', handleSettingsUpdate)
     }
-  }, [refetchCategoriesSettings])
+  }, [refetchHomepageSettings])
   
   // Touch/drag state for categories
   const [isDragging, setIsDragging] = useState(false)
@@ -407,41 +408,13 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Our Coffees Section - Placeholder */}
-      <section className="py-16 lg:py-24 bg-gradient-to-b from-accent/5 via-background to-muted/10 w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center space-y-4 mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
-                {t('homepage.ourCoffees.title', 'Our Coffees')}
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('homepage.ourCoffees.subtitle', 'Coming Soon')}
-              </p>
-            </div>
-            
-            <div className="text-center py-20 bg-muted/20 rounded-lg border-2 border-dashed border-muted">
-              <div className="space-y-4">
-                <Clock className="h-16 w-16 text-muted-foreground mx-auto" />
-                <h3 className="text-xl font-semibold text-muted-foreground">
-                  {t('homepage.ourCoffees.comingSoon', 'Coming Soon')}
-                </h3>
-                <p className="text-muted-foreground">
-                  {t('homepage.ourCoffees.description', 'We are preparing something special for you. Stay tuned!')}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SpiritHub Categories Section */}
+      {/* Coffee Selection Section */}
       <section className="py-16 lg:py-24 relative overflow-hidden">
         {/* Background Video */}
-        {(categoriesSettings?.showBackgroundVideo !== false) && (
+        {(homepageSettings?.showBackgroundVideo !== false) && (
           <div className="absolute inset-0 w-full h-full overflow-hidden">
             <video
-              key={categoriesSettings?.backgroundVideo || 'default-video'}
+              key={homepageSettings?.backgroundVideo || 'default-video'}
               ref={videoRef}
               autoPlay
               loop
@@ -449,15 +422,15 @@ export function HomePage() {
               playsInline
               preload="auto"
               disablePictureInPicture
-              src={categoriesSettings?.backgroundVideo || '/video/back.mp4'}
+              src={homepageSettings?.backgroundVideo || '/video/back.mp4'}
               className={`absolute -top-[15%] -left-[15%] min-w-[130%] min-h-[130%] object-cover transition-all duration-300 ${
-                (categoriesSettings?.backgroundVideoBlur || 30) <= 12.5 
+                (homepageSettings?.backgroundVideoBlur || 30) <= 12.5 
                   ? 'blur-none' 
-                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 25 
+                  : (homepageSettings?.backgroundVideoBlur || 30) <= 25 
                   ? 'blur-sm' 
-                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 50 
+                  : (homepageSettings?.backgroundVideoBlur || 30) <= 50 
                   ? 'blur' 
-                  : (categoriesSettings?.backgroundVideoBlur || 30) <= 75 
+                  : (homepageSettings?.backgroundVideoBlur || 30) <= 75 
                   ? 'blur-lg' 
                   : 'blur-xl'
               }`}
@@ -467,23 +440,23 @@ export function HomePage() {
             {/* Overlay */}
             <div 
               className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                (categoriesSettings?.overlayOpacity || 70) <= 10 
+                (homepageSettings?.overlayOpacity || 70) <= 10 
                   ? 'opacity-10'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 20
+                  : (homepageSettings?.overlayOpacity || 70) <= 20
                   ? 'opacity-20'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 30
+                  : (homepageSettings?.overlayOpacity || 70) <= 30
                   ? 'opacity-30'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 40
+                  : (homepageSettings?.overlayOpacity || 70) <= 40
                   ? 'opacity-40'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 50
+                  : (homepageSettings?.overlayOpacity || 70) <= 50
                   ? 'opacity-50'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 60
+                  : (homepageSettings?.overlayOpacity || 70) <= 60
                   ? 'opacity-60'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 70
+                  : (homepageSettings?.overlayOpacity || 70) <= 70
                   ? 'opacity-70'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 80
+                  : (homepageSettings?.overlayOpacity || 70) <= 80
                   ? 'opacity-80'
-                  : (categoriesSettings?.overlayOpacity || 70) <= 90
+                  : (homepageSettings?.overlayOpacity || 70) <= 90
                   ? 'opacity-90'
                   : 'opacity-70'
               }`}
@@ -496,8 +469,38 @@ export function HomePage() {
         {/* Content */}
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
+            <div className="text-center space-y-6 mb-16">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
+                {isArabic ? 'مجموعة القهوة' : 'COFFEE SELECTION'}
+              </h2>
+              <p className="text-lg md:text-xl text-white/90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
+                {isArabic 
+                  ? 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.'
+                  : 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.'
+                }
+              </p>
+              <div className="pt-4">
+                <Button 
+                  size="lg" 
+                  className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                  asChild
+                >
+                  <Link to="/shop" className="flex items-center gap-2">
+                    {isArabic ? 'تسوق الآن' : 'SHOP NOW'}
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SpiritHub Categories Section */}
+      <section className="py-16 lg:py-24 bg-gradient-to-b from-accent/5 via-background to-muted/10 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground drop-shadow-lg">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
                 {t('homepage.categories.title', 'SpiritHub Categories')}
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">

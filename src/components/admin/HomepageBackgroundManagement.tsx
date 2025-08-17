@@ -15,16 +15,16 @@ import {
   AlertTriangle,
   X
 } from 'lucide-react'
-import { useCategoriesSettings } from '@/hooks/useCategoriesSettings'
+import { useHomepageSettings } from '@/hooks/useHomepageSettings'
 import { storageService, auth } from '@/lib/firebase'
 import { settingsService } from '@/services/settings'
 import toast from 'react-hot-toast'
 
-export default function CategoriesBackgroundManagement() {
+export default function HomepageBackgroundManagement() {
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   
-  const { settings, loading, updateSettings } = useCategoriesSettings()
+  const { settings, loading, updateSettings } = useHomepageSettings()
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -71,8 +71,6 @@ export default function CategoriesBackgroundManagement() {
       setUploadProgress(0)
 
       const user = auth.currentUser
-      console.log('Current user:', user)
-      console.log('User email verified:', user?.emailVerified)
       
       if (!user) {
         throw new Error('User not authenticated')
@@ -83,12 +81,8 @@ export default function CategoriesBackgroundManagement() {
       }
 
       // Upload video to storage
-      const fileName = `categories-background-${Date.now()}.${file.name.split('.').pop()}`
-      const filePath = `videos/categories/${fileName}`
-      
-      console.log('Uploading to path:', filePath)
-      console.log('File size:', file.size, 'bytes')
-      console.log('File type:', file.type)
+      const fileName = `homepage-background-${Date.now()}.${file.name.split('.').pop()}`
+      const filePath = `videos/homepage/${fileName}`
       
       // Simulate progress
       const progressInterval = setInterval(() => {
@@ -102,8 +96,6 @@ export default function CategoriesBackgroundManagement() {
       }, 300)
 
       const downloadUrl = await storageService.upload(filePath, file)
-      
-      console.log('Upload successful, download URL:', downloadUrl)
       
       clearInterval(progressInterval)
       setUploadProgress(100)
@@ -162,14 +154,14 @@ export default function CategoriesBackgroundManagement() {
       await updateSettings(formData)
       
       // Force cache invalidation and refresh
-      settingsService.forceRefreshCategories()
+      settingsService.forceRefreshHomepage()
       
       toast.success(isArabic ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully')
       
       // Add a small delay then trigger a page refresh signal
       setTimeout(() => {
         // Trigger a custom event that HomePage can listen to
-        window.dispatchEvent(new CustomEvent('categoriesSettingsUpdated'))
+        window.dispatchEvent(new CustomEvent('homepageSettingsUpdated'))
       }, 500)
     } catch (error) {
       console.error('Error saving settings:', error)
@@ -202,10 +194,10 @@ export default function CategoriesBackgroundManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">
-            {isArabic ? 'تنظیمات بک‌گراند دسته‌بندی‌ها' : 'Categories Background Settings'}
+            {isArabic ? 'إعدادات الخلفية' : 'Background Settings'}
           </h1>
           <p className="text-muted-foreground">
-            {isArabic ? 'إدارة فيديو الخلفية وتأثيراته لقسم الفئات' : 'Manage background video and effects for categories section'}
+            {isArabic ? 'إدارة فيديو الخلفية وتأثيراته للصفحة الرئيسية' : 'Manage background video and effects for homepage section'}
           </p>
         </div>
       </div>
@@ -220,7 +212,7 @@ export default function CategoriesBackgroundManagement() {
             {isArabic ? 'إدارة فيديو الخلفية' : 'Background Video Management'}
           </CardTitle>
           <CardDescription className="text-base">
-            {isArabic ? 'رفع وإدارة فيديو خلفية القسم مع تأثير Parallax' : 'Upload and manage section background video with parallax effect'}
+            {isArabic ? 'رفع وإدارة فيديو خلفية الصفحة الرئيسية مع تأثير Parallax' : 'Upload and manage homepage background video with parallax effect'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
@@ -380,7 +372,7 @@ export default function CategoriesBackgroundManagement() {
                 {isArabic ? 'عرض فيديو الخلفية' : 'Show Background Video'}
               </Label>
               <p className="text-sm text-muted-foreground">
-                {isArabic ? 'تفعيل أو إلغاء فيديو الخلفية في قسم الفئات' : 'Enable or disable background video in categories section'}
+                {isArabic ? 'تفعيل أو إلغاء فيديو الخلفية في الصفحة الرئيسية' : 'Enable or disable background video in homepage section'}
               </p>
             </div>
             <Switch
@@ -534,10 +526,10 @@ export default function CategoriesBackgroundManagement() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <h3 className="text-2xl font-bold drop-shadow-lg mb-2 text-foreground">
-                    {isArabic ? 'فئات SpiritHub' : 'SpiritHub Categories'}
+                    COFFEE SELECTION
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    {isArabic ? 'استكشف مجموعة القهوة لدينا' : 'Explore our coffee collection'}
+                    {isArabic ? 'استكشف مجموعة القهوة لدينا' : 'Explore our premium coffee collection'}
                   </p>
                   <div className="text-sm text-muted-foreground/80 bg-background/20 rounded-lg px-3 py-1 inline-block backdrop-blur-sm">
                     {isArabic ? 'تحرک الماوس لرؤیة تأثیر Parallax' : 'Move mouse to see parallax effect'}

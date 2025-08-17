@@ -26,9 +26,17 @@ export interface CategoriesSettings {
   overlayOpacity?: number // Overlay opacity (0-100)
 }
 
+export interface HomepageSettings {
+  backgroundVideo?: string // URL to background video
+  backgroundVideoBlur?: number // Blur percentage (0-100)
+  showBackgroundVideo?: boolean // Whether to show background video
+  overlayOpacity?: number // Overlay opacity (0-100)
+}
+
 export interface AppSettings {
   footer: FooterSettings
   categories: CategoriesSettings
+  homepage: HomepageSettings
 }
 
 class SettingsService {
@@ -169,6 +177,55 @@ class SettingsService {
     }
   }
 
+  async getHomepageSettings(): Promise<HomepageSettings> {
+    const cacheKey = 'homepage'
+    
+    // Try cache first
+    const cached = this.getFromCache<HomepageSettings>(cacheKey)
+    if (cached) return cached
+
+    try {
+      const doc = await firestoreService.getDocument(this.collection, 'homepage')
+      if (doc.exists()) {
+        const data = doc.data() as HomepageSettings
+        console.log('SettingsService - Loaded homepage settings from Firestore:', data)
+        this.setCache(cacheKey, data)
+        return data
+      }
+      
+      // Return default settings if not found
+      console.log('SettingsService - No homepage settings found, returning defaults')
+      const defaults = this.getDefaultHomepageSettings()
+      this.setCache(cacheKey, defaults)
+      return defaults
+    } catch (error) {
+      console.error('Error getting homepage settings:', error)
+      console.log('SettingsService - Error occurred, returning defaults')
+      return this.getDefaultHomepageSettings()
+    }
+  }
+
+  async updateHomepageSettings(settings: HomepageSettings): Promise<void> {
+    try {
+      console.log('SettingsService - Saving homepage settings to Firestore:', settings)
+      await firestoreService.setDocument(this.collection, 'homepage', settings)
+      this.invalidateCache('homepage')
+      console.log('SettingsService - Homepage settings saved successfully')
+    } catch (error) {
+      console.error('Error updating homepage settings:', error)
+      throw error
+    }
+  }
+
+  private getDefaultHomepageSettings(): HomepageSettings {
+    return {
+      backgroundVideo: '/video/back.mp4',
+      backgroundVideoBlur: 30,
+      showBackgroundVideo: true,
+      overlayOpacity: 70
+    }
+  }
+
   // Utility methods for cache management
   invalidateAllCache(): void {
     this.cache.clear()
@@ -177,6 +234,10 @@ class SettingsService {
 
   forceRefreshCategories(): void {
     this.invalidateCache('categories')
+  }
+
+  forceRefreshHomepage(): void {
+    this.invalidateCache('homepage')
   }
 
   forceRefreshFooter(): void {
