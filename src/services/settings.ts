@@ -27,10 +27,27 @@ export interface CategoriesSettings {
 }
 
 export interface HomepageSettings {
+  // Coffee Selection Section (Video Background)
   backgroundVideo?: string // URL to background video
   backgroundVideoBlur?: number // Blur percentage (0-100)
   showBackgroundVideo?: boolean // Whether to show background video
   overlayOpacity?: number // Overlay opacity (0-100)
+  coffeeSelectionTitle?: string // Coffee selection title in English
+  coffeeSelectionTitleAr?: string // Coffee selection title in Arabic
+  coffeeSelectionDescription?: string // Coffee selection description in English
+  coffeeSelectionDescriptionAr?: string // Coffee selection description in Arabic
+  coffeeSelectionButtonText?: string // Coffee selection button text in English
+  coffeeSelectionButtonTextAr?: string // Coffee selection button text in Arabic
+  
+  // Mission Statement Section (Fixed Background Image)
+  missionBackgroundImage?: string // URL to mission section background image
+  showMissionSection?: boolean // Whether to show mission section
+  missionTitle?: string // Mission title in English
+  missionTitleAr?: string // Mission title in Arabic
+  missionDescription?: string // Mission description in English
+  missionDescriptionAr?: string // Mission description in Arabic
+  missionButtonText?: string // Mission button text in English
+  missionButtonTextAr?: string // Mission button text in Arabic
 }
 
 export interface AppSettings {
@@ -219,10 +236,27 @@ class SettingsService {
 
   private getDefaultHomepageSettings(): HomepageSettings {
     return {
+      // Coffee Selection Section (Video Background)
       backgroundVideo: '/video/back.mp4',
       backgroundVideoBlur: 30,
       showBackgroundVideo: true,
-      overlayOpacity: 30
+      overlayOpacity: 30,
+      coffeeSelectionTitle: 'COFFEE SELECTION',
+      coffeeSelectionTitleAr: 'مجموعة القهوة',
+      coffeeSelectionDescription: 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.',
+      coffeeSelectionDescriptionAr: 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.',
+      coffeeSelectionButtonText: 'SHOP NOW',
+      coffeeSelectionButtonTextAr: 'تسوق الآن',
+      
+      // Mission Statement Section (Fixed Background Image)
+      missionBackgroundImage: '/images/back.jpg',
+      showMissionSection: true,
+      missionTitle: 'SUSTAINABILITY, QUALITY, COMMITMENT',
+      missionTitleAr: 'الاستدامة والجودة والالتزام',
+      missionDescription: 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.',
+      missionDescriptionAr: 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.',
+      missionButtonText: 'SHOP NOW',
+      missionButtonTextAr: 'تسوق الآن'
     }
   }
 

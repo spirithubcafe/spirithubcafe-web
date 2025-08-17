@@ -384,12 +384,15 @@ export function HomePage() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-6 mb-16">
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
-                {isArabic ? 'مجموعة القهوة' : 'COFFEE SELECTION'}
+                {isArabic 
+                  ? (homepageSettings?.coffeeSelectionTitleAr || 'مجموعة القهوة')
+                  : (homepageSettings?.coffeeSelectionTitle || 'COFFEE SELECTION')
+                }
               </h2>
               <p className="text-lg md:text-xl text-white/90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
                 {isArabic 
-                  ? 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.'
-                  : 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.'
+                  ? (homepageSettings?.coffeeSelectionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
+                  : (homepageSettings?.coffeeSelectionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
                 }
               </p>
               <div className="pt-4">
@@ -399,7 +402,10 @@ export function HomePage() {
                   asChild
                 >
                   <Link to="/shop" className="flex items-center gap-2">
-                    {isArabic ? 'تسوق الآن' : 'SHOP NOW'}
+                    {isArabic 
+                      ? (homepageSettings?.coffeeSelectionButtonTextAr || 'تسوق الآن')
+                      : (homepageSettings?.coffeeSelectionButtonText || 'SHOP NOW')
+                    }
                   </Link>
                 </Button>
               </div>
@@ -480,47 +486,55 @@ export function HomePage() {
       </section>
 
       {/* Mission Statement Section with Fixed Background */}
-      <section className="py-32 lg:py-40 relative overflow-hidden">
-        {/* Fixed Background Image */}
-        <div 
-          className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/images/back.jpg)' }}
-        />
-        
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/50" />
-        
-        {/* Scrolling Content */}
-        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-2xl">
-                {isArabic ? 'الاستدامة والجودة والالتزام' : 'SUSTAINABILITY, QUALITY, COMMITMENT'}
-              </h2>
-              
-              <p className="text-lg md:text-xl lg:text-2xl text-white/95 leading-relaxed drop-shadow-lg font-medium">
-                {isArabic 
-                  ? 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.'
-                  : 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.'
-                }
-              </p>
-              
-              <div className="pt-8">
-                <Button 
-                  size="lg" 
-                  className="bg-amber-600 hover:bg-amber-700 text-white px-10 py-4 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 border-2 border-amber-500"
-                  asChild
-                >
-                  <Link to="/shop" className="flex items-center gap-3">
-                    {isArabic ? 'تسوق الآن' : 'SHOP NOW'}
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                </Button>
+      {(homepageSettings?.showMissionSection !== false) && (
+        <section className="py-32 lg:py-40 relative overflow-hidden">
+          {/* Fixed Background Image */}
+          <div 
+            className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${homepageSettings?.missionBackgroundImage || '/images/back.jpg'})` }}
+          />
+          
+          {/* Dark overlay for better text readability */}
+          <div className="absolute inset-0 bg-black/50" />
+          
+          {/* Scrolling Content */}
+          <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="space-y-8">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-2xl">
+                  {isArabic 
+                    ? (homepageSettings?.missionTitleAr || 'الاستدامة والجودة والالتزام')
+                    : (homepageSettings?.missionTitle || 'SUSTAINABILITY, QUALITY, COMMITMENT')
+                  }
+                </h2>
+                
+                <p className="text-lg md:text-xl lg:text-2xl text-white/95 leading-relaxed drop-shadow-lg font-medium">
+                  {isArabic 
+                    ? (homepageSettings?.missionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
+                    : (homepageSettings?.missionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
+                  }
+                </p>
+                
+                <div className="pt-8">
+                  <Button 
+                    size="lg" 
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-10 py-4 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 border-2 border-amber-500"
+                    asChild
+                  >
+                    <Link to="/shop" className="flex items-center gap-3">
+                      {isArabic 
+                        ? (homepageSettings?.missionButtonTextAr || 'تسوق الآن')
+                        : (homepageSettings?.missionButtonText || 'SHOP NOW')
+                      }
+                      <ArrowRight className="h-5 w-5" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
 
     </div>

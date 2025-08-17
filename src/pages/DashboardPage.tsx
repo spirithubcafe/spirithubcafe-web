@@ -41,7 +41,7 @@ import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
-import HomepageBackgroundManagement from '@/components/admin/HomepageBackgroundManagement'
+import HomepageBackgroundManagement from '@/components/admin/HomepageManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
