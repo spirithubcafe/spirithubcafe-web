@@ -24,7 +24,7 @@ import { storageService, auth } from '@/lib/firebase'
 import { settingsService } from '@/services/settings'
 import toast from 'react-hot-toast'
 
-export default function HomepageBackgroundManagement() {
+export default function HomepageManagement() {
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   
@@ -217,7 +217,7 @@ export default function HomepageBackgroundManagement() {
       }
 
       // Upload video to storage
-      const fileName = `homepage-background-${Date.now()}.${file.name.split('.').pop()}`
+      const fileName = `homepage-settings-${Date.now()}.${file.name.split('.').pop()}`
       const filePath = `videos/homepage/${fileName}`
       
       // Simulate progress

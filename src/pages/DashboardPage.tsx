@@ -41,7 +41,7 @@ import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
-import HomepageBackgroundManagement from '@/components/admin/HomepageManagement'
+import HomepageManagement from '@/components/admin/HomepageManagement'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -226,8 +226,8 @@ export default function DashboardPage() {
         badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined
       },
       {
-        id: 'homepage-background',
-        label: isArabic ? 'خلفية الصفحة الرئيسية' : 'Homepage Background',
+        id: 'homepage-settings',
+        label: isArabic ? 'إعدادات الصفحة الرئيسية' : 'Homepage Settings',
         icon: Settings,
         show: true
       },
@@ -268,8 +268,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <HeroSlideManagement />
       case 'categories':
         return user?.role === 'admin' && <CategoryManagement />
-      case 'homepage-background':
-        return user?.role === 'admin' && <HomepageBackgroundManagement />
+      case 'homepage-settings':
+        return user?.role === 'admin' && <HomepageManagement />
       case 'products':
         return user?.role === 'admin' && <ProductManagement />
       case 'admin-orders':
