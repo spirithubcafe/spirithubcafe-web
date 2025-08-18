@@ -366,10 +366,17 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     return (
       <div className="w-full min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="relative mx-auto mb-8 w-16 h-16">
+          <div className="relative mx-auto mb-8 w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56">
             <div className="hero-loading-spinner mx-auto"></div>
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl opacity-60">☕</span>
+              <img 
+                src="/images/logo.png" 
+                alt="SpiritHub Logo" 
+                className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-contain hero-loading-logo"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/logo-s.png'
+                }}
+              />
             </div>
           </div>
           <h3 className="text-foreground font-semibold text-xl mb-2">
