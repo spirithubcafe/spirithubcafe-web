@@ -58,24 +58,40 @@ export function HomePage() {
     const video = videoRef.current
     if (!video) return
 
-    const handleVideoEnd = () => {
-      video.currentTime = 0
-      video.play()
+    const handleVideoEnd = async () => {
+      try {
+        video.currentTime = 0
+        // Only play if video is not already playing
+        if (video.paused) {
+          await video.play()
+        }
+      } catch (error) {
+        console.error('Error restarting video after end:', error)
+      }
     }
 
     const handleVideoError = () => {
       console.error('Video playback error, attempting to restart')
-      setTimeout(() => {
-        video.currentTime = 0
-        video.play()
+      setTimeout(async () => {
+        try {
+          video.currentTime = 0
+          // Only play if video is not already playing  
+          if (video.paused) {
+            await video.play()
+          }
+        } catch (error) {
+          console.error('Error restarting video after error:', error)
+        }
       }, 1000)
     }
 
     video.addEventListener('ended', handleVideoEnd)
     video.addEventListener('error', handleVideoError)
     
-    // Ensure video starts playing
-    video.play().catch(console.error)
+    // Only ensure video starts playing if it's not already playing and autoplay failed
+    if (video.paused && video.readyState >= 2) {
+      video.play().catch(console.error)
+    }
 
     return () => {
       video.removeEventListener('ended', handleVideoEnd)
@@ -88,17 +104,52 @@ export function HomePage() {
     const video = videoRef.current
     if (!video || !homepageSettings?.backgroundVideo) return
 
-    // Force video to reload with new source
-    video.pause()
-    video.src = homepageSettings.backgroundVideo
-    video.load()
-    
-    // Wait a bit then play
-    setTimeout(() => {
-      video.play().catch(console.error)
-    }, 100)
+    // Properly handle video source changes with async operations
+    const updateVideoSource = async () => {
+      try {
+        // Wait for pause to complete if video is playing
+        if (!video.paused) {
+          video.pause()
+          // Wait for pause event to complete
+          await new Promise(resolve => {
+            const handlePause = () => {
+              video.removeEventListener('pause', handlePause)
+              resolve(undefined)
+            }
+            video.addEventListener('pause', handlePause)
+            // Fallback timeout in case pause event doesn't fire
+            setTimeout(resolve, 100)
+          })
+        }
+        
+        // Ensure we have a valid video URL
+        if (homepageSettings.backgroundVideo) {
+          video.src = homepageSettings.backgroundVideo
+          video.load()
+          
+          // Wait for the video to be ready before playing
+          await new Promise(resolve => {
+            const handleCanPlay = () => {
+              video.removeEventListener('canplay', handleCanPlay)
+              resolve(undefined)
+            }
+            video.addEventListener('canplay', handleCanPlay)
+            // Fallback timeout
+            setTimeout(resolve, 500)
+          })
+          
+          // Now safely play the video only if it's not already playing
+          if (video.paused) {
+            await video.play()
+            console.log('Video source updated and playing:', homepageSettings.backgroundVideo)
+          }
+        }
+      } catch (error) {
+        console.error('Error updating video source:', error)
+      }
+    }
 
-    console.log('Video source updated to:', homepageSettings.backgroundVideo)
+    updateVideoSource()
   }, [homepageSettings?.backgroundVideo])
 
   // Listen for homepage settings updates
@@ -329,6 +380,13 @@ export function HomePage() {
               preload="auto"
               disablePictureInPicture
               src={homepageSettings?.backgroundVideo || '/video/back.mp4'}
+              onLoadStart={() => {
+                // Clear any previous play attempts when a new video starts loading
+                const video = videoRef.current
+                if (video) {
+                  video.pause()
+                }
+              }}
               className={`absolute -top-[15%] -left-[15%] min-w-[130%] min-h-[130%] object-cover transition-all duration-300 ${
                 (homepageSettings?.backgroundVideoBlur || 30) <= 12.5 
                   ? 'blur-none' 
