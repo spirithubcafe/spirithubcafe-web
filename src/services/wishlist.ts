@@ -92,20 +92,32 @@ export class WishlistService {
 
   // Subscribe to wishlist changes
   subscribeToWishlist(userId: string, callback: (wishlist: Wishlist[]) => void): () => void {
-    if (!db) throw new Error('Database not initialized')
+    if (!db) {
+      console.warn('Database not initialized');
+      return () => {};
+    }
     
-    const q = query(
-      collection(db, this.collectionName),
-      where('user_id', '==', userId)
-    )
-    
-    return onSnapshot(q, (querySnapshot) => {
-      const wishlist = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Wishlist))
-      callback(wishlist)
-    })
+    try {
+      const q = query(
+        collection(db, this.collectionName),
+        where('user_id', '==', userId)
+      )
+      
+      return onSnapshot(q, (querySnapshot) => {
+        const wishlist = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as Wishlist))
+        callback(wishlist)
+      }, (error) => {
+        console.error('❌ Wishlist listener error:', error);
+        // Fallback to empty array on error
+        callback([]);
+      })
+    } catch (error) {
+      console.error('❌ Failed to set up wishlist listener:', error);
+      return () => {};
+    }
   }
 
   // Toggle wishlist status

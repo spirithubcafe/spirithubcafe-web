@@ -33,9 +33,19 @@ try {
   // Enable offline persistence for better performance
   if (typeof window !== 'undefined') {
     import('firebase/firestore').then(({ enableNetwork }) => {
+      // Add global error handling for Firestore
+      window.addEventListener('unhandledrejection', (event) => {
+        if (event.reason?.code?.includes('firestore')) {
+          console.warn('⚠️ Firestore connection issue, continuing with offline data');
+          event.preventDefault();
+        }
+      });
+      
       // Only enable in production
       if (import.meta.env.PROD) {
-        enableNetwork(db).catch(console.warn);
+        enableNetwork(db).catch((error) => {
+          console.warn('⚠️ Firestore network issue:', error);
+        });
       }
     });
   }
@@ -2172,27 +2182,55 @@ export const storageService = {
 // Real-time subscriptions
 export const subscriptions = {
   onCartChange: (userId: string, callback: (cartItems: any[]) => void) => {
-    const q = query(
-      collection(db, 'cart_items'),
-      where('user_id', '==', userId)
-    );
-    
-    return onSnapshot(q, (snapshot) => {
-      const cartItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      callback(cartItems);
-    });
+    if (!db) {
+      console.warn('Database not initialized');
+      return () => {};
+    }
+
+    try {
+      const q = query(
+        collection(db, 'cart_items'),
+        where('user_id', '==', userId)
+      );
+      
+      return onSnapshot(q, (snapshot) => {
+        const cartItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(cartItems);
+      }, (error) => {
+        console.error('❌ Cart listener error:', error);
+        // Fallback to empty array on error
+        callback([]);
+      });
+    } catch (error) {
+      console.error('❌ Failed to set up cart listener:', error);
+      return () => {};
+    }
   },
   
   onOrderChange: (orderId: string, callback: (order: Order | null) => void) => {
-    const orderDoc = doc(db, 'orders', orderId);
-    
-    return onSnapshot(orderDoc, (doc) => {
-      if (doc.exists()) {
-        callback({ id: doc.id, ...doc.data() } as Order);
-      } else {
+    if (!db) {
+      console.warn('Database not initialized');
+      return () => {};
+    }
+
+    try {
+      const orderDoc = doc(db, 'orders', orderId);
+      
+      return onSnapshot(orderDoc, (doc) => {
+        if (doc.exists()) {
+          callback({ id: doc.id, ...doc.data() } as Order);
+        } else {
+          callback(null);
+        }
+      }, (error) => {
+        console.error('❌ Order listener error:', error);
+        // Fallback to null on error
         callback(null);
-      }
-    });
+      });
+    } catch (error) {
+      console.error('❌ Failed to set up order listener:', error);
+      return () => {};
+    }
   }
 };
 
