@@ -168,7 +168,12 @@ export default function ProductManagement() {
     if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
     if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
     if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
-    if (product.is_on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+    
+    // Only show sale badge if product has actual sale price that's different from regular price
+    if (product.is_on_sale && product.sale_price_omr && product.sale_price_omr < (product.price_omr || 0)) {
+      badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+    }
+    
     return badges
   }
 

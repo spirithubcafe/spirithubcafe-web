@@ -90,7 +90,7 @@ export default function ProductsList() {
               <div key={product.id} className="border rounded-lg p-4 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-semibold">{productName}</h3>
-                  {product.is_on_sale && (
+                  {product.is_on_sale && salePrice && salePrice < productPrice && (
                     <Badge variant="destructive" className="text-xs">
                       {isArabic ? 'تخفيض' : 'Sale'}
                     </Badge>

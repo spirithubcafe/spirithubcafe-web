@@ -143,7 +143,14 @@ export function ShopPage() {
     if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
     if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
     if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
-    if (product.is_on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+    
+    // Only show sale badge if product is on sale AND has a valid sale price that's less than regular price
+    const salePrice = getSalePrice(product)
+    const regularPrice = getProductPrice(product)
+    if (product.is_on_sale && salePrice && salePrice < regularPrice) {
+      badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+    }
+    
     return badges
   }
 
