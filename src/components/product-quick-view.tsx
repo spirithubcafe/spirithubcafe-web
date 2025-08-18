@@ -10,7 +10,7 @@ import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { firestoreService, type Product, type Category } from '@/lib/firebase'
-// import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
+import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
 import toast from 'react-hot-toast'
 
 interface ProductQuickViewProps {
@@ -583,8 +583,30 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               </Button>
             </div>
 
-            {/* Coffee Info Display - Comment out for now */}
-            {/* <CoffeeInfoDisplay product={product} /> */}
+            {/* Coffee Info Display */}
+            <CoffeeInfoDisplay
+              roastLevel={product.roast_level}
+              roastLevel_ar={product.roast_level_ar}
+              process={product.processing_method}
+              process_ar={product.processing_method_ar}
+              variety={product.variety}
+              variety_ar={product.variety_ar}
+              altitude={product.altitude}
+              altitude_ar={product.altitude_ar}
+              notes={product.notes}
+              notes_ar={product.notes_ar}
+              uses={product.uses}
+              uses_ar={product.uses_ar}
+              farm={product.farm}
+              farm_ar={product.farm_ar}
+              aromatic_profile={product.aromatic_profile}
+              aromatic_profile_ar={product.aromatic_profile_ar}
+              intensity={product.intensity}
+              intensity_ar={product.intensity_ar}
+              compatibility={product.compatibility}
+              compatibility_ar={product.compatibility_ar}
+              className="py-0"
+            />
           </div>
         </div>
       </DialogContent>

@@ -869,7 +869,10 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                     { label: isArabic ? 'الارتفاع' : 'Altitude', value: form.altitude },
                     { label: isArabic ? 'الملاحظات' : 'Notes', value: form.notes },
                     { label: isArabic ? 'الاستخدامات' : 'Uses', value: form.uses },
-                    { label: isArabic ? 'المزرعة' : 'Farm', value: form.farm }
+                    { label: isArabic ? 'المزرعة' : 'Farm', value: form.farm },
+                    { label: isArabic ? 'الملف العطري' : 'Aromatic Profile', value: form.aromatic_profile },
+                    { label: isArabic ? 'الكثافة' : 'Intensity', value: form.intensity },
+                    { label: isArabic ? 'التوافق' : 'Compatibility', value: form.compatibility }
                   ].filter(item => item.value && item.value.trim()).map((item, index) => (
                     <div key={index} className="flex justify-between items-start text-sm">
                       <span className="text-muted-foreground font-medium">
@@ -880,7 +883,7 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
                       </span>
                     </div>
                   ))}
-                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.uses, form.farm].some(v => v && v.trim()) && (
+                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.uses, form.farm, form.aromatic_profile, form.intensity, form.compatibility].some(v => v && v.trim()) && (
                     <p className="text-muted-foreground text-sm text-center py-4">
                       {isArabic ? 'لا توجد معلومات قهوة مضافة بعد' : 'No coffee information added yet'}
                     </p>
