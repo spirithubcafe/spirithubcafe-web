@@ -380,13 +380,6 @@ export function HomePage() {
               preload="auto"
               disablePictureInPicture
               src={homepageSettings?.backgroundVideo || '/video/back.mp4'}
-              onLoadStart={() => {
-                // Clear any previous play attempts when a new video starts loading
-                const video = videoRef.current
-                if (video) {
-                  video.pause()
-                }
-              }}
               className={`absolute -top-[15%] -left-[15%] min-w-[130%] min-h-[130%] object-cover transition-all duration-300 ${
                 (homepageSettings?.backgroundVideoBlur || 30) <= 12.5 
                   ? 'blur-none' 
