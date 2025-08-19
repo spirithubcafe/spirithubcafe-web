@@ -55,7 +55,17 @@ export default function HomepageManagement() {
     missionDescription: 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.',
     missionDescriptionAr: 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.',
     missionButtonText: 'SHOP NOW',
-    missionButtonTextAr: 'تسوق الآن'
+    missionButtonTextAr: 'تسوق الآن',
+    
+    // Community Section (Fixed Background Image + Gallery)
+    communityBackgroundImage: '/images/back.jpg',
+    showCommunitySection: true,
+    communityText: 'Become an integral part of our Spirit Hub family! Connect with us on social media for exclusive updates, behind-the-scenes glimpses, and thrilling content. Follow us to stay in the loop. From sneak peeks into our creative process to special promotions, our social channels are your ticket to the latest. Engage with like-minded enthusiasts, share your experiences, and be a crucial member of our dynamic online community. Don\'t miss out on the excitement; join us today!',
+    communityTextAr: 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!',
+    communityImage1: '',
+    communityImage2: '',
+    communityImage3: '',
+    communityImage4: ''
   })
 
   useEffect(() => {
@@ -81,7 +91,17 @@ export default function HomepageManagement() {
         missionDescription: settings.missionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.',
         missionDescriptionAr: settings.missionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.',
         missionButtonText: settings.missionButtonText || 'SHOP NOW',
-        missionButtonTextAr: settings.missionButtonTextAr || 'تسوق الآن'
+        missionButtonTextAr: settings.missionButtonTextAr || 'تسوق الآن',
+        
+        // Community Section (Fixed Background Image + Gallery)
+        communityBackgroundImage: settings.communityBackgroundImage || '/images/back.jpg',
+        showCommunitySection: settings.showCommunitySection ?? true,
+        communityText: settings.communityText || 'Become an integral part of our Spirit Hub family! Connect with us on social media for exclusive updates, behind-the-scenes glimpses, and thrilling content. Follow us to stay in the loop. From sneak peeks into our creative process to special promotions, our social channels are your ticket to the latest. Engage with like-minded enthusiasts, share your experiences, and be a crucial member of our dynamic online community. Don\'t miss out on the excitement; join us today!',
+        communityTextAr: settings.communityTextAr || 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!',
+        communityImage1: settings.communityImage1 || '',
+        communityImage2: settings.communityImage2 || '',
+        communityImage3: settings.communityImage3 || '',
+        communityImage4: settings.communityImage4 || ''
       })
       setPreviewVideo(settings.backgroundVideo || '')
     }
@@ -313,6 +333,205 @@ export default function HomepageManagement() {
     toast.success(isArabic ? 'تم إزالة الفيديو' : 'Video removed')
   }
 
+  const handleCommunityBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(isArabic ? 'يرجى رفع ملف صورة صالح' : 'Please upload a valid image file')
+      return
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      toast.error(isArabic ? 'حجم الملف كبير جداً (الحد الأقصى 10MB)' : 'File size too large (max 10MB)')
+      return
+    }
+
+    try {
+      setUploading(true)
+      setUploadProgress(0)
+
+      const user = auth.currentUser
+      
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      if (!user.emailVerified) {
+        throw new Error('Please verify your email before uploading files')
+      }
+
+      // Upload image to storage
+      const fileName = `community-background-${Date.now()}.${file.name.split('.').pop()}`
+      const filePath = `images/homepage/${fileName}`
+      
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + Math.random() * 15
+        })
+      }, 300)
+
+      const downloadUrl = await storageService.upload(filePath, file)
+      
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      // Update form data
+      setFormData(prev => ({ ...prev, communityBackgroundImage: downloadUrl }))
+      
+      toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      
+      // Clear progress
+      const progressInterval2 = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev <= 0) {
+            clearInterval(progressInterval2)
+            return 0
+          }
+          return prev - 10
+        })
+      }, 100)
+      
+      // Specific error handling
+      let errorMessage = isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('storage/unauthorized') || error.message.includes('Unauthorized')) {
+          errorMessage = isArabic ? 'ليس لديك صلاحية لرفع الملفات' : 'You do not have permission to upload files'
+        } else if (error.message.includes('storage/quota-exceeded')) {
+          errorMessage = isArabic ? 'تم تجاوز حد التخزين' : 'Storage quota exceeded'
+        } else if (error.message.includes('storage/unauthenticated') || error.message.includes('not authenticated')) {
+          errorMessage = isArabic ? 'يرجى تسجيل الدخول أولاً' : 'Please login first'
+        } else if (error.message.includes('network')) {
+          errorMessage = isArabic ? 'خطأ في الشبكة، يرجى المحاولة مرة أخرى' : 'Network error, please try again'
+        } else {
+          errorMessage = `${isArabic ? 'خطأ' : 'Error'}: ${error.message}`
+        }
+      }
+      
+      toast.error(errorMessage)
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+      // Reset file input
+      const input = event.target
+      if (input) {
+        input.value = ''
+      }
+    }
+  }
+
+  const handleCommunityImageUpload = async (event: React.ChangeEvent<HTMLInputElement>, imageNumber: number) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(isArabic ? 'يرجى رفع ملف صورة صالح' : 'Please upload a valid image file')
+      return
+    }
+
+    // Validate file size (10MB max)
+    const maxSize = 10 * 1024 * 1024 // 10MB
+    if (file.size > maxSize) {
+      toast.error(isArabic ? 'حجم الملف كبير جداً (الحد الأقصى 10MB)' : 'File size too large (max 10MB)')
+      return
+    }
+
+    try {
+      setUploading(true)
+      setUploadProgress(0)
+
+      const user = auth.currentUser
+      
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      if (!user.emailVerified) {
+        throw new Error('Please verify your email before uploading files')
+      }
+
+      // Upload image to storage
+      const fileName = `community-image-${imageNumber}-${Date.now()}.${file.name.split('.').pop()}`
+      const filePath = `images/homepage/community/${fileName}`
+      
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + Math.random() * 15
+        })
+      }, 300)
+
+      const downloadUrl = await storageService.upload(filePath, file)
+      
+      clearInterval(progressInterval)
+      setUploadProgress(100)
+
+      // Update form data
+      setFormData(prev => ({ 
+        ...prev, 
+        [`communityImage${imageNumber}`]: downloadUrl 
+      }))
+      
+      toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      
+      // Clear progress
+      const progressInterval2 = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev <= 0) {
+            clearInterval(progressInterval2)
+            return 0
+          }
+          return prev - 10
+        })
+      }, 100)
+      
+      // Specific error handling
+      let errorMessage = isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('storage/unauthorized') || error.message.includes('Unauthorized')) {
+          errorMessage = isArabic ? 'ليس لديك صلاحية لرفع الملفات' : 'You do not have permission to upload files'
+        } else if (error.message.includes('storage/quota-exceeded')) {
+          errorMessage = isArabic ? 'تم تجاوز حد التخزين' : 'Storage quota exceeded'
+        } else if (error.message.includes('storage/unauthenticated') || error.message.includes('not authenticated')) {
+          errorMessage = isArabic ? 'يرجى تسجيل الدخول أولاً' : 'Please login first'
+        } else if (error.message.includes('network')) {
+          errorMessage = isArabic ? 'خطأ في الشبكة، يرجى المحاولة مرة أخرى' : 'Network error, please try again'
+        } else {
+          errorMessage = `${isArabic ? 'خطأ' : 'Error'}: ${error.message}`
+        }
+      }
+      
+      toast.error(errorMessage)
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+      // Reset file input
+      const input = event.target
+      if (input) {
+        input.value = ''
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -339,7 +558,7 @@ export default function HomepageManagement() {
       </div>
 
       <Tabs defaultValue="coffee-selection" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="coffee-selection" className="flex items-center gap-2">
             <FileVideo className="h-4 w-4" />
             {isArabic ? 'قسم القهوة' : 'Coffee Selection'}
@@ -348,13 +567,17 @@ export default function HomepageManagement() {
             <Image className="h-4 w-4" />
             {isArabic ? 'بيان المهمة' : 'Mission Statement'}
           </TabsTrigger>
+          <TabsTrigger value="community-section" className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            {isArabic ? 'قسم المجتمع' : 'Community Section'}
+          </TabsTrigger>
         </TabsList>
 
         {/* Coffee Selection Tab */}
         <TabsContent value="coffee-selection" className="space-y-6">
           {/* Content Management */}
-          <Card className="border border-border/50 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg">
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
               <CardTitle className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-full">
                   <Type className="h-5 w-5 text-primary" />
@@ -602,8 +825,8 @@ export default function HomepageManagement() {
           </Card>
 
           {/* Video Settings */}
-          <Card className="border border-border/50 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg">
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-full">
@@ -712,8 +935,8 @@ export default function HomepageManagement() {
         {/* Mission Statement Tab */}
         <TabsContent value="mission-statement" className="space-y-6">
           {/* Content Management */}
-          <Card className="border border-border/50 shadow-lg">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg">
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
               <CardTitle className="flex items-center gap-3">
                 <div className="p-2 bg-primary/10 rounded-full">
                   <Type className="h-5 w-5 text-primary" />
@@ -974,6 +1197,306 @@ export default function HomepageManagement() {
                       dir="ltr"
                     />
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Community Section Tab */}
+        <TabsContent value="community-section" className="space-y-6">
+          {/* Show/Hide Community Section */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Settings className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'إعدادات العرض' : 'Display Settings'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'تحكم في عرض قسم المجتمع على الصفحة الرئيسية' : 'Control the display of community section on homepage'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <Label className="text-base font-medium">
+                    {isArabic ? 'عرض قسم المجتمع' : 'Show Community Section'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'تحديد ما إذا كان سيتم عرض قسم المجتمع على الصفحة الرئيسية' : 'Determines if the community section is displayed on the homepage'}
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.showCommunitySection}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, showCommunitySection: checked }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Background Image Upload */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'صورة الخلفية' : 'Background Image'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'رفع وإدارة صورة خلفية قسم المجتمع' : 'Upload and manage community section background image'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="space-y-4">
+                <Label htmlFor="community-background" className="text-sm font-medium">
+                  {isArabic ? 'صورة الخلفية' : 'Background Image'}
+                </Label>
+                <Input
+                  id="community-background"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCommunityBackgroundUpload}
+                  disabled={uploading}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                />
+                {formData.communityBackgroundImage && (
+                  <div className="space-y-2">
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityBackgroundImage}
+                        alt="Community background preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityBackgroundImage: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isArabic ? 'انقر على X لإزالة الصورة' : 'Click X to remove image'}
+                    </p>
+                  </div>
+                )}
+                {uploading && (
+                  <div className="space-y-2">
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${uploadProgress}%` 
+                        }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isArabic ? 'جاري الرفع...' : 'Uploading...'} {uploadProgress}%
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Community Text Content */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Type className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'نص المجتمع' : 'Community Text'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'إدارة النص المعروض في قسم المجتمع' : 'Manage the text displayed in community section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="community-text-en" className="text-sm font-medium">
+                    {isArabic ? 'النص (إنجليزي)' : 'Text (English)'}
+                  </Label>
+                  <Textarea
+                    id="community-text-en"
+                    value={formData.communityText}
+                    onChange={(e) => setFormData(prev => ({ ...prev, communityText: e.target.value }))}
+                    placeholder="Become an integral part of our Spirit Hub family!"
+                    className="min-h-[150px] text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="community-text-ar" className="text-sm font-medium">
+                    {isArabic ? 'النص (عربي)' : 'Text (Arabic)'}
+                  </Label>
+                  <Textarea
+                    id="community-text-ar"
+                    value={formData.communityTextAr}
+                    onChange={(e) => setFormData(prev => ({ ...prev, communityTextAr: e.target.value }))}
+                    placeholder="كن جزءًا لا يتجزأ من عائلة سبيريت هب!"
+                    className="min-h-[150px] text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Community Images Gallery */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'معرض الصور' : 'Image Gallery'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'رفع وإدارة 4 صور لعرضها في قسم المجتمع' : 'Upload and manage 4 images to display in community section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Image 1 */}
+                <div className="space-y-4">
+                  <Label htmlFor="community-image-1" className="text-sm font-medium">
+                    {isArabic ? 'الصورة الأولى' : 'Image 1'}
+                  </Label>
+                  <Input
+                    id="community-image-1"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleCommunityImageUpload(e, 1)}
+                    disabled={uploading}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                  {formData.communityImage1 && (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityImage1}
+                        alt="Community image 1"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityImage1: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 2 */}
+                <div className="space-y-4">
+                  <Label htmlFor="community-image-2" className="text-sm font-medium">
+                    {isArabic ? 'الصورة الثانية' : 'Image 2'}
+                  </Label>
+                  <Input
+                    id="community-image-2"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleCommunityImageUpload(e, 2)}
+                    disabled={uploading}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                  {formData.communityImage2 && (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityImage2}
+                        alt="Community image 2"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityImage2: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 3 */}
+                <div className="space-y-4">
+                  <Label htmlFor="community-image-3" className="text-sm font-medium">
+                    {isArabic ? 'الصورة الثالثة' : 'Image 3'}
+                  </Label>
+                  <Input
+                    id="community-image-3"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleCommunityImageUpload(e, 3)}
+                    disabled={uploading}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                  {formData.communityImage3 && (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityImage3}
+                        alt="Community image 3"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityImage3: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 4 */}
+                <div className="space-y-4">
+                  <Label htmlFor="community-image-4" className="text-sm font-medium">
+                    {isArabic ? 'الصورة الرابعة' : 'Image 4'}
+                  </Label>
+                  <Input
+                    id="community-image-4"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleCommunityImageUpload(e, 4)}
+                    disabled={uploading}
+                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                  />
+                  {formData.communityImage4 && (
+                    <div className="relative aspect-square rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityImage4}
+                        alt="Community image 4"
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityImage4: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

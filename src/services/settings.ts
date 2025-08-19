@@ -48,6 +48,16 @@ export interface HomepageSettings {
   missionDescriptionAr?: string // Mission description in Arabic
   missionButtonText?: string // Mission button text in English
   missionButtonTextAr?: string // Mission button text in Arabic
+  
+  // Community Section (Fixed Background Image + Gallery)
+  communityBackgroundImage?: string // URL to community section background image
+  showCommunitySection?: boolean // Whether to show community section
+  communityText?: string // Community text in English
+  communityTextAr?: string // Community text in Arabic
+  communityImage1?: string // First community image
+  communityImage2?: string // Second community image
+  communityImage3?: string // Third community image
+  communityImage4?: string // Fourth community image
 }
 
 export interface AppSettings {
@@ -256,7 +266,17 @@ class SettingsService {
       missionDescription: 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.',
       missionDescriptionAr: 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.',
       missionButtonText: 'SHOP NOW',
-      missionButtonTextAr: 'تسوق الآن'
+      missionButtonTextAr: 'تسوق الآن',
+      
+      // Community Section (Fixed Background Image + Gallery)
+      communityBackgroundImage: '/images/back.jpg',
+      showCommunitySection: true,
+      communityText: 'Become an integral part of our Spirit Hub family! Connect with us on social media for exclusive updates, behind-the-scenes glimpses, and thrilling content. Follow us to stay in the loop. From sneak peeks into our creative process to special promotions, our social channels are your ticket to the latest. Engage with like-minded enthusiasts, share your experiences, and be a crucial member of our dynamic online community. Don\'t miss out on the excitement; join us today!',
+      communityTextAr: 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!',
+      communityImage1: '',
+      communityImage2: '',
+      communityImage3: '',
+      communityImage4: ''
     }
   }
 
