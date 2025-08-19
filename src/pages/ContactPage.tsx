@@ -216,8 +216,8 @@ export function ContactPage() {
               <CardContent className="p-6 text-center">
                 <Phone className="contact-icon h-8 w-8 mx-auto mb-3 text-green-600" />
                 <h3 className="font-semibold mb-2">{t('contact.info.callNow')}</h3>
-                <p className="text-sm text-muted-foreground currency">{contactSettings.phone1}</p>
-                <p className="text-sm text-muted-foreground currency">{contactSettings.phone2}</p>
+                <p className="text-sm text-muted-foreground ltr">{contactSettings.phone1}</p>
+                <p className="text-sm text-muted-foreground ltr">{contactSettings.phone2}</p>
               </CardContent>
             </Card>
 
@@ -225,7 +225,7 @@ export function ContactPage() {
               <CardContent className="p-6 text-center">
                 <MessageCircle className="contact-icon h-8 w-8 mx-auto mb-3 text-green-500" />
                 <h3 className="font-semibold mb-2">{t('contact.info.sendWhatsApp')}</h3>
-                <p className="text-sm text-muted-foreground currency">{contactSettings.whatsapp}</p>
+                <p className="text-sm text-muted-foreground ltr">{contactSettings.whatsapp}</p>
               </CardContent>
             </Card>
 
@@ -233,7 +233,7 @@ export function ContactPage() {
               <CardContent className="p-6 text-center">
                 <Mail className="contact-icon h-8 w-8 mx-auto mb-3 text-blue-600" />
                 <h3 className="font-semibold mb-2">{t('contact.info.sendEmail')}</h3>
-                <p className="text-sm text-muted-foreground currency">{contactSettings.email}</p>
+                <p className="text-sm text-muted-foreground ltr">{contactSettings.email}</p>
               </CardContent>
             </Card>
 
@@ -467,7 +467,7 @@ export function ContactPage() {
               <Phone className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
               <div>
                 <div className="font-medium">{t('contact.modal.mainLine')}</div>
-                <div className="text-sm text-muted-foreground" dir="ltr">{contactSettings.phone1}</div>
+                <div className="text-sm text-muted-foreground ltr" dir="ltr">{contactSettings.phone1}</div>
               </div>
             </Button>
             <Button
@@ -481,7 +481,7 @@ export function ContactPage() {
               <Phone className={`h-4 w-4 ${isRTL ? 'ml-3' : 'mr-3'}`} />
               <div>
                 <div className="font-medium">{t('contact.modal.secondLine')}</div>
-                <div className="text-sm text-muted-foreground" dir="ltr">{contactSettings.phone2}</div>
+                <div className="text-sm text-muted-foreground ltr" dir="ltr">{contactSettings.phone2}</div>
               </div>
             </Button>
           </div>

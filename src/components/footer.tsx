@@ -167,10 +167,10 @@ export function Footer() {
               <div className="space-y-3 text-sm text-foreground/80 drop-shadow-sm">
                 <p>{address}</p>
                 <div className="space-y-1">
-                  <p>{phone}</p>
-                  {phone2 && <p>{phone2}</p>}
+                  <p className="ltr">{phone}</p>
+                  {phone2 && <p className="ltr">{phone2}</p>}
                 </div>
-                <p>{email}</p>
+                <p className="ltr">{email}</p>
                 <p>{workingHours}</p>
               </div>
             </div>
