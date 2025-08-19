@@ -65,7 +65,9 @@ export default function HomepageManagement() {
     communityImage1: '',
     communityImage2: '',
     communityImage3: '',
-    communityImage4: ''
+    communityImage4: '',
+    instagramUrl: 'https://instagram.com/spirithubcafe',
+    facebookUrl: 'https://facebook.com/spirithubcafe'
   })
 
   useEffect(() => {
@@ -98,10 +100,12 @@ export default function HomepageManagement() {
         showCommunitySection: settings.showCommunitySection ?? true,
         communityText: settings.communityText || 'Become an integral part of our Spirit Hub family! Connect with us on social media for exclusive updates, behind-the-scenes glimpses, and thrilling content. Follow us to stay in the loop. From sneak peeks into our creative process to special promotions, our social channels are your ticket to the latest. Engage with like-minded enthusiasts, share your experiences, and be a crucial member of our dynamic online community. Don\'t miss out on the excitement; join us today!',
         communityTextAr: settings.communityTextAr || 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!',
-        communityImage1: settings.communityImage1 || '',
-        communityImage2: settings.communityImage2 || '',
-        communityImage3: settings.communityImage3 || '',
-        communityImage4: settings.communityImage4 || ''
+        communityImage1: settings.communityImage1 || '/images/gallery/1.jpg',
+        communityImage2: settings.communityImage2 || '/images/gallery/2.jpg',
+        communityImage3: settings.communityImage3 || '/images/gallery/3.jpg',
+        communityImage4: settings.communityImage4 || '/images/gallery/4.webp',
+        instagramUrl: settings.instagramUrl || 'https://instagram.com/spirithubcafe',
+        facebookUrl: settings.facebookUrl || 'https://facebook.com/spirithubcafe'
       })
       setPreviewVideo(settings.backgroundVideo || '')
     }
@@ -1238,75 +1242,6 @@ export default function HomepageManagement() {
             </CardContent>
           </Card>
 
-          {/* Background Image Upload */}
-          <Card className="border border-border/50 shadow-lg py-0">
-            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
-              <CardTitle className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-full">
-                  <Image className="h-5 w-5 text-primary" />
-                </div>
-                <span className="text-xl">
-                  {isArabic ? 'صورة الخلفية' : 'Background Image'}
-                </span>
-              </CardTitle>
-              <CardDescription className="text-base mt-2">
-                {isArabic ? 'رفع وإدارة صورة خلفية قسم المجتمع' : 'Upload and manage community section background image'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="space-y-4">
-                <Label htmlFor="community-background" className="text-sm font-medium">
-                  {isArabic ? 'صورة الخلفية' : 'Background Image'}
-                </Label>
-                <Input
-                  id="community-background"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleCommunityBackgroundUpload}
-                  disabled={uploading}
-                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                />
-                {formData.communityBackgroundImage && (
-                  <div className="space-y-2">
-                    <div className="relative w-full h-32 rounded-lg overflow-hidden border">
-                      <img
-                        src={formData.communityBackgroundImage}
-                        alt="Community background preview"
-                        className="w-full h-full object-cover"
-                      />
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="absolute top-2 right-2"
-                        onClick={() => setFormData(prev => ({ ...prev, communityBackgroundImage: '' }))}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {isArabic ? 'انقر على X لإزالة الصورة' : 'Click X to remove image'}
-                    </p>
-                  </div>
-                )}
-                {uploading && (
-                  <div className="space-y-2">
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div 
-                        className="bg-primary h-2 rounded-full transition-all duration-300" 
-                        style={{ 
-                          width: `${uploadProgress}%` 
-                        }}
-                      />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {isArabic ? 'جاري الرفع...' : 'Uploading...'} {uploadProgress}%
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Community Text Content */}
           <Card className="border border-border/50 shadow-lg py-0">
             <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
@@ -1354,7 +1289,144 @@ export default function HomepageManagement() {
             </CardContent>
           </Card>
 
-          {/* Community Images Gallery */}
+          {/* Social Media Links */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Type className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'روابط الشبكات الاجتماعية' : 'Social Media Links'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'إدارة روابط الشبكات الاجتماعية المعروضة في قسم المجتمع' : 'Manage social media links displayed in community section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="instagram-url" className="text-sm font-medium">
+                    {isArabic ? 'رابط إنستغرام' : 'Instagram URL'}
+                  </Label>
+                  <Input
+                    id="instagram-url"
+                    value={formData.instagramUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, instagramUrl: e.target.value }))}
+                    placeholder="https://instagram.com/spirithubcafe"
+                    className="text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facebook-url" className="text-sm font-medium">
+                    {isArabic ? 'رابط فيسبوك' : 'Facebook URL'}
+                  </Label>
+                  <Input
+                    id="facebook-url"
+                    value={formData.facebookUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, facebookUrl: e.target.value }))}
+                    placeholder="https://facebook.com/spirithubcafe"
+                    className="text-left"
+                    dir="ltr"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Community Background Image with Manual URL */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'صورة خلفية القسم' : 'Section Background Image'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'رفع صورة خلفية أو إدخال رابط مباشر' : 'Upload background image or enter direct URL'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Manual URL Input */}
+              <div className="space-y-2">
+                <Label htmlFor="community-bg-url" className="text-sm font-medium">
+                  {isArabic ? 'رابط الصورة المباشر' : 'Direct Image URL'}
+                </Label>
+                <Input
+                  id="community-bg-url"
+                  value={formData.communityBackgroundImage}
+                  onChange={(e) => setFormData(prev => ({ ...prev, communityBackgroundImage: e.target.value }))}
+                  placeholder="https://example.com/image.jpg"
+                  className="text-left"
+                  dir="ltr"
+                />
+              </div>
+              
+              {/* File Upload */}
+              <div className="space-y-4">
+                <Label htmlFor="community-background-upload" className="text-sm font-medium">
+                  {isArabic ? 'أو رفع صورة جديدة' : 'Or Upload New Image'}
+                </Label>
+                <Input
+                  id="community-background-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCommunityBackgroundUpload}
+                  disabled={uploading}
+                  className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                />
+                
+                {formData.communityBackgroundImage && (
+                  <div className="space-y-2">
+                    <div className="relative w-full h-32 rounded-lg overflow-hidden border">
+                      <img
+                        src={formData.communityBackgroundImage}
+                        alt="Community background preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={() => setFormData(prev => ({ ...prev, communityBackgroundImage: '' }))}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {isArabic ? 'انقر على X لإزالة الصورة' : 'Click X to remove image'}
+                    </p>
+                  </div>
+                )}
+                
+                {uploading && (
+                  <div className="space-y-2">
+                    <div className="w-full bg-secondary rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300" 
+                        style={{ 
+                          width: `${uploadProgress}%` 
+                        } as React.CSSProperties}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isArabic ? 'جاري الرفع...' : 'Uploading...'} {uploadProgress}%
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Community Images Gallery with Manual URLs */}
           <Card className="border border-border/50 shadow-lg py-0">
             <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
               <CardTitle className="flex items-center gap-3">
@@ -1366,30 +1438,57 @@ export default function HomepageManagement() {
                 </span>
               </CardTitle>
               <CardDescription className="text-base mt-2">
-                {isArabic ? 'رفع وإدارة 4 صور لعرضها في قسم المجتمع' : 'Upload and manage 4 images to display in community section'}
+                {isArabic ? 'رفع أو إدخال روابط مباشرة لـ 4 صور لعرضها في قسم المجتمع' : 'Upload or enter direct URLs for 4 images to display in community section'}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CardContent className="space-y-8 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                
                 {/* Image 1 */}
-                <div className="space-y-4">
-                  <Label htmlFor="community-image-1" className="text-sm font-medium">
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="text-sm font-semibold">
                     {isArabic ? 'الصورة الأولى' : 'Image 1'}
-                  </Label>
-                  <Input
-                    id="community-image-1"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleCommunityImageUpload(e, 1)}
-                    disabled={uploading}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
+                  </h4>
+                  
+                  {/* Manual URL */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-1-url" className="text-xs font-medium">
+                      {isArabic ? 'رابط الصورة المباشر' : 'Direct Image URL'}
+                    </Label>
+                    <Input
+                      id="community-image-1-url"
+                      value={formData.communityImage1}
+                      onChange={(e) => setFormData(prev => ({ ...prev, communityImage1: e.target.value }))}
+                      placeholder="https://example.com/image1.jpg"
+                      className="text-left text-xs"
+                      dir="ltr"
+                    />
+                  </div>
+                  
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-1-upload" className="text-xs font-medium">
+                      {isArabic ? 'أو رفع صورة جديدة' : 'Or Upload New Image'}
+                    </Label>
+                    <Input
+                      id="community-image-1-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleCommunityImageUpload(e, 1)}
+                      disabled={uploading}
+                      className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                  </div>
+                  
                   {formData.communityImage1 && (
                     <div className="relative aspect-square rounded-lg overflow-hidden border">
                       <img
                         src={formData.communityImage1}
                         alt="Community image 1"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
                       />
                       <Button
                         size="sm"
@@ -1404,24 +1503,50 @@ export default function HomepageManagement() {
                 </div>
 
                 {/* Image 2 */}
-                <div className="space-y-4">
-                  <Label htmlFor="community-image-2" className="text-sm font-medium">
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="text-sm font-semibold">
                     {isArabic ? 'الصورة الثانية' : 'Image 2'}
-                  </Label>
-                  <Input
-                    id="community-image-2"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleCommunityImageUpload(e, 2)}
-                    disabled={uploading}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
+                  </h4>
+                  
+                  {/* Manual URL */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-2-url" className="text-xs font-medium">
+                      {isArabic ? 'رابط الصورة المباشر' : 'Direct Image URL'}
+                    </Label>
+                    <Input
+                      id="community-image-2-url"
+                      value={formData.communityImage2}
+                      onChange={(e) => setFormData(prev => ({ ...prev, communityImage2: e.target.value }))}
+                      placeholder="https://example.com/image2.jpg"
+                      className="text-left text-xs"
+                      dir="ltr"
+                    />
+                  </div>
+                  
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-2-upload" className="text-xs font-medium">
+                      {isArabic ? 'أو رفع صورة جديدة' : 'Or Upload New Image'}
+                    </Label>
+                    <Input
+                      id="community-image-2-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleCommunityImageUpload(e, 2)}
+                      disabled={uploading}
+                      className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                  </div>
+                  
                   {formData.communityImage2 && (
                     <div className="relative aspect-square rounded-lg overflow-hidden border">
                       <img
                         src={formData.communityImage2}
                         alt="Community image 2"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
                       />
                       <Button
                         size="sm"
@@ -1436,24 +1561,50 @@ export default function HomepageManagement() {
                 </div>
 
                 {/* Image 3 */}
-                <div className="space-y-4">
-                  <Label htmlFor="community-image-3" className="text-sm font-medium">
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="text-sm font-semibold">
                     {isArabic ? 'الصورة الثالثة' : 'Image 3'}
-                  </Label>
-                  <Input
-                    id="community-image-3"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleCommunityImageUpload(e, 3)}
-                    disabled={uploading}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
+                  </h4>
+                  
+                  {/* Manual URL */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-3-url" className="text-xs font-medium">
+                      {isArabic ? 'رابط الصورة المباشر' : 'Direct Image URL'}
+                    </Label>
+                    <Input
+                      id="community-image-3-url"
+                      value={formData.communityImage3}
+                      onChange={(e) => setFormData(prev => ({ ...prev, communityImage3: e.target.value }))}
+                      placeholder="https://example.com/image3.jpg"
+                      className="text-left text-xs"
+                      dir="ltr"
+                    />
+                  </div>
+                  
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-3-upload" className="text-xs font-medium">
+                      {isArabic ? 'أو رفع صورة جديدة' : 'Or Upload New Image'}
+                    </Label>
+                    <Input
+                      id="community-image-3-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleCommunityImageUpload(e, 3)}
+                      disabled={uploading}
+                      className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                  </div>
+                  
                   {formData.communityImage3 && (
                     <div className="relative aspect-square rounded-lg overflow-hidden border">
                       <img
                         src={formData.communityImage3}
                         alt="Community image 3"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
                       />
                       <Button
                         size="sm"
@@ -1468,24 +1619,50 @@ export default function HomepageManagement() {
                 </div>
 
                 {/* Image 4 */}
-                <div className="space-y-4">
-                  <Label htmlFor="community-image-4" className="text-sm font-medium">
+                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                  <h4 className="text-sm font-semibold">
                     {isArabic ? 'الصورة الرابعة' : 'Image 4'}
-                  </Label>
-                  <Input
-                    id="community-image-4"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleCommunityImageUpload(e, 4)}
-                    disabled={uploading}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                  />
+                  </h4>
+                  
+                  {/* Manual URL */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-4-url" className="text-xs font-medium">
+                      {isArabic ? 'رابط الصورة المباشر' : 'Direct Image URL'}
+                    </Label>
+                    <Input
+                      id="community-image-4-url"
+                      value={formData.communityImage4}
+                      onChange={(e) => setFormData(prev => ({ ...prev, communityImage4: e.target.value }))}
+                      placeholder="https://example.com/image4.jpg"
+                      className="text-left text-xs"
+                      dir="ltr"
+                    />
+                  </div>
+                  
+                  {/* File Upload */}
+                  <div className="space-y-2">
+                    <Label htmlFor="community-image-4-upload" className="text-xs font-medium">
+                      {isArabic ? 'أو رفع صورة جديدة' : 'Or Upload New Image'}
+                    </Label>
+                    <Input
+                      id="community-image-4-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleCommunityImageUpload(e, 4)}
+                      disabled={uploading}
+                      className="file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                  </div>
+                  
                   {formData.communityImage4 && (
                     <div className="relative aspect-square rounded-lg overflow-hidden border">
                       <img
                         src={formData.communityImage4}
                         alt="Community image 4"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
                       />
                       <Button
                         size="sm"

@@ -58,6 +58,8 @@ export interface HomepageSettings {
   communityImage2?: string // Second community image
   communityImage3?: string // Third community image
   communityImage4?: string // Fourth community image
+  instagramUrl?: string // Instagram URL
+  facebookUrl?: string // Facebook URL
 }
 
 export interface AppSettings {
@@ -273,10 +275,12 @@ class SettingsService {
       showCommunitySection: true,
       communityText: 'Become an integral part of our Spirit Hub family! Connect with us on social media for exclusive updates, behind-the-scenes glimpses, and thrilling content. Follow us to stay in the loop. From sneak peeks into our creative process to special promotions, our social channels are your ticket to the latest. Engage with like-minded enthusiasts, share your experiences, and be a crucial member of our dynamic online community. Don\'t miss out on the excitement; join us today!',
       communityTextAr: 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!',
-      communityImage1: '',
-      communityImage2: '',
-      communityImage3: '',
-      communityImage4: ''
+      communityImage1: '/images/gallery/1.jpg',
+      communityImage2: '/images/gallery/2.jpg',
+      communityImage3: '/images/gallery/3.jpg',
+      communityImage4: '/images/gallery/4.webp',
+      instagramUrl: 'https://instagram.com/spirithubcafe',
+      facebookUrl: 'https://facebook.com/spirithubcafe'
     }
   }
 

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Star, ShoppingCart } from 'lucide-react'
+import { ArrowRight, Star, ShoppingCart, X, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useState, useRef } from 'react'
@@ -19,11 +20,26 @@ export function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
   const [loadingCategories, setLoadingCategories] = useState(true)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
   const { settings: homepageSettings, refetch: refetchHomepageSettings } = useHomepageSettings()
   const videoRef = useRef<HTMLVideoElement>(null)
   const isArabic = i18n.language === 'ar'
+  
+  // Functions for image modal
+  const openImageModal = (imageSrc: string | undefined) => {
+    if (imageSrc) {
+      setSelectedImage(imageSrc)
+      setIsModalOpen(true)
+    }
+  }
+
+  const closeImageModal = () => {
+    setSelectedImage(null)
+    setIsModalOpen(false)
+  }
   
   // Parallax effect for categories background video
   useEffect(() => {
@@ -617,7 +633,7 @@ export function HomePage() {
                       asChild
                     >
                       <a 
-                        href="https://instagram.com/spirithubcafe" 
+                        href={homepageSettings?.instagramUrl || "https://instagram.com/spirithubcafe"} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         title="Follow us on Instagram"
@@ -635,7 +651,7 @@ export function HomePage() {
                       asChild
                     >
                       <a 
-                        href="https://facebook.com/spirithubcafe" 
+                        href={homepageSettings?.facebookUrl || "https://facebook.com/spirithubcafe"} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         title="Follow us on Facebook"
@@ -651,9 +667,12 @@ export function HomePage() {
                 
                 {/* Community Images Gallery */}
                 {(homepageSettings?.communityImage1 || homepageSettings?.communityImage2 || homepageSettings?.communityImage3 || homepageSettings?.communityImage4) && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                  <div className="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
                     {homepageSettings?.communityImage1 && (
-                      <div className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20">
+                      <div 
+                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        onClick={() => openImageModal(homepageSettings.communityImage1)}
+                      >
                         <img
                           src={homepageSettings.communityImage1}
                           alt="Community 1"
@@ -663,10 +682,16 @@ export function HomePage() {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <ZoomIn className="w-8 h-8 text-white" />
+                        </div>
                       </div>
                     )}
                     {homepageSettings?.communityImage2 && (
-                      <div className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20">
+                      <div 
+                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        onClick={() => openImageModal(homepageSettings.communityImage2)}
+                      >
                         <img
                           src={homepageSettings.communityImage2}
                           alt="Community 2"
@@ -676,10 +701,16 @@ export function HomePage() {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <ZoomIn className="w-8 h-8 text-white" />
+                        </div>
                       </div>
                     )}
                     {homepageSettings?.communityImage3 && (
-                      <div className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20">
+                      <div 
+                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        onClick={() => openImageModal(homepageSettings.communityImage3)}
+                      >
                         <img
                           src={homepageSettings.communityImage3}
                           alt="Community 3"
@@ -689,10 +720,16 @@ export function HomePage() {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <ZoomIn className="w-8 h-8 text-white" />
+                        </div>
                       </div>
                     )}
                     {homepageSettings?.communityImage4 && (
-                      <div className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20">
+                      <div 
+                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        onClick={() => openImageModal(homepageSettings.communityImage4)}
+                      >
                         <img
                           src={homepageSettings.communityImage4}
                           alt="Community 4"
@@ -702,6 +739,9 @@ export function HomePage() {
                             e.currentTarget.style.display = 'none'
                           }}
                         />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <ZoomIn className="w-8 h-8 text-white" />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -711,6 +751,31 @@ export function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Image Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none">
+          <div className="relative">
+            <button
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors duration-200"
+              aria-label={isArabic ? 'إغلاق' : 'Close'}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt={isArabic ? 'صورة مكبرة' : 'Enlarged image'}
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/logo.png'
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   )
