@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { CurrencyProvider } from '@/components/currency-provider'
 import { AuthProvider } from '@/components/auth-provider'
 import { CartProvider } from '@/components/cart-provider'
+import { DataProvider } from '@/contexts/data-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
@@ -29,11 +30,12 @@ function App() {
       <CurrencyProvider defaultCurrency="USD" storageKey="spirithub-currency">
         <AuthProvider>
           <CartProvider>
-            <Router>
-              <div className="min-h-screen flex flex-col bg-background">
-                <Navigation />
-                <main className="flex-1 relative">
-                  <Routes>
+            <DataProvider>
+              <Router>
+                <div className="min-h-screen flex flex-col bg-background">
+                  <Navigation />
+                  <main className="flex-1 relative">
+                    <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/shop" element={<ShopPage />} />
                     <Route path="/product/:slug" element={<ProductPage />} />
@@ -129,6 +131,7 @@ function App() {
                 <PWAUpdatePrompt />
               </div>
             </Router>
+            </DataProvider>
           </CartProvider>
         </AuthProvider>
       </CurrencyProvider>

@@ -6,27 +6,33 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
-import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
-import { useHomepageSettings } from '@/hooks/useHomepageSettings'
+import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
 import { conversionRates } from '@/lib/currency'
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
-  const [latestProducts, setLatestProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loadingProducts, setLoadingProducts] = useState(true)
-  const [loadingCategories, setLoadingCategories] = useState(true)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
   const { addToCart } = useCart()
-  const { settings: homepageSettings, refetch: refetchHomepageSettings } = useHomepageSettings()
+  
+  const { products, loading: loadingProducts } = useProducts()
+  const { categories, loading: loadingCategories } = useCategories()
+  const { settings: homepageSettings } = useGlobalHomepageSettings()
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const isArabic = i18n.language === 'ar'
+  
+  const latestProducts = useMemo(() => {
+    return products
+      .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
+      .slice(0, 4)
+  }, [products])
   
   // Functions for image modal
   const openImageModal = (imageSrc: string | undefined) => {
@@ -168,19 +174,6 @@ export function HomePage() {
     updateVideoSource()
   }, [homepageSettings?.backgroundVideo])
 
-  // Listen for homepage settings updates
-  useEffect(() => {
-    const handleSettingsUpdate = () => {
-      console.log('Homepage settings updated, refreshing...')
-      refetchHomepageSettings()
-    }
-
-    window.addEventListener('homepageSettingsUpdated', handleSettingsUpdate)
-    return () => {
-      window.removeEventListener('homepageSettingsUpdated', handleSettingsUpdate)
-    }
-  }, [refetchHomepageSettings])
-
   // Helper function to get product price in current currency
   const getProductPrice = (product: Product): number => {
     return (product.price_omr || 0) * conversionRates[currency]
@@ -194,44 +187,6 @@ export function HomePage() {
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
-
-  // Load latest products (last 3 products)
-  useEffect(() => {
-    const loadLatestProducts = async () => {
-      try {
-        const products = await firestoreService.products.list()
-        
-        // Get the latest 4 products
-        const latest = products.items
-          .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
-          .slice(0, 4)
-        
-        setLatestProducts(latest)
-      } catch (error) {
-        console.error('Error loading latest products:', error)
-      } finally {
-        setLoadingProducts(false)
-      }
-    }
-
-    loadLatestProducts()
-  }, [])
-
-  // Load categories
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const result = await firestoreService.categories.list()
-        setCategories(result.items.filter(cat => cat.is_active))
-      } catch (error) {
-        console.error('Error loading categories:', error)
-      } finally {
-        setLoadingCategories(false)
-      }
-    }
-
-    loadCategories()
-  }, [])
 
   return (
     <div className="flex flex-col min-h-screen w-full">

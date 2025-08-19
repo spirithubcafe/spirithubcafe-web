@@ -11,9 +11,10 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import type { Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
+import { useProducts, useCategories } from '@/contexts/data-provider'
 
 export function ShopPage() {
   const { i18n } = useTranslation()
@@ -24,18 +25,14 @@ export function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
-  const [products, setProducts] = useState<Product[]>([])
+  
+  const { products, loading } = useProducts()
+  const { categories } = useCategories()
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
+  
   const isArabic = i18n.language === 'ar'
-
-  // Load products and categories
-  useEffect(() => {
-    loadData()
-  }, [])
 
   // Check for category parameter in URL
   useEffect(() => {
@@ -44,23 +41,6 @@ export function ShopPage() {
       setSelectedCategory(categoryParam)
     }
   }, [searchParams])
-
-  const loadData = async () => {
-    try {
-      setLoading(true)
-      const [productsResult, categoriesResult] = await Promise.all([
-        firestoreService.products.list(),
-        firestoreService.categories.list()
-      ])
-      
-      setProducts(productsResult.items)
-      setCategories(categoriesResult.items)
-    } catch (error) {
-      console.error('Error loading data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
