@@ -16,12 +16,10 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [isHovered, setIsHovered] = useState(false)
-  const [loadProgress, setLoadProgress] = useState(0)
   const [textVisible, setTextVisible] = useState(false)
   const [cursorSide, setCursorSide] = useState<'left' | 'right'>('right')
   
   const autoplayTimer = useRef<NodeJS.Timeout | null>(null)
-  const progressTimer = useRef<NodeJS.Timeout | null>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   const sliderRef = useRef<HTMLElement>(null)
 
@@ -113,36 +111,6 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
       }
     }
   }, [settings, isPlaying, isHovered, nextSlide, currentSlide, activeSlides])
-
-  // Progress bar animation
-  useEffect(() => {
-    if (!settings || !isPlaying || isHovered && settings.pause_on_hover) {
-      setLoadProgress(0)
-      return
-    }
-
-    setLoadProgress(0)
-    const currentSlideDuration = activeSlides[currentSlide]?.duration 
-      ? activeSlides[currentSlide].duration * 1000
-      : settings.autoplay_delay
-    const interval = 50
-    const increment = (interval / currentSlideDuration) * 100
-
-    progressTimer.current = setInterval(() => {
-      setLoadProgress(prev => {
-        if (prev >= 100) {
-          return 0
-        }
-        return prev + increment
-      })
-    }, interval)
-
-    return () => {
-      if (progressTimer.current) {
-        clearInterval(progressTimer.current)
-      }
-    }
-  }, [settings, isPlaying, isHovered, currentSlide, activeSlides])
 
   // Initialize text animation
   useEffect(() => {
@@ -576,16 +544,6 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
               aria-label={`${t('common.goToSlide', 'Go to slide')} ${index + 1}`}
             />
           ))}
-        </div>
-      )}
-
-      {/* Progress Bar */}
-      {settings.show_progress && isPlaying && (
-        <div className="absolute bottom-0 left-0 w-full h-1 bg-white/20 z-20">
-          <div 
-            className="h-full bg-gradient-to-r from-amber-400 to-orange-500 hero-slider-progress"
-            style={{ width: `${loadProgress}%` }}
-          />
         </div>
       )}
     </section>
