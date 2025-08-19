@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { Star, ShoppingCart, Plus, Minus, Heart } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Star, Plus, Minus, Heart } from 'lucide-react'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StockIndicator } from '@/components/ui/stock-indicator'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Card, CardContent } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import { getProductPriceDetails, type Product } from '@/lib/firebase'
 import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
 import toast from 'react-hot-toast'
 
@@ -25,25 +25,11 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const { toggleWishlist, isInWishlist, loading: wishlistLoading } = useWishlist()
   const [quantity, setQuantity] = useState(1)
   const [isOpen, setIsOpen] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(0)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [selectedProperties, setSelectedProperties] = useState<Record<string, string>>({})
 
   const isArabic = i18n.language === 'ar'
-
-  // Load categories when component mounts
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const categoriesData = await firestoreService.categories.list()
-        setCategories(categoriesData.items)
-      } catch (error) {
-        console.error('Error loading categories:', error)
-      }
-    }
-    loadCategories()
-  }, [])
 
   // Initialize default selections for property-based pricing
   useEffect(() => {
@@ -60,34 +46,42 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
           if (propertyIndex >= pricingProperties.length) {
             // Calculate price for this combination
             let totalPrice = 0
-            
             for (const property of pricingProperties) {
               const selectedValue = currentSelections[property.name]
-              if (selectedValue) {
-                const option = property.options.find(opt => opt.value === selectedValue)
-                if (option) {
-                  let optionPrice = 0
-                  if (currency === 'OMR') {
-                    if (option.price_omr) {
-                      optionPrice = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
-                    } else if (option.price_modifier_omr || option.price_modifier) {
-                      optionPrice = option.price_modifier_omr || option.price_modifier || 0
-                    }
-                  } else if (currency === 'SAR') {
-                    if (option.price_sar) {
-                      optionPrice = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
-                    } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
-                      optionPrice = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
-                    }
-                  } else {
-                    if (option.price_usd) {
-                      optionPrice = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
-                    } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
-                      optionPrice = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
-                    }
+              const option = property.options.find(opt => opt.value === selectedValue)
+              if (option) {
+                let optionPrice = 0
+                // Check if option has absolute prices (new system) or modifiers (old system)
+                if (currency === 'OMR') {
+                  if (option.price_omr) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
+                  } else if (option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_omr || option.price_modifier || 0
+                    optionPrice = modifier
                   }
-                  totalPrice += optionPrice
+                } else if (currency === 'SAR') {
+                  if (option.price_sar) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
+                  } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
+                    optionPrice = modifier
+                  }
+                } else {
+                  if (option.price_usd) {
+                    // New system: absolute price only
+                    optionPrice = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
+                  } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
+                    // Legacy: treat modifier as standalone price (do not add base)
+                    const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
+                    optionPrice = modifier
+                  }
                 }
+                totalPrice = optionPrice // Use absolute price, not cumulative
+                break // Only use first property that affects price
               }
             }
             
@@ -97,203 +91,31 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             }
             return
           }
-          
-          const currentProperty = pricingProperties[propertyIndex]
-          for (const option of currentProperty.options) {
-            findBestCombination(propertyIndex + 1, {
-              ...currentSelections,
-              [currentProperty.name]: option.value
-            })
+
+          const property = pricingProperties[propertyIndex]
+          for (const option of property.options) {
+            findBestCombination(
+              propertyIndex + 1,
+              { ...currentSelections, [property.name]: option.value }
+            )
           }
         }
-        
+
         findBestCombination(0, {})
-        
-        if (Object.keys(bestCombination).length > 0) {
-          setSelectedProperties(bestCombination)
-        }
+        setSelectedProperties(bestCombination)
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product, currency])
-
-  // Get all product images from different fields
-  const getProductImages = (product: Product): string[] => {
-    const images: string[] = []
-    
-    // Add main image first (highest priority)
-    if (product.image_url) {
-      images.push(product.image_url)
-    }
-    if (product.image) {
-      images.push(product.image)
-    }
-    
-    // Then add gallery images
-    if (product.images && Array.isArray(product.images)) {
-      images.push(...product.images)
-    }
-    if (product.gallery && Array.isArray(product.gallery)) {
-      images.push(...product.gallery)
-    }
-    if (product.gallery_images && Array.isArray(product.gallery_images)) {
-      images.push(...product.gallery_images)
-    }
-    
-    // Remove duplicates and empty strings
-    return [...new Set(images.filter(img => img && img.trim() !== ''))]
-  }
-
-  // Get category name by ID
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId)
-    if (!category) return isArabic ? 'عام' : 'General'
-    return isArabic ? (category.name_ar || category.name) : category.name
-  }
-
-  // Get product price based on selected currency - returns sale price if available and lower, otherwise regular
-  const getProductPrice = (): number => {
-    if (!product) return 0
-    
-    // If product has properties with pricing, try property-based pricing first
-    if (product.properties && product.properties.some(p => p.affects_price && p.options && p.options.length > 0)) {
-      const price = getPropertyBasedPrice()
-      
-      // If property-based pricing returned a valid price, use it
-      if (price > 0) {
-        return price
-      }
-    }
-    
-    // Fallback to base pricing for products without property-based pricing or when property pricing fails
-    let baseSalePrice: number
-    
-    switch (currency) {
-      case 'OMR':
-        baseSalePrice = product.sale_price_omr || product.price_omr || 0
-        break
-      case 'SAR':
-        baseSalePrice = product.sale_price_sar || (product.sale_price_omr ? product.sale_price_omr * 9.75 : (product.price_omr || 0) * 9.75)
-        break
-      case 'USD':
-      default:
-        baseSalePrice = product.sale_price_usd || (product.sale_price_omr ? product.sale_price_omr * 2.6 : (product.price_omr || 0) * 2.6)
-        break
-    }
-
-    return baseSalePrice
-  }
-
-  const getPropertyBasedPrice = (): number => {
-    if (!product || !product.properties) return 0
-
-    // Find properties that affect price
-    const pricingProperties = product.properties.filter(p => p.affects_price && p.options && p.options.length > 0)
-    
-    if (pricingProperties.length === 0) return 0
-
-    // If user has selected properties, use the first property that affects price
-    if (Object.keys(selectedProperties).length > 0) {
-      for (const property of pricingProperties) {
-        const selectedValue = selectedProperties[property.name]
-        
-        if (selectedValue) {
-          const option = property.options.find(opt => opt.value === selectedValue)
-          if (option) {
-            // Check for absolute prices first (new system)
-            let price = 0
-            if (currency === 'OMR') {
-              if (option.price_omr) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_omr ? option.sale_price_omr : option.price_omr
-              } else if (option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_omr || option.price_modifier || 0
-                price = modifier
-              }
-            } else if (currency === 'SAR') {
-              if (option.price_sar) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_sar ? option.sale_price_sar : option.price_sar
-              } else if (option.price_modifier_sar || option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75
-                price = modifier
-              }
-            } else {
-              if (option.price_usd) {
-                // New system: absolute price
-                price = option.on_sale && option.sale_price_usd ? option.sale_price_usd : option.price_usd
-              } else if (option.price_modifier_usd || option.price_modifier_omr || option.price_modifier) {
-                // Legacy: modifier as absolute price
-                const modifier = option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6
-                price = modifier
-              }
-            }
-            
-            // If property option has valid price, return it
-            if (price > 0) {
-              return price
-            }
-          }
-        }
-      }
-    }
-
-    // If no properties selected or no valid price found, use first option of first property
-    const firstProperty = pricingProperties[0]
-    if (firstProperty && firstProperty.options.length > 0) {
-      const firstOption = firstProperty.options[0]
-      // Check for absolute prices first (new system)
-      let price = 0
-      if (currency === 'OMR') {
-        if (firstOption.price_omr) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_omr ? firstOption.sale_price_omr : firstOption.price_omr
-        } else if (firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_omr || firstOption.price_modifier || 0
-          price = modifier
-        }
-      } else if (currency === 'SAR') {
-        if (firstOption.price_sar) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_sar ? firstOption.sale_price_sar : firstOption.price_sar
-        } else if (firstOption.price_modifier_sar || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_sar || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 9.75
-          price = modifier
-        }
-      } else {
-        if (firstOption.price_usd) {
-          // New system: absolute price
-          price = firstOption.on_sale && firstOption.sale_price_usd ? firstOption.sale_price_usd : firstOption.price_usd
-        } else if (firstOption.price_modifier_usd || firstOption.price_modifier_omr || firstOption.price_modifier) {
-          // Legacy: modifier as absolute price
-          const modifier = firstOption.price_modifier_usd || (firstOption.price_modifier_omr || firstOption.price_modifier || 0) * 2.6
-          price = modifier
-        }
-      }
-      
-      // If property option has valid price, return it
-      if (price > 0) {
-        return price
-      }
-    }
-
-    return 0
-  }
-
-  const finalPrice = getProductPrice()
+  }, [product, currency, selectedProperties])
 
   const handleAddToCart = async () => {
+    if (!product) return
+    
     setIsLoading(true)
     try {
       await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
       setQuantity(1)
       setIsOpen(false)
-      const productName = isArabic ? (product.name_ar || product.name) : product.name
-      toast.success(isArabic ? `تمت إضافة ${productName} إلى السلة` : `${productName} added to cart`)
+      toast.success(isArabic ? 'تمت إضافة المنتج إلى السلة' : 'Product added to cart')
     } catch (error) {
       console.error('Error adding to cart:', error)
       toast.error(isArabic ? 'حدث خطأ أثناء الإضافة إلى السلة' : 'Error adding to cart')
@@ -302,109 +124,85 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     }
   }
 
+  // Get detailed pricing information including sale status
+  const priceDetails = getProductPriceDetails(product, selectedProperties, currency.toLowerCase() as 'omr' | 'usd' | 'sar')
+  
+  // Get product badges
+  const getProductBadges = () => {
+    const badges = []
+    
+    if (priceDetails.isOnSale) {
+      badges.push({
+        text: isArabic ? `خصم ${priceDetails.discountPercentage}%` : `${priceDetails.discountPercentage}% OFF`,
+        color: 'bg-red-500'
+      })
+    }
+    
+    if (product.is_featured) {
+      badges.push({
+        text: isArabic ? 'مميز' : 'Featured',
+        color: 'bg-amber-500'
+      })
+    }
+    
+    if (product.stock_quantity <= 5 && product.stock_quantity > 0) {
+      badges.push({
+        text: isArabic ? 'كمية محدودة' : 'Limited Stock',
+        color: 'bg-orange-500'
+      })
+    }
+    
+    return badges
+  }
+
+  const badges = getProductBadges()
+  const productName = isArabic ? (product.name_ar || product.name) : product.name
+  const averageRating = product.average_rating || 0
+  const totalReviews = product.total_reviews || 0
+
+  // Get all available images
+  const getProductImages = () => {
+    const availableImages = []
+    
+    // Add main image first (highest priority)
+    if (product.image_url) availableImages.push(product.image_url)
+    if (product.image) availableImages.push(product.image)
+    
+    // Then add gallery images
+    if (product.images) availableImages.push(...product.images)
+    if (product.gallery) availableImages.push(...product.gallery)
+    if (product.gallery_images) availableImages.push(...product.gallery_images)
+    
+    // Remove duplicates and empty strings
+    return [...new Set(availableImages.filter(img => img && img.trim() !== ''))]
+  }
+
+  const productImages = getProductImages()
+
+  const incrementQuantity = () => {
+    if (quantity < (product.stock_quantity || 0)) {
+      setQuantity(prev => prev + 1)
+    }
+  }
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1)
+    }
+  }
+
   const handleWishlistToggle = async () => {
     try {
       await toggleWishlist(product.id)
     } catch (error) {
       console.error('Error toggling wishlist:', error)
+      toast.error(isArabic ? 'حدث خطأ أثناء إضافة/إزالة المفضلة' : 'Error updating wishlist')
     }
   }
 
-  const incrementQuantity = () => {
-    if (quantity < product.stock_quantity) {
-      setQuantity(prev => prev + 1)
-    }
-  }
-
-  const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1))
-
-  const productImages = getProductImages(product)
-  const productName = isArabic ? (product.name_ar || product.name) : product.name
-  const productUses = isArabic ? (product.uses_ar || product.uses) : product.uses
-
-  // Render property input based on display type
-  const renderPropertyInput = (property: any) => {
-    const selectedValue = selectedProperties[property.name] || ''
-    
-    if (property.display_type === 'radio') {
-      return (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{isArabic ? (property.label_ar || property.label) : property.label}</label>
-          <div className="flex flex-wrap gap-2">
-            {property.options.map((option: any) => (
-              <Button
-                key={option.value}
-                variant={selectedValue === option.value ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedProperties(prev => ({
-                  ...prev,
-                  [property.name]: option.value
-                }))}
-                className="h-8"
-              >
-                {isArabic ? (option.label_ar || option.label) : option.label}
-                {property.affects_price && option.price_omr && (
-                  <span className="ml-1 text-xs opacity-75">
-                    (+{formatPrice(option.price_omr)})
-                  </span>
-                )}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )
-    } else if (property.display_type === 'color') {
-      return (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{isArabic ? (property.label_ar || property.label) : property.label}</label>
-          <div className="flex flex-wrap gap-2">
-            {property.options.map((option: any) => (
-              <div
-                key={option.value}
-                onClick={() => setSelectedProperties(prev => ({
-                  ...prev,
-                  [property.name]: option.value
-                }))}
-                className={`w-8 h-8 rounded-full border-2 cursor-pointer ${
-                  selectedValue === option.value ? 'border-primary ring-2 ring-primary/30' : 'border-gray-300'
-                } swatch-${option.value.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
-                title={isArabic ? (option.label_ar || option.label) : option.label}
-              />
-            ))}
-          </div>
-        </div>
-      )
-    } else {
-      // Default dropdown
-      return (
-        <div className="space-y-2">
-          <label className="text-sm font-medium">{isArabic ? (property.label_ar || property.label) : property.label}</label>
-          <Select 
-            value={selectedValue} 
-            onValueChange={(value) => setSelectedProperties(prev => ({
-              ...prev,
-              [property.name]: value
-            }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={isArabic ? "اختر..." : "Select..."} />
-            </SelectTrigger>
-            <SelectContent>
-              {property.options.map((option: any) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {isArabic ? (option.label_ar || option.label) : option.label}
-                  {property.affects_price && option.price_omr && (
-                    <span className="ml-1 text-xs opacity-75">
-                      (+{formatPrice(option.price_omr)})
-                    </span>
-                  )}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )
-    }
+  // Get total price based on selected properties and quantity
+  const getTotalPrice = () => {
+    return priceDetails.finalPrice * quantity
   }
 
   return (
@@ -412,126 +210,263 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-right">
-            {productName}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Product Images */}
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+        <div className="grid lg:grid-cols-2 gap-8 p-6">
+          {/* Product Images - Left Side */}
           <div className="space-y-4">
-            {productImages.length > 0 ? (
-              <>
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={productImages[selectedImage]}
-                    alt={productName}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/images/placeholder.jpg'
-                    }}
+            {/* Main Image */}
+            <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
+              {productImages.length > 0 ? (
+                <img
+                  src={productImages[selectedImageIndex] || '/images/logo.png'}
+                  alt={productName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/logo.png'
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <img 
+                    src="/images/logo-s.png" 
+                    alt="SpiritHub Cafe Logo" 
+                    className="h-20 w-20 object-contain opacity-50"
                   />
                 </div>
-                
-                {productImages.length > 1 && (
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {productImages.map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setSelectedImage(index)}
-                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${
-                          selectedImage === index ? 'border-primary' : 'border-transparent'
-                        }`}
-                      >
-                        <img
-                          src={image}
-                          alt={`${productName} ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/placeholder.jpg'
-                          }}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-400">No image available</span>
+              )}
+            </div>
+            
+            {/* Thumbnail Gallery */}
+            {productImages.length > 1 && (
+              <div className="grid grid-cols-3 gap-3">
+                {productImages.slice(0, 3).map((image: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index ? 'border-primary' : 'border-muted hover:border-muted-foreground'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`${productName} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/logo.png'
+                      }}
+                    />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-4">
+          {/* Product Information - Right Side */}
+          <div className="space-y-6">
+            {/* Title and Rating */}
             <div>
-              <h1 className="text-2xl font-bold mb-2">{productName}</h1>
-              <p className="text-muted-foreground">{productUses}</p>
-            </div>
-
-            {/* Category */}
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
-                {getCategoryName(product.category_id)}
-              </Badge>
-            </div>
-
-            {/* Rating */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`h-4 w-4 ${
-                      i < Math.floor((product as any).rating || 0)
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-sm text-muted-foreground">
-                ({(product as any).rating || 0})
-              </span>
-            </div>
-
-            {/* Price & Stock */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl font-bold text-primary">
-                    {formatPrice(finalPrice)}
-                  </span>
+              <h1 className="text-2xl font-bold mb-3">
+                {productName}
+              </h1>
+              
+              <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(averageRating) ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
+                      }`}
+                    />
+                  ))}
                 </div>
-                <StockIndicator 
-                  stock={product.stock_quantity || product.stock || 0} 
-                  variant="detailed"
-                  lowStockThreshold={10}
-                />
+                <span className="text-sm text-muted-foreground">
+                  ({averageRating.toFixed(1)}) • {totalReviews} {isArabic ? 'مراجعة' : 'reviews'}
+                </span>
               </div>
+
+              {/* Badges */}
+              {badges.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {badges.map((badge, index) => (
+                    <Badge key={index} className={`text-white ${badge.color}`}>
+                      {badge.text}
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Properties */}
-            {product.properties && product.properties.length > 0 && (
-              <div className="space-y-4">
-                {product.properties.map((property) => (
-                  <div key={property.name}>
-                    {renderPropertyInput(property)}
+            {/* Coffee Information Card */}
+            <Card className="py-0">
+              <CardContent className="p-4">
+                <h3 className="text-primary font-semibold mb-3 flex items-center gap-2">
+                  ☕ {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+                </h3>
+                <CoffeeInfoDisplay
+                  roastLevel={product.roast_level}
+                  roastLevel_ar={product.roast_level_ar}
+                  process={product.processing_method}
+                  process_ar={product.processing_method_ar}
+                  variety={product.variety}
+                  variety_ar={product.variety_ar}
+                  altitude={product.altitude}
+                  altitude_ar={product.altitude_ar}
+                  notes={product.notes}
+                  notes_ar={product.notes_ar}
+                  uses={product.uses}
+                  uses_ar={product.uses_ar}
+                  farm={product.farm}
+                  farm_ar={product.farm_ar}
+                  aromatic_profile={product.aromatic_profile}
+                  aromatic_profile_ar={product.aromatic_profile_ar}
+                  intensity={product.intensity}
+                  intensity_ar={product.intensity_ar}
+                  compatibility={product.compatibility}
+                  compatibility_ar={product.compatibility_ar}
+                  className=""
+                />
+              </CardContent>
+            </Card>
+
+            {/* Price Section */}
+            <Card className="py-0">
+              <CardContent className="p-4">
+                <h3 className="text-lg font-semibold mb-3">{isArabic ? 'السعر' : 'Price'}</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
+                      <>
+                        <span className="text-2xl font-bold text-primary">
+                          {formatPrice(priceDetails.finalPrice)}
+                        </span>
+                        <span className="text-lg text-muted-foreground line-through">
+                          {formatPrice(priceDetails.originalPrice)}
+                        </span>
+                        <Badge variant="destructive" className="text-sm">
+                          -{priceDetails.discountPercentage}%
+                        </Badge>
+                      </>
+                    ) : (
+                      <span className="text-2xl font-bold text-primary">
+                        {formatPrice(priceDetails.finalPrice)}
+                      </span>
+                    )}
                   </div>
-                ))}
-              </div>
+                  <StockIndicator 
+                    stock={product.stock_quantity || product.stock || 0} 
+                    variant="detailed"
+                    lowStockThreshold={10}
+                    className="text-green-400"
+                  />
+                </div>
+                {priceDetails.isOnSale && priceDetails.discountAmount > 0 && (
+                  <p className="text-sm text-green-400 font-medium">
+                    {isArabic ? 'توفر' : 'You Save'} {formatPrice(priceDetails.discountAmount)}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Dynamic Properties for Selection */}
+            {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
+              <Card className="py-0">
+                <CardContent className="p-4">
+                  <div className="space-y-4">
+                    {product.properties
+                      .filter(property => property.options && property.options.length > 0)
+                      .map((property) => {
+                        const selectedValue = selectedProperties[property.name] || ''
+                        const propertyLabel = isArabic ? property.name : property.name
+                        
+                        return (
+                          <div key={property.name} className="space-y-3">
+                            <label className="text-sm font-medium">{propertyLabel}</label>
+                            
+                            <div className="grid grid-cols-3 gap-2">
+                              {property.options.map((option: any) => {
+                                const optionLabel = isArabic ? option.value : option.value
+                                const isSelected = selectedValue === option.value
+                                
+                                // Get option price for display
+                                const getOptionPrice = () => {
+                                  let regularPrice = 0
+                                  let salePrice = 0
+                                  
+                                  if (currency === 'OMR') {
+                                    regularPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
+                                    salePrice = option.sale_price_omr || option.sale_price_modifier_omr || 0
+                                  } else if (currency === 'SAR') {
+                                    regularPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
+                                    salePrice = option.sale_price_sar || (option.sale_price_modifier_sar || (option.sale_price_modifier_omr || 0) * 9.75)
+                                  } else {
+                                    regularPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+                                    salePrice = option.sale_price_usd || (option.sale_price_modifier_usd || (option.sale_price_modifier_omr || 0) * 2.6)
+                                  }
+                                  
+                                  const isOnSale = option.on_sale && salePrice > 0
+                                  const finalPrice = isOnSale ? salePrice : regularPrice
+                                  const hasDiscount = isOnSale && salePrice < regularPrice
+                                  
+                                  return { finalPrice, regularPrice, hasDiscount, isOnSale }
+                                }
+                                
+                                const priceInfo = getOptionPrice()
+                                
+                                return (
+                                  <Button
+                                    key={option.value}
+                                    variant={isSelected ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setSelectedProperties(prev => ({
+                                      ...prev,
+                                      [property.name]: option.value
+                                    }))}
+                                    className={`h-auto p-3 flex flex-col items-center text-center ${
+                                      isSelected 
+                                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                                        : 'bg-muted hover:bg-muted/80 border-border'
+                                    }`}
+                                  >
+                                    <span className="font-medium">{optionLabel}</span>
+                                    {property.affects_price && priceInfo.finalPrice > 0 && (
+                                      <span className="text-xs mt-1 opacity-90">
+                                        {priceInfo.hasDiscount ? (
+                                          <>
+                                            <span className="line-through opacity-70">
+                                              ({formatPrice(priceInfo.regularPrice)})
+                                            </span>
+                                            <br />
+                                            <span className="font-medium">
+                                              {formatPrice(priceInfo.finalPrice)}
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <span className="font-medium">
+                                            {formatPrice(priceInfo.finalPrice)}
+                                          </span>
+                                        )}
+                                      </span>
+                                    )}
+                                  </Button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Quantity Selector */}
             {product.stock_quantity > 0 && (
               <div className="space-y-3">
                 <label className="text-sm font-medium">
-                  {isArabic ? 'الكمية' : 'Quantity'}
+                  {isArabic ? 'الكمية:' : 'Quantity:'}
                 </label>
-                <div className="flex items-center w-fit ltr">
+                <div className="flex items-center w-fit">
                   <Button
                     variant="outline"
                     size="icon"
@@ -541,7 +476,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <div className="flex h-10 w-16 items-center justify-center border-t border-b bg-background text-sm font-medium">
+                  <div className="flex h-10 w-16 items-center justify-center border-t border-b bg-muted border-border text-sm font-medium">
                     {quantity}
                   </div>
                   <Button
@@ -557,16 +492,36 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               </div>
             )}
 
+            {/* Total Price */}
+            <div className="bg-muted rounded-lg p-4 border border-border">
+              <div className="flex items-center justify-between">
+                <span className="text-lg font-semibold">
+                  {isArabic ? 'المجموع' : 'Total'}
+                </span>
+                <span className="text-2xl font-bold text-primary">
+                  {formatPrice(getTotalPrice())}
+                </span>
+              </div>
+              {Object.keys(selectedProperties).length > 0 && (
+                <div className="text-sm text-muted-foreground mt-2">
+                  {Object.entries(selectedProperties).map(([key, value]) => (
+                    <div key={key}>
+                      {isArabic ? 'الحجم المختار:' : 'Choose Size:'} {value}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Actions */}
             <div className="flex gap-3">
               {/* Add to Cart Button */}
               <Button 
-                className="flex-1" 
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 text-base" 
                 onClick={handleAddToCart} 
                 disabled={product.stock_quantity <= 0 || isLoading}
               >
-                <ShoppingCart className="h-5 w-5 mr-2" />
-                {isLoading 
+                🛒 {isLoading 
                   ? (isArabic ? 'جاري الإضافة...' : 'Adding...') 
                   : (isArabic ? 'أضف إلى السلة' : 'Add to Cart')
                 }
@@ -578,35 +533,11 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 size="icon"
                 onClick={handleWishlistToggle}
                 disabled={wishlistLoading}
+                className="p-3"
               >
                 <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
-
-            {/* Coffee Info Display */}
-            <CoffeeInfoDisplay
-              roastLevel={product.roast_level}
-              roastLevel_ar={product.roast_level_ar}
-              process={product.processing_method}
-              process_ar={product.processing_method_ar}
-              variety={product.variety}
-              variety_ar={product.variety_ar}
-              altitude={product.altitude}
-              altitude_ar={product.altitude_ar}
-              notes={product.notes}
-              notes_ar={product.notes_ar}
-              uses={product.uses}
-              uses_ar={product.uses_ar}
-              farm={product.farm}
-              farm_ar={product.farm_ar}
-              aromatic_profile={product.aromatic_profile}
-              aromatic_profile_ar={product.aromatic_profile_ar}
-              intensity={product.intensity}
-              intensity_ar={product.intensity_ar}
-              compatibility={product.compatibility}
-              compatibility_ar={product.compatibility_ar}
-              className="py-0"
-            />
           </div>
         </div>
       </DialogContent>

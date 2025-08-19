@@ -416,7 +416,7 @@ export function ContactManagement() {
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
+                              <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>{message.subject}</DialogTitle>
                                   <DialogDescription>

@@ -541,7 +541,7 @@ export default function OrderManagement() {
 
       {/* Edit Order Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isArabic ? 'تحديث الطلب' : 'Update Order'}

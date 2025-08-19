@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShoppingCart, Heart, Star } from 'lucide-react'
+import { ShoppingCart, Heart, Star, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -15,6 +15,7 @@ import type { Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
 import { useProducts, useCategories } from '@/contexts/data-provider'
+import { ProductQuickView } from '@/components/product-quick-view'
 
 export function ShopPage() {
   const { i18n } = useTranslation()
@@ -319,7 +320,7 @@ export function ShopPage() {
             return (
               <div key={product.id} className="group">
                 <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 py-0 h-full flex flex-col">
-                  <Link to={`/product/${product.slug || product.id}`} className="block flex-1 flex flex-col">
+                  <Link to={`/product/${product.slug || product.id}`} className="flex-1 flex flex-col">
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
@@ -461,11 +462,21 @@ export function ShopPage() {
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         {isArabic ? 'أضف للسلة' : 'Add to Cart'}
                       </Button>
+                      <ProductQuickView product={product}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          title={isArabic ? 'نظرة سريعة' : 'Quick View'}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </ProductQuickView>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => toggleWishlist(product.id)}
                         className={`${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
+                        title={isArabic ? 'إضافة إلى المفضلة' : 'Add to Wishlist'}
                       >
                         <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                       </Button>

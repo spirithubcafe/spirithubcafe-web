@@ -390,7 +390,7 @@ export default function ReviewManagement() {
 
       {/* Delete Review Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg w-[95vw]">
           <DialogHeader>
             <DialogTitle>
               {isArabic ? 'حذف المراجعة' : 'Delete Review'}
