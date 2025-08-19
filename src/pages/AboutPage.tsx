@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { aboutService, type AboutSectionData, type AboutHeaderData } from '@/services/about';
+import { HTMLContent } from '@/components/ui/html-content';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
@@ -90,12 +91,25 @@ export function AboutPage() {
           
           {/* Header */}
           <div className="space-y-6 text-center">
-            <h1 className="text-5xl font-bold tracking-tight text-shadow-coffee bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              {header ? (isRTL ? header.title_ar : header.title_en) : (isRTL ? 'من نحن' : 'About Us')}
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {header ? (isRTL ? header.subtitle_ar : header.subtitle_en) : (isRTL ? 'من نحن' : 'Who We Are')}
-            </p>
+            <div className="text-5xl font-bold tracking-tight text-shadow-coffee bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              {header ? (
+                <HTMLContent 
+                  content={isRTL ? header.title_ar : header.title_en}
+                  className="inline-block"
+                />
+              ) : (
+                isRTL ? 'من نحن' : 'About Us'
+              )}
+            </div>
+            <div className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              {header ? (
+                <HTMLContent 
+                  content={isRTL ? header.subtitle_ar : header.subtitle_en}
+                />
+              ) : (
+                isRTL ? 'من نحن' : 'Who We Are'
+              )}
+            </div>
           </div>
 
           {/* Dynamic Sections */}
@@ -111,19 +125,16 @@ export function AboutPage() {
               {section.layout === 'full-width' ? (
                 // Full Width Layout
                 <div className="text-center space-y-4">
-                  <h2 className="text-3xl font-bold text-foreground">
-                    {isRTL ? section.title_ar : section.title_en}
-                  </h2>
+                  <div className="text-3xl font-bold text-foreground">
+                    <HTMLContent 
+                      content={isRTL ? section.title_ar : section.title_en}
+                    />
+                  </div>
                   <div className="prose prose-lg dark:prose-invert max-w-none">
-                    <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                      {(isRTL ? section.content_ar : section.content_en)
-                        .split('\n\n')
-                        .map((paragraph, pIndex) => (
-                          <p key={pIndex}>
-                            {paragraph}
-                          </p>
-                        ))}
-                    </div>
+                    <HTMLContent 
+                      content={isRTL ? section.content_ar : section.content_en}
+                      className="space-y-4 text-lg text-foreground/90 leading-relaxed"
+                    />
                   </div>
                 </div>
               ) : (
@@ -142,18 +153,15 @@ export function AboutPage() {
                   
                   {/* Text Content */}
                   <div className={section.layout === 'text-right' ? 'order-1 lg:order-2 space-y-6' : (section.layout === 'text-left' ? 'order-2 lg:order-1 space-y-6' : 'space-y-6')}>
-                    <h2 className="text-3xl font-bold text-foreground">
-                      {isRTL ? section.title_ar : section.title_en}
-                    </h2>
-                    <div className="space-y-4 text-lg text-foreground/90 leading-relaxed">
-                      {(isRTL ? section.content_ar : section.content_en)
-                        .split('\n\n')
-                        .map((paragraph, pIndex) => (
-                          <p key={pIndex}>
-                            {paragraph}
-                          </p>
-                        ))}
+                    <div className="text-3xl font-bold text-foreground">
+                      <HTMLContent 
+                        content={isRTL ? section.title_ar : section.title_en}
+                      />
                     </div>
+                    <HTMLContent 
+                      content={isRTL ? section.content_ar : section.content_en}
+                      className="space-y-4 text-lg text-foreground/90 leading-relaxed"
+                    />
                   </div>
                 </>
               )}

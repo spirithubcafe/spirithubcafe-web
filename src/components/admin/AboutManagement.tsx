@@ -473,14 +473,15 @@ export function AboutManagement() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title_en" className="block mb-2">{t('dashboard.admin.about.titleEn', 'Title (English)')}</Label>
-                      <Input
-                        id="title_en"
+                      <RichTextEditor
                         value={editingSection.title_en}
-                        onChange={(e) => setEditingSection({
+                        onChange={(value) => setEditingSection({
                           ...editingSection,
-                          title_en: e.target.value
+                          title_en: value
                         })}
                         placeholder={t('dashboard.admin.about.enterPlaceholder.titleEn', 'Enter English title')}
+                        direction="ltr"
+                        className="min-h-[120px]"
                       />
                     </div>
                     <div>
@@ -499,15 +500,15 @@ export function AboutManagement() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="title_ar" className="block mb-2">{t('dashboard.admin.about.titleAr', 'Title (Arabic)')}</Label>
-                      <Input
-                        id="title_ar"
+                      <RichTextEditor
                         value={editingSection.title_ar}
-                        onChange={(e) => setEditingSection({
+                        onChange={(value) => setEditingSection({
                           ...editingSection,
-                          title_ar: e.target.value
+                          title_ar: value
                         })}
                         placeholder={t('dashboard.admin.about.enterPlaceholder.titleAr', 'Enter Arabic title')}
-                        dir="rtl"
+                        direction="rtl"
+                        className="min-h-[120px]"
                       />
                     </div>
                     <div>
@@ -686,54 +687,56 @@ export function AboutManagement() {
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="header_title_en" className="block mb-2">{t('dashboard.admin.about.titleEn', 'Title (English)')}</Label>
-                    <Input
-                      id="header_title_en"
+                    <RichTextEditor
                       value={editingHeader.title_en}
-                      onChange={(e) => setEditingHeader({
+                      onChange={(value) => setEditingHeader({
                         ...editingHeader,
-                        title_en: e.target.value
+                        title_en: value
                       })}
                       placeholder={t('dashboard.admin.about.enterPlaceholder.titleEn', 'Enter English title')}
+                      direction="ltr"
+                      className="min-h-[120px]"
                     />
                   </div>
                   <div>
                     <Label htmlFor="header_subtitle_en" className="block mb-2">{t('dashboard.admin.about.subtitleEn', 'Subtitle (English)')}</Label>
-                    <Input
-                      id="header_subtitle_en"
+                    <RichTextEditor
                       value={editingHeader.subtitle_en}
-                      onChange={(e) => setEditingHeader({
+                      onChange={(value) => setEditingHeader({
                         ...editingHeader,
-                        subtitle_en: e.target.value
+                        subtitle_en: value
                       })}
                       placeholder={t('dashboard.admin.about.enterPlaceholder.subtitleEn', 'Enter English subtitle')}
+                      direction="ltr"
+                      className="min-h-[150px]"
                     />
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="header_title_ar" className="block mb-2">{t('dashboard.admin.about.titleAr', 'Title (Arabic)')}</Label>
-                    <Input
-                      id="header_title_ar"
+                    <RichTextEditor
                       value={editingHeader.title_ar}
-                      onChange={(e) => setEditingHeader({
+                      onChange={(value) => setEditingHeader({
                         ...editingHeader,
-                        title_ar: e.target.value
+                        title_ar: value
                       })}
                       placeholder={t('dashboard.admin.about.enterPlaceholder.titleAr', 'Enter Arabic title')}
-                      dir="rtl"
+                      direction="rtl"
+                      className="min-h-[120px]"
                     />
                   </div>
                   <div>
                     <Label htmlFor="header_subtitle_ar" className="block mb-2">{t('dashboard.admin.about.subtitleAr', 'Subtitle (Arabic)')}</Label>
-                    <Input
-                      id="header_subtitle_ar"
+                    <RichTextEditor
                       value={editingHeader.subtitle_ar}
-                      onChange={(e) => setEditingHeader({
+                      onChange={(value) => setEditingHeader({
                         ...editingHeader,
-                        subtitle_ar: e.target.value
+                        subtitle_ar: value
                       })}
                       placeholder={t('dashboard.admin.about.enterPlaceholder.subtitleAr', 'Enter Arabic subtitle')}
-                      dir="rtl"
+                      direction="rtl"
+                      className="min-h-[150px]"
                     />
                   </div>
                 </div>
