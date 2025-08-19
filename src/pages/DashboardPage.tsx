@@ -334,14 +334,14 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex h-screen">
+      <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-64 bg-card border-r border-border flex-shrink-0 hidden lg:flex lg:flex-col h-full">
-          <div className="p-6 flex-1">
+        <aside className="w-64 bg-card border-r border-border flex-shrink-0 hidden xl:flex xl:flex-col h-screen overflow-hidden">
+          <div className="p-6 flex-1 overflow-y-auto">
             <h2 className="text-lg font-semibold mb-6">
               {isArabic ? 'لوحة التحكم' : 'Dashboard'}
             </h2>
-            <nav className="space-y-2">
+            <nav className="space-y-2 pb-6">
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -374,25 +374,28 @@ export default function DashboardPage() {
 
         {/* Mobile Sidebar Overlay */}
         <div className={cn(
-          "fixed inset-0 z-50 lg:hidden",
+          "fixed inset-0 z-[100] xl:hidden",
           sidebarOpen ? "block" : "hidden"
         )}>
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="fixed top-0 left-0 h-full w-64 bg-card border-r border-border">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold">
-                  {isArabic ? 'لوحة التحكم' : 'Dashboard'}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          <aside className="fixed top-0 left-0 h-screen w-64 bg-card border-r border-border overflow-hidden z-[110]">
+            <div className="h-full flex flex-col">
+              <div className="p-6 border-b border-border flex-shrink-0">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold">
+                    {isArabic ? 'لوحة التحكم' : 'Dashboard'}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <nav className="space-y-2">
+              <div className="flex-1 overflow-y-auto p-6">
+                <nav className="space-y-2 pb-6">
                 {navigationItems.map((item) => {
                   const Icon = item.icon
                   return (
@@ -419,39 +422,40 @@ export default function DashboardPage() {
                     </button>
                   )
                 })}
-              </nav>
+                </nav>
+              </div>
             </div>
           </aside>
         </div>
 
         {/* Main Content */}
-        <main ref={mainContentRef} className="flex-1 min-w-0 h-screen overflow-y-auto">
-          <div className="container mx-auto px-4 py-8">
+        <main ref={mainContentRef} className="flex-1 min-w-0 h-screen overflow-y-auto bg-background">
+          <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-none">
             {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="mb-6 lg:mb-8">
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-3 lg:gap-4 min-w-0 flex-1">
                   {/* Mobile Menu Button */}
                   <Button
                     variant="outline"
                     size="sm"
-                    className="lg:hidden"
+                    className="xl:hidden flex-shrink-0"
                     onClick={() => setSidebarOpen(true)}
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
 
-                  <Avatar className="h-16 w-16">
+                  <Avatar className="h-12 w-12 lg:h-16 lg:w-16 flex-shrink-0">
                     <AvatarImage src={user.avatar} alt={user.full_name} />
                     <AvatarFallback>
                       {user.full_name.split(' ').map((n: string) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h1 className="text-3xl font-bold">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-xl lg:text-3xl font-bold truncate">
                       {isArabic ? `مرحباً ${user.full_name}` : `Welcome ${user.full_name}`}
                     </h1>
-                    <p className="text-muted-foreground">
+                    <p className="text-sm lg:text-base text-muted-foreground">
                       {user.role === 'admin'
                         ? (isArabic ? 'مدير النظام' : 'System Administrator')
                         : user.role === 'employee'
@@ -461,9 +465,10 @@ export default function DashboardPage() {
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" onClick={handleLogout}>
+                <Button variant="outline" onClick={handleLogout} className="flex-shrink-0">
                   <LogOut className="h-4 w-4 mr-2" />
-                  {isArabic ? 'تسجيل الخروج' : 'Logout'}
+                  <span className="hidden sm:inline">{isArabic ? 'تسجيل الخروج' : 'Logout'}</span>
+                  <span className="sm:hidden">{isArabic ? 'خروج' : 'Exit'}</span>
                 </Button>
               </div>
             </div>

@@ -322,7 +322,7 @@ export default function ReviewManagement() {
 
       {/* View Review Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>
               {isArabic ? 'تفاصيل المراجعة' : 'Review Details'}

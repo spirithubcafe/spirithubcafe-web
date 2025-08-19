@@ -339,7 +339,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
       
       {/* Property Dialog */}
       <Dialog open={isPropertyDialogOpen} onOpenChange={setIsPropertyDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingProperty?.id ? 
@@ -532,7 +532,7 @@ export default function ProductPropertyForm({ properties, onPropertiesChange }: 
       
       {/* Option Dialog */}
       <Dialog open={isOptionDialogOpen} onOpenChange={setIsOptionDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>
               {editingOption?.id ? 

@@ -454,7 +454,7 @@ export function AboutManagement() {
 
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-[80%] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[80%] w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingSection?.id ? t('dashboard.admin.about.editSection', 'Edit Section') : t('dashboard.admin.about.addSection', 'Add Section')}
@@ -674,7 +674,7 @@ export function AboutManagement() {
 
       {/* Header Edit Dialog */}
       <Dialog open={showHeaderDialog} onOpenChange={setShowHeaderDialog}>
-        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingHeader?.id ? t('dashboard.admin.about.editHeader', 'Edit Page Header') : t('dashboard.admin.about.createHeader', 'Create Page Header')}

@@ -305,7 +305,7 @@ export default function OrderManagement() {
 
       {/* View Order Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {isArabic ? 'تفاصيل الطلب' : 'Order Details'}
