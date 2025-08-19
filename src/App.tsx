@@ -7,6 +7,7 @@ import { CartProvider } from '@/components/cart-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { PWAUpdatePrompt } from '@/components/pwa-update-prompt'
 import { HomePage } from '@/pages/HomePage'
 import { ShopPage } from '@/pages/ShopPage'
 import ProductPage from '@/pages/ProductPage'
@@ -125,6 +126,7 @@ function App() {
                     },
                   }}
                 />
+                <PWAUpdatePrompt />
               </div>
             </Router>
           </CartProvider>
