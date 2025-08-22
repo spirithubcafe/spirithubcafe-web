@@ -253,9 +253,7 @@ export function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
                 {t('homepage.latestRelease.title', 'Latest Release')}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('homepage.latestRelease.subtitle', 'Discover our newest coffee arrivals')}
-              </p>
+ 
             </div>
             
             {loadingProducts ? (
@@ -489,9 +487,6 @@ export function HomePage() {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-shadow-coffee">
                 {t('homepage.categories.title', 'SpiritHub Categories')}
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                {t('homepage.categories.subtitle', 'Explore our coffee categories')}
-              </p>
             </div>
             
             {loadingCategories ? (

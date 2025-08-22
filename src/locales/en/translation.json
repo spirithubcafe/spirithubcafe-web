@@ -45,7 +45,7 @@
       "viewAll": "View All Products"
     },
     "latestRelease": {
-      "title": "Latest Release",
+      "title": "LATEST RELEASE",
       "subtitle": "Discover our newest coffee arrivals",
       "noProducts": "No new products available at the moment",
       "viewShop": "View Shop"
@@ -57,7 +57,7 @@
       "description": "We are preparing something special for you. Stay tuned!"
     },
     "categories": {
-      "title": "SpiritHub Categories",
+      "title": "SPIRITHUB CATEGORIES",
       "subtitle": "Explore our coffee categories",
       "noCategories": "No categories available at the moment"
     },
