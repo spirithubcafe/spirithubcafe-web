@@ -294,6 +294,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
   payment_status: 'unpaid' | 'paid' | 'partially_paid' | 'refunded' | 'failed';
   payment_method?: 'card' | 'cash' | 'paypal' | 'bank_transfer';
+  transaction_id?: string; // Payment gateway transaction ID
   total_usd?: number;
   total_omr?: number;
   total_sar?: number;
@@ -2057,6 +2058,217 @@ export const firestoreService = {
         throw error;
       }
     }
+  },
+
+  // Checkout Settings
+  checkoutSettings: {
+    // Get checkout settings
+    get: async (): Promise<any> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          if (settingsDoc.exists()) {
+            return {
+              id: settingsDoc.id,
+              ...settingsDoc.data(),
+              created_at: settingsDoc.data().created_at?.toDate() || new Date(),
+              updated_at: settingsDoc.data().updated_at?.toDate() || new Date()
+            };
+          }
+          
+          // Return default settings if none exist
+          return {
+            tax_rate: 0.1, // 10% tax
+            enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+            shipping_methods: [
+              {
+                id: 'pickup',
+                name: 'Pickup from our Cafe',
+                name_ar: 'الاستلام من المقهى',
+                enabled: true,
+                is_free: true,
+                pricing_type: 'flat',
+                base_cost_omr: 0,
+                base_cost_usd: 0,
+                base_cost_sar: 0,
+                estimated_delivery_days: 'Same day',
+                description: 'Free pickup from our cafe',
+                description_ar: 'استلام مجاني من المقهى'
+              },
+              {
+                id: 'nool_oman',
+                name: 'NOOL OMAN',
+                name_ar: 'نول عمان',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'flat',
+                base_cost_omr: 2,
+                base_cost_usd: 5.2,
+                base_cost_sar: 19.5,
+                estimated_delivery_days: '1-2 days',
+                description: 'Fast delivery within Oman',
+                description_ar: 'توصيل سريع داخل عمان',
+                api_settings: {
+                  provider: 'nool_oman',
+                  api_url: 'https://api.nool.om',
+                  account_number: '71925275'
+                }
+              },
+              {
+                id: 'aramex',
+                name: 'Aramex',
+                name_ar: 'أرامكس',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'api_calculated',
+                base_cost_omr: 1.73,
+                base_cost_usd: 4.5,
+                base_cost_sar: 16.86,
+                estimated_delivery_days: '2-3 days',
+                description: 'International shipping via Aramex',
+                description_ar: 'شحن دولي عبر أرامكس',
+                api_settings: {
+                  provider: 'aramex',
+                  api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                  username: 'aramex_username',
+                  password: 'aramex_password',
+                  account_number: 'aramex_account'
+                }
+              }
+            ],
+            payment_gateway: {
+              provider: 'bank_muscat',
+              enabled: true,
+              test_mode: false,
+              merchant_id: '224',
+              access_code: 'AVDP00LA16BE47PDEB',
+              working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+              supported_currencies: ['OMR', 'USD', 'SAR'],
+              additional_settings: {
+                return_url: 'https://spirithubcafe.com/checkout/success',
+                cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+              }
+            },
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+        },
+        null,
+        'getCheckoutSettings'
+      );
+    },
+
+    // Update checkout settings
+    update: async (settingsData: any): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsRef = doc(db, 'settings', 'checkout');
+          await updateDoc(settingsRef, {
+            ...settingsData,
+            updated_at: serverTimestamp()
+          });
+          console.log('✅ Checkout settings updated successfully');
+          return true;
+        },
+        false,
+        'updateCheckoutSettings'
+      );
+    },
+
+    // Initialize default checkout settings
+    initialize: async (): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          
+          if (!settingsDoc.exists()) {
+            const defaultSettings = {
+              tax_rate: 0.1, // 10% tax
+              enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+              shipping_methods: [
+                {
+                  id: 'pickup',
+                  name: 'Pickup from our Cafe',
+                  name_ar: 'الاستلام من المقهى',
+                  enabled: true,
+                  is_free: true,
+                  pricing_type: 'flat',
+                  base_cost_omr: 0,
+                  base_cost_usd: 0,
+                  base_cost_sar: 0,
+                  estimated_delivery_days: 'Same day',
+                  description: 'Free pickup from our cafe',
+                  description_ar: 'استلام مجاني من المقهى'
+                },
+                {
+                  id: 'nool_oman',
+                  name: 'NOOL OMAN',
+                  name_ar: 'نول عمان',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'flat',
+                  base_cost_omr: 2,
+                  base_cost_usd: 5.2,
+                  base_cost_sar: 19.5,
+                  estimated_delivery_days: '1-2 days',
+                  description: 'Fast delivery within Oman',
+                  description_ar: 'توصيل سريع داخل عمان',
+                  api_settings: {
+                    provider: 'nool_oman',
+                    api_url: 'https://api.nool.om',
+                    account_number: '71925275'
+                  }
+                },
+                {
+                  id: 'aramex',
+                  name: 'Aramex',
+                  name_ar: 'أرامكس',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'api_calculated',
+                  base_cost_omr: 1.73,
+                  base_cost_usd: 4.5,
+                  base_cost_sar: 16.86,
+                  estimated_delivery_days: '2-3 days',
+                  description: 'International shipping via Aramex',
+                  description_ar: 'شحن دولي عبر أرامكس',
+                  api_settings: {
+                    provider: 'aramex',
+                    api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                    username: 'aramex_username',
+                    password: 'aramex_password',
+                    account_number: 'aramex_account'
+                  }
+                }
+              ],
+              payment_gateway: {
+                provider: 'bank_muscat',
+                enabled: true,
+                test_mode: false,
+                merchant_id: '224',
+                access_code: 'AVDP00LA16BE47PDEB',
+                working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+                supported_currencies: ['OMR', 'USD', 'SAR'],
+                additional_settings: {
+                  return_url: 'https://spirithubcafe.com/checkout/success',
+                  cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                  webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+                }
+              },
+              created_at: serverTimestamp(),
+              updated_at: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
+            console.log('✅ Default checkout settings initialized');
+          }
+          return true;
+        },
+        false,
+        'initializeCheckoutSettings'
+      );
+    }
   }
 };
 
@@ -2176,6 +2388,217 @@ export const storageService = {
       console.error('Error deleting file:', error);
       throw error;
     }
+  },
+
+  // Checkout Settings
+  checkoutSettings: {
+    // Get checkout settings
+    get: async (): Promise<any> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          if (settingsDoc.exists()) {
+            return {
+              id: settingsDoc.id,
+              ...settingsDoc.data(),
+              created_at: settingsDoc.data().created_at?.toDate() || new Date(),
+              updated_at: settingsDoc.data().updated_at?.toDate() || new Date()
+            };
+          }
+          
+          // Return default settings if none exist
+          return {
+            tax_rate: 0.1, // 10% tax
+            enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+            shipping_methods: [
+              {
+                id: 'pickup',
+                name: 'Pickup from our Cafe',
+                name_ar: 'الاستلام من المقهى',
+                enabled: true,
+                is_free: true,
+                pricing_type: 'flat',
+                base_cost_omr: 0,
+                base_cost_usd: 0,
+                base_cost_sar: 0,
+                estimated_delivery_days: 'Same day',
+                description: 'Free pickup from our cafe',
+                description_ar: 'استلام مجاني من المقهى'
+              },
+              {
+                id: 'nool_oman',
+                name: 'NOOL OMAN',
+                name_ar: 'نول عمان',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'flat',
+                base_cost_omr: 2,
+                base_cost_usd: 5.2,
+                base_cost_sar: 19.5,
+                estimated_delivery_days: '1-2 days',
+                description: 'Fast delivery within Oman',
+                description_ar: 'توصيل سريع داخل عمان',
+                api_settings: {
+                  provider: 'nool_oman',
+                  api_url: 'https://api.nool.om',
+                  account_number: '71925275'
+                }
+              },
+              {
+                id: 'aramex',
+                name: 'Aramex',
+                name_ar: 'أرامكس',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'api_calculated',
+                base_cost_omr: 1.73,
+                base_cost_usd: 4.5,
+                base_cost_sar: 16.86,
+                estimated_delivery_days: '2-3 days',
+                description: 'International shipping via Aramex',
+                description_ar: 'شحن دولي عبر أرامكس',
+                api_settings: {
+                  provider: 'aramex',
+                  api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                  username: 'aramex_username',
+                  password: 'aramex_password',
+                  account_number: 'aramex_account'
+                }
+              }
+            ],
+            payment_gateway: {
+              provider: 'bank_muscat',
+              enabled: true,
+              test_mode: false,
+              merchant_id: '224',
+              access_code: 'AVDP00LA16BE47PDEB',
+              working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+              supported_currencies: ['OMR', 'USD', 'SAR'],
+              additional_settings: {
+                return_url: 'https://spirithubcafe.com/checkout/success',
+                cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+              }
+            },
+            created_at: new Date(),
+            updated_at: new Date()
+          };
+        },
+        null,
+        'getCheckoutSettings'
+      );
+    },
+
+    // Update checkout settings
+    update: async (settingsData: any): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsRef = doc(db, 'settings', 'checkout');
+          await updateDoc(settingsRef, {
+            ...settingsData,
+            updated_at: serverTimestamp()
+          });
+          console.log('✅ Checkout settings updated successfully');
+          return true;
+        },
+        false,
+        'updateCheckoutSettings'
+      );
+    },
+
+    // Initialize default checkout settings
+    initialize: async (): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          
+          if (!settingsDoc.exists()) {
+            const defaultSettings = {
+              tax_rate: 0.1, // 10% tax
+              enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+              shipping_methods: [
+                {
+                  id: 'pickup',
+                  name: 'Pickup from our Cafe',
+                  name_ar: 'الاستلام من المقهى',
+                  enabled: true,
+                  is_free: true,
+                  pricing_type: 'flat',
+                  base_cost_omr: 0,
+                  base_cost_usd: 0,
+                  base_cost_sar: 0,
+                  estimated_delivery_days: 'Same day',
+                  description: 'Free pickup from our cafe',
+                  description_ar: 'استلام مجاني من المقهى'
+                },
+                {
+                  id: 'nool_oman',
+                  name: 'NOOL OMAN',
+                  name_ar: 'نول عمان',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'flat',
+                  base_cost_omr: 2,
+                  base_cost_usd: 5.2,
+                  base_cost_sar: 19.5,
+                  estimated_delivery_days: '1-2 days',
+                  description: 'Fast delivery within Oman',
+                  description_ar: 'توصيل سريع داخل عمان',
+                  api_settings: {
+                    provider: 'nool_oman',
+                    api_url: 'https://api.nool.om',
+                    account_number: '71925275'
+                  }
+                },
+                {
+                  id: 'aramex',
+                  name: 'Aramex',
+                  name_ar: 'أرامكس',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'api_calculated',
+                  base_cost_omr: 1.73,
+                  base_cost_usd: 4.5,
+                  base_cost_sar: 16.86,
+                  estimated_delivery_days: '2-3 days',
+                  description: 'International shipping via Aramex',
+                  description_ar: 'شحن دولي عبر أرامكس',
+                  api_settings: {
+                    provider: 'aramex',
+                    api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                    username: 'aramex_username',
+                    password: 'aramex_password',
+                    account_number: 'aramex_account'
+                  }
+                }
+              ],
+              payment_gateway: {
+                provider: 'bank_muscat',
+                enabled: true,
+                test_mode: false,
+                merchant_id: '224',
+                access_code: 'AVDP00LA16BE47PDEB',
+                working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+                supported_currencies: ['OMR', 'USD', 'SAR'],
+                additional_settings: {
+                  return_url: 'https://spirithubcafe.com/checkout/success',
+                  cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                  webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+                }
+              },
+              created_at: serverTimestamp(),
+              updated_at: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
+            console.log('✅ Default checkout settings initialized');
+          }
+          return true;
+        },
+        false,
+        'initializeCheckoutSettings'
+      );
+    }
   }
 };
 
@@ -2204,6 +2627,215 @@ export const subscriptions = {
     } catch (error) {
       console.error('❌ Failed to set up cart listener:', error);
       return () => {};
+    }
+  },
+
+  // Checkout Settings
+  checkoutSettings: {
+    // Get checkout settings
+    get: async (): Promise<any> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          if (settingsDoc.exists()) {
+            return {
+              id: settingsDoc.id,
+              ...settingsDoc.data(),
+              created_at: settingsDoc.data().created_at?.toDate() || new Date(),
+              updated_at: settingsDoc.data().updated_at?.toDate() || new Date()
+            };
+          }
+          
+          // Return default settings if none exist
+          return {
+            tax_rate: 0.1, // 10% tax
+            enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+            shipping_methods: [
+              {
+                id: 'pickup',
+                name: 'Pickup from our Cafe',
+                name_ar: 'الاستلام من المقهى',
+                enabled: true,
+                is_free: true,
+                pricing_type: 'flat',
+                base_cost_omr: 0,
+                base_cost_usd: 0,
+                base_cost_sar: 0,
+                estimated_delivery_days: 'Same day',
+                description: 'Free pickup from our cafe',
+                description_ar: 'استلام مجاني من المقهى'
+              },
+              {
+                id: 'nool_oman',
+                name: 'NOOL OMAN',
+                name_ar: 'نول عمان',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'flat',
+                base_cost_omr: 2,
+                base_cost_usd: 5.2,
+                base_cost_sar: 19.5,
+                estimated_delivery_days: '1-2 days',
+                description: 'Fast delivery within Oman',
+                description_ar: 'توصيل سريع داخل عمان',
+                api_settings: {
+                  provider: 'nool_oman',
+                  api_url: 'https://api.nool.om',
+                  account_number: '71925275'
+                }
+              },
+              {
+                id: 'aramex',
+                name: 'Aramex',
+                name_ar: 'أرامكس',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'api_calculated',
+                base_cost_omr: 1.73,
+                base_cost_usd: 4.5,
+                base_cost_sar: 16.86,
+                estimated_delivery_days: '2-3 days',
+                description: 'International shipping via Aramex',
+                description_ar: 'شحن دولي عبر أرامكس',
+                api_settings: {
+                  provider: 'aramex',
+                  api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                  username: 'aramex_username',
+                  password: 'aramex_password',
+                  account_number: 'aramex_account'
+                }
+              }
+            ],
+            payment_gateway: {
+              provider: 'bank_muscat',
+              enabled: true,
+              test_mode: false,
+              merchant_id: '224',
+              access_code: 'AVDP00LA16BE47PDEB',
+              working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+              supported_currencies: ['OMR', 'USD', 'SAR'],
+              additional_settings: {
+                return_url: 'https://spirithubcafe.com/checkout/success',
+                cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+              }
+            }
+          };
+        },
+        null,
+        'getCheckoutSettings'
+      );
+    },
+
+    // Update checkout settings
+    update: async (settings: any): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const updateData = {
+            ...settings,
+            updated_at: serverTimestamp()
+          };
+          
+          await setDoc(doc(db, 'settings', 'checkout'), updateData, { merge: true });
+          console.log('✅ Checkout settings updated');
+          return true;
+        },
+        false,
+        'updateCheckoutSettings'
+      );
+    },
+
+    // Initialize default settings
+    initialize: async (): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'));
+          if (!settingsDoc.exists()) {
+            const defaultSettings = {
+              tax_rate: 0.1,
+              enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+              shipping_methods: [
+                {
+                  id: 'pickup',
+                  name: 'Pickup from our Cafe',
+                  name_ar: 'الاستلام من المقهى',
+                  enabled: true,
+                  is_free: true,
+                  pricing_type: 'flat',
+                  base_cost_omr: 0,
+                  base_cost_usd: 0,
+                  base_cost_sar: 0,
+                  estimated_delivery_days: 'Same day',
+                  description: 'Free pickup from our cafe',
+                  description_ar: 'استلام مجاني من المقهى'
+                },
+                {
+                  id: 'nool_oman',
+                  name: 'NOOL OMAN',
+                  name_ar: 'نول عمان',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'flat',
+                  base_cost_omr: 2,
+                  base_cost_usd: 5.2,
+                  base_cost_sar: 19.5,
+                  estimated_delivery_days: '1-2 days',
+                  description: 'Fast delivery within Oman',
+                  description_ar: 'توصيل سريع داخل عمان',
+                  api_settings: {
+                    provider: 'nool_oman',
+                    api_url: 'https://api.nool.om',
+                    account_number: '71925275'
+                  }
+                },
+                {
+                  id: 'aramex',
+                  name: 'Aramex',
+                  name_ar: 'أرامكس',
+                  enabled: true,
+                  is_free: false,
+                  pricing_type: 'api_calculated',
+                  base_cost_omr: 1.73,
+                  base_cost_usd: 4.5,
+                  base_cost_sar: 16.86,
+                  estimated_delivery_days: '2-3 days',
+                  description: 'International shipping via Aramex',
+                  description_ar: 'شحن دولي عبر أرامكس',
+                  api_settings: {
+                    provider: 'aramex',
+                    api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                    username: 'aramex_username',
+                    password: 'aramex_password',
+                    account_number: 'aramex_account'
+                  }
+                }
+              ],
+              payment_gateway: {
+                provider: 'bank_muscat',
+                enabled: true,
+                test_mode: false,
+                merchant_id: '224',
+                access_code: 'AVDP00LA16BE47PDEB',
+                working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+                supported_currencies: ['OMR', 'USD', 'SAR'],
+                additional_settings: {
+                  return_url: 'https://spirithubcafe.com/checkout/success',
+                  cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                  webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+                }
+              },
+              created_at: serverTimestamp(),
+              updated_at: serverTimestamp()
+            };
+            
+            await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
+            console.log('✅ Default checkout settings initialized');
+          }
+          return true;
+        },
+        false,
+        'initializeCheckoutSettings'
+      );
     }
   },
   

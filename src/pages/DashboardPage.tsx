@@ -15,7 +15,8 @@ import {
   Globe,
   Presentation,
   FileText,
-  Phone
+  Phone,
+  CreditCard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -45,6 +46,7 @@ import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
 import { AboutManagement } from '@/components/admin/AboutManagement'
+import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -247,6 +249,12 @@ export default function DashboardPage() {
         show: true
       },
       {
+        id: 'checkout-settings',
+        label: isArabic ? 'إعدادات الدفع والشحن' : 'Checkout Settings',
+        icon: CreditCard,
+        show: true
+      },
+      {
         id: 'contact',
         label: t('dashboard.tabs.contact'),
         icon: Phone,
@@ -303,6 +311,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <FooterManagement />
       case 'pages':
         return user?.role === 'admin' && <PagesManagement />
+      case 'checkout-settings':
+        return user?.role === 'admin' && <CheckoutSettingsPage />
       case 'contact':
         return user?.role === 'admin' && <ContactManagement />
       case 'about':

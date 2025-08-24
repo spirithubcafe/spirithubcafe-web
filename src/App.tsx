@@ -18,6 +18,8 @@ import { LoginPage } from '@/pages/LoginPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
 import CheckoutPage from '@/pages/CheckoutPage'
+import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage'
+import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 import DashboardPage from '@/pages/DashboardPage'
 import { WishlistPage } from '@/pages/WishlistPage'
 import { HeroSlidePage } from '@/pages/HeroSlidePage'
@@ -45,6 +47,7 @@ function App() {
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
                     <Route 
                       path="/wishlist" 
                       element={
@@ -58,6 +61,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <DashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/dashboard/checkout-settings" 
+                      element={
+                        <ProtectedRoute>
+                          <CheckoutSettingsPage />
                         </ProtectedRoute>
                       } 
                     />

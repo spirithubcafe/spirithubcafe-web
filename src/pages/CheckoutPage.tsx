@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle, ShoppingCart, CreditCard, MapPin } from 'lucide-react'
+import { CheckCircle, ShoppingCart, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,8 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
 import { firestoreService, type Order, type OrderItem } from '@/lib/firebase'
+import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
+import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
 import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
@@ -23,6 +25,7 @@ export default function CheckoutPage() {
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
   const { currentUser } = useAuth()
+  const { settings: checkoutSettings } = useCheckoutSettings()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
@@ -133,11 +136,8 @@ export default function CheckoutPage() {
     zipCode: '',
     country: '',
     
-    // Payment
-    paymentMethod: 'card',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
+    // Shipping
+    shippingMethod: 'pickup', // pickup, nool_oman, aramex
     
     // Order Notes
     notes: ''
@@ -149,8 +149,35 @@ export default function CheckoutPage() {
 
   const calculateTotals = () => {
     const subtotal = getTotalPrice()
-    const shippingCost = 5
-    const taxAmount = subtotal * 0.1
+    
+    // Calculate shipping cost based on method and settings
+    let shippingCost = 0
+    if (checkoutSettings && checkoutSettings.shipping_methods) {
+      const selectedMethod = checkoutSettings.shipping_methods.find(
+        method => method.id === formData.shippingMethod && method.enabled
+      )
+      
+      if (selectedMethod && !selectedMethod.is_free) {
+        switch (currency) {
+          case 'OMR':
+            shippingCost = selectedMethod.base_cost_omr || 0
+            break
+          case 'SAR':
+            shippingCost = selectedMethod.base_cost_sar || 0
+            break
+          case 'USD':
+            shippingCost = selectedMethod.base_cost_usd || 0
+            break
+          default:
+            shippingCost = selectedMethod.base_cost_omr || 0
+        }
+      }
+    }
+    
+    // Calculate tax based on settings
+    const taxRate = checkoutSettings?.tax_rate || 0.1
+    const taxableAmount = subtotal + shippingCost
+    const taxAmount = taxableAmount * taxRate
     const total = subtotal + shippingCost + taxAmount
     
     return {
@@ -228,8 +255,8 @@ export default function CheckoutPage() {
         
         currency: currency as 'USD' | 'OMR' | 'SAR',
         status: 'pending',
-        payment_status: formData.paymentMethod === 'cash' ? 'unpaid' : 'paid',
-        payment_method: formData.paymentMethod as 'card' | 'cash' | 'paypal' | 'bank_transfer',
+        payment_status: 'unpaid', // Will be handled by payment gateway
+        payment_method: 'card' as 'card' | 'cash' | 'paypal' | 'bank_transfer', // Using payment gateway
         notes: formData.notes,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -266,12 +293,47 @@ export default function CheckoutPage() {
         await firestoreService.orderItems.create(orderItemData)
       }
       
-      // Clear cart and show success
-      setCreatedOrderId(order.id)
-      setOrderSuccess(true)
-      clearCart()
+      // Create payment request
+      const paymentRequest: PaymentRequest = {
+        order_id: order.id,
+        amount: totals.total,
+        currency: currency as 'OMR' | 'USD' | 'SAR',
+        customer_email: formData.email,
+        customer_name: `${formData.firstName} ${formData.lastName}`,
+        customer_phone: formData.phone,
+        return_url: `${window.location.origin}/checkout-success?order_id=${order.id}`,
+        cancel_url: `${window.location.origin}/checkout-success?order_id=${order.id}`
+      }
+
+      // Process payment
+      const paymentResponse = await bankMuscatPaymentService.createPayment(paymentRequest)
       
-      toast.success(isArabic ? 'تم إنشاء الطلب بنجاح!' : 'Order created successfully!')
+      if (paymentResponse.success && paymentResponse.payment_url) {
+        // Update order with payment info
+        await firestoreService.orders.update(order.id, {
+          payment_status: 'unpaid', // Will be updated when payment is confirmed
+          transaction_id: paymentResponse.transaction_id
+        })
+        
+        // Clear cart before redirecting to payment
+        clearCart()
+        
+        // Show processing message
+        toast.success(isArabic ? 'جاري تحويلك إلى بوابة الدفع...' : 'Redirecting to payment gateway...')
+        
+        // Redirect to payment gateway will happen automatically in the service
+        // The form submission will redirect the user
+        
+      } else {
+        // Payment initiation failed
+        toast.error(isArabic ? 'فشل في بدء عملية الدفع' : 'Failed to initiate payment')
+        console.error('Payment error:', paymentResponse.error)
+        
+        // Still show success for order creation but inform about payment issue
+        setCreatedOrderId(order.id)
+        setOrderSuccess(true)
+        clearCart()
+      }
       
     } catch (error) {
       console.error('Error creating order:', error)
@@ -502,10 +564,29 @@ export default function CheckoutPage() {
                           <SelectValue placeholder={isArabic ? 'اختر البلد' : 'Select country'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="iraq">{isArabic ? 'العراق' : 'Iraq'}</SelectItem>
-                          <SelectItem value="uae">{isArabic ? 'الإمارات العربية المتحدة' : 'UAE'}</SelectItem>
-                          <SelectItem value="saudi">{isArabic ? 'السعودية' : 'Saudi Arabia'}</SelectItem>
-                          <SelectItem value="kuwait">{isArabic ? 'الكويت' : 'Kuwait'}</SelectItem>
+                          {checkoutSettings?.enabled_countries?.map((countryCode) => {
+                            const countryNames: Record<string, {name: string, name_ar: string}> = {
+                              'OM': {name: 'Oman', name_ar: 'عمان'},
+                              'AE': {name: 'UAE', name_ar: 'الإمارات العربية المتحدة'},
+                              'SA': {name: 'Saudi Arabia', name_ar: 'السعودية'},
+                              'KW': {name: 'Kuwait', name_ar: 'الكويت'},
+                              'IQ': {name: 'Iraq', name_ar: 'العراق'}
+                            }
+                            const country = countryNames[countryCode]
+                            if (!country) return null
+                            
+                            return (
+                              <SelectItem key={countryCode} value={countryCode}>
+                                {isArabic ? country.name_ar : country.name}
+                              </SelectItem>
+                            )
+                          }) || [
+                            <SelectItem key="OM" value="OM">{isArabic ? 'عمان' : 'Oman'}</SelectItem>,
+                            <SelectItem key="AE" value="AE">{isArabic ? 'الإمارات العربية المتحدة' : 'UAE'}</SelectItem>,
+                            <SelectItem key="SA" value="SA">{isArabic ? 'السعودية' : 'Saudi Arabia'}</SelectItem>,
+                            <SelectItem key="KW" value="KW">{isArabic ? 'الكويت' : 'Kuwait'}</SelectItem>,
+                            <SelectItem key="IQ" value="IQ">{isArabic ? 'العراق' : 'Iraq'}</SelectItem>
+                          ]}
                         </SelectContent>
                       </Select>
                     </div>
@@ -513,80 +594,11 @@ export default function CheckoutPage() {
                 </CardContent>
               </Card>
 
-              {/* Step 3: Payment Method */}
+              {/* Step 3: Order Notes */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <span className="w-6 h-6 bg-amber-600 text-white rounded-full flex items-center justify-center text-sm">3</span>
-                    <CreditCard className="h-5 w-5" />
-                    {isArabic ? 'طريقة الدفع' : 'Payment Method'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <RadioGroup value={formData.paymentMethod} onValueChange={(value: string) => handleInputChange('paymentMethod', value)}>
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <RadioGroupItem value="card" id="card" />
-                      <Label htmlFor="card">
-                        {isArabic ? 'بطاقة ائتمان' : 'Credit Card'}
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <RadioGroupItem value="cash" id="cash" />
-                      <Label htmlFor="cash">
-                        {isArabic ? 'الدفع عند الاستلام' : 'Cash on Delivery'}
-                      </Label>
-                    </div>
-                  </RadioGroup>
-
-                  {formData.paymentMethod === 'card' && (
-                    <div className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="cardNumber">
-                          {isArabic ? 'رقم البطاقة' : 'Card Number'}
-                        </Label>
-                        <Input
-                          id="cardNumber"
-                          value={formData.cardNumber}
-                          onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                          placeholder="1234 5678 9012 3456"
-                          maxLength={19}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="expiryDate">
-                            {isArabic ? 'تاريخ الانتهاء' : 'Expiry Date'}
-                          </Label>
-                          <Input
-                            id="expiryDate"
-                            value={formData.expiryDate}
-                            onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                            placeholder="MM/YY"
-                            maxLength={5}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="cvv">
-                            {isArabic ? 'رمز الأمان' : 'CVV'}
-                          </Label>
-                          <Input
-                            id="cvv"
-                            value={formData.cvv}
-                            onChange={(e) => handleInputChange('cvv', e.target.value)}
-                            placeholder="123"
-                            maxLength={3}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Order Notes */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>
                     {isArabic ? 'ملاحظات الطلب' : 'Order Notes'}
                   </CardTitle>
                 </CardHeader>
@@ -606,93 +618,142 @@ export default function CheckoutPage() {
               <Card className="sticky top-8">
                 <CardHeader>
                   <CardTitle>
-                    {isArabic ? 'ملخص الطلب' : 'Order Summary'}
+                    {isArabic ? 'طلبك' : 'Your Order'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Cart Items */}
                   <div className="space-y-3">
+                    <div className="flex justify-between text-sm font-medium border-b pb-2">
+                      <span>{isArabic ? 'المنتج' : 'Product'}</span>
+                      <span>{isArabic ? 'المجموع الفرعي' : 'Subtotal'}</span>
+                    </div>
                     {cart?.items?.map((item) => (
-                      <div key={item.product?.id} className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0">
-                          <img 
-                            src="/images/logo-s.png" 
-                            alt="SpiritHub Cafe Logo" 
-                            className="h-8 w-8 object-contain"
-                          />
-                        </div>
+                      <div key={item.product?.id} className="flex justify-between items-start">
                         <div className="flex-1">
                           <h4 className="font-medium text-sm">
                             {isArabic ? (item.product?.name_ar || item.product?.name) : item.product?.name}
+                            {item.selectedProperties && Object.keys(item.selectedProperties).length > 0 && (
+                              <span className="text-xs text-muted-foreground">
+                                {Object.entries(item.selectedProperties).map(([propertyName, selectedValue]) => {
+                                  const property = item.product?.properties?.find((p: any) => p.name === propertyName)
+                                  const option = property?.options?.find((opt: any) => opt.value === selectedValue)
+                                  const label = isArabic ? (option?.label_ar || option?.label) : option?.label
+                                  return ` - ${label}`
+                                }).join(', ')}
+                              </span>
+                            )}
                           </h4>
                           <p className="text-xs text-muted-foreground">
-                            {isArabic ? 'الكمية' : 'Qty'}: {item.quantity}
+                            × {item.quantity}
                           </p>
-                          {/* Selected Properties */}
-                          {item.selectedProperties && Object.keys(item.selectedProperties).length > 0 && (
-                            <div className="text-xs text-muted-foreground mt-1 space-y-1">
-                              {Object.entries(item.selectedProperties).map(([propertyName, selectedValue]) => {
-                                const property = item.product?.properties?.find((p: any) => p.name === propertyName)
-                                const option = property?.options?.find((opt: any) => opt.value === selectedValue)
-                                const label = isArabic ? (option?.label_ar || option?.label) : option?.label
-                                return (
-                                  <div key={propertyName}>
-                                    <span className="font-medium">{isArabic ? (property?.name_ar || property?.name) : property?.name}:</span> {label}
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          )}
                         </div>
-                        <div className="text-sm font-medium currency">
+                        <div className="text-sm font-medium">
                           {item.product && formatPrice(getProductPrice(item.product, item.selectedProperties) * item.quantity)}
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div className="border-t pt-4 space-y-2">
+                  {/* Subtotal */}
+                  <div className="border-t pt-4">
                     <div className="flex justify-between text-sm">
                       <span>{isArabic ? 'المجموع الفرعي' : 'Subtotal'}</span>
-                      <span className="currency">{formatPrice(getTotalPrice())}</span>
+                      <span>{formatPrice(getTotalPrice())}</span>
                     </div>
+                  </div>
+
+                  {/* Shipping Section */}
+                  <div className="space-y-3">
+                    <h3 className="font-medium text-sm">{isArabic ? 'الشحن' : 'Shipping'}</h3>
+                    <RadioGroup 
+                      value={formData.shippingMethod} 
+                      onValueChange={(value: string) => handleInputChange('shippingMethod', value)}
+                    >
+                      {checkoutSettings?.shipping_methods?.filter(method => method.enabled).map((method) => {
+                        let cost = 0
+                        if (!method.is_free) {
+                          switch (currency) {
+                            case 'OMR':
+                              cost = method.base_cost_omr || 0
+                              break
+                            case 'SAR':
+                              cost = method.base_cost_sar || 0
+                              break
+                            case 'USD':
+                              cost = method.base_cost_usd || 0
+                              break
+                            default:
+                              cost = method.base_cost_omr || 0
+                          }
+                        }
+
+                        return (
+                          <div key={method.id} className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
+                            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                              <RadioGroupItem value={method.id} id={method.id} />
+                              <Label htmlFor={method.id} className="text-sm">
+                                {isArabic ? method.name_ar : method.name}
+                              </Label>
+                            </div>
+                            <span className={`text-sm font-medium ${method.is_free ? 'text-green-600' : ''}`}>
+                              {method.is_free 
+                                ? (isArabic ? 'مجاناً' : 'Free')
+                                : formatPrice(cost)
+                              }
+                            </span>
+                          </div>
+                        )
+                      }) || [
+                        // Fallback options if settings not loaded
+                        <div key="pickup" className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <RadioGroupItem value="pickup" id="pickup" />
+                            <Label htmlFor="pickup" className="text-sm">
+                              {isArabic ? 'الاستلام من المقهى' : 'Pickup from our Cafe'}
+                            </Label>
+                          </div>
+                          <span className="text-sm font-medium text-green-600">
+                            {isArabic ? 'مجاناً' : 'Free'}
+                          </span>
+                        </div>
+                      ]}
+                    </RadioGroup>
+                  </div>
+
+                  {/* Tax Section */}
+                  <div className="border-t pt-4">
                     <div className="flex justify-between text-sm">
-                      <span>{isArabic ? 'الشحن' : 'Shipping'}</span>
-                      <span className="currency">{formatPrice(5)}</span>
+                      <span>
+                        {isArabic ? 'الضريبة' : 'Tax'} ({((checkoutSettings?.tax_rate || 0.1) * 100).toFixed(0)}%)
+                      </span>
+                      <span>{formatPrice(calculateTotals().tax)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span>{isArabic ? 'الضرائب' : 'Tax'}</span>
-                      <span className="currency">{formatPrice(getTotalPrice() * 0.1)}</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold">
-                      <span>{isArabic ? 'المجموع الكلي' : 'Total'}</span>
-                      <span className="text-amber-600 currency">
-                        {formatPrice(getTotalPrice() + 5 + getTotalPrice() * 0.1)}
+                  </div>
+
+                  {/* Total */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>{isArabic ? 'المجموع' : 'Total'}</span>
+                      <span className="text-amber-600">
+                        {formatPrice(calculateTotals().total)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-4 space-y-2">
-                    <Button onClick={handleSubmit} disabled={orderLoading} className="w-full">
+                  {/* Payment Methods Display */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-center items-center gap-2 mb-4">
+                      <img src="/images/apple-pay.png" alt="Apple Pay" className="h-8" onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                      <img src="/images/visa.png" alt="Visa" className="h-8" onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                      <img src="/images/mastercard.png" alt="Mastercard" className="h-8" onError={(e) => (e.target as HTMLImageElement).style.display = 'none'} />
+                    </div>
+                    
+                    <Button onClick={handleSubmit} disabled={orderLoading} className="w-full bg-green-600 hover:bg-green-700">
                       {orderLoading 
                         ? (isArabic ? 'جاري معالجة الطلب...' : 'Processing Order...')
-                        : (isArabic ? 'تأكيد الطلب' : 'Place Order')
+                        : (isArabic ? 'المتابعة للدفع' : 'Proceed to Pay')
                       }
-                    </Button>
-                    <Button variant="outline" asChild className="w-full">
-                      <Link to="/shop" className="flex items-center gap-2">
-                        {isArabic ? (
-                          <>
-                            <ArrowRight className="h-4 w-4" />
-                            العودة للمتجر
-                          </>
-                        ) : (
-                          <>
-                            <ArrowLeft className="h-4 w-4" />
-                            Back to Shop
-                          </>
-                        )}
-                      </Link>
                     </Button>
                   </div>
                 </CardContent>
