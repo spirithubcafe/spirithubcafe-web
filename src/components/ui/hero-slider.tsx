@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '@/components/theme-provider'
 import type { HeroSettings, HeroSlide } from '@/types'
 import { heroService } from '@/services/hero'
 import './hero-slider.css'
@@ -10,6 +11,7 @@ interface HeroSliderProps {
 
 export function HeroSlider({ className = '' }: HeroSliderProps) {
   const { t, i18n } = useTranslation()
+  const { theme } = useTheme()
   const isRTL = i18n.language === 'ar'
   
   const [settings, setSettings] = useState<HeroSettings | null>(null)
@@ -343,7 +345,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
             <div className="hero-loading-spinner mx-auto"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
-                src="/images/logo.png" 
+                src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                 alt="SpiritHub Logo" 
                 className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-contain hero-loading-logo"
                 onError={(e) => {
