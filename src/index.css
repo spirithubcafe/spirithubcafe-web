@@ -1471,3 +1471,70 @@
 .content-section .hover\:bg-content:hover {
   @apply hover:bg-accent/10;
 }
+
+/* Feature Section HTML Content Styles */
+.feature-content p {
+  margin-bottom: 1rem;
+}
+
+.feature-content strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.feature-content em {
+  font-style: italic;
+}
+
+.feature-content h1,
+.feature-content h2,
+.feature-content h3,
+.feature-content h4,
+.feature-content h5,
+.feature-content h6 {
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.5rem;
+}
+
+.feature-content h1 { font-size: 1.5rem; }
+.feature-content h2 { font-size: 1.25rem; }
+.feature-content h3 { font-size: 1.125rem; }
+
+.feature-content ul,
+.feature-content ol {
+  margin-left: 1rem;
+  margin-bottom: 1rem;
+}
+
+.feature-content ul {
+  list-style-type: disc;
+}
+
+.feature-content ol {
+  list-style-type: decimal;
+}
+
+.feature-content li {
+  margin-bottom: 0.25rem;
+}
+
+.feature-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.feature-content a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
+.feature-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 1rem;
+  font-style: italic;
+}
+
+.feature-content br {
+  display: block;
+  margin-bottom: 0.5rem;
+}

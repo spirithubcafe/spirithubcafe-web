@@ -399,7 +399,8 @@
         "general": "General",
         "contact": "Contact", 
         "social": "Social Media",
-        "hours": "Working Hours"
+        "hours": "Working Hours",
+        "video": "Video Background"
       },
       "footerForm": {
         "companyNameEn": "Company Name (English)",
@@ -417,6 +418,19 @@
         "twitter": "Twitter Account",
         "workingHoursEn": "Working Hours (English)",
         "workingHoursAr": "Working Hours (Arabic)",
+        "backgroundVideoBlur": "Background Video Blur (%)",
+        "videoOverlayOpacity": "Video Overlay Opacity (%)",
+        "enableVideoOverlay": "Enable Video Overlay",
+        "enableVideoBlur": "Enable Video Blur",
+        "enableGradientOverlay": "Enable Gradient Overlay",
+        "gradientOverlayOpacity": "Gradient Overlay Opacity (%)",
+        "videoSettings": "Video Background Settings",
+        "videoBlurDescription": "Control the blur intensity of the background video for better text readability",
+        "videoOverlayDescription": "Control the darkness overlay on the video to improve text contrast",
+        "gradientOverlayDescription": "Control the gradient overlay that helps with text readability",
+        "enableOverlayDescription": "Toggle the dark overlay on/off completely",
+        "enableBlurDescription": "Toggle the blur effect on/off completely",
+        "enableGradientDescription": "Toggle the gradient overlay on/off completely",
         "saveChanges": "Save Changes",
         "saving": "Saving..."
       },

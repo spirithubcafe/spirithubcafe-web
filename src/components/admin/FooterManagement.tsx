@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'react-hot-toast'
@@ -62,7 +63,7 @@ export function FooterManagement() {
     }
   }
 
-  const updateSetting = (key: keyof FooterSettings, value: string | number) => {
+  const updateSetting = (key: keyof FooterSettings, value: string | number | boolean) => {
     if (!settings) return
     console.log('FooterManagement - Updating setting:', key, 'to:', value)
     setSettings({
@@ -124,7 +125,7 @@ export function FooterManagement() {
             </TabsTrigger>
             <TabsTrigger value="video" className="flex items-center space-x-2">
               <Video className="h-4 w-4" />
-              <span>Video</span>
+              <span>{t('dashboard.admin.footerTabs.video')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -310,36 +311,171 @@ export function FooterManagement() {
           </TabsContent>
 
           <TabsContent value="video" className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <Label htmlFor="backgroundVideoBlur" className="flex items-center space-x-2">
-                  <Video className="h-4 w-4" />
-                  <span>Background Video Blur (%)</span>
-                </Label>
-                <div className="space-y-2">
-                  <input
-                    id="backgroundVideoBlur"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    value={settings.backgroundVideoBlur || 50}
-                    onChange={(e) => updateSetting('backgroundVideoBlur', parseInt(e.target.value))}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                    aria-label="Background video blur percentage"
-                    title={`Background video blur: ${settings.backgroundVideoBlur || 50}%`}
-                  />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>0% (No Blur)</span>
-                    <span className="font-medium">{settings.backgroundVideoBlur || 50}%</span>
-                    <span>100% (Maximum Blur)</span>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Video className="h-5 w-5" />
+                  <span>{t('dashboard.admin.footerForm.videoSettings')}</span>
+                </CardTitle>
+                <CardDescription>
+                  {t('dashboard.admin.footerForm.videoBlurDescription')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Enable/Disable Video Overlay */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="flex items-center space-x-2">
+                        <div className="h-4 w-4 bg-black/50 rounded"></div>
+                        <span>{t('dashboard.admin.footerForm.enableVideoOverlay')}</span>
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t('dashboard.admin.footerForm.enableOverlayDescription')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.enableVideoOverlay ?? true}
+                      onCheckedChange={(checked) => updateSetting('enableVideoOverlay', checked)}
+                    />
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Control the blur intensity of the background video to ensure text readability. Higher values provide more blur for better text contrast.
-                </p>
-              </div>
-            </div>
+
+                {/* Video Overlay Opacity Setting - Only show if overlay is enabled */}
+                {(settings.enableVideoOverlay ?? true) && (
+                  <div className="space-y-3">
+                    <Label htmlFor="videoOverlayOpacity" className="flex items-center space-x-2">
+                      <div className="h-4 w-4 bg-black/50 rounded"></div>
+                      <span>{t('dashboard.admin.footerForm.videoOverlayOpacity')}</span>
+                    </Label>
+                    <div className="space-y-2">
+                      <input
+                        id="videoOverlayOpacity"
+                        type="range"
+                        min="0"
+                        max="80"
+                        step="5"
+                        value={settings.videoOverlayOpacity || 30}
+                        onChange={(e) => updateSetting('videoOverlayOpacity', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        aria-label="Video overlay opacity percentage"
+                        title={`Video overlay opacity: ${settings.videoOverlayOpacity || 30}%`}
+                      />
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>0% (No Overlay)</span>
+                        <span className="font-medium">{settings.videoOverlayOpacity || 30}%</span>
+                        <span>80% (Maximum Overlay)</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {t('dashboard.admin.footerForm.videoOverlayDescription')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Enable/Disable Video Blur */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="flex items-center space-x-2">
+                        <Video className="h-4 w-4" />
+                        <span>{t('dashboard.admin.footerForm.enableVideoBlur')}</span>
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t('dashboard.admin.footerForm.enableBlurDescription')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.enableVideoBlur ?? true}
+                      onCheckedChange={(checked) => updateSetting('enableVideoBlur', checked)}
+                    />
+                  </div>
+                </div>
+
+                {/* Background Video Blur Setting - Only show if blur is enabled */}
+                {(settings.enableVideoBlur ?? true) && (
+                  <div className="space-y-3">
+                    <Label htmlFor="backgroundVideoBlur" className="flex items-center space-x-2">
+                      <Video className="h-4 w-4" />
+                      <span>{t('dashboard.admin.footerForm.backgroundVideoBlur')}</span>
+                    </Label>
+                    <div className="space-y-2">
+                      <input
+                        id="backgroundVideoBlur"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={settings.backgroundVideoBlur || 50}
+                        onChange={(e) => updateSetting('backgroundVideoBlur', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        aria-label="Background video blur percentage"
+                        title={`Background video blur: ${settings.backgroundVideoBlur || 50}%`}
+                      />
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>0% (No Blur)</span>
+                        <span className="font-medium">{settings.backgroundVideoBlur || 50}%</span>
+                        <span>100% (Maximum Blur)</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {t('dashboard.admin.footerForm.videoBlurDescription')}
+                    </p>
+                  </div>
+                )}
+
+                {/* Enable/Disable Gradient Overlay */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <Label className="flex items-center space-x-2">
+                        <div className="h-4 w-4 bg-gradient-to-b from-gray-500 to-gray-700 rounded"></div>
+                        <span>{t('dashboard.admin.footerForm.enableGradientOverlay')}</span>
+                      </Label>
+                      <p className="text-sm text-muted-foreground">
+                        {t('dashboard.admin.footerForm.enableGradientDescription')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.enableGradientOverlay ?? false}
+                      onCheckedChange={(checked) => updateSetting('enableGradientOverlay', checked)}
+                    />
+                  </div>
+                </div>
+
+                {/* Gradient Overlay Opacity Setting - Only show if gradient is enabled */}
+                {(settings.enableGradientOverlay ?? false) && (
+                  <div className="space-y-3">
+                    <Label htmlFor="gradientOverlayOpacity" className="flex items-center space-x-2">
+                      <div className="h-4 w-4 bg-gradient-to-b from-gray-500 to-gray-700 rounded"></div>
+                      <span>{t('dashboard.admin.footerForm.gradientOverlayOpacity')}</span>
+                    </Label>
+                    <div className="space-y-2">
+                      <input
+                        id="gradientOverlayOpacity"
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={settings.gradientOverlayOpacity || 80}
+                        onChange={(e) => updateSetting('gradientOverlayOpacity', parseInt(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                        aria-label="Gradient overlay opacity percentage"
+                        title={`Gradient overlay opacity: ${settings.gradientOverlayOpacity || 80}%`}
+                      />
+                      <div className="flex justify-between text-sm text-muted-foreground">
+                        <span>0% (No Gradient)</span>
+                        <span className="font-medium">{settings.gradientOverlayOpacity || 80}%</span>
+                        <span>100% (Maximum Gradient)</span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {t('dashboard.admin.footerForm.gradientOverlayDescription')}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 

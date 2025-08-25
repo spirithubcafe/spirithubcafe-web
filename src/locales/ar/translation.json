@@ -429,7 +429,8 @@
         "general": "عام",
         "contact": "تواصل",
         "social": "وسائل التواصل الاجتماعي",
-        "hours": "ساعات العمل"
+        "hours": "ساعات العمل",
+        "video": "فيديو الخلفية"
       },
       "footerForm": {
         "companyNameEn": "اسم الشركة (إنجليزي)",
@@ -447,6 +448,19 @@
         "twitter": "حساب تويتر",
         "workingHoursEn": "ساعات العمل (إنجليزي)",
         "workingHoursAr": "ساعات العمل (عربي)",
+        "backgroundVideoBlur": "ضبابية الفيديو في الخلفية (%)",
+        "videoOverlayOpacity": "شفافية الطبقة فوق الفيديو (%)",
+        "enableVideoOverlay": "تفعيل طبقة الفيديو",
+        "enableVideoBlur": "تفعيل ضبابية الفيديو",
+        "enableGradientOverlay": "تفعيل الطبقة المتدرجة",
+        "gradientOverlayOpacity": "شفافية الطبقة المتدرجة (%)",
+        "videoSettings": "إعدادات فيديو الخلفية",
+        "videoBlurDescription": "تحكم في شدة الضبابية للفيديو في الخلفية لتحسين قراءة النص",
+        "videoOverlayDescription": "تحكم في مستوى الطبقة المظلمة فوق الفيديو لتحسين التباين مع النص",
+        "gradientOverlayDescription": "تحكم في الطبقة المتدرجة التي تساعد في قراءة النص",
+        "enableOverlayDescription": "تشغيل أو إيقاف الطبقة المظلمة بالكامل",
+        "enableBlurDescription": "تشغيل أو إيقاف تأثير الضبابية بالكامل",
+        "enableGradientDescription": "تشغيل أو إيقاف الطبقة المتدرجة بالكامل",
         "saveChanges": "حفظ التغييرات",
         "saving": "جاري الحفظ..."
       },

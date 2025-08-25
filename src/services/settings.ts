@@ -17,6 +17,12 @@ export interface FooterSettings {
   workingHours: string
   workingHoursAr: string
   backgroundVideoBlur?: number // Blur percentage for background video (0-100)
+  videoOverlayOpacity?: number // Overlay opacity percentage for background video (0-100)
+  enableVideoOverlay?: boolean // Enable/disable video overlay
+  enableVideoBlur?: boolean // Enable/disable video blur
+  enableGradientOverlay?: boolean // Enable/disable gradient overlay
+  gradientOverlayOpacity?: number // Gradient overlay opacity percentage (0-100)
+  transparentVideoMode?: boolean // Enable completely transparent video mode (no overlay, no blur)
 }
 
 export interface CategoriesSettings {
@@ -163,7 +169,12 @@ class SettingsService {
       twitter: 'spirithubcafe',
       workingHours: 'Daily: 8 AM - 11 PM',
       workingHoursAr: 'كل أيام الأسبوع: 8 صباحاً - 11 مساءً',
-      backgroundVideoBlur: 50 // Default 50% blur
+      backgroundVideoBlur: 50, // Default 50% blur
+      videoOverlayOpacity: 30, // Default 30% overlay opacity (lighter than current)
+      enableVideoOverlay: true, // Enable overlay by default
+      enableVideoBlur: true, // Enable blur by default
+      enableGradientOverlay: false, // Disable gradient by default (since we removed it)
+      gradientOverlayOpacity: 80 // Default 80% gradient opacity
     }
   }
 

@@ -102,25 +102,25 @@ export function Footer() {
                 />
               </div>
               <div 
-                className="text-sm text-foreground/90 leading-relaxed drop-shadow-sm prose prose-sm prose-invert max-w-none"
+                className="text-sm text-foreground/90 leading-relaxed prose prose-sm prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: description }}
               />
             </div>
 
             {/* Quick Links - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground drop-shadow-sm">{t('footer.quickLinks')}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t('footer.quickLinks')}</h3>
               <nav className="flex flex-col space-y-2">
-                <Link to="/" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                <Link to="/" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                   {t('navigation.home')}
                 </Link>
-                <Link to="/shop" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                <Link to="/shop" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                   {t('navigation.shop')}
                 </Link>
-                <Link to="/about" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                <Link to="/about" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                   {t('navigation.about')}
                 </Link>
-                <Link to="/contact" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                <Link to="/contact" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                   {t('navigation.contact')}
                 </Link>
               </nav>
@@ -128,13 +128,13 @@ export function Footer() {
 
             {/* Legal Pages - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground drop-shadow-sm">{isArabic ? 'الصفحات القانونية' : 'Legal Pages'}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{isArabic ? 'الصفحات القانونية' : 'Legal Pages'}</h3>
               <nav className="flex flex-col space-y-2">
                 {footerPages.map((page) => (
                   <Link 
                     key={page.id}
                     to={`/page/${page.slug}`} 
-                    className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm"
+                    className="text-sm text-foreground/80 hover:text-foreground transition-colors"
                   >
                     {isArabic ? page.title_ar : page.title}
                   </Link>
@@ -142,19 +142,19 @@ export function Footer() {
                 {/* Fallback links if no pages are loaded */}
                 {footerPages.length === 0 && (
                   <>
-                    <Link to="/privacy-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                    <Link to="/privacy-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                       {isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}
                     </Link>
-                    <Link to="/terms-and-conditions" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                    <Link to="/terms-and-conditions" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                       {isArabic ? 'الشروط والأحكام' : 'Terms & Conditions'}
                     </Link>
-                    <Link to="/refund-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                    <Link to="/refund-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                       {isArabic ? 'سياسة الاستبدال والإرجاع' : 'Refund Policy'}
                     </Link>
-                    <Link to="/delivery-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                    <Link to="/delivery-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                       {isArabic ? 'سياسة التوصيل' : 'Delivery Policy'}
                     </Link>
-                    <Link to="/faq" className="text-sm text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm">
+                    <Link to="/faq" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
                       {isArabic ? 'الأسئلة الشائعة' : 'FAQ'}
                     </Link>
                   </>
@@ -164,8 +164,8 @@ export function Footer() {
 
             {/* Contact Info - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground drop-shadow-sm">{t('navigation.contact')}</h3>
-              <div className="space-y-3 text-sm text-foreground/80 drop-shadow-sm">
+              <h3 className="text-sm font-semibold text-foreground">{t('navigation.contact')}</h3>
+              <div className="space-y-3 text-sm text-foreground/80">
                 <p>{address}</p>
                 <div className="space-y-1">
                   <p className="ltr">{phone}</p>
@@ -173,7 +173,7 @@ export function Footer() {
                 </div>
                 <p className="ltr">{email}</p>
                 <div 
-                  className="prose prose-sm prose-invert max-w-none text-sm text-foreground/80 drop-shadow-sm"
+                  className="prose prose-sm prose-invert max-w-none text-sm text-foreground/80"
                   dangerouslySetInnerHTML={{ __html: workingHours }}
                 />
               </div>
@@ -183,12 +183,12 @@ export function Footer() {
           {/* Social Media Section */}
           <div className="border-t border-foreground/20 mt-8 pt-8">
             <div className="text-center space-y-4">
-              <h3 className="text-sm font-semibold text-foreground drop-shadow-sm">{t('footer.followUs')}</h3>
+              <h3 className="text-sm font-semibold text-foreground">{t('footer.followUs')}</h3>
               <div className="flex justify-center gap-4">
                 {settings?.facebook && (
                   <a 
                     href={`https://facebook.com/${settings.facebook}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm"
+                    className="text-foreground/80 hover:text-foreground transition-colors"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Facebook"
@@ -199,7 +199,7 @@ export function Footer() {
                 {settings?.twitter && (
                   <a 
                     href={`https://twitter.com/${settings.twitter}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm"
+                    className="text-foreground/80 hover:text-foreground transition-colors"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Twitter"
@@ -210,7 +210,7 @@ export function Footer() {
                 {settings?.instagram && (
                   <a 
                     href={`https://instagram.com/${settings.instagram.replace('@', '')}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm"
+                    className="text-foreground/80 hover:text-foreground transition-colors"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Instagram"

@@ -1,16 +1,18 @@
+import React from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, X, ZoomIn } from 'lucide-react'
+import { X, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
 import { conversionRates } from '@/lib/currency'
 import { NewsletterForm } from '@/components/newsletter-form'
+import DOMPurify from 'dompurify'
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
@@ -22,7 +24,6 @@ export function HomePage() {
   const { categories, loading: loadingCategories } = useCategories()
   const { settings: homepageSettings } = useGlobalHomepageSettings()
   
-  const videoRef = useRef<HTMLVideoElement>(null)
   const isArabic = i18n.language === 'ar'
   
   const latestProducts = useMemo(() => {
@@ -44,196 +45,113 @@ export function HomePage() {
     setIsModalOpen(false)
   }
   
-  // Parallax effect for categories background video
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!videoRef.current) return
-      
-      const scrolled = window.pageYOffset
-      const rate = scrolled * -0.3 // Reduced parallax speed to prevent gaps
-      
-      // Apply parallax transform with larger scale to prevent gaps
-      videoRef.current.style.transform = `translate3d(0, ${rate}px, 0) scale(1.2)`
-    }
-
-    // Add throttling for better performance
-    let ticking = false
-    const requestTick = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          handleScroll()
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-
-    window.addEventListener('scroll', requestTick, { passive: true })
-    return () => window.removeEventListener('scroll', requestTick)
-  }, [])
-
-  // Ensure video loops continuously
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-
-    const handleVideoEnd = async () => {
-      try {
-        video.currentTime = 0
-        // Only play if video is not already playing
-        if (video.paused) {
-          await video.play()
-        }
-      } catch (error) {
-        console.error('Error restarting video after end:', error)
-      }
-    }
-
-    const handleVideoError = () => {
-      console.error('Video playback error, attempting to restart')
-      setTimeout(async () => {
-        try {
-          video.currentTime = 0
-          // Only play if video is not already playing  
-          if (video.paused) {
-            await video.play()
-          }
-        } catch (error) {
-          console.error('Error restarting video after error:', error)
-        }
-      }, 1000)
-    }
-
-    video.addEventListener('ended', handleVideoEnd)
-    video.addEventListener('error', handleVideoError)
-    
-    // Only ensure video starts playing if it's not already playing and autoplay failed
-    if (video.paused && video.readyState >= 2) {
-      video.play().catch(console.error)
-    }
-
-    return () => {
-      video.removeEventListener('ended', handleVideoEnd)
-      video.removeEventListener('error', handleVideoError)
-    }
-  }, [homepageSettings?.backgroundVideo])
-
-  // Update video source when settings change
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video || !homepageSettings?.backgroundVideo) return
-
-    // Properly handle video source changes with async operations
-    const updateVideoSource = async () => {
-      try {
-        // Wait for pause to complete if video is playing
-        if (!video.paused) {
-          video.pause()
-          // Wait for pause event to complete
-          await new Promise(resolve => {
-            const handlePause = () => {
-              video.removeEventListener('pause', handlePause)
-              resolve(undefined)
-            }
-            video.addEventListener('pause', handlePause)
-            // Fallback timeout in case pause event doesn't fire
-            setTimeout(resolve, 100)
-          })
-        }
-        
-        // Ensure we have a valid video URL
-        if (homepageSettings.backgroundVideo) {
-          video.src = homepageSettings.backgroundVideo
-          video.load()
-          
-          // Wait for the video to be ready before playing
-          await new Promise(resolve => {
-            const handleCanPlay = () => {
-              video.removeEventListener('canplay', handleCanPlay)
-              resolve(undefined)
-            }
-            video.addEventListener('canplay', handleCanPlay)
-            // Fallback timeout
-            setTimeout(resolve, 500)
-          })
-          
-          // Now safely play the video only if it's not already playing
-          if (video.paused) {
-            await video.play()
-            console.log('Video source updated and playing:', homepageSettings.backgroundVideo)
-          }
-        }
-      } catch (error) {
-        console.error('Error updating video source:', error)
-      }
-    }
-
-    updateVideoSource()
-  }, [homepageSettings?.backgroundVideo])
-
-  // Helper function to get product price in current currency
-  const getProductPrice = (product: Product): number => {
-    return (product.price_omr || 0) * conversionRates[currency]
-  }
-
-  // Helper function to get sale price in current currency  
-  const getSalePrice = (product: Product): number | null => {
-    if (!product.sale_price_omr || product.sale_price_omr >= (product.price_omr || 0)) return null
-    return product.sale_price_omr * conversionRates[currency]
-  }
-
-  // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
 
-  return (
-    <div className="flex flex-col min-h-screen w-full">
-      {/* Hero Section with Slides */}
-      <HeroSlider />
+  const getProductPrice = (product: Product) => {
+    let basePrice = product.price_omr
+    if (currency === 'USD' && product.price_usd) {
+      basePrice = product.price_usd
+    } else if (currency === 'SAR' && product.price_sar) {
+      basePrice = product.price_sar
+    }
+    
+    if (currency !== 'OMR') {
+      const rate = conversionRates[currency] || 1
+      return (basePrice * rate)
+    }
+    return basePrice
+  }
 
-      {/* Mission Statement Section with Fixed Background */}
-      {(homepageSettings?.showMissionSection !== false) && (
-        <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden">
-          {/* Fixed Background Image */}
-          <div 
-            className="absolute inset-0 w-full h-full bg-scroll md:bg-fixed bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${homepageSettings?.missionBackgroundImage || '/images/back.jpg'})` }}
-          />
-          
-          {/* Dark overlay for better text readability */}
-          <div className="absolute inset-0 bg-black/50" />
-          
-          {/* Scrolling Content */}
-          <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center">
-              <div className="space-y-8">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-2xl">
-                  {isArabic 
-                    ? (homepageSettings?.missionTitleAr || 'الاستدامة والجودة والالتزام')
-                    : (homepageSettings?.missionTitle || 'SUSTAINABILITY, QUALITY, COMMITMENT')
-                  }
-                </h2>
+  const getSalePrice = (product: Product) => {
+    let salePrice = product.sale_price_omr
+    if (currency === 'USD' && product.sale_price_usd) {
+      salePrice = product.sale_price_usd
+    } else if (currency === 'SAR' && product.sale_price_sar) {
+      salePrice = product.sale_price_sar
+    }
+    
+    if (!salePrice) return null
+    
+    if (currency !== 'OMR') {
+      const rate = conversionRates[currency] || 1
+      return (salePrice * rate)
+    }
+    return salePrice
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Hero Section */}
+      <section className="min-h-screen relative overflow-hidden">
+        <HeroSlider />
+      </section>
+
+      {/* Feature Section */}
+      {(homepageSettings?.showFeatureSection !== false) && (
+        <section className="py-16 lg:py-20 bg-background">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+              {/* Title */}
+              <div className="text-center mb-12">
+                <h2 
+                  className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-foreground"
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(isArabic 
+                      ? (homepageSettings?.featureSectionTitleAr || 'تجربة قهوة استثنائية')
+                      : (homepageSettings?.featureSectionTitle || 'تجربة قهوة استثنائية'))
+                  }}
+                />
+              </div>
+              
+              {/* Content Grid */}
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                {/* Text Content - Left Side */}
+                <div className={`space-y-6 ${isArabic ? 'lg:order-2' : 'lg:order-1'}`}>
+                  <div 
+                    className="text-lg md:text-xl text-muted-foreground leading-relaxed feature-content"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(isArabic 
+                        ? (homepageSettings?.featureSectionDescriptionAr || 'في سبيريت هب، ندعوك لتجربة مثالية للقهوة الحرفية عالية الجودة. استمتع بنكهات استثنائية تم إعدادها بعناية فائقة، واكتشف عالم القهوة كما لم تعهده من قبل.')
+                        : (homepageSettings?.featureSectionDescription || 'في سبيريت هب، ندعوك لتجربة مثالية للقهوة الحرفية عالية الجودة. استمتع بنكهات استثنائية تم إعدادها بعناية فائقة، واكتشف عالم القهوة كما لم تعهده من قبل.'))
+                    }}
+                  />
+                  <div className="pt-4">
+                    <Button 
+                      size="lg" 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      asChild
+                    >
+                      <Link to="/shop">
+                        {isArabic 
+                          ? (homepageSettings?.featureSectionButtonTextAr || 'اكتشف المزيد')
+                          : (homepageSettings?.featureSectionButtonText || 'Discover More')
+                        }
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
                 
-                <p className="text-lg md:text-xl lg:text-2xl text-white/95 leading-relaxed drop-shadow-lg font-medium">
-                  {isArabic 
-                    ? (homepageSettings?.missionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
-                    : (homepageSettings?.missionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
-                  }
-                </p>
-                
-                <div className="pt-8">
-                  <Button 
-                    size="lg" 
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-10 py-4 text-lg font-semibold shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-105 border-2 border-amber-500"
-                    asChild
-                  >
-                    <Link to="/shop" className="flex items-center gap-3">
-                      {isArabic 
-                        ? (homepageSettings?.missionButtonTextAr || 'تسوق الآن')
-                        : (homepageSettings?.missionButtonText || 'SHOP NOW')
-                      }
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </Button>
+                {/* Feature Image - Right Side */}
+                <div className={`${isArabic ? 'lg:order-1' : 'lg:order-2'}`}>
+                  {homepageSettings?.featureSectionImage && (
+                    <div 
+                      className="aspect-video overflow-hidden rounded-lg shadow-xl cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                      onClick={() => openImageModal(homepageSettings.featureSectionImage)}
+                    >
+                      <img
+                        src={homepageSettings.featureSectionImage}
+                        alt="Feature"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <ZoomIn className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -241,323 +159,215 @@ export function HomePage() {
         </section>
       )}
 
-
-      {/* Unified Background Section - Latest Release to Categories */}
-      <section className="relative overflow-hidden overlay-section">
-        {/* Background Video */}
-        {(homepageSettings?.showBackgroundVideo !== false) && (
-          <div className="absolute inset-0 w-full h-full overflow-hidden">
-            <video
-              key={homepageSettings?.backgroundVideo || 'default-video'}
-              ref={videoRef}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              disablePictureInPicture
-              src={homepageSettings?.backgroundVideo || '/video/back.mp4'}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
-                (homepageSettings?.backgroundVideoBlur || 30) <= 12.5 
-                  ? 'blur-none' 
-                  : (homepageSettings?.backgroundVideoBlur || 30) <= 25 
-                  ? 'blur-sm' 
-                  : (homepageSettings?.backgroundVideoBlur || 30) <= 50 
-                  ? 'blur' 
-                  : (homepageSettings?.backgroundVideoBlur || 30) <= 75 
-                  ? 'blur-lg' 
-                  : 'blur-xl'
-              }`}
-            >
-              Your browser does not support the video tag.
-            </video>
-            {/* Overlay */}
-            <div 
-              className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                (homepageSettings?.overlayOpacity || 30) <= 10 
-                  ? 'opacity-5'
-                  : (homepageSettings?.overlayOpacity || 30) <= 20
-                  ? 'opacity-10'
-                  : (homepageSettings?.overlayOpacity || 30) <= 30
-                  ? 'opacity-20'
-                  : (homepageSettings?.overlayOpacity || 30) <= 40
-                  ? 'opacity-30'
-                  : (homepageSettings?.overlayOpacity || 30) <= 50
-                  ? 'opacity-40'
-                  : (homepageSettings?.overlayOpacity || 30) <= 60
-                  ? 'opacity-50'
-                  : (homepageSettings?.overlayOpacity || 30) <= 70
-                  ? 'opacity-60'
-                  : (homepageSettings?.overlayOpacity || 30) <= 80
-                  ? 'opacity-70'
-                  : (homepageSettings?.overlayOpacity || 30) <= 90
-                  ? 'opacity-80'
-                  : 'opacity-30'
-              }`}
-            />
-            {/* Theme-aware gradient overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-background/20 to-background/40"></div>
-          </div>
-        )}
-
-        {/* Feature Section - Image and Text */}
-        {homepageSettings?.showFeatureSection && (
-          <div className="relative z-10 py-12 md:py-16 lg:py-20 w-full">
-            <div className="w-full px-4 sm:px-6 lg:px-8">
-              <div className="max-w-7xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                  {/* Text Content */}
-                  <div className="space-y-6 order-2 lg:order-1">
-                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-overlay-primary">
-                      {isArabic 
-                        ? (homepageSettings?.featureSectionTitleAr || 'تجربة قهوة استثنائية')
-                        : (homepageSettings?.featureSectionTitle || 'Exceptional Coffee Experience')
-                      }
-                    </h2>
-                    <div 
-                      className="text-lg md:text-xl text-overlay-secondary leading-relaxed prose prose-lg prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ 
-                        __html: isArabic 
-                          ? (homepageSettings?.featureSectionDescriptionAr || 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.')
-                          : (homepageSettings?.featureSectionDescription || 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.')
-                      }}
-                    />
-                    <div className="pt-4">
-                      <Button 
-                        size="lg" 
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                        asChild
-                      >
-                        <Link to="/shop" className="flex items-center gap-2">
-                          {isArabic 
-                            ? (homepageSettings?.featureSectionButtonTextAr || 'اكتشف المزيد')
-                            : (homepageSettings?.featureSectionButtonText || 'Discover More')
-                          }
-                          <ArrowRight className="h-5 w-5" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Image Content */}
-                  <div className="order-1 lg:order-2">
-                    <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-muted">
-                      <img
-                        src={homepageSettings?.featureSectionImage || '/images/back.jpg'}
-                        alt={isArabic ? 'تجربة القهوة' : 'Coffee Experience'}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.currentTarget.src = '/images/back.jpg'
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+      {/* Latest Release Section */}
+      <section className="py-12 md:py-16 lg:py-24 w-full bg-background">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center space-y-4 mb-8 md:mb-12">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+                {t('homepage.latestRelease.title', 'Latest Release')}
+              </h2>
             </div>
-          </div>
-        )}
-
-        {/* Latest Release Section */}
-        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-4 mb-8 md:mb-12">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
-                  {t('homepage.latestRelease.title', 'Latest Release')}
-                </h2>
-              </div>
               
-              {loadingProducts ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex flex-col items-center space-y-3">
-                      <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
-                      <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
-                      <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
-                      <div className="animate-pulse h-3 bg-muted rounded w-1/3"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : latestProducts.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                  {latestProducts.map((product) => {
-                    const productPrice = getProductPrice(product)
-                    const salePrice = getSalePrice(product)
-                    const isArabic = localStorage.getItem('i18nextLng') === 'ar'
+            {loadingProducts ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/3"></div>
+                  </div>
+                ))}
+              </div>
+            ) : latestProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {latestProducts.map((product) => {
+                  const productPrice = getProductPrice(product)
+                  const salePrice = getSalePrice(product)
+                  const isArabic = localStorage.getItem('i18nextLng') === 'ar'
 
-                    return (
-                      <Link
-                        key={product.id}
-                        to={`/product/${product.slug || product.id}`}
-                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-overlay transition-colors"
-                      >
-                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-overlay">
-                          <img
-                            src={
-                              product.image_url || 
-                              product.image || 
-                              product.images?.[0] || 
-                              product.gallery?.[0] || 
-                              product.gallery_images?.[0] || 
-                              '/images/logo.png'
-                            }
-                            alt={product.name || ''}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.src = '/images/logo.png'
-                            }}
-                          />
-                        </div>
+                  return (
+                    <Link
+                      key={product.id}
+                      to={`/product/${product.slug || product.id}`}
+                      className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                        <img
+                          src={
+                            product.image_url || 
+                            product.image || 
+                            product.images?.[0] || 
+                            product.gallery?.[0] || 
+                            product.gallery_images?.[0] || 
+                            '/images/logo.png'
+                          }
+                          alt={product.name || ''}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/logo.png'
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors">
+                          {isArabic ? (product.name_ar || product.name) : product.name}
+                        </h3>
                         
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-base text-overlay-primary hover:text-overlay-accent transition-colors">
-                            {isArabic ? (product.name_ar || product.name) : product.name}
-                          </h3>
-                          
-                          <p className="text-sm text-overlay-muted line-clamp-2">
-                            {(isArabic ? product.uses_ar : product.uses) ? (
-                              isArabic ? (product.uses_ar || product.uses) : product.uses
-                            ) : (
-                              isArabic ? 'لا توجد استخدامات' : 'No uses available'
-                            )}
-                          </p>
-                          
-                          <div className="flex items-center justify-center gap-2">
-                            {salePrice && salePrice < productPrice ? (
-                              <>
-                                <span className="text-base font-bold text-red-400">
-                                  {formatPrice(salePrice)}
-                                </span>
-                                <span className="text-sm text-overlay-muted line-through">
-                                  {formatPrice(productPrice)}
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-base font-bold text-overlay-accent">
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {(isArabic ? product.uses_ar : product.uses) ? (
+                            isArabic ? (product.uses_ar || product.uses) : product.uses
+                          ) : (
+                            isArabic ? 'لا توجد استخدامات' : 'No uses available'
+                          )}
+                        </p>
+                        
+                        <div className="flex items-center justify-center gap-2">
+                          {salePrice && salePrice < productPrice ? (
+                            <>
+                              <span className="text-base font-bold text-red-500">
+                                {formatPrice(salePrice)}
+                              </span>
+                              <span className="text-sm text-muted-foreground line-through">
                                 {formatPrice(productPrice)}
                               </span>
-                            )}
-                          </div>
+                            </>
+                          ) : (
+                            <span className="text-base font-bold text-primary">
+                              {formatPrice(productPrice)}
+                            </span>
+                          )}
                         </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-overlay-secondary text-lg">
-                    {t('homepage.latestRelease.noProducts', 'No new products available at the moment')}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Coffee Selection Section */}
-        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-16">
-                <h2 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
-                  {isArabic 
-                    ? (homepageSettings?.coffeeSelectionTitleAr || 'مجموعة القهوة')
-                    : (homepageSettings?.coffeeSelectionTitle || 'COFFEE SELECTION')
-                  }
-                </h2>
-                <p className="text-sm md:text-lg lg:text-xl text-overlay-secondary max-w-4xl mx-auto leading-relaxed drop-shadow-md px-2 md:px-0">
-                  {isArabic 
-                    ? (homepageSettings?.coffeeSelectionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
-                    : (homepageSettings?.coffeeSelectionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
-                  }
-                </p>
-                <div className="pt-4">
-                  <Button 
-                    size="lg" 
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                    asChild
-                  >
-                    <Link to="/shop" className="flex items-center gap-2">
-                      {isArabic 
-                        ? (homepageSettings?.coffeeSelectionButtonTextAr || 'تسوق الآن')
-                        : (homepageSettings?.coffeeSelectionButtonText || 'SHOP NOW')
-                      }
+                      </div>
                     </Link>
-                  </Button>
-                </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  {t('homepage.latestRelease.noProducts', 'No new products available at the moment')}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Coffee Selection Section with Image Background */}
+      <section className="relative py-12 md:py-16 lg:py-24 w-full overflow-hidden">
+        {/* Fixed Background Image */}
+        <div 
+          className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: `url(${homepageSettings?.backgroundVideo || '/images/back.jpg'})` 
+          } as React.CSSProperties}
+        />
+        
+        {/* Image Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
+
+        <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-16">
+              <h2 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
+                {isArabic 
+                  ? (homepageSettings?.coffeeSelectionTitleAr || 'مجموعة القهوة')
+                  : (homepageSettings?.coffeeSelectionTitle || 'COFFEE SELECTION')
+                }
+              </h2>
+              <p className="text-sm md:text-lg lg:text-xl text-white/90 max-w-4xl mx-auto leading-relaxed drop-shadow-md px-2 md:px-0">
+                {isArabic 
+                  ? (homepageSettings?.coffeeSelectionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
+                  : (homepageSettings?.coffeeSelectionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
+                }
+              </p>
+              <div className="pt-4">
+                <Button 
+                  size="lg" 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                  asChild
+                >
+                  <Link to="/shop" className="flex items-center gap-2">
+                    {isArabic 
+                      ? (homepageSettings?.coffeeSelectionButtonTextAr || 'تسوق الآن')
+                      : (homepageSettings?.coffeeSelectionButtonText || 'SHOP NOW')
+                    }
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* SpiritHub Categories Section */}
-        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-4 mb-8 md:mb-12">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
-                  {t('homepage.categories.title', 'SpiritHub Categories')}
-                </h2>
-              </div>
-              
-              {loadingCategories ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                    <div key={i} className="flex flex-col items-center space-y-3">
-                      <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
-                      <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
-                      <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
-                    </div>
-                  ))}
-                </div>
-              ) : categories.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                  {categories.map((category: Category) => {
-                    const isArabic = localStorage.getItem('i18nextLng') === 'ar'
-                    // Count products in this category
-                    const productCount = latestProducts.filter(product => product.category_id === category.id).length
-                    
-                    return (
-                      <Link
-                        key={category.id}
-                        to={`/shop?category=${category.id}`}
-                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-overlay transition-colors"
-                      >
-                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-overlay">
-                          <img
-                            src={category.image || '/images/logo.png'}
-                            alt={isArabic ? (category.name_ar || category.name) : category.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.src = '/images/logo.png'
-                            }}
-                          />
-                        </div>
-                        
-                        <div className="space-y-1">
-                          <h3 className="font-semibold text-base text-overlay-primary hover:text-overlay-accent transition-colors">
-                            {isArabic ? (category.name_ar || category.name) : category.name}
-                          </h3>
-                          <p className="text-sm text-overlay-muted">
-                            {productCount} {isArabic ? 'منتج' : 'Products'}
-                          </p>
-                        </div>
-                      </Link>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-overlay-secondary text-lg">
-                    {t('homepage.categories.noCategories', 'No categories available at the moment')}
-                  </p>
-                </div>
-              )}
+      {/* SpiritHub Categories Section */}
+      <section className="py-12 md:py-16 lg:py-24 w-full bg-background">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center space-y-4 mb-8 md:mb-12">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+                {t('homepage.categories.title', 'SpiritHub Categories')}
+              </h2>
             </div>
+            
+            {loadingCategories ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : categories.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {categories.map((category: Category) => {
+                  const isArabic = localStorage.getItem('i18nextLng') === 'ar'
+                  // Count products in this category
+                  const productCount = latestProducts.filter(product => product.category_id === category.id).length
+                  
+                  return (
+                    <Link
+                      key={category.id}
+                      to={`/shop?category=${category.id}`}
+                      className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                        <img
+                          src={category.image || '/images/logo.png'}
+                          alt={isArabic ? (category.name_ar || category.name) : category.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = '/images/logo.png'
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors">
+                          {isArabic ? (category.name_ar || category.name) : category.name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {productCount} {isArabic ? 'منتج' : 'Products'}
+                        </p>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground text-lg">
+                  {t('homepage.categories.noCategories', 'No categories available at the moment')}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -570,7 +380,7 @@ export function HomePage() {
             className="absolute inset-0 w-full h-full bg-scroll md:bg-fixed bg-cover bg-center bg-no-repeat"
             style={{ 
               backgroundImage: `url(${homepageSettings?.communityBackgroundImage || '/images/back.jpg'})` 
-            }}
+            } as React.CSSProperties}
           />
           
           {/* Dark overlay for better text readability */}
@@ -740,11 +550,11 @@ export function HomePage() {
 
       {/* Image Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none">
+        <DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none [&>button]:hidden">
           <div className="relative">
             <button
               onClick={closeImageModal}
-              className="absolute top-4 right-4 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition-colors duration-200"
+              className="absolute top-4 right-4 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full p-3 transition-colors duration-200 backdrop-blur-sm border border-white/20"
               aria-label={isArabic ? 'إغلاق' : 'Close'}
             >
               <X className="w-6 h-6" />
