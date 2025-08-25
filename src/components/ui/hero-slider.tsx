@@ -201,9 +201,14 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     const lineHeight = getStyleValue(`${baseKey}line_height${suffix}`, `${baseKey}line_height${suffix}`)
     const letterSpacing = getStyleValue(`${baseKey}letter_spacing${suffix}`, `${baseKey}letter_spacing${suffix}`)
     const textTransform = getStyleValue(`${baseKey}text_transform${suffix}`, `${baseKey}text_transform${suffix}`)
+    const color = getStyleValue(`${baseKey}color${suffix}`, `${baseKey}color${suffix}`)
     
-    // Force all text to be white with subtle black shadow
-    style.color = '#ffffff'
+    // Use custom color if specified, otherwise fallback to white with shadow
+    if (color && typeof color === 'string') {
+      style.color = color
+    } else {
+      style.color = '#ffffff'
+    }
     style.textShadow = '1px 1px 2px rgba(0, 0, 0, 0.4)'
     
     if (fontFamily && typeof fontFamily === 'string') style.fontFamily = fontFamily

@@ -479,7 +479,337 @@ export function HeroSliderSettings({ onClose }: HeroSliderSettingsProps) {
                     </div>
                   </div>
 
-                  {/* Additional typography sections for subtitle and description would go here */}
+                  <Separator />
+
+                  {/* Subtitle Typography */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      {t('admin.heroSlider.subtitleTypography', 'Subtitle Typography')}
+                      <Badge variant="secondary">Subtitle</Badge>
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* English Typography */}
+                      <div className="space-y-4">
+                        <h5 className="text-sm font-medium text-muted-foreground">English</h5>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-family">Font Family</Label>
+                          <Input
+                            id="subtitle-font-family"
+                            value={selectedSlide.typography?.subtitle_font_family || settings.global_typography?.subtitle_font_family || 'Inter, sans-serif'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_family: e.target.value
+                              }
+                            })}
+                            placeholder="e.g., Inter, sans-serif"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-size">Font Size</Label>
+                          <Input
+                            id="subtitle-font-size"
+                            value={selectedSlide.typography?.subtitle_font_size || settings.global_typography?.subtitle_font_size || '1.25rem'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_size: e.target.value
+                              }
+                            })}
+                            placeholder="e.g., 1.25rem, 20px"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-weight">Font Weight</Label>
+                          <Select
+                            value={(selectedSlide.typography?.subtitle_font_weight || settings.global_typography?.subtitle_font_weight || 500).toString()}
+                            onValueChange={(value) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_weight: parseInt(value)
+                              }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">100 - Thin</SelectItem>
+                              <SelectItem value="300">300 - Light</SelectItem>
+                              <SelectItem value="400">400 - Normal</SelectItem>
+                              <SelectItem value="500">500 - Medium</SelectItem>
+                              <SelectItem value="600">600 - Semibold</SelectItem>
+                              <SelectItem value="700">700 - Bold</SelectItem>
+                              <SelectItem value="800">800 - Extrabold</SelectItem>
+                              <SelectItem value="900">900 - Black</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-color">Color</Label>
+                          <Input
+                            id="subtitle-color"
+                            type="color"
+                            value={selectedSlide.typography?.subtitle_color || settings.global_typography?.subtitle_color || '#e5e7eb'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_color: e.target.value
+                              }
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Arabic Typography */}
+                      <div className="space-y-4">
+                        <h5 className="text-sm font-medium text-muted-foreground">العربية</h5>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-family-ar">خط الكتابة</Label>
+                          <Input
+                            id="subtitle-font-family-ar"
+                            value={selectedSlide.typography?.subtitle_font_family_ar || settings.global_typography?.subtitle_font_family_ar || 'Tajawal, sans-serif'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_family_ar: e.target.value
+                              }
+                            })}
+                            placeholder="مثال: Tajawal, sans-serif"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-size-ar">حجم الخط</Label>
+                          <Input
+                            id="subtitle-font-size-ar"
+                            value={selectedSlide.typography?.subtitle_font_size_ar || settings.global_typography?.subtitle_font_size_ar || '1.25rem'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_size_ar: e.target.value
+                              }
+                            })}
+                            placeholder="مثال: 1.25rem, 20px"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-font-weight-ar">وزن الخط</Label>
+                          <Select
+                            value={(selectedSlide.typography?.subtitle_font_weight_ar || settings.global_typography?.subtitle_font_weight_ar || 500).toString()}
+                            onValueChange={(value) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_font_weight_ar: parseInt(value)
+                              }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">100 - رفيع</SelectItem>
+                              <SelectItem value="300">300 - خفيف</SelectItem>
+                              <SelectItem value="400">400 - عادي</SelectItem>
+                              <SelectItem value="500">500 - متوسط</SelectItem>
+                              <SelectItem value="600">600 - نصف عريض</SelectItem>
+                              <SelectItem value="700">700 - عريض</SelectItem>
+                              <SelectItem value="800">800 - عريض جداً</SelectItem>
+                              <SelectItem value="900">900 - أسود</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="subtitle-color-ar">اللون</Label>
+                          <Input
+                            id="subtitle-color-ar"
+                            type="color"
+                            value={selectedSlide.typography?.subtitle_color_ar || settings.global_typography?.subtitle_color_ar || '#e5e7eb'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                subtitle_color_ar: e.target.value
+                              }
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Description Typography */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      {t('admin.heroSlider.descriptionTypography', 'Description Typography')}
+                      <Badge variant="secondary">Description</Badge>
+                    </h4>
+                    
+                    <div className="grid grid-cols-2 gap-6">
+                      {/* English Typography */}
+                      <div className="space-y-4">
+                        <h5 className="text-sm font-medium text-muted-foreground">English</h5>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-family">Font Family</Label>
+                          <Input
+                            id="description-font-family"
+                            value={selectedSlide.typography?.description_font_family || settings.global_typography?.description_font_family || 'Inter, sans-serif'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_family: e.target.value
+                              }
+                            })}
+                            placeholder="e.g., Inter, sans-serif"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-size">Font Size</Label>
+                          <Input
+                            id="description-font-size"
+                            value={selectedSlide.typography?.description_font_size || settings.global_typography?.description_font_size || '1rem'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_size: e.target.value
+                              }
+                            })}
+                            placeholder="e.g., 1rem, 16px"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-weight">Font Weight</Label>
+                          <Select
+                            value={(selectedSlide.typography?.description_font_weight || settings.global_typography?.description_font_weight || 400).toString()}
+                            onValueChange={(value) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_weight: parseInt(value)
+                              }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">100 - Thin</SelectItem>
+                              <SelectItem value="300">300 - Light</SelectItem>
+                              <SelectItem value="400">400 - Normal</SelectItem>
+                              <SelectItem value="500">500 - Medium</SelectItem>
+                              <SelectItem value="600">600 - Semibold</SelectItem>
+                              <SelectItem value="700">700 - Bold</SelectItem>
+                              <SelectItem value="800">800 - Extrabold</SelectItem>
+                              <SelectItem value="900">900 - Black</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-color">Color</Label>
+                          <Input
+                            id="description-color"
+                            type="color"
+                            value={selectedSlide.typography?.description_color || settings.global_typography?.description_color || '#d1d5db'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_color: e.target.value
+                              }
+                            })}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Arabic Typography */}
+                      <div className="space-y-4">
+                        <h5 className="text-sm font-medium text-muted-foreground">العربية</h5>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-family-ar">خط الكتابة</Label>
+                          <Input
+                            id="description-font-family-ar"
+                            value={selectedSlide.typography?.description_font_family_ar || settings.global_typography?.description_font_family_ar || 'Tajawal, sans-serif'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_family_ar: e.target.value
+                              }
+                            })}
+                            placeholder="مثال: Tajawal, sans-serif"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-size-ar">حجم الخط</Label>
+                          <Input
+                            id="description-font-size-ar"
+                            value={selectedSlide.typography?.description_font_size_ar || settings.global_typography?.description_font_size_ar || '1rem'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_size_ar: e.target.value
+                              }
+                            })}
+                            placeholder="مثال: 1rem, 16px"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-font-weight-ar">وزن الخط</Label>
+                          <Select
+                            value={(selectedSlide.typography?.description_font_weight_ar || settings.global_typography?.description_font_weight_ar || 400).toString()}
+                            onValueChange={(value) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_font_weight_ar: parseInt(value)
+                              }
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="100">100 - رفيع</SelectItem>
+                              <SelectItem value="300">300 - خفيف</SelectItem>
+                              <SelectItem value="400">400 - عادي</SelectItem>
+                              <SelectItem value="500">500 - متوسط</SelectItem>
+                              <SelectItem value="600">600 - نصف عريض</SelectItem>
+                              <SelectItem value="700">700 - عريض</SelectItem>
+                              <SelectItem value="800">800 - عريض جداً</SelectItem>
+                              <SelectItem value="900">900 - أسود</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="description-color-ar">اللون</Label>
+                          <Input
+                            id="description-color-ar"
+                            type="color"
+                            value={selectedSlide.typography?.description_color_ar || settings.global_typography?.description_color_ar || '#d1d5db'}
+                            onChange={(e) => updateSlide(selectedSlide.id, {
+                              typography: {
+                                ...selectedSlide.typography,
+                                description_color_ar: e.target.value
+                              }
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
