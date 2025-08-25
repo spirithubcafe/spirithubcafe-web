@@ -13,7 +13,8 @@ import {
   Filter,
   MoreHorizontal,
   Eye,
-  EyeOff
+  EyeOff,
+  RefreshCw
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { firestoreService } from '@/lib/firebase'
@@ -37,24 +38,39 @@ export function NewsletterManagement() {
   const { i18n } = useTranslation()
   const [subscriptions, setSubscriptions] = useState<NewsletterSubscription[]>([])
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const isArabic = i18n.language === 'ar'
 
   useEffect(() => {
-    loadSubscriptions()
+    loadSubscriptions(false)
+    
+    // Set up interval to refresh data every 30 seconds
+    const interval = setInterval(() => {
+      loadSubscriptions(true)
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
-  const loadSubscriptions = async () => {
+  const loadSubscriptions = async (isRefresh = false) => {
     try {
-      setLoading(true)
+      if (isRefresh) {
+        setRefreshing(true)
+      } else {
+        setLoading(true)
+      }
+      console.log('Loading newsletter subscriptions...')
       const result = await firestoreService.newsletters.list()
+      console.log('Newsletter subscriptions loaded:', result)
       setSubscriptions(result.items)
     } catch (error) {
       console.error('Error loading newsletter subscriptions:', error)
       toast.error(isArabic ? 'خطأ في تحميل الاشتراكات' : 'Error loading subscriptions')
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -137,10 +153,21 @@ export function NewsletterManagement() {
             {isArabic ? 'إدارة اشتراكات النشرة الإخبارية' : 'Manage newsletter subscriptions'}
           </p>
         </div>
-        <Button onClick={downloadEmails} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          {isArabic ? 'تحميل الإيميلات' : 'Download Emails'}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => loadSubscriptions(true)} 
+            variant="outline"
+            className="flex items-center gap-2"
+            disabled={loading || refreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${(loading || refreshing) ? 'animate-spin' : ''}`} />
+            {isArabic ? 'تحديث' : 'Refresh'}
+          </Button>
+          <Button onClick={downloadEmails} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            {isArabic ? 'تحميل الإيميلات' : 'Download Emails'}
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

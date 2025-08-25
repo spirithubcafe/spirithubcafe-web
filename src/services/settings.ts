@@ -60,6 +60,16 @@ export interface HomepageSettings {
   communityImage4?: string // Fourth community image
   instagramUrl?: string // Instagram URL
   facebookUrl?: string // Facebook URL
+  
+  // Feature Section (Image and Text)
+  showFeatureSection?: boolean // Whether to show feature section
+  featureSectionTitle?: string // Feature section title in English
+  featureSectionTitleAr?: string // Feature section title in Arabic
+  featureSectionDescription?: string // Feature section description in English
+  featureSectionDescriptionAr?: string // Feature section description in Arabic
+  featureSectionButtonText?: string // Feature section button text in English
+  featureSectionButtonTextAr?: string // Feature section button text in Arabic
+  featureSectionImage?: string // Feature section image URL
 }
 
 export interface AppSettings {
@@ -280,7 +290,17 @@ class SettingsService {
       communityImage3: '/images/gallery/3.jpg',
       communityImage4: '/images/gallery/4.webp',
       instagramUrl: 'https://instagram.com/spirithubcafe',
-      facebookUrl: 'https://facebook.com/spirithubcafe'
+      facebookUrl: 'https://facebook.com/spirithubcafe',
+      
+      // Feature Section (Image and Text)
+      showFeatureSection: true,
+      featureSectionTitle: 'Exceptional Coffee Experience',
+      featureSectionTitleAr: 'تجربة قهوة استثنائية',
+      featureSectionDescription: 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.',
+      featureSectionDescriptionAr: 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.',
+      featureSectionButtonText: 'Discover More',
+      featureSectionButtonTextAr: 'اكتشف المزيد',
+      featureSectionImage: '/images/back.jpg'
     }
   }
 

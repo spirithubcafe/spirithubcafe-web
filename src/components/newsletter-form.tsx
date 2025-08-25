@@ -47,12 +47,16 @@ export function NewsletterForm() {
       }
 
       // Add new subscription
-      await firestoreService.newsletters.create({
+      const subscriptionData = {
         email: email.toLowerCase().trim(),
         subscribed_at: new Date().toISOString(),
         status: 'active',
         source: 'homepage'
-      })
+      }
+      
+      console.log('Creating newsletter subscription with data:', subscriptionData)
+      const result = await firestoreService.newsletters.create(subscriptionData)
+      console.log('Newsletter subscription result:', result)
 
       setIsSubscribed(true)
       setEmail('')

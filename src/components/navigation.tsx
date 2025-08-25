@@ -13,9 +13,11 @@ import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/components/theme-provider'
 
 export function Navigation() {
   const { t, i18n } = useTranslation()
+  const { theme } = useTheme()
   const auth = useAuth()
   const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
@@ -107,15 +109,10 @@ export function Navigation() {
             )}>
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
                 <img 
-                  src="/images/logo-s.png" 
+                  src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
-                  className="h-8 w-8 object-contain no-flip"
+                  className="h-14 w-auto object-contain no-flip"
                 />
-                <span className={cn(
-                  "font-bold text-foreground"
-                )}>
-                  {t('navigation.brandName')}
-                </span>
               </Link>
             </div>
 

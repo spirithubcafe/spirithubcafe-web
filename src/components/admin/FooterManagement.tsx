@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'react-hot-toast'
 import { Loader2, Save, Settings, Globe, Phone, Mail, Clock, MapPin, Users, Video } from 'lucide-react'
@@ -153,22 +153,20 @@ export function FooterManagement() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="description">{t('dashboard.admin.footerForm.descriptionEn')}</Label>
-                <Textarea
-                  id="description"
+                <RichTextEditor
                   value={settings.description}
-                  onChange={(e) => updateSetting('description', e.target.value)}
+                  onChange={(value) => updateSetting('description', value)}
                   placeholder="Premium coffee roasted with passion and expertise."
-                  rows={3}
+                  className="min-h-[120px]"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="descriptionAr">{t('dashboard.admin.footerForm.descriptionAr')}</Label>
-                <Textarea
-                  id="descriptionAr"
+                <RichTextEditor
                   value={settings.descriptionAr}
-                  onChange={(e) => updateSetting('descriptionAr', e.target.value)}
+                  onChange={(value) => updateSetting('descriptionAr', value)}
                   placeholder="قهوة فاخرة محمصة بشغف وخبرة."
-                  rows={3}
+                  className="min-h-[120px]"
                 />
               </div>
             </div>

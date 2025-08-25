@@ -301,60 +301,63 @@ export function HomePage() {
         )}
 
         {/* Feature Section - Image and Text */}
-        <div className="relative z-10 py-12 md:py-16 lg:py-20 w-full">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                {/* Text Content */}
-                <div className="space-y-6 order-2 lg:order-1">
-                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-overlay-primary">
-                    {isArabic 
-                      ? 'تجربة قهوة استثنائية'
-                      : 'Exceptional Coffee Experience'
-                    }
-                  </h2>
-                  <p className="text-lg md:text-xl text-overlay-secondary leading-relaxed">
-                    {isArabic 
-                      ? 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.'
-                      : 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.'
-                    }
-                  </p>
-                  <div className="pt-4">
-                    <Button 
-                      size="lg" 
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
-                      asChild
-                    >
-                      <Link to="/shop" className="flex items-center gap-2">
-                        {isArabic 
-                          ? 'اكتشف المزيد'
-                          : 'Discover More'
-                        }
-                        <ArrowRight className="h-5 w-5" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-                
-                {/* Image Content */}
-                <div className="order-1 lg:order-2">
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-muted">
-                    <img
-                      src="/images/back.jpg"
-                      alt={isArabic ? 'تجربة القهوة' : 'Coffee Experience'}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/back.jpg'
+        {homepageSettings?.showFeatureSection && (
+          <div className="relative z-10 py-12 md:py-16 lg:py-20 w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+              <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                  {/* Text Content */}
+                  <div className="space-y-6 order-2 lg:order-1">
+                    <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-overlay-primary">
+                      {isArabic 
+                        ? (homepageSettings?.featureSectionTitleAr || 'تجربة قهوة استثنائية')
+                        : (homepageSettings?.featureSectionTitle || 'Exceptional Coffee Experience')
+                      }
+                    </h2>
+                    <div 
+                      className="text-lg md:text-xl text-overlay-secondary leading-relaxed prose prose-lg prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: isArabic 
+                          ? (homepageSettings?.featureSectionDescriptionAr || 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.')
+                          : (homepageSettings?.featureSectionDescription || 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.')
                       }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                    <div className="pt-4">
+                      <Button 
+                        size="lg" 
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                        asChild
+                      >
+                        <Link to="/shop" className="flex items-center gap-2">
+                          {isArabic 
+                            ? (homepageSettings?.featureSectionButtonTextAr || 'اكتشف المزيد')
+                            : (homepageSettings?.featureSectionButtonText || 'Discover More')
+                          }
+                          <ArrowRight className="h-5 w-5" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Image Content */}
+                  <div className="order-1 lg:order-2">
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-muted">
+                      <img
+                        src={homepageSettings?.featureSectionImage || '/images/back.jpg'}
+                        alt={isArabic ? 'تجربة القهوة' : 'Coffee Experience'}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/back.jpg'
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Latest Release Section */}
         <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">

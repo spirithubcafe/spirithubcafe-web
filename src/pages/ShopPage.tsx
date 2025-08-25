@@ -283,7 +283,7 @@ export function ShopPage() {
               <img 
                 src="/images/logo-s.png" 
                 alt="SpiritHub Cafe Logo" 
-                className="h-16 w-16 object-contain opacity-50"
+                className="h-12 w-12 object-contain opacity-50"
               />
             </div>
             <div>
@@ -345,7 +345,7 @@ export function ShopPage() {
                             <img 
                               src="/images/logo-s.png" 
                               alt="SpiritHub Cafe Logo" 
-                              className="h-20 w-20 object-contain opacity-50"
+                              className="h-16 w-16 object-contain opacity-50"
                             />
                           </div>
                         )}

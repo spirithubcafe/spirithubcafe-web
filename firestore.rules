@@ -203,6 +203,13 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
     }
     
+    // Newsletters - create for all, read for authenticated users, write for admin/employee only
+    match /newsletters/{subscriptionId} {
+      allow create: if true; // Allow anonymous newsletter subscriptions
+      allow read: if request.auth != null; // Allow authenticated users to read newsletters
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
     // Tickets - users can read their own, admin can read all
     match /tickets/{ticketId} {
       allow read: if request.auth != null && 

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { 
   Save, 
   FileVideo, 
@@ -18,6 +19,7 @@ import {
   X,
   Image,
   Type,
+  Star,
 } from 'lucide-react'
 import { useHomepageSettings } from '@/hooks/useHomepageSettings'
 import { storageService, auth } from '@/lib/firebase'
@@ -67,7 +69,17 @@ export default function HomepageManagement() {
     communityImage3: '',
     communityImage4: '',
     instagramUrl: 'https://instagram.com/spirithubcafe',
-    facebookUrl: 'https://facebook.com/spirithubcafe'
+    facebookUrl: 'https://facebook.com/spirithubcafe',
+    
+    // Feature Section (Image and Text)
+    showFeatureSection: true,
+    featureSectionTitle: 'Exceptional Coffee Experience',
+    featureSectionTitleAr: 'تجربة قهوة استثنائية',
+    featureSectionDescription: 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.',
+    featureSectionDescriptionAr: 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.',
+    featureSectionButtonText: 'Discover More',
+    featureSectionButtonTextAr: 'اكتشف المزيد',
+    featureSectionImage: '/images/back.jpg'
   })
 
   useEffect(() => {
@@ -105,7 +117,17 @@ export default function HomepageManagement() {
         communityImage3: settings.communityImage3 || '/images/gallery/3.jpg',
         communityImage4: settings.communityImage4 || '/images/gallery/4.webp',
         instagramUrl: settings.instagramUrl || 'https://instagram.com/spirithubcafe',
-        facebookUrl: settings.facebookUrl || 'https://facebook.com/spirithubcafe'
+        facebookUrl: settings.facebookUrl || 'https://facebook.com/spirithubcafe',
+        
+        // Feature Section (Image and Text)
+        showFeatureSection: settings.showFeatureSection ?? true,
+        featureSectionTitle: settings.featureSectionTitle || 'Exceptional Coffee Experience',
+        featureSectionTitleAr: settings.featureSectionTitleAr || 'تجربة قهوة استثنائية',
+        featureSectionDescription: settings.featureSectionDescription || 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.',
+        featureSectionDescriptionAr: settings.featureSectionDescriptionAr || 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.',
+        featureSectionButtonText: settings.featureSectionButtonText || 'Discover More',
+        featureSectionButtonTextAr: settings.featureSectionButtonTextAr || 'اكتشف المزيد',
+        featureSectionImage: settings.featureSectionImage || '/images/back.jpg'
       })
       setPreviewVideo(settings.backgroundVideo || '')
     }
@@ -562,10 +584,14 @@ export default function HomepageManagement() {
       </div>
 
       <Tabs defaultValue="coffee-selection" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="coffee-selection" className="flex items-center gap-2">
             <FileVideo className="h-4 w-4" />
             {isArabic ? 'قسم القهوة' : 'Coffee Selection'}
+          </TabsTrigger>
+          <TabsTrigger value="feature-section" className="flex items-center gap-2">
+            <Type className="h-4 w-4" />
+            {isArabic ? 'القسم المميز' : 'Feature Section'}
           </TabsTrigger>
           <TabsTrigger value="mission-statement" className="flex items-center gap-2">
             <Image className="h-4 w-4" />
@@ -1201,6 +1227,196 @@ export default function HomepageManagement() {
                       dir="ltr"
                     />
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Feature Section Tab */}
+        <TabsContent value="feature-section" className="space-y-6">
+          {/* Content Management */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Star className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'محتوى القسم المميز' : 'Feature Section Content'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'إدارة العنوان والوصف والصورة للقسم المميز' : 'Manage title, description, and image for Feature section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Show/Hide Section */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="space-y-1">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-primary" />
+                    {isArabic ? 'عرض القسم المميز' : 'Show Feature Section'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'تفعيل أو إلغاء القسم المميز في الصفحة الرئيسية' : 'Enable or disable feature section in homepage'}
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.showFeatureSection}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, showFeatureSection: checked }))
+                  }
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              {/* Title Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="feature-title-en" className="text-sm font-medium">
+                    {isArabic ? 'العنوان (إنجليزي)' : 'Title (English)'}
+                  </Label>
+                  <Input
+                    id="feature-title-en"
+                    value={formData.featureSectionTitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionTitle: e.target.value }))}
+                    placeholder="Premium Coffee Experience"
+                    className="text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="feature-title-ar" className="text-sm font-medium">
+                    {isArabic ? 'العنوان (عربي)' : 'Title (Arabic)'}
+                  </Label>
+                  <Input
+                    id="feature-title-ar"
+                    value={formData.featureSectionTitleAr}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionTitleAr: e.target.value }))}
+                    placeholder="تجربة قهوة مميزة"
+                    className="text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* Description Fields with RichTextEditor */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="feature-desc-en" className="text-sm font-medium">
+                    {isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}
+                  </Label>
+                  <RichTextEditor
+                    value={formData.featureSectionDescription}
+                    onChange={(value) => setFormData(prev => ({ ...prev, featureSectionDescription: value }))}
+                    placeholder="Discover the art of exceptional coffee..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="feature-desc-ar" className="text-sm font-medium">
+                    {isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}
+                  </Label>
+                  <RichTextEditor
+                    value={formData.featureSectionDescriptionAr}
+                    onChange={(value) => setFormData(prev => ({ ...prev, featureSectionDescriptionAr: value }))}
+                    placeholder="اكتشف فن القهوة الاستثنائية..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+              </div>
+
+              {/* Button Text Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="feature-btn-en" className="text-sm font-medium">
+                    {isArabic ? 'نص الزر (إنجليزي)' : 'Button Text (English)'}
+                  </Label>
+                  <Input
+                    id="feature-btn-en"
+                    value={formData.featureSectionButtonText}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionButtonText: e.target.value }))}
+                    placeholder="EXPLORE NOW"
+                    className="text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="feature-btn-ar" className="text-sm font-medium">
+                    {isArabic ? 'نص الزر (عربي)' : 'Button Text (Arabic)'}
+                  </Label>
+                  <Input
+                    id="feature-btn-ar"
+                    value={formData.featureSectionButtonTextAr}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionButtonTextAr: e.target.value }))}
+                    placeholder="استكشف الآن"
+                    className="text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Feature Image Upload Section */}
+          <Card className="border-2 border-dashed border-primary/20 hover:border-primary/40 transition-colors">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-3 text-xl">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-6 w-6 text-primary" />
+                </div>
+                {isArabic ? 'إدارة صورة القسم المميز' : 'Feature Section Image Management'}
+              </CardTitle>
+              <CardDescription className="text-base">
+                {isArabic ? 'رفع وإدارة صورة القسم المميز' : 'Upload and manage feature section image'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-8">
+              {/* Current Image Preview */}
+              {formData.featureSectionImage && (
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-accent/20 rounded-xl blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
+                  <div className="relative bg-background rounded-lg p-4 border">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-foreground">
+                        {isArabic ? 'الصورة الحالية' : 'Current Image'}
+                      </h4>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFormData(prev => ({ ...prev, featureSectionImage: '/images/logo.png' }))}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <img
+                      src={formData.featureSectionImage}
+                      alt="Feature section"
+                      className="w-full max-w-md rounded-lg shadow-lg aspect-square mx-auto object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/logo.png'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Manual URL Input */}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="feature-image-url" className="text-sm font-medium">
+                    {isArabic ? 'رابط الصورة' : 'Image URL'}
+                  </Label>
+                  <Input
+                    id="feature-image-url"
+                    value={formData.featureSectionImage}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionImage: e.target.value }))}
+                    placeholder={isArabic ? 'https://example.com/image.jpg' : 'https://example.com/image.jpg'}
+                    className="text-left"
+                    dir="ltr"
+                  />
                 </div>
               </div>
             </CardContent>

@@ -10,6 +10,7 @@ import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
 import { conversionRates } from '@/lib/currency'
+import { useTheme } from '@/components/theme-provider'
 
 // Define local interface for cart items with products
 interface CartItemWithProduct extends CartItem {
@@ -18,6 +19,7 @@ interface CartItemWithProduct extends CartItem {
 
 export function CartSidebar() {
   const { t, i18n } = useTranslation()
+  const { theme } = useTheme()
   const { cart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
   const isRTL = i18n.language === 'ar'
@@ -151,9 +153,9 @@ export function CartSidebar() {
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-center space-y-4">
                   <img 
-                    src="/images/logo-s.png" 
+                    src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                     alt="SpiritHub Cafe Logo" 
-                    className="h-20 w-20 object-contain mx-auto opacity-50"
+                    className="h-20 w-auto object-contain mx-auto opacity-50"
                   />
                   <div>
                     <h3 className="text-lg font-semibold">

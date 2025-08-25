@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next'
 import { useFooterSettings } from '@/hooks/useFooterSettings'
 import { useState, useEffect, useCallback } from 'react'
 import { firestoreService, type Page } from '@/lib/firebase'
+import { useTheme } from '@/components/theme-provider'
 
 export function Footer() {
   const { t, i18n } = useTranslation()
+  const { theme } = useTheme()
   const { settings } = useFooterSettings()
   const [footerPages, setFooterPages] = useState<Page[]>([])
   const isArabic = i18n.language === 'ar'
@@ -26,7 +28,6 @@ export function Footer() {
   }, [])
 
   // Use settings if available, otherwise fallback to translation keys
-  const companyName = settings?.companyName || t('navigation.brandName')
   const description = isArabic 
     ? (settings?.descriptionAr || settings?.description || t('footer.description'))
     : (settings?.description || t('footer.description'))
@@ -95,15 +96,15 @@ export function Footer() {
             <div className="space-y-4 lg:col-span-3">
               <div className="flex items-center gap-3">
                 <img 
-                  src="/images/logo-s.png" 
+                  src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SpiritHub Cafe Logo" 
-                  className="h-8 w-8 object-contain no-flip flex-shrink-0"
+                  className="h-16 w-auto object-contain no-flip flex-shrink-0"
                 />
-                <span className="text-lg font-bold text-foreground drop-shadow-sm">{companyName}</span>
               </div>
-              <p className="text-sm text-foreground/90 leading-relaxed max-w-md drop-shadow-sm">
-                {description}
-              </p>
+              <div 
+                className="text-sm text-foreground/90 leading-relaxed drop-shadow-sm prose prose-sm prose-invert max-w-none"
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
             </div>
 
             {/* Quick Links - Smaller column */}
@@ -171,7 +172,10 @@ export function Footer() {
                   {phone2 && <p className="ltr">{phone2}</p>}
                 </div>
                 <p className="ltr">{email}</p>
-                <p>{workingHours}</p>
+                <div 
+                  className="prose prose-sm prose-invert max-w-none text-sm text-foreground/80 drop-shadow-sm"
+                  dangerouslySetInnerHTML={{ __html: workingHours }}
+                />
               </div>
             </div>
           </div>
