@@ -1421,3 +1421,53 @@
 .ltr * {
   direction: ltr !important;
 }
+
+/* Overlay text classes for sections with background images/videos */
+.overlay-section {
+  /* Text colors that work well on dark overlays */
+}
+
+.overlay-section .text-overlay-primary {
+  @apply text-white;
+}
+
+.overlay-section .text-overlay-secondary {
+  @apply text-white/90;
+}
+
+.overlay-section .text-overlay-muted {
+  @apply text-white/70;
+}
+
+.overlay-section .hover\:text-overlay-accent:hover {
+  @apply text-amber-200;
+}
+
+.overlay-section .border-overlay {
+  @apply border-white/20;
+}
+
+.overlay-section .hover\:bg-overlay:hover {
+  @apply hover:bg-white/10;
+}
+
+/* For sections without overlay, use theme colors */
+.content-section .text-content-primary {
+  @apply text-foreground;
+}
+
+.content-section .text-content-secondary {
+  @apply text-muted-foreground;
+}
+
+.content-section .hover\:text-content-accent:hover {
+  @apply hover:text-primary;
+}
+
+.content-section .border-content {
+  @apply border-border;
+}
+
+.content-section .hover\:bg-content:hover {
+  @apply hover:bg-accent/10;
+}

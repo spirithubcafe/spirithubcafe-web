@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Star, ShoppingCart, X, ZoomIn } from 'lucide-react'
+import { ArrowRight, X, ZoomIn } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
@@ -10,7 +8,6 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
-import { useCart } from '@/hooks/useCart'
 import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
 import { conversionRates } from '@/lib/currency'
 
@@ -19,7 +16,6 @@ export function HomePage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
-  const { addToCart } = useCart()
   
   const { products, loading: loadingProducts } = useProducts()
   const { categories, loading: loadingCategories } = useCategories()
@@ -31,7 +27,7 @@ export function HomePage() {
   const latestProducts = useMemo(() => {
     return products
       .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
-      .slice(0, 4)
+      .slice(0, 5)
   }, [products])
   
   // Functions for image modal
@@ -246,7 +242,7 @@ export function HomePage() {
 
 
       {/* Unified Background Section - Latest Release to Categories */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden overlay-section">
         {/* Background Video */}
         {(homepageSettings?.showBackgroundVideo !== false) && (
           <div className="absolute inset-0 w-full h-full overflow-hidden">
@@ -308,138 +304,95 @@ export function HomePage() {
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-center space-y-4 mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-lg">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {t('homepage.latestRelease.title', 'Latest Release')}
                 </h2>
-   
               </div>
               
               {loadingProducts ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Card key={i} className="card-clean py-0">
-                      <CardContent className="p-4">
-                        <div className="animate-pulse space-y-3">
-                          <div className="bg-muted h-40 rounded-lg"></div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-3/4"></div>
-                            <div className="h-4 bg-muted rounded w-1/2"></div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex flex-col items-center space-y-3">
+                      <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                      <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                      <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
+                      <div className="animate-pulse h-3 bg-muted rounded w-1/3"></div>
+                    </div>
                   ))}
                 </div>
               ) : latestProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
                   {latestProducts.map((product) => {
                     const productPrice = getProductPrice(product)
                     const salePrice = getSalePrice(product)
-                    const discountPercent = salePrice ? Math.round(((productPrice - salePrice) / productPrice) * 100) : 0
                     const isArabic = localStorage.getItem('i18nextLng') === 'ar'
 
                     return (
-                      <Card key={product.id} className="card-clean group hover:glow-coffee hover:-translate-y-2 transition-all duration-300 border-0 shadow-lg backdrop-blur-sm overflow-hidden py-0">
-                        <div className="relative">
-                          <Link to={`/product/${product.slug || product.id}`}>
-                            <div className="aspect-square overflow-hidden">
-                              <img
-                                src={
-                                  product.images?.[0] || 
-                                  product.gallery?.[0] || 
-                                  product.gallery_images?.[0] || 
-                                  product.image_url || 
-                                  product.image || 
-                                  '/images/logo.png'
-                                }
-                                alt={product.name || ''}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/images/logo.png'
-                                }}
-                              />
-                            </div>
-                          </Link>
-                          
-                          {/* Discount Badge */}
-                          {discountPercent > 0 && (
-                            <Badge className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg text-xs">
-                              {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
-                            </Badge>
-                          )}
-                          
-                          {/* Rating */}
-                          {product.average_rating && product.average_rating > 0 && (
-                            <div className="absolute top-2 left-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-                              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                              <span className="text-white text-xs font-medium">
-                                {product.average_rating.toFixed(1)}
-                              </span>
-                            </div>
-                          )}
+                      <Link
+                        key={product.id}
+                        to={`/product/${product.slug || product.id}`}
+                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-overlay transition-colors"
+                      >
+                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-overlay">
+                          <img
+                            src={
+                              product.image_url || 
+                              product.image || 
+                              product.images?.[0] || 
+                              product.gallery?.[0] || 
+                              product.gallery_images?.[0] || 
+                              '/images/logo.png'
+                            }
+                            alt={product.name || ''}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/logo.png'
+                            }}
+                          />
                         </div>
                         
-                        <CardContent className="p-4 flex-1 flex flex-col">
-                          <Link to={`/product/${product.slug || product.id}`}>
-                            <h3 className="font-semibold text-base mb-2 hover:text-primary transition-colors line-clamp-2 text-white">
-                              {isArabic ? (product.name_ar || product.name) : product.name}
-                            </h3>
-                          </Link>
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-base text-overlay-primary hover:text-overlay-accent transition-colors">
+                            {isArabic ? (product.name_ar || product.name) : product.name}
+                          </h3>
                           
-                          <div className="text-white/80 text-sm mb-3 line-clamp-2 flex-1">
+                          <p className="text-sm text-overlay-muted line-clamp-2">
                             {(isArabic ? product.uses_ar : product.uses) ? (
-                              <span>{isArabic ? (product.uses_ar || product.uses) : product.uses}</span>
+                              isArabic ? (product.uses_ar || product.uses) : product.uses
                             ) : (
-                              <span className="italic opacity-70">
-                                {isArabic ? 'لا توجد استخدامات' : 'No uses available'}
+                              isArabic ? 'لا توجد استخدامات' : 'No uses available'
+                            )}
+                          </p>
+                          
+                          <div className="flex items-center justify-center gap-2">
+                            {salePrice && salePrice < productPrice ? (
+                              <>
+                                <span className="text-base font-bold text-red-400">
+                                  {formatPrice(salePrice)}
+                                </span>
+                                <span className="text-sm text-overlay-muted line-through">
+                                  {formatPrice(productPrice)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-base font-bold text-overlay-accent">
+                                {formatPrice(productPrice)}
                               </span>
                             )}
                           </div>
-                          
-                          <div className="mt-auto">
-                            <div className="flex items-center gap-2">
-                              {salePrice && salePrice < productPrice ? (
-                                <>
-                                  <span className="text-base font-bold text-red-400">
-                                    {formatPrice(salePrice)}
-                                  </span>
-                                  <span className="text-sm text-white/60 line-through">
-                                    {formatPrice(productPrice)}
-                                  </span>
-                                </>
-                              ) : (
-                                <span className="text-base font-bold text-white">
-                                  {formatPrice(productPrice)}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                        
-                        <div className="p-4 pt-0">
-                          <Button 
-                            size="sm" 
-                            className="btn-coffee w-full text-sm"
-                            onClick={() => addToCart(product, 1)}
-                          >
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            {t('common.addToCart', 'Add to Cart')}
-                          </Button>
                         </div>
-                      </Card>
+                      </Link>
                     )
                   })}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-white/80 text-lg">
+                  <p className="text-overlay-secondary text-lg">
                     {t('homepage.latestRelease.noProducts', 'No new products available at the moment')}
                   </p>
                 </div>
               )}
-              
-
             </div>
           </div>
         </div>
@@ -449,13 +402,13 @@ export function HomePage() {
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-center space-y-6 mb-16">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white drop-shadow-lg">
+                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {isArabic 
                     ? (homepageSettings?.coffeeSelectionTitleAr || 'مجموعة القهوة')
                     : (homepageSettings?.coffeeSelectionTitle || 'COFFEE SELECTION')
                   }
                 </h2>
-                <p className="text-lg md:text-xl text-white/90 max-w-4xl mx-auto leading-relaxed drop-shadow-md">
+                <p className="text-lg md:text-xl text-overlay-secondary max-w-4xl mx-auto leading-relaxed drop-shadow-md">
                   {isArabic 
                     ? (homepageSettings?.coffeeSelectionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
                     : (homepageSettings?.coffeeSelectionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
@@ -464,7 +417,7 @@ export function HomePage() {
                 <div className="pt-4">
                   <Button 
                     size="lg" 
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
                     asChild
                   >
                     <Link to="/shop" className="flex items-center gap-2">
@@ -485,7 +438,7 @@ export function HomePage() {
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-center space-y-4 mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-lg">
+                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {t('homepage.categories.title', 'SpiritHub Categories')}
                 </h2>
               </div>
@@ -511,9 +464,9 @@ export function HomePage() {
                       <Link
                         key={category.id}
                         to={`/shop?category=${category.id}`}
-                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-white/10 transition-colors"
+                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-overlay transition-colors"
                       >
-                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-white/20">
+                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-overlay">
                           <img
                             src={category.image || '/images/logo.png'}
                             alt={isArabic ? (category.name_ar || category.name) : category.name}
@@ -526,10 +479,10 @@ export function HomePage() {
                         </div>
                         
                         <div className="space-y-1">
-                          <h3 className="font-semibold text-base text-white group-hover:text-amber-200 transition-colors">
+                          <h3 className="font-semibold text-base text-overlay-primary hover:text-overlay-accent transition-colors">
                             {isArabic ? (category.name_ar || category.name) : category.name}
                           </h3>
-                          <p className="text-sm text-white/70">
+                          <p className="text-sm text-overlay-muted">
                             {productCount} {isArabic ? 'منتج' : 'Products'}
                           </p>
                         </div>
@@ -539,7 +492,7 @@ export function HomePage() {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <p className="text-white/80 text-lg">
+                  <p className="text-overlay-secondary text-lg">
                     {t('homepage.categories.noCategories', 'No categories available at the moment')}
                   </p>
                 </div>
