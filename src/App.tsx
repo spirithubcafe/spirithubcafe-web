@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CurrencyProvider } from '@/components/currency-provider'
@@ -26,6 +26,31 @@ import { HeroSlidePage } from '@/pages/HeroSlidePage'
 import PageDisplayPage from '@/pages/PageDisplayPage'
 import './App.css'
 
+// Component to conditionally show navigation and footer
+function ConditionalNavigation() {
+  const location = useLocation()
+  
+  // Hide navigation only on hero-slide pages
+  const hideNavPaths = ['/hero-slide']
+  const shouldHideNav = hideNavPaths.some(path => 
+    location.pathname.startsWith(path)
+  )
+  
+  return shouldHideNav ? null : <Navigation />
+}
+
+function ConditionalFooter() {
+  const location = useLocation()
+  
+  // Hide footer on dashboard pages
+  const hideFooterPaths = ['/dashboard', '/hero-slide']
+  const shouldHideFooter = hideFooterPaths.some(path => 
+    location.pathname.startsWith(path)
+  )
+  
+  return shouldHideFooter ? null : <Footer />
+}
+
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="spirithub-ui-theme">
@@ -35,7 +60,7 @@ function App() {
             <DataProvider>
               <Router>
                 <div className="min-h-screen flex flex-col bg-background">
-                  <Navigation />
+                  <ConditionalNavigation />
                   <main className="flex-1 relative">
                     <Routes>
                     <Route path="/" element={<HomePage />} />
@@ -98,7 +123,7 @@ function App() {
                     <Route path="/faq" element={<PageDisplayPage />} />
                   </Routes>
                 </main>
-                <Footer />
+                <ConditionalFooter />
                 <Toaster
                   position="bottom-right"
                   toastOptions={{

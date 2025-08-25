@@ -1573,6 +1573,76 @@ export const firestoreService = {
     }
   },
 
+  // Newsletter subscriptions
+  newsletters: {
+    list: async (): Promise<{ items: any[]; total: number }> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const q = query(
+            collection(db, 'newsletters'),
+            orderBy('subscribed_at', 'desc')
+          );
+          const querySnapshot = await getDocs(q);
+          const subscriptions = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            subscribed_at: doc.data().subscribed_at || new Date().toISOString()
+          }));
+          
+          return {
+            items: subscriptions,
+            total: subscriptions.length
+          };
+        },
+        { items: [], total: 0 },
+        'getNewslettersList'
+      );
+    },
+
+    create: async (data: any): Promise<string> => {
+      return await safeFirestoreOperation(
+        async () => {
+          const docRef = await addDoc(collection(db, 'newsletters'), {
+            ...data,
+            subscribed_at: data.subscribed_at || new Date().toISOString(),
+            status: data.status || 'active'
+          });
+          console.log('✅ Newsletter subscription created:', docRef.id);
+          return docRef.id;
+        },
+        '',
+        'createNewsletterSubscription'
+      );
+    },
+
+    delete: async (id: string): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          await deleteDoc(doc(db, 'newsletters', id));
+          console.log('✅ Newsletter subscription deleted:', id);
+          return true;
+        },
+        false,
+        'deleteNewsletterSubscription'
+      );
+    },
+
+    updateStatus: async (id: string, status: 'active' | 'inactive'): Promise<boolean> => {
+      return await safeFirestoreOperation(
+        async () => {
+          await updateDoc(doc(db, 'newsletters', id), {
+            status,
+            updated_at: new Date().toISOString()
+          });
+          console.log('✅ Newsletter subscription status updated:', id);
+          return true;
+        },
+        false,
+        'updateNewsletterStatus'
+      );
+    }
+  },
+
   // Orders
   orders: {
     list: async (userId?: string) => {

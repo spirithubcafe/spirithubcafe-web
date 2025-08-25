@@ -10,6 +10,7 @@ import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
 import { conversionRates } from '@/lib/currency'
+import { NewsletterForm } from '@/components/newsletter-form'
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
@@ -191,10 +192,10 @@ export function HomePage() {
 
       {/* Mission Statement Section with Fixed Background */}
       {(homepageSettings?.showMissionSection !== false) && (
-        <section className="py-32 lg:py-40 relative overflow-hidden">
+        <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden">
           {/* Fixed Background Image */}
           <div 
-            className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0 w-full h-full bg-scroll md:bg-fixed bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url(${homepageSettings?.missionBackgroundImage || '/images/back.jpg'})` }}
           />
           
@@ -256,7 +257,7 @@ export function HomePage() {
               preload="auto"
               disablePictureInPicture
               src={homepageSettings?.backgroundVideo || '/video/back.mp4'}
-              className={`absolute -top-[15%] -left-[15%] min-w-[130%] min-h-[130%] object-cover transition-all duration-300 ${
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-300 ${
                 (homepageSettings?.backgroundVideoBlur || 30) <= 12.5 
                   ? 'blur-none' 
                   : (homepageSettings?.backgroundVideoBlur || 30) <= 25 
@@ -299,18 +300,74 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Latest Release Section */}
-        <div className="relative z-10 py-16 lg:py-24 w-full">
+        {/* Feature Section - Image and Text */}
+        <div className="relative z-10 py-12 md:py-16 lg:py-20 w-full">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-4 mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                {/* Text Content */}
+                <div className="space-y-6 order-2 lg:order-1">
+                  <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-overlay-primary">
+                    {isArabic 
+                      ? 'تجربة قهوة استثنائية'
+                      : 'Exceptional Coffee Experience'
+                    }
+                  </h2>
+                  <p className="text-lg md:text-xl text-overlay-secondary leading-relaxed">
+                    {isArabic 
+                      ? 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.'
+                      : 'Discover the world of premium coffee with our carefully curated selection of the finest roasted beans. Every cup tells a story of passion and craftsmanship.'
+                    }
+                  </p>
+                  <div className="pt-4">
+                    <Button 
+                      size="lg" 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                      asChild
+                    >
+                      <Link to="/shop" className="flex items-center gap-2">
+                        {isArabic 
+                          ? 'اكتشف المزيد'
+                          : 'Discover More'
+                        }
+                        <ArrowRight className="h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Image Content */}
+                <div className="order-1 lg:order-2">
+                  <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/3] bg-muted">
+                    <img
+                      src="/images/back.jpg"
+                      alt={isArabic ? 'تجربة القهوة' : 'Coffee Experience'}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/back.jpg'
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Latest Release Section */}
+        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center space-y-4 mb-8 md:mb-12">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {t('homepage.latestRelease.title', 'Latest Release')}
                 </h2>
               </div>
               
               {loadingProducts ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                   {[1, 2, 3, 4, 5].map((i) => (
                     <div key={i} className="flex flex-col items-center space-y-3">
                       <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
@@ -321,7 +378,7 @@ export function HomePage() {
                   ))}
                 </div>
               ) : latestProducts.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                   {latestProducts.map((product) => {
                     const productPrice = getProductPrice(product)
                     const salePrice = getSalePrice(product)
@@ -398,17 +455,17 @@ export function HomePage() {
         </div>
 
         {/* Coffee Selection Section */}
-        <div className="relative z-10 py-16 lg:py-24 w-full">
+        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-6 mb-16">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
+              <div className="text-center space-y-4 md:space-y-6 mb-12 md:mb-16">
+                <h2 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {isArabic 
                     ? (homepageSettings?.coffeeSelectionTitleAr || 'مجموعة القهوة')
                     : (homepageSettings?.coffeeSelectionTitle || 'COFFEE SELECTION')
                   }
                 </h2>
-                <p className="text-lg md:text-xl text-overlay-secondary max-w-4xl mx-auto leading-relaxed drop-shadow-md">
+                <p className="text-sm md:text-lg lg:text-xl text-overlay-secondary max-w-4xl mx-auto leading-relaxed drop-shadow-md px-2 md:px-0">
                   {isArabic 
                     ? (homepageSettings?.coffeeSelectionDescriptionAr || 'مهمتنا هي إثراء يوم كل عميل بتجربة قهوة مصنوعة يدوياً. من خلال محمصة سبيريت هب، نضمن جودة ونكهة استثنائية في كل كوب، من الحبوب المختارة بعناية إلى التحميص الخبير. أينما نخدم، تتألق شغفنا وتفانينا، مما يجعل كل رشفة لا تُنسى.')
                     : (homepageSettings?.coffeeSelectionDescription || 'Our mission is to enrich each customer\'s day with a hand-crafted coffee experience. Through SpiritHub Roastery, we guarantee exceptional quality and flavor in every cup, from carefully selected beans to expert roasting. Wherever we serve, our passion and dedication shine through, making every sip unforgettable.')
@@ -434,17 +491,17 @@ export function HomePage() {
         </div>
 
         {/* SpiritHub Categories Section */}
-        <div className="relative z-10 py-16 lg:py-24 w-full">
+        <div className="relative z-10 py-12 md:py-16 lg:py-24 w-full">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
-              <div className="text-center space-y-4 mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
+              <div className="text-center space-y-4 mb-8 md:mb-12">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-overlay-primary drop-shadow-lg">
                   {t('homepage.categories.title', 'SpiritHub Categories')}
                 </h2>
               </div>
               
               {loadingCategories ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                     <div key={i} className="flex flex-col items-center space-y-3">
                       <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
@@ -454,7 +511,7 @@ export function HomePage() {
                   ))}
                 </div>
               ) : categories.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                   {categories.map((category: Category) => {
                     const isArabic = localStorage.getItem('i18nextLng') === 'ar'
                     // Count products in this category
@@ -504,10 +561,10 @@ export function HomePage() {
 
       {/* Community Section with Fixed Background */}
       {(homepageSettings?.showCommunitySection !== false) && (
-        <section className="py-32 lg:py-40 relative overflow-hidden">
+        <section className="py-16 md:py-24 lg:py-32 xl:py-40 relative overflow-hidden">
           {/* Fixed Background Image */}
           <div 
-            className="absolute inset-0 w-full h-full bg-fixed bg-cover bg-center bg-no-repeat"
+            className="absolute inset-0 w-full h-full bg-scroll md:bg-fixed bg-cover bg-center bg-no-repeat"
             style={{ 
               backgroundImage: `url(${homepageSettings?.communityBackgroundImage || '/images/back.jpg'})` 
             }}
@@ -656,6 +713,27 @@ export function HomePage() {
           </div>
         </section>
       )}
+
+      {/* Newsletter Section */}
+      <section className="py-16 lg:py-20 bg-card">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center space-y-6 mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                {isArabic ? 'اشترك في نشرتنا الإخبارية' : 'Subscribe to Our Newsletter'}
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                {isArabic 
+                  ? 'كن أول من يعرف عن منتجاتنا الجديدة والعروض الخاصة والأخبار المثيرة من عالم القهوة'
+                  : 'Be the first to know about our new products, special offers, and exciting news from the coffee world'
+                }
+              </p>
+            </div>
+            
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
 
       {/* Image Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

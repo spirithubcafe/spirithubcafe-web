@@ -16,7 +16,8 @@ import {
   Presentation,
   FileText,
   Phone,
-  CreditCard
+  CreditCard,
+  Mail
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,6 +47,7 @@ import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
 import { AboutManagement } from '@/components/admin/AboutManagement'
+import { NewsletterManagement } from '@/components/admin/NewsletterManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 
 export default function DashboardPage() {
@@ -265,6 +267,12 @@ export default function DashboardPage() {
         label: t('dashboard.tabs.about'),
         icon: FileText,
         show: true
+      },
+      {
+        id: 'newsletter',
+        label: isArabic ? 'النشرة الإخبارية' : 'Newsletter',
+        icon: Mail,
+        show: true
       }
     ] : [])
   ]
@@ -317,6 +325,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <ContactManagement />
       case 'about':
         return user?.role === 'admin' && <AboutManagement />
+      case 'newsletter':
+        return user?.role === 'admin' && <NewsletterManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }
@@ -344,10 +354,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex min-h-screen">
         {/* Sidebar */}
-        <aside className="w-64 bg-card border-r border-border flex-shrink-0 hidden xl:flex xl:flex-col h-screen overflow-hidden">
-          <div className="p-6 flex-1 overflow-y-auto">
+        <aside className="w-64 bg-card border-r border-border flex-shrink-0 hidden xl:flex xl:flex-col">
+          <div className="p-6 flex-1">
             <h2 className="text-lg font-semibold mb-6">
               {isArabic ? 'لوحة التحكم' : 'Dashboard'}
             </h2>
@@ -388,7 +398,7 @@ export default function DashboardPage() {
           sidebarOpen ? "block" : "hidden"
         )}>
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <aside className="fixed top-0 left-0 h-screen w-64 bg-card border-r border-border overflow-hidden z-[110]">
+          <aside className="fixed top-0 left-0 h-full w-64 bg-card border-r border-border z-[110]">
             <div className="h-full flex flex-col">
               <div className="p-6 border-b border-border flex-shrink-0">
                 <div className="flex items-center justify-between mb-6">
@@ -404,7 +414,7 @@ export default function DashboardPage() {
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 p-6 overflow-y-auto">
                 <nav className="space-y-2 pb-6">
                 {navigationItems.map((item) => {
                   const Icon = item.icon
@@ -439,7 +449,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Main Content */}
-        <main ref={mainContentRef} className="flex-1 min-w-0 h-screen overflow-y-auto bg-background">
+        <main ref={mainContentRef} className="flex-1 min-w-0 bg-background">
           <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-none">
             {/* Header */}
             <div className="mb-6 lg:mb-8">
