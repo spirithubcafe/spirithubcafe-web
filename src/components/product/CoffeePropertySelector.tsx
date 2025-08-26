@@ -113,15 +113,15 @@ export default function CoffeePropertySelector({
                 <div className="text-right">
                   {option.is_on_sale && option.sale_price_omr ? (
                     <div>
-                      <span className="text-sm line-through text-muted-foreground">
+                      <span className="price-original text-sm line-through text-muted-foreground">
                         {formatOptionPrice(option.price_omr)}
                       </span>
-                      <span className="ml-2 font-bold text-red-600">
+                      <span className="ml-2 price-sale font-bold">
                         {formatOptionPrice(option.sale_price_omr)}
                       </span>
                     </div>
                   ) : (
-                    <span className="font-bold">
+                    <span className="price-text font-bold">
                       {formatOptionPrice(option.price_omr)}
                     </span>
                   )}

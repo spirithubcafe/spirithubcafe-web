@@ -11,7 +11,7 @@ interface HeroSliderProps {
 
 export function HeroSlider({ className = '' }: HeroSliderProps) {
   const { t, i18n } = useTranslation()
-  const { theme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const isRTL = i18n.language === 'ar'
   
   const [settings, setSettings] = useState<HeroSettings | null>(null)
@@ -350,7 +350,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     const defaultDarkColors = ['#000000', '#333333']
     const defaultLightColors = ['#ffffff', '#f0f0f0']
     
-    const colors = gradientSettings.colors || (theme === 'dark' ? defaultDarkColors : defaultLightColors)
+    const colors = gradientSettings.colors || (resolvedTheme === 'dark' ? defaultDarkColors : defaultLightColors)
     const direction = gradientSettings.direction || 'to bottom'
     const type = gradientSettings.type || 'linear'
 
@@ -390,7 +390,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
             <div className="hero-loading-spinner mx-auto"></div>
             <div className="absolute inset-0 flex items-center justify-center">
               <img 
-                src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
+                src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                 alt="SpiritHub Logo" 
                 className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-contain hero-loading-logo"
                 onError={(e) => {
@@ -479,7 +479,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
         ) : (
           /* Default theme-aware gradient overlays for better text readability */
           <>
-            {theme === 'dark' ? (
+            {resolvedTheme === 'dark' ? (
               <>
                 <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />

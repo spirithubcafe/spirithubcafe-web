@@ -164,7 +164,7 @@ export function Footer() {
   }
 
   return (
-    <footer className="border-t border-border/40 shadow-inner w-full relative overflow-hidden">
+    <footer className="shadow-inner w-full relative overflow-hidden">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
         {/* Transparent video mode check */}

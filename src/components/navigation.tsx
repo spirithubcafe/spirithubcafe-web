@@ -17,7 +17,7 @@ import { useTheme } from '@/components/theme-provider'
 
 export function Navigation() {
   const { t, i18n } = useTranslation()
-  const { theme } = useTheme()
+  const { resolvedTheme } = useTheme()
   const auth = useAuth()
   const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
@@ -109,7 +109,7 @@ export function Navigation() {
             )}>
               <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
                 <img 
-                  src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
+                  src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
                   className="h-14 w-auto object-contain no-flip"
                 />
@@ -130,7 +130,7 @@ export function Navigation() {
                   "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
                   isActive('/')
                     ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
-                    : "text-foreground hover:text-primary hover:bg-accent/10",
+                    : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -148,7 +148,7 @@ export function Navigation() {
                     "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1",
                     location.pathname.startsWith('/shop')
                       ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
-                      : "text-foreground hover:text-primary hover:bg-accent/10",
+                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -170,7 +170,7 @@ export function Navigation() {
                     <Link
                       to="/shop"
                       className={cn(
-                        "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                        "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-accent/50 dark:hover:bg-accent/30 transition-colors",
                         isArabic ? "text-right" : "text-left"
                       )}
                     >
@@ -198,7 +198,7 @@ export function Navigation() {
                           key={category.id}
                           to={`/shop?category=${category.id}`}
                           className={cn(
-                            "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors",
+                            "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-accent/50 dark:hover:bg-accent/30 transition-colors",
                             isArabic ? "text-right" : "text-left"
                           )}
                         >

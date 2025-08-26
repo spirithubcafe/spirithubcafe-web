@@ -135,7 +135,7 @@
   
   /* Soft muted tones - coffee foam */
   --muted: oklch(0.92 0.012 42);
-  --muted-foreground: oklch(0.55 0.03 35);
+  --muted-foreground: oklch(61.492% 0.01771 31.849);
   
   /* Warm accent - roasted coffee */
   --accent: oklch(0.85 0.02 38);
@@ -182,7 +182,7 @@
   --popover-foreground: oklch(0.94 0.005 42);
   
   /* Bright golden primary for better visibility */
-  --primary: oklch(0.85 0.08 55);
+  --primary: oklch(0.4 0.08 35 / 0.6);
   --primary-foreground: oklch(0.15 0.02 20);
   
   /* Dark secondary with better contrast */
@@ -1537,4 +1537,67 @@
 .feature-content br {
   display: block;
   margin-bottom: 0.5rem;
+}
+
+/* Enhanced Dark Mode Hover Effects */
+.dark .hover\:bg-accent\/50:hover {
+  background-color: oklch(0.4 0.08 35 / 0.6) !important;
+}
+
+.dark .hover\:bg-accent\/10:hover {
+  background-color: oklch(0.35 0.06 35 / 0.25) !important;
+}
+
+/* Better menu hover colors for dark mode */
+.dark .menu-item:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.35 0.06 35 / 0.3) 0%, 
+    oklch(0.4 0.08 40 / 0.2) 100%
+  );
+  color: oklch(0.9 0.08 50);
+  transform: translateX(4px);
+}
+
+/* Price styling improvements for dark mode */
+.dark .price-text {
+  color: oklch(0.85 0.08 55);
+  font-weight: 600;
+}
+
+.dark .price-sale {
+  color: oklch(0.75 0.12 25);
+}
+
+.dark .price-original {
+  color: oklch(0.6 0.04 45);
+}
+
+/* Navigation hover improvements */
+.dark .nav-link:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.25 0.025 26 / 0.8) 0%, 
+    oklch(0.3 0.03 28 / 0.6) 100%
+  );
+  color: oklch(0.9 0.08 50);
+  border-radius: 8px;
+}
+
+/* Dropdown menu improvements */
+.dark .dropdown-item:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.28 0.025 26) 0%, 
+    oklch(0.32 0.03 28) 100%
+  );
+  color: oklch(0.88 0.06 48);
+  box-shadow: 0 2px 8px oklch(0.15 0.02 22 / 0.5);
+}
+
+/* Mobile navigation hover */
+.dark .mobile-nav-item:hover {
+  background: linear-gradient(135deg, 
+    oklch(0.25 0.025 26) 0%, 
+    oklch(0.3 0.03 28) 100%
+  );
+  color: oklch(0.9 0.08 50);
+  border-left: 3px solid oklch(0.85 0.08 55);
 }

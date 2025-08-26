@@ -11,7 +11,7 @@ import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
 import { conversionRates } from '@/lib/currency'
-import { NewsletterForm } from '@/components/newsletter-form'
+import { NewsletterSection } from '@/components/newsletter-section'
 import DOMPurify from 'dompurify'
 
 export function HomePage() {
@@ -88,7 +88,7 @@ export function HomePage() {
 
       {/* Feature Section */}
       {(homepageSettings?.showFeatureSection !== false) && (
-        <section className="py-16 lg:py-20 bg-background">
+        <section className="py-16 lg:py-20 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto">
               {/* Title */}
@@ -98,7 +98,7 @@ export function HomePage() {
                   dangerouslySetInnerHTML={{
                     __html: DOMPurify.sanitize(isArabic 
                       ? (homepageSettings?.featureSectionTitleAr || 'تجربة قهوة استثنائية')
-                      : (homepageSettings?.featureSectionTitle || 'تجربة قهوة استثنائية'))
+                      : (homepageSettings?.featureSectionTitle || 'Exceptional Coffee Experience'))
                   }}
                 />
               </div>
@@ -112,7 +112,7 @@ export function HomePage() {
                     dangerouslySetInnerHTML={{
                       __html: DOMPurify.sanitize(isArabic 
                         ? (homepageSettings?.featureSectionDescriptionAr || 'في سبيريت هب، ندعوك لتجربة مثالية للقهوة الحرفية عالية الجودة. استمتع بنكهات استثنائية تم إعدادها بعناية فائقة، واكتشف عالم القهوة كما لم تعهده من قبل.')
-                        : (homepageSettings?.featureSectionDescription || 'في سبيريت هب، ندعوك لتجربة مثالية للقهوة الحرفية عالية الجودة. استمتع بنكهات استثنائية تم إعدادها بعناية فائقة، واكتشف عالم القهوة كما لم تعهده من قبل.'))
+                        : (homepageSettings?.featureSectionDescription || 'At Spirit Hub, we invite you to a perfect artisanal high-quality coffee experience. Enjoy exceptional flavors crafted with utmost care, and discover the world of coffee like never before.'))
                     }}
                   />
                   <div className="pt-4">
@@ -159,14 +159,24 @@ export function HomePage() {
         </section>
       )}
 
+      {/* Section Separator */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
       {/* Latest Release Section */}
-      <section className="py-12 md:py-16 lg:py-24 w-full bg-background">
+      <section className="py-12 md:py-16 lg:py-24 w-full bg-card border-t border-border">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-8 md:mb-12">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-                {t('homepage.latestRelease.title', 'Latest Release')}
+                {t('homepage.latestRelease.title', 'LATEST RELEASE')}
               </h2>
+              <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                {isArabic 
+                  ? 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة'
+                  : 'Discover our newest additions of specialty coffee crafted with exceptional care'
+                }
+              </p>
             </div>
               
             {loadingProducts ? (
@@ -528,25 +538,7 @@ export function HomePage() {
       )}
 
       {/* Newsletter Section */}
-      <section className="py-16 lg:py-20 bg-card">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center space-y-6 mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                {isArabic ? 'اشترك في نشرتنا الإخبارية' : 'Subscribe to Our Newsletter'}
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                {isArabic 
-                  ? 'كن أول من يعرف عن منتجاتنا الجديدة والعروض الخاصة والأخبار المثيرة من عالم القهوة'
-                  : 'Be the first to know about our new products, special offers, and exciting news from the coffee world'
-                }
-              </p>
-            </div>
-            
-            <NewsletterForm />
-          </div>
-        </div>
-      </section>
+      <NewsletterSection />
 
       {/* Image Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
