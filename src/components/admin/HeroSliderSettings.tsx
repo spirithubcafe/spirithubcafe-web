@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,7 @@ interface HeroSliderSettingsProps {
 
 export function HeroSliderSettings({ onClose }: HeroSliderSettingsProps) {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   
   const [settings, setSettings] = useState<HeroSettings | null>(null)
   const [selectedSlide, setSelectedSlide] = useState<HeroSlide | null>(null)
@@ -2280,6 +2282,10 @@ export function HeroSliderSettings({ onClose }: HeroSliderSettingsProps) {
                       <Badge variant="secondary">Gradient</Badge>
                     </h4>
                     
+                    <div className="bg-muted/50 p-3 rounded-lg text-sm text-muted-foreground">
+                      💡 <strong>Theme Awareness:</strong> When no custom colors are set, the gradient will automatically adapt to your current theme (darker gradients for dark mode, lighter gradients for light mode).
+                    </div>
+                    
                     <div className="space-y-4">
                       <div className="flex items-center space-x-2">
                         <Switch
@@ -2371,41 +2377,72 @@ export function HeroSliderSettings({ onClose }: HeroSliderSettingsProps) {
                             <div className="space-y-2">
                               <Label>Gradient Colors</Label>
                               <div className="flex gap-2">
-                                <Input
-                                  type="color"
-                                  value={selectedSlide.effects?.gradient_overlay?.colors?.[0] || '#000000'}
-                                  onChange={(e) => {
-                                    const colors = selectedSlide.effects?.gradient_overlay?.colors || ['#000000', '#ffffff']
-                                    colors[0] = e.target.value
-                                    updateSlide(selectedSlide.id, {
-                                      effects: {
-                                        ...selectedSlide.effects,
-                                        gradient_overlay: {
-                                          ...selectedSlide.effects?.gradient_overlay,
-                                          colors: colors
+                                <div className="flex-1">
+                                  <Input
+                                    type="color"
+                                    value={selectedSlide.effects?.gradient_overlay?.colors?.[0] || '#000000'}
+                                    onChange={(e) => {
+                                      const colors = selectedSlide.effects?.gradient_overlay?.colors || ['#000000', '#ffffff']
+                                      colors[0] = e.target.value
+                                      updateSlide(selectedSlide.id, {
+                                        effects: {
+                                          ...selectedSlide.effects,
+                                          gradient_overlay: {
+                                            ...selectedSlide.effects?.gradient_overlay,
+                                            colors: colors
+                                          }
                                         }
-                                      }
-                                    })
-                                  }}
-                                />
-                                <Input
-                                  type="color"
-                                  value={selectedSlide.effects?.gradient_overlay?.colors?.[1] || '#ffffff'}
-                                  onChange={(e) => {
-                                    const colors = selectedSlide.effects?.gradient_overlay?.colors || ['#000000', '#ffffff']
-                                    colors[1] = e.target.value
-                                    updateSlide(selectedSlide.id, {
-                                      effects: {
-                                        ...selectedSlide.effects,
-                                        gradient_overlay: {
-                                          ...selectedSlide.effects?.gradient_overlay,
-                                          colors: colors
+                                      })
+                                    }}
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-1">Start Color</p>
+                                </div>
+                                <div className="flex-1">
+                                  <Input
+                                    type="color"
+                                    value={selectedSlide.effects?.gradient_overlay?.colors?.[1] || '#ffffff'}
+                                    onChange={(e) => {
+                                      const colors = selectedSlide.effects?.gradient_overlay?.colors || ['#000000', '#ffffff']
+                                      colors[1] = e.target.value
+                                      updateSlide(selectedSlide.id, {
+                                        effects: {
+                                          ...selectedSlide.effects,
+                                          gradient_overlay: {
+                                            ...selectedSlide.effects?.gradient_overlay,
+                                            colors: colors
+                                          }
                                         }
-                                      }
-                                    })
-                                  }}
-                                />
+                                      })
+                                    }}
+                                  />
+                                  <p className="text-xs text-muted-foreground mt-1">End Color</p>
+                                </div>
                               </div>
+                              <div className="text-xs text-muted-foreground">
+                                Leave colors as default to use theme-aware automatic colors
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  // Theme-aware default colors
+                                  const themeAwareColors = theme === 'dark' 
+                                    ? ['#000000', '#333333'] 
+                                    : ['#ffffff', '#f0f0f0'];
+                                  updateSlide(selectedSlide.id, {
+                                    effects: {
+                                      ...selectedSlide.effects,
+                                      gradient_overlay: {
+                                        ...selectedSlide.effects?.gradient_overlay,
+                                        colors: themeAwareColors
+                                      }
+                                    }
+                                  })
+                                }}
+                                className="mt-2"
+                              >
+                                Reset to Theme Defaults
+                              </Button>
                             </div>
                           </div>
                         </div>

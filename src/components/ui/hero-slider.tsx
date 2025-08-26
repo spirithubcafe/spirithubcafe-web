@@ -337,6 +337,51 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     }
   }
 
+  const getGradientOverlayStyle = (slide: HeroSlide) => {
+    const gradientSettings = slide.effects?.gradient_overlay
+    
+    if (!gradientSettings?.enabled) {
+      return {}
+    }
+
+    const opacity = (gradientSettings.opacity || 50) / 100
+    
+    // Theme-aware default colors (hex values)
+    const defaultDarkColors = ['#000000', '#333333']
+    const defaultLightColors = ['#ffffff', '#f0f0f0']
+    
+    const colors = gradientSettings.colors || (theme === 'dark' ? defaultDarkColors : defaultLightColors)
+    const direction = gradientSettings.direction || 'to bottom'
+    const type = gradientSettings.type || 'linear'
+
+    let gradientString = ''
+    
+    if (type === 'linear') {
+      const colorStops = colors.map((color, index) => {
+        const stop = index === 0 ? '0%' : index === colors.length - 1 ? '100%' : `${(index / (colors.length - 1)) * 100}%`
+        return `${color} ${stop}`
+      }).join(', ')
+      gradientString = `linear-gradient(${direction}, ${colorStops})`
+    } else if (type === 'radial') {
+      const colorStops = colors.map((color, index) => {
+        const stop = index === 0 ? '0%' : index === colors.length - 1 ? '100%' : `${(index / (colors.length - 1)) * 100}%`
+        return `${color} ${stop}`
+      }).join(', ')
+      gradientString = `radial-gradient(circle, ${colorStops})`
+    } else if (type === 'conic') {
+      const colorStops = colors.map((color, index) => {
+        const stop = `${(index / (colors.length - 1)) * 360}deg`
+        return `${color} ${stop}`
+      }).join(', ')
+      gradientString = `conic-gradient(from 0deg, ${colorStops})`
+    }
+
+    return {
+      background: gradientString,
+      opacity: opacity
+    }
+  }
+
   if (!settings || activeSlides.length === 0) {
     return (
       <div className="w-full min-h-screen bg-background flex items-center justify-center">
@@ -422,9 +467,31 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
           </div>
         ))}
         
-        {/* Additional gradient overlays for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+        {/* Gradient overlays - controlled by slide settings */}
+        {/* When gradient_overlay.enabled is explicitly false, hide overlays completely */}
+        {currentSlideData.effects?.gradient_overlay?.enabled === false ? null : 
+         currentSlideData.effects?.gradient_overlay?.enabled === true ? (
+          /* Custom gradient overlay */
+          <div 
+            className="absolute inset-0"
+            style={getGradientOverlayStyle(currentSlideData)}
+          />
+        ) : (
+          /* Default theme-aware gradient overlays for better text readability */
+          <>
+            {theme === 'dark' ? (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/20" />
+                <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-white/30" />
+              </>
+            )}
+          </>
+        )}
       </div>
 
       {/* Content */}

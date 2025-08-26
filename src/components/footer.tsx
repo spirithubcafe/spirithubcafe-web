@@ -59,6 +59,100 @@ export function Footer() {
     return 'bg-black/70'
   }, [blurIntensity])
 
+  // Get theme-aware styles based on footer color settings
+  const getFooterStyles = useCallback(() => {
+    const colorTheme = settings?.colorTheme || 'auto'
+    
+    // Determine effective theme
+    let effectiveTheme = theme
+    if (colorTheme === 'light') effectiveTheme = 'light'
+    else if (colorTheme === 'dark') effectiveTheme = 'dark'
+    
+    return {
+      textColor: settings?.textColor || (effectiveTheme === 'dark' ? '#ffffff' : '#000000'),
+      headingColor: settings?.headingColor || (effectiveTheme === 'dark' ? '#ffffff' : '#000000'), 
+      linkColor: settings?.linkColor || (effectiveTheme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'),
+      linkHoverColor: settings?.linkHoverColor || (effectiveTheme === 'dark' ? '#ffffff' : '#000000'),
+      borderColor: settings?.borderColor || (effectiveTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'),
+      socialIconsColor: settings?.socialIconsColor || (effectiveTheme === 'dark' ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)'),
+      socialIconsHoverColor: settings?.socialIconsHoverColor || (effectiveTheme === 'dark' ? '#ffffff' : '#000000')
+    }
+  }, [settings, theme])
+
+  // Get logo based on footer logo theme setting
+  const getFooterLogo = useCallback(() => {
+    const logoTheme = settings?.logoTheme || 'auto'
+    const colorTheme = settings?.colorTheme || 'auto'
+    console.log('Footer - Logo theme:', logoTheme, 'Color theme:', colorTheme, 'Global theme:', theme)
+    
+    if (logoTheme === 'light') {
+      console.log('Footer - Using light logo (explicit setting)')
+      return "/images/logo/logo-light.png"
+    } else if (logoTheme === 'dark') {
+      console.log('Footer - Using dark logo (explicit setting)')
+      return "/images/logo/logo-dark.png"
+    } else {
+      // Auto mode - determine based on effective color theme
+      let effectiveTheme = theme
+      if (colorTheme === 'light') effectiveTheme = 'light'
+      else if (colorTheme === 'dark') effectiveTheme = 'dark'
+      
+      // In dark theme/background, use light (white) logo
+      // In light theme/background, use dark (black) logo
+      const logo = effectiveTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"
+      console.log('Footer - Auto mode, effective theme:', effectiveTheme, 'using logo:', logo)
+      return logo
+    }
+  }, [settings, theme])
+
+  const footerStyles = getFooterStyles()
+  const logoSrc = getFooterLogo()
+
+  // Styled Link Component
+  const StyledLink = ({ to, children, ...props }: { to: string; children: React.ReactNode; [key: string]: any }) => (
+    <Link 
+      to={to} 
+      className="text-base transition-all hover:scale-105 transform duration-200"
+      style={{ color: footerStyles.linkColor }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = footerStyles.linkHoverColor
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = footerStyles.linkColor
+      }}
+      {...props}
+    >
+      {children}
+    </Link>
+  )
+
+  // Styled Social Icon Component
+  const StyledSocialIcon = ({ href, children, label }: { href: string; children: React.ReactNode; label: string }) => (
+    <a 
+      href={href}
+      className="transition-all duration-300 hover:scale-110 transform p-3 rounded-full backdrop-blur-sm shadow-lg"
+      style={{ 
+        color: footerStyles.socialIconsColor,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderColor: 'rgba(255,255,255,0.2)',
+        border: '1px solid'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = footerStyles.socialIconsHoverColor
+        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = footerStyles.socialIconsColor
+        e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'
+      }}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+    >
+      {children}
+    </a>
+  )
+
   // Create blur class based on intensity
   const getBlurClass = () => {
     const blurClass = blurIntensity <= 12.5 ? 'blur-none' :
@@ -73,90 +167,112 @@ export function Footer() {
     <footer className="border-t border-border/40 shadow-inner w-full relative overflow-hidden">
       {/* Background Video */}
       <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className={`w-full h-full object-cover ${getBlurClass()}`}
-        >
-          <source src="/video/back.mp4" type="video/mp4" />
-        </video>
-        {/* Dark overlay for better text readability */}
-        <div className={`absolute inset-0 ${getOverlayClass()}`}></div>
-        {/* Additional gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-background/90"></div>
+        {/* Transparent video mode check */}
+        {!settings?.transparentVideoMode && (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className={`w-full h-full object-cover ${getBlurClass()}`}
+          >
+            <source src="/video/back.mp4" type="video/mp4" />
+          </video>
+        )}
+        
+        {/* Conditional overlays based on settings */}
+        {!settings?.transparentVideoMode && settings?.enableVideoOverlay !== false && (
+          <div 
+            className={`absolute inset-0 ${getOverlayClass()}`}
+            style={{
+              opacity: settings?.videoOverlayOpacity ? settings.videoOverlayOpacity / 100 : undefined
+            }}
+          ></div>
+        )}
+        
+        {/* Gradient overlay - conditional */}
+        {!settings?.transparentVideoMode && settings?.enableGradientOverlay !== false && (
+          <div 
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.9) 100%)',
+              opacity: settings?.gradientOverlayOpacity ? settings.gradientOverlayOpacity / 100 : 1
+            }}
+          ></div>
+        )}
       </div>
       
       {/* Content */}
       <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-7xl mx-auto py-12">
-          <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
+        <div className="max-w-7xl mx-auto py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-10">
             {/* Brand - Takes more space (3 columns) */}
-            <div className="space-y-4 lg:col-span-3">
-              <div className="flex items-center gap-3">
+            <div className="space-y-6 lg:col-span-3">
+              <div className="flex items-center gap-4">
                 <img 
-                  src={theme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
+                  src={logoSrc}
                   alt="SpiritHub Cafe Logo" 
-                  className="h-16 w-auto object-contain no-flip flex-shrink-0"
+                  className="h-20 w-auto object-contain no-flip flex-shrink-0 drop-shadow-lg"
                 />
               </div>
               <div 
-                className="text-sm text-foreground/90 leading-relaxed prose prose-sm prose-invert max-w-none"
+                className="text-base leading-relaxed prose prose-base max-w-none drop-shadow-sm"
+                style={{ color: footerStyles.textColor }}
                 dangerouslySetInnerHTML={{ __html: description }}
               />
             </div>
 
             {/* Quick Links - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">{t('footer.quickLinks')}</h3>
-              <nav className="flex flex-col space-y-2">
-                <Link to="/" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
-                  {t('navigation.home')}
-                </Link>
-                <Link to="/shop" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
-                  {t('navigation.shop')}
-                </Link>
-                <Link to="/about" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
-                  {t('navigation.about')}
-                </Link>
-                <Link to="/contact" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
-                  {t('navigation.contact')}
-                </Link>
+              <h3 
+                className="text-base font-semibold"
+                style={{ color: footerStyles.headingColor }}
+              >
+                {t('footer.quickLinks')}
+              </h3>
+              <nav className="flex flex-col space-y-3">
+                <StyledLink to="/">{t('navigation.home')}</StyledLink>
+                <StyledLink to="/shop">{t('navigation.shop')}</StyledLink>
+                <StyledLink to="/about">{t('navigation.about')}</StyledLink>
+                <StyledLink to="/contact">{t('navigation.contact')}</StyledLink>
               </nav>
             </div>
 
             {/* Legal Pages - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">{isArabic ? 'الصفحات القانونية' : 'Legal Pages'}</h3>
-              <nav className="flex flex-col space-y-2">
+              <h3 
+                className="text-base font-semibold"
+                style={{ color: footerStyles.headingColor }}
+              >
+                {isArabic ? 'الصفحات القانونية' : 'Legal Pages'}
+              </h3>
+              <nav className="flex flex-col space-y-3">
                 {footerPages.map((page) => (
-                  <Link 
+                  <StyledLink 
                     key={page.id}
-                    to={`/page/${page.slug}`} 
-                    className="text-sm text-foreground/80 hover:text-foreground transition-colors"
+                    to={`/page/${page.slug}`}
                   >
                     {isArabic ? page.title_ar : page.title}
-                  </Link>
+                  </StyledLink>
                 ))}
                 {/* Fallback links if no pages are loaded */}
                 {footerPages.length === 0 && (
                   <>
-                    <Link to="/privacy-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                    <StyledLink to="/privacy-policy">
                       {isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}
-                    </Link>
-                    <Link to="/terms-and-conditions" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                    </StyledLink>
+                    <StyledLink to="/terms-and-conditions">
                       {isArabic ? 'الشروط والأحكام' : 'Terms & Conditions'}
-                    </Link>
-                    <Link to="/refund-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                    </StyledLink>
+                    <StyledLink to="/refund-policy">
                       {isArabic ? 'سياسة الاستبدال والإرجاع' : 'Refund Policy'}
-                    </Link>
-                    <Link to="/delivery-policy" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                    </StyledLink>
+                    <StyledLink to="/delivery-policy">
                       {isArabic ? 'سياسة التوصيل' : 'Delivery Policy'}
-                    </Link>
-                    <Link to="/faq" className="text-sm text-foreground/80 hover:text-foreground transition-colors">
+                    </StyledLink>
+                    <StyledLink to="/faq">
                       {isArabic ? 'الأسئلة الشائعة' : 'FAQ'}
-                    </Link>
+                    </StyledLink>
                   </>
                 )}
               </nav>
@@ -164,8 +280,13 @@ export function Footer() {
 
             {/* Contact Info - Smaller column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">{t('navigation.contact')}</h3>
-              <div className="space-y-3 text-sm text-foreground/80">
+              <h3 
+                className="text-base font-semibold"
+                style={{ color: footerStyles.headingColor }}
+              >
+                {t('navigation.contact')}
+              </h3>
+              <div className="space-y-3 text-base" style={{ color: footerStyles.textColor }}>
                 <p>{address}</p>
                 <div className="space-y-1">
                   <p className="ltr">{phone}</p>
@@ -173,7 +294,8 @@ export function Footer() {
                 </div>
                 <p className="ltr">{email}</p>
                 <div 
-                  className="prose prose-sm prose-invert max-w-none text-sm text-foreground/80"
+                  className="prose prose-base max-w-none text-base"
+                  style={{ color: footerStyles.textColor }}
                   dangerouslySetInnerHTML={{ __html: workingHours }}
                 />
               </div>
@@ -181,55 +303,54 @@ export function Footer() {
           </div>
 
           {/* Social Media Section */}
-          <div className="border-t border-foreground/20 mt-8 pt-8">
-            <div className="text-center space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">{t('footer.followUs')}</h3>
-              <div className="flex justify-center gap-4">
+          <div 
+            className="border-t mt-12 pt-12"
+            style={{ borderColor: footerStyles.borderColor }}
+          >
+            <div className="text-center space-y-6">
+              <h3 
+                className="text-lg font-semibold drop-shadow-sm"
+                style={{ color: footerStyles.headingColor }}
+              >
+                {t('footer.followUs')}
+              </h3>
+              <div className="flex justify-center gap-6">
                 {settings?.facebook && (
-                  <a 
-                    href={`https://facebook.com/${settings.facebook}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Facebook"
+                  <StyledSocialIcon 
+                    href={`https://facebook.com/${settings.facebook}`}
+                    label="Facebook"
                   >
-                    <Facebook className="h-5 w-5 no-flip" />
-                  </a>
+                    <Facebook className="h-6 w-6 no-flip" />
+                  </StyledSocialIcon>
                 )}
                 {settings?.twitter && (
-                  <a 
-                    href={`https://twitter.com/${settings.twitter}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Twitter"
+                  <StyledSocialIcon 
+                    href={`https://twitter.com/${settings.twitter}`}
+                    label="Twitter"
                   >
-                    <Twitter className="h-5 w-5 no-flip" />
-                  </a>
+                    <Twitter className="h-6 w-6 no-flip" />
+                  </StyledSocialIcon>
                 )}
                 {settings?.instagram && (
-                  <a 
-                    href={`https://instagram.com/${settings.instagram.replace('@', '')}`} 
-                    className="text-foreground/80 hover:text-foreground transition-colors"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Instagram"
+                  <StyledSocialIcon 
+                    href={`https://instagram.com/${settings.instagram.replace('@', '')}`}
+                    label="Instagram"
                   >
-                    <Instagram className="h-5 w-5 no-flip" />
-                  </a>
+                    <Instagram className="h-6 w-6 no-flip" />
+                  </StyledSocialIcon>
                 )}
                 {/* Fallback to translation keys if settings not available */}
                 {!settings && (
                   <>
-                    <a href="#" className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm" aria-label="Facebook">
-                      <Facebook className="h-5 w-5 no-flip" />
-                    </a>
-                    <a href="#" className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm" aria-label="Twitter">
-                      <Twitter className="h-5 w-5 no-flip" />
-                    </a>
-                    <a href="#" className="text-foreground/80 hover:text-foreground transition-colors drop-shadow-sm" aria-label="Instagram">
-                      <Instagram className="h-5 w-5 no-flip" />
-                    </a>
+                    <StyledSocialIcon href="#" label="Facebook">
+                      <Facebook className="h-6 w-6 no-flip" />
+                    </StyledSocialIcon>
+                    <StyledSocialIcon href="#" label="Twitter">
+                      <Twitter className="h-6 w-6 no-flip" />
+                    </StyledSocialIcon>
+                    <StyledSocialIcon href="#" label="Instagram">
+                      <Instagram className="h-6 w-6 no-flip" />
+                    </StyledSocialIcon>
                   </>
                 )}
               </div>
@@ -237,8 +358,14 @@ export function Footer() {
           </div>
 
           {/* Copyright */}
-          <div className="border-t border-foreground/20 mt-8 pt-8 text-center">
-            <p className="text-sm text-foreground/80 drop-shadow-sm">
+          <div 
+            className="border-t mt-12 pt-12 text-center"
+            style={{ borderColor: footerStyles.borderColor }}
+          >
+            <p 
+              className="text-base drop-shadow-sm font-medium"
+              style={{ color: footerStyles.textColor }}
+            >
               {t('footer.copyright')}
             </p>
           </div>

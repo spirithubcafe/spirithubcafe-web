@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'react-hot-toast'
-import { Loader2, Save, Settings, Globe, Phone, Mail, Clock, MapPin, Users, Video } from 'lucide-react'
+import { Loader2, Save, Settings, Globe, Phone, Mail, Clock, MapPin, Users, Video, Palette } from 'lucide-react'
 import { settingsService, type FooterSettings } from '@/services/settings'
 
 export function FooterManagement() {
@@ -54,6 +54,11 @@ export function FooterManagement() {
       setSaving(true)
       console.log('FooterManagement - Saving settings:', settings)
       await settingsService.updateFooterSettings(settings)
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('footer-settings-updated'))
+      localStorage.setItem('footer-settings-updated', Date.now().toString())
+      
       toast.success(t('dashboard.admin.footerForm.saveChanges'))
     } catch (error) {
       console.error('Error saving footer settings:', error)
@@ -106,7 +111,7 @@ export function FooterManagement() {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="general" className="flex items-center space-x-2">
               <Globe className="h-4 w-4" />
               <span>{t('dashboard.admin.footerTabs.general')}</span>
@@ -126,6 +131,10 @@ export function FooterManagement() {
             <TabsTrigger value="video" className="flex items-center space-x-2">
               <Video className="h-4 w-4" />
               <span>{t('dashboard.admin.footerTabs.video')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="colors" className="flex items-center space-x-2">
+              <Palette className="h-4 w-4" />
+              <span>Color Theme</span>
             </TabsTrigger>
           </TabsList>
 
@@ -472,6 +481,253 @@ export function FooterManagement() {
                     <p className="text-sm text-muted-foreground">
                       {t('dashboard.admin.footerForm.gradientOverlayDescription')}
                     </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="colors" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Palette className="h-5 w-5" />
+                  <span>Color Theme Settings</span>
+                </CardTitle>
+                <CardDescription>
+                  Control the appearance of text, headings, links, and icons in the footer. This is especially useful when using dark background videos.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Color Theme Mode */}
+                <div className="space-y-2">
+                  <Label htmlFor="colorTheme">Color Theme Mode</Label>
+                  <select 
+                    id="colorTheme"
+                    className="w-full p-2 border rounded-md"
+                    value={settings?.colorTheme || 'auto'}
+                    onChange={(e) => setSettings({ 
+                      ...settings!, 
+                      colorTheme: e.target.value as 'auto' | 'light' | 'dark' | 'custom'
+                    })}
+                    aria-label="Color Theme Mode"
+                  >
+                    <option value="auto">Auto (Follow Global Theme)</option>
+                    <option value="light">Light Theme</option>
+                    <option value="dark">Dark Theme</option>
+                    <option value="custom">Custom Colors</option>
+                  </select>
+                  <p className="text-sm text-muted-foreground">
+                    Choose how the footer colors should behave. Auto follows the global theme, while custom allows full control.
+                  </p>
+                </div>
+
+                {/* Custom Colors Section */}
+                {settings?.colorTheme === 'custom' && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+                    <h4 className="font-medium">Custom Color Settings</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Text Colors */}
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="textColor">Text Color</Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              id="textColor"
+                              type="color"
+                              value={settings?.textColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, textColor: e.target.value })}
+                              className="w-16"
+                            />
+                            <Input
+                              type="text"
+                              value={settings?.textColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, textColor: e.target.value })}
+                              placeholder="#ffffff"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="headingColor">Heading Color</Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              id="headingColor"
+                              type="color"
+                              value={settings?.headingColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, headingColor: e.target.value })}
+                              className="w-16"
+                            />
+                            <Input
+                              type="text"
+                              value={settings?.headingColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, headingColor: e.target.value })}
+                              placeholder="#ffffff"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Link Colors */}
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="linkColor">Link Color</Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              id="linkColor"
+                              type="color"
+                              value={settings?.linkColor || '#cccccc'}
+                              onChange={(e) => setSettings({ ...settings!, linkColor: e.target.value })}
+                              className="w-16"
+                            />
+                            <Input
+                              type="text"
+                              value={settings?.linkColor || '#cccccc'}
+                              onChange={(e) => setSettings({ ...settings!, linkColor: e.target.value })}
+                              placeholder="#cccccc"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="linkHoverColor">Link Hover Color</Label>
+                          <div className="flex space-x-2">
+                            <Input
+                              id="linkHoverColor"
+                              type="color"
+                              value={settings?.linkHoverColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, linkHoverColor: e.target.value })}
+                              className="w-16"
+                            />
+                            <Input
+                              type="text"
+                              value={settings?.linkHoverColor || '#ffffff'}
+                              onChange={(e) => setSettings({ ...settings!, linkHoverColor: e.target.value })}
+                              placeholder="#ffffff"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Logo Theme */}
+                    <div className="space-y-2">
+                      <Label htmlFor="logoTheme">Logo Theme</Label>
+                      <select 
+                        id="logoTheme"
+                        className="w-full p-2 border rounded-md"
+                        value={settings?.logoTheme || 'auto'}
+                        onChange={(e) => setSettings({ 
+                          ...settings!, 
+                          logoTheme: e.target.value as 'auto' | 'light' | 'dark'
+                        })}
+                        aria-label="Logo Theme"
+                      >
+                        <option value="auto">Auto (Follow Global Theme)</option>
+                        <option value="light">Light Logo (White)</option>
+                        <option value="dark">Dark Logo (Black)</option>
+                      </select>
+                    </div>
+
+                    {/* Additional Colors */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="borderColor">Border Color</Label>
+                        <div className="flex space-x-2">
+                          <Input
+                            id="borderColor"
+                            type="color"
+                            value={settings?.borderColor || '#333333'}
+                            onChange={(e) => setSettings({ ...settings!, borderColor: e.target.value })}
+                            className="w-16"
+                          />
+                          <Input
+                            type="text"
+                            value={settings?.borderColor || '#333333'}
+                            onChange={(e) => setSettings({ ...settings!, borderColor: e.target.value })}
+                            placeholder="#333333"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="socialIconsColor">Social Icons Color</Label>
+                        <div className="flex space-x-2">
+                          <Input
+                            id="socialIconsColor"
+                            type="color"
+                            value={settings?.socialIconsColor || '#cccccc'}
+                            onChange={(e) => setSettings({ ...settings!, socialIconsColor: e.target.value })}
+                            className="w-16"
+                          />
+                          <Input
+                            type="text"
+                            value={settings?.socialIconsColor || '#cccccc'}
+                            onChange={(e) => setSettings({ ...settings!, socialIconsColor: e.target.value })}
+                            placeholder="#cccccc"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div className="space-y-2">
+                      <Label>Quick Presets</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSettings({
+                            ...settings!,
+                            colorTheme: 'custom',
+                            textColor: '#ffffff',
+                            headingColor: '#ffffff',
+                            linkColor: '#cccccc',
+                            linkHoverColor: '#ffffff',
+                            borderColor: '#333333',
+                            socialIconsColor: '#cccccc',
+                            logoTheme: 'light'
+                          })}
+                        >
+                          White Theme
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSettings({
+                            ...settings!,
+                            colorTheme: 'custom',
+                            textColor: '#000000',
+                            headingColor: '#000000',
+                            linkColor: '#666666',
+                            linkHoverColor: '#000000',
+                            borderColor: '#cccccc',
+                            socialIconsColor: '#666666',
+                            logoTheme: 'dark'
+                          })}
+                        >
+                          Black Theme
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSettings({
+                            ...settings!,
+                            colorTheme: 'auto',
+                            textColor: undefined,
+                            headingColor: undefined,
+                            linkColor: undefined,
+                            linkHoverColor: undefined,
+                            borderColor: undefined,
+                            socialIconsColor: undefined,
+                            logoTheme: 'auto'
+                          })}
+                        >
+                          Reset to Auto
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </CardContent>

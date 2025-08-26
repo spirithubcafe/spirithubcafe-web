@@ -8,6 +8,25 @@ export function useFooterSettings() {
 
   useEffect(() => {
     loadSettings()
+
+    // Listen for footer settings updates
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'footer-settings-updated') {
+        loadSettings()
+      }
+    }
+
+    const handleCustomEvent = () => {
+      loadSettings()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('footer-settings-updated', handleCustomEvent)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('footer-settings-updated', handleCustomEvent)
+    }
   }, [])
 
   const loadSettings = async () => {
@@ -33,6 +52,10 @@ export function useFooterSettings() {
     try {
       await settingsService.updateFooterSettings(newSettings)
       setSettings(newSettings)
+      
+      // Force re-render by dispatching event
+      window.dispatchEvent(new CustomEvent('footer-settings-updated'))
+      
       return true
     } catch (err) {
       console.error('Error updating footer settings:', err)

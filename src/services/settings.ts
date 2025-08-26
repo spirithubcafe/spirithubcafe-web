@@ -23,6 +23,17 @@ export interface FooterSettings {
   enableGradientOverlay?: boolean // Enable/disable gradient overlay
   gradientOverlayOpacity?: number // Gradient overlay opacity percentage (0-100)
   transparentVideoMode?: boolean // Enable completely transparent video mode (no overlay, no blur)
+  
+  // Color Theme Settings
+  colorTheme?: 'auto' | 'light' | 'dark' | 'custom' // Color theme mode
+  textColor?: string // Custom text color (hex)
+  headingColor?: string // Custom heading color (hex)
+  linkColor?: string // Custom link color (hex)
+  linkHoverColor?: string // Custom link hover color (hex)
+  logoTheme?: 'auto' | 'light' | 'dark' // Logo theme independent of text
+  borderColor?: string // Custom border color (hex)
+  socialIconsColor?: string // Custom social icons color (hex)
+  socialIconsHoverColor?: string // Custom social icons hover color (hex)
 }
 
 export interface CategoriesSettings {
