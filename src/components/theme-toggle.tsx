@@ -8,8 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme-provider'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  className?: string
+}
+
+export function ThemeToggle({ className }: ThemeToggleProps = {}) {
   const { theme, setTheme } = useTheme()
   const { t } = useTranslation()
 
@@ -26,7 +31,7 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className={className}>
           {getThemeIcon()}
           <span className="sr-only">{t('common.toggleTheme')}</span>
         </Button>

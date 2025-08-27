@@ -82,7 +82,7 @@ export function HomePage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="min-h-screen relative overflow-hidden">
+      <section className="min-h-screen relative overflow-hidden z-0 -mt-16">
         <HeroSlider />
       </section>
 

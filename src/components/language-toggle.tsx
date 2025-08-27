@@ -8,8 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
-export function LanguageToggle() {
+interface LanguageToggleProps {
+  className?: string
+}
+
+export function LanguageToggle({ className }: LanguageToggleProps = {}) {
   const { i18n, t } = useTranslation()
 
   const changeLanguage = (lng: string) => {
@@ -40,7 +45,7 @@ export function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className={className}>
           <Languages className="h-[1.2rem] w-[1.2rem]" />
           <span className="sr-only">{t('common.toggleLanguage')}</span>
         </Button>

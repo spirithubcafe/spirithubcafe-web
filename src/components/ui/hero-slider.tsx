@@ -495,7 +495,7 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
       </div>
 
       {/* Content */}
-      <div className="w-full relative z-10 px-4 sm:px-6 lg:px-8">
+      <div className="w-full relative z-5 px-4 sm:px-6 lg:px-8 pt-16">
         <div 
           className={`max-w-6xl mx-auto ${
             currentSlideData.text_position === 'left' ? 'text-left' :

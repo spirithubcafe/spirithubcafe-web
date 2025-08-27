@@ -26,10 +26,32 @@ export function Navigation() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
+  const [isScrolled, setIsScrolled] = useState(false)
   const isArabic = i18n.language === 'ar'
 
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
+
+  // Check if current page is HomePage
+  const isHomePage = location.pathname === '/'
+
+  // Handle scroll detection for HomePage
+  useEffect(() => {
+    if (!isHomePage) return
+
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+      setIsScrolled(scrollTop > 0) // Consider scrolled if any scroll from top
+    }
+
+    // Set initial state - transparent by default on HomePage
+    setIsScrolled(false)
+    
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // Check initial scroll position
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isHomePage])
 
   // Load categories from Firestore
   useEffect(() => {
@@ -94,9 +116,13 @@ export function Navigation() {
       {/* Navigation Bar */}
       <nav
         className={cn(
-          "sticky top-0 w-full border-b nav-coffee",
-          "z-50", // default
-          mobileMenuOpen && "z-[60] shadow-2xl" // when mobile menu is open, ensure solid bg and higher z-index
+          "sticky top-0 w-full border-b transition-all duration-300",
+          "z-20", // higher than hero z-10
+          mobileMenuOpen && "z-[60] shadow-2xl", // when mobile menu is open, ensure solid bg and higher z-index
+          // Apply transparent background on HomePage when at top
+          isHomePage && !isScrolled
+            ? "bg-transparent backdrop-blur-0 border-transparent pointer-events-none"
+            : "nav-coffee"
         )}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -107,7 +133,10 @@ export function Navigation() {
               "flex items-center gap-2 flex-shrink-0",
               isArabic ? "order-3" : "order-1"
             )}>
-              <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover">
+              <Link to="/" className={cn(
+                "flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover pointer-events-auto",
+                isHomePage && !isScrolled && "hover:opacity-90"
+              )}>
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
@@ -127,10 +156,14 @@ export function Navigation() {
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
+                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto",
                   isActive('/')
-                    ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
-                    : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
+                    ? isHomePage && !isScrolled
+                      ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
+                      : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                    : isHomePage && !isScrolled
+                      ? "text-white hover:text-white hover:bg-white/10"
+                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -145,10 +178,14 @@ export function Navigation() {
                   variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1",
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto",
                     location.pathname.startsWith('/shop')
-                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
-                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
+                      ? isHomePage && !isScrolled
+                        ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
+                        : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      : isHomePage && !isScrolled
+                        ? "text-white hover:text-white hover:bg-white/10"
+                        : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -161,7 +198,7 @@ export function Navigation() {
                 {/* Dropdown Menu */}
                 <div 
                   className={cn(
-                    "absolute top-full mt-1 w-64 bg-background border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200",
+                    "absolute top-full mt-1 w-64 bg-background border rounded-lg shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-auto",
                     isArabic ? "right-0" : "left-0"
                   )}
                 >
@@ -241,10 +278,14 @@ export function Navigation() {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto",
                     isActive(item.href)
-                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
-                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:text-foreground",
+                      ? isHomePage && !isScrolled
+                        ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
+                        : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      : isHomePage && !isScrolled
+                        ? "text-white hover:text-white hover:bg-white/10"
+                        : "text-foreground hover:text-primary hover:bg-accent/10 dark:text-foreground",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -262,14 +303,45 @@ export function Navigation() {
             )}>
               {/* Settings Controls */}
               <div className="hidden sm:flex items-center gap-2">
-                <ThemeToggle />
-                <LanguageToggle />
-                <CurrencyToggle />
+                <ThemeToggle 
+                  className={cn(
+                    "transition-all duration-200 pointer-events-auto",
+                    isHomePage && !isScrolled
+                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      : ""
+                  )}
+                />
+                <LanguageToggle 
+                  className={cn(
+                    "transition-all duration-200",
+                    isHomePage && !isScrolled
+                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      : ""
+                  )}
+                />
+                <CurrencyToggle 
+                  className={cn(
+                    "transition-all duration-200 pointer-events-auto",
+                    isHomePage && !isScrolled
+                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      : ""
+                  )}
+                />
               </div>
 
               {/* Wishlist Button */}
               {auth.currentUser && (
-                <Button variant="outline" size="icon" asChild className="relative">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  asChild 
+                  className={cn(
+                    "relative transition-all duration-200 pointer-events-auto",
+                    isHomePage && !isScrolled
+                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      : ""
+                  )}
+                >
                   <Link to="/wishlist">
                     <Heart className="h-4 w-4" />
                     {wishlistCount > 0 && (
@@ -284,12 +356,24 @@ export function Navigation() {
               )}
 
               {/* Cart */}
-              <CartSidebar />
+              <div className="pointer-events-auto">
+                <CartSidebar />
+              </div>
 
               {/* Auth Buttons */}
               {auth.currentUser ? (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Button variant="outline" size="sm" asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    asChild
+                    className={cn(
+                      "transition-all duration-200 pointer-events-auto",
+                      isHomePage && !isScrolled
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : ""
+                    )}
+                  >
                     <Link to="/dashboard" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       <span className="hidden lg:block">
@@ -301,7 +385,12 @@ export function Navigation() {
                     variant="ghost" 
                     size="sm" 
                     onClick={handleLogout}
-                    className="flex items-center gap-2 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                    className={cn(
+                      "flex items-center gap-2 transition-all duration-200 pointer-events-auto",
+                      isHomePage && !isScrolled
+                        ? "text-white hover:text-white hover:bg-white/10"
+                        : "text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                    )}
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden lg:block">
@@ -311,10 +400,29 @@ export function Navigation() {
                 </div>
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
-                  <Button variant="ghost" size="sm" asChild className="hover:bg-accent/20">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    asChild 
+                    className={cn(
+                      "transition-all duration-200",
+                      isHomePage && !isScrolled
+                        ? "text-white hover:text-white hover:bg-white/10"
+                        : "hover:bg-accent/20"
+                    )}
+                  >
                     <Link to="/login">{t('navigation.login')}</Link>
                   </Button>
-                  <Button size="sm" asChild className="btn-coffee">
+                  <Button 
+                    size="sm" 
+                    asChild 
+                    className={cn(
+                      "transition-all duration-200",
+                      isHomePage && !isScrolled
+                        ? "bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50"
+                        : "btn-coffee"
+                    )}
+                  >
                     <Link to="/register">{t('navigation.register')}</Link>
                   </Button>
                 </div>
@@ -324,7 +432,12 @@ export function Navigation() {
               <Button
                 variant="outline"
                 size="icon"
-                className="md:hidden"
+                className={cn(
+                  "md:hidden transition-all duration-200 pointer-events-auto",
+                  isHomePage && !isScrolled
+                    ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                    : ""
+                )}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
               >

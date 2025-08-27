@@ -8,8 +8,13 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 
-export function CurrencyToggle() {
+interface CurrencyToggleProps {
+  className?: string
+}
+
+export function CurrencyToggle({ className }: CurrencyToggleProps = {}) {
   const { currency, setCurrency } = useCurrency()
   const { t } = useTranslation()
 
@@ -22,7 +27,7 @@ export function CurrencyToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className={className}>
           <DollarSign className="h-[1.2rem] w-[1.2rem]" />
           <span className="sr-only">{t('common.toggleCurrency')}</span>
         </Button>
