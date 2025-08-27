@@ -87,6 +87,9 @@ export interface HomepageSettings {
   featureSectionButtonText?: string // Feature section button text in English
   featureSectionButtonTextAr?: string // Feature section button text in Arabic
   featureSectionImage?: string // Feature section image URL
+  featureSectionBackgroundImage?: string // Feature section background image URL
+  featureSectionBackgroundColor?: string // Feature section background color
+  featureSectionBackgroundType?: 'color' | 'image' // Background type
 }
 
 export interface AppSettings {

@@ -79,7 +79,10 @@ export default function HomepageManagement() {
     featureSectionDescriptionAr: 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.',
     featureSectionButtonText: 'Discover More',
     featureSectionButtonTextAr: 'اكتشف المزيد',
-    featureSectionImage: '/images/back.jpg'
+    featureSectionImage: '/images/back.jpg',
+    featureSectionBackgroundImage: '',
+    featureSectionBackgroundColor: '#f8f9fa',
+    featureSectionBackgroundType: 'color' // 'color' or 'image'
   })
 
   useEffect(() => {

@@ -88,8 +88,27 @@ export function HomePage() {
 
       {/* Feature Section */}
       {(homepageSettings?.showFeatureSection !== false) && (
-        <section className="py-12 lg:py-16 bg-muted/30">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <section 
+          className="py-12 lg:py-16 relative"
+          style={{
+            backgroundColor: homepageSettings?.featureSectionBackgroundType === 'color' && homepageSettings?.featureSectionBackgroundColor
+              ? homepageSettings.featureSectionBackgroundColor
+              : undefined,
+            backgroundImage: homepageSettings?.featureSectionBackgroundType === 'image' && homepageSettings?.featureSectionBackgroundImage
+              ? `url(${homepageSettings.featureSectionBackgroundImage})`
+              : undefined,
+            backgroundSize: homepageSettings?.featureSectionBackgroundType === 'image' ? 'cover' : undefined,
+            backgroundPosition: homepageSettings?.featureSectionBackgroundType === 'image' ? 'center' : undefined,
+            backgroundRepeat: homepageSettings?.featureSectionBackgroundType === 'image' ? 'no-repeat' : undefined,
+            backgroundAttachment: homepageSettings?.featureSectionBackgroundType === 'image' ? 'fixed' : undefined
+          }}
+        >
+          {/* Overlay for better text readability when using background image */}
+          {homepageSettings?.featureSectionBackgroundType === 'image' && homepageSettings?.featureSectionBackgroundImage && (
+            <div className="absolute inset-0 bg-black/20"></div>
+          )}
+          
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="w-full">
               {/* Title */}
               <div className="text-center mb-8">
