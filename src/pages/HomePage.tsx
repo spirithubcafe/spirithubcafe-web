@@ -89,7 +89,8 @@ export function HomePage() {
       {/* Feature Section */}
       {(homepageSettings?.showFeatureSection !== false) && (
         <section 
-          className="py-12 lg:py-16 relative"
+
+        className="py-12 lg:py-16 relative"
           style={{
             backgroundColor: homepageSettings?.featureSectionBackgroundType === 'color' && homepageSettings?.featureSectionBackgroundColor
               ? homepageSettings.featureSectionBackgroundColor
@@ -199,12 +200,14 @@ export function HomePage() {
                   }
                 </h2>
                 <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
-                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                  {isArabic 
-                    ? (homepageSettings?.latestReleaseDescriptionAr || 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة')
-                    : (homepageSettings?.latestReleaseDescription || 'Discover our newest additions of specialty coffee crafted with exceptional care')
-                  }
-                </p>
+                {(homepageSettings?.latestReleaseDescription || homepageSettings?.latestReleaseDescriptionAr) && (
+                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                    {isArabic 
+                      ? homepageSettings?.latestReleaseDescriptionAr
+                      : homepageSettings?.latestReleaseDescription
+                    }
+                  </p>
+                )}
               </div>
               
             {loadingProducts ? (
@@ -256,10 +259,10 @@ export function HomePage() {
                         </h3>
                         
                         <p className="text-sm text-muted-foreground line-clamp-2">
-                          {(isArabic ? product.uses_ar : product.uses) ? (
-                            isArabic ? (product.uses_ar || product.uses) : product.uses
+                          {(isArabic ? product.notes_ar : product.notes) ? (
+                            isArabic ? (product.notes_ar || product.notes) : product.notes
                           ) : (
-                            isArabic ? 'لا توجد استخدامات' : 'No uses available'
+                            isArabic ? 'لا توجد ملاحظات' : 'No notes available'
                           )}
                         </p>
                         
