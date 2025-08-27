@@ -88,11 +88,11 @@ export function HomePage() {
 
       {/* Feature Section */}
       {(homepageSettings?.showFeatureSection !== false) && (
-        <section className="py-16 lg:py-20 bg-muted/30">
+        <section className="py-12 lg:py-16 bg-muted/30">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-7xl mx-auto">
+            <div className="w-full">
               {/* Title */}
-              <div className="text-center mb-12">
+              <div className="text-center mb-8">
                 <h2 
                   className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-foreground"
                   dangerouslySetInnerHTML={{
@@ -103,10 +103,10 @@ export function HomePage() {
                 />
               </div>
               
-              {/* Content Grid */}
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                {/* Text Content - Left Side */}
-                <div className={`space-y-6 ${isArabic ? 'lg:order-2' : 'lg:order-1'}`}>
+              {/* Content */}
+              <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+                {/* Text Content */}
+                <div className="flex-1 text-center lg:text-left">
                   <div 
                     className="text-lg md:text-xl text-muted-foreground leading-relaxed feature-content"
                     dangerouslySetInnerHTML={{
@@ -115,27 +115,13 @@ export function HomePage() {
                         : (homepageSettings?.featureSectionDescription || 'At Spirit Hub, we invite you to a perfect artisanal high-quality coffee experience. Enjoy exceptional flavors crafted with utmost care, and discover the world of coffee like never before.'))
                     }}
                   />
-                  <div className="pt-4">
-                    <Button 
-                      size="lg" 
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                      asChild
-                    >
-                      <Link to="/shop">
-                        {isArabic 
-                          ? (homepageSettings?.featureSectionButtonTextAr || 'اكتشف المزيد')
-                          : (homepageSettings?.featureSectionButtonText || 'Discover More')
-                        }
-                      </Link>
-                    </Button>
-                  </div>
                 </div>
                 
-                {/* Feature Image - Right Side */}
-                <div className={`${isArabic ? 'lg:order-1' : 'lg:order-2'}`}>
+                {/* Feature Image */}
+                <div className="flex-1 flex justify-center">
                   {homepageSettings?.featureSectionImage && (
                     <div 
-                      className="aspect-video overflow-hidden rounded-lg shadow-xl cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                      className="w-full aspect-video overflow-hidden rounded-lg shadow-xl cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                       onClick={() => openImageModal(homepageSettings.featureSectionImage)}
                     >
                       <img

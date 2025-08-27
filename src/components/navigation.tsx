@@ -129,8 +129,8 @@ export function Navigation() {
                 className={cn(
                   "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
                   isActive('/')
-                    ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
-                    : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25",
+                    ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                    : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -147,8 +147,8 @@ export function Navigation() {
                   className={cn(
                     "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1",
                     location.pathname.startsWith('/shop')
-                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
-                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25",
+                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -243,8 +243,8 @@ export function Navigation() {
                   className={cn(
                     "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium",
                     isActive(item.href)
-                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30"
-                      : "text-foreground hover:text-primary hover:bg-accent/10",
+                      ? "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:text-foreground",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
