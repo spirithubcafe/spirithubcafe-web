@@ -1486,6 +1486,7 @@ export default function HomepageManagement() {
                   value={formData.featureSectionBackgroundType}
                   onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundType: e.target.value as 'color' | 'image' }))}
                   className="w-full p-2 border border-border rounded-md bg-background"
+                  title={isArabic ? 'اختر نوع الخلفية لقسم التجربة الاستثنائية' : 'Choose background type for Exceptional Coffee Experience section'}
                 >
                   <option value="color">{isArabic ? 'لون' : 'Color'}</option>
                   <option value="image">{isArabic ? 'صورة' : 'Image'}</option>
@@ -1703,6 +1704,7 @@ export default function HomepageManagement() {
                   value={formData.latestReleaseBackgroundType}
                   onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundType: e.target.value as 'color' | 'image' }))}
                   className="w-full p-2 border border-border rounded-md bg-background"
+                  title={isArabic ? 'اختر نوع الخلفية لقسم أحدث الإصدارات' : 'Choose background type for Latest Release section'}
                 >
                   <option value="color">{isArabic ? 'لون' : 'Color'}</option>
                   <option value="image">{isArabic ? 'صورة' : 'Image'}</option>

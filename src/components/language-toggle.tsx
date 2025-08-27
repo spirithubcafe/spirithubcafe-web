@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
-import { cn } from '@/lib/utils'
 
 interface LanguageToggleProps {
   className?: string

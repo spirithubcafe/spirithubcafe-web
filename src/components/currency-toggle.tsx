@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
 
 interface CurrencyToggleProps {
   className?: string

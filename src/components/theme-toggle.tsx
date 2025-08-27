@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme-provider'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
 
 interface ThemeToggleProps {
   className?: string
