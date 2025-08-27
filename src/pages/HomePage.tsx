@@ -168,21 +168,44 @@ export function HomePage() {
       <div className="w-full h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
 
       {/* Latest Release Section */}
-      <section className="py-12 md:py-16 lg:py-24 w-full bg-card border-t border-border">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center space-y-4 mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
-                {t('homepage.latestRelease.title', 'LATEST RELEASE')}
-              </h2>
-              <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                {isArabic 
-                  ? 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة'
-                  : 'Discover our newest additions of specialty coffee crafted with exceptional care'
-                }
-              </p>
-            </div>
+      {(homepageSettings?.showLatestReleaseSection !== false) && (
+        <section 
+          className="py-12 md:py-16 lg:py-24 w-full relative"
+          style={{
+            backgroundColor: homepageSettings?.latestReleaseBackgroundType === 'color' && homepageSettings?.latestReleaseBackgroundColor
+              ? homepageSettings.latestReleaseBackgroundColor
+              : undefined,
+            backgroundImage: homepageSettings?.latestReleaseBackgroundType === 'image' && homepageSettings?.latestReleaseBackgroundImage
+              ? `url(${homepageSettings.latestReleaseBackgroundImage})`
+              : undefined,
+            backgroundSize: homepageSettings?.latestReleaseBackgroundType === 'image' ? 'cover' : undefined,
+            backgroundPosition: homepageSettings?.latestReleaseBackgroundType === 'image' ? 'center' : undefined,
+            backgroundRepeat: homepageSettings?.latestReleaseBackgroundType === 'image' ? 'no-repeat' : undefined,
+            backgroundAttachment: homepageSettings?.latestReleaseBackgroundType === 'image' ? 'fixed' : undefined
+          }}
+        >
+          {/* Overlay for better text readability when using background image */}
+          {homepageSettings?.latestReleaseBackgroundType === 'image' && homepageSettings?.latestReleaseBackgroundImage && (
+            <div className="absolute inset-0 bg-black/20"></div>
+          )}
+          
+          <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center space-y-4 mb-8 md:mb-12">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+                  {isArabic 
+                    ? (homepageSettings?.latestReleaseTitleAr || 'أحدث الإصدارات')
+                    : (homepageSettings?.latestReleaseTitle || 'LATEST RELEASE')
+                  }
+                </h2>
+                <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                  {isArabic 
+                    ? (homepageSettings?.latestReleaseDescriptionAr || 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة')
+                    : (homepageSettings?.latestReleaseDescription || 'Discover our newest additions of specialty coffee crafted with exceptional care')
+                  }
+                </p>
+              </div>
               
             {loadingProducts ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
@@ -271,6 +294,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Coffee Selection Section with Image Background */}
       <section className="relative py-12 md:py-16 lg:py-24 w-full overflow-hidden">

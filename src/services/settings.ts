@@ -90,6 +90,16 @@ export interface HomepageSettings {
   featureSectionBackgroundImage?: string // Feature section background image URL
   featureSectionBackgroundColor?: string // Feature section background color
   featureSectionBackgroundType?: 'color' | 'image' // Background type
+
+  // Latest Release Section
+  showLatestReleaseSection?: boolean // Whether to show latest release section
+  latestReleaseTitle?: string // Latest release title in English
+  latestReleaseTitleAr?: string // Latest release title in Arabic
+  latestReleaseDescription?: string // Latest release description in English
+  latestReleaseDescriptionAr?: string // Latest release description in Arabic
+  latestReleaseBackgroundImage?: string // Latest release background image URL
+  latestReleaseBackgroundColor?: string // Latest release background color
+  latestReleaseBackgroundType?: 'color' | 'image' // Background type
 }
 
 export interface AppSettings {

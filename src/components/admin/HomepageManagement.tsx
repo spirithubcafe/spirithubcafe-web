@@ -82,7 +82,17 @@ export default function HomepageManagement() {
     featureSectionImage: '/images/back.jpg',
     featureSectionBackgroundImage: '',
     featureSectionBackgroundColor: '#f8f9fa',
-    featureSectionBackgroundType: 'color' // 'color' or 'image'
+    featureSectionBackgroundType: 'color', // 'color' or 'image'
+
+    // Latest Release Section
+    showLatestReleaseSection: true,
+    latestReleaseTitle: 'LATEST RELEASE',
+    latestReleaseTitleAr: 'أحدث الإصدارات',
+    latestReleaseDescription: 'Discover our newest additions of specialty coffee crafted with exceptional care',
+    latestReleaseDescriptionAr: 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة',
+    latestReleaseBackgroundImage: '',
+    latestReleaseBackgroundColor: '#ffffff',
+    latestReleaseBackgroundType: 'color' // 'color' or 'image'
   })
 
   useEffect(() => {
@@ -130,7 +140,20 @@ export default function HomepageManagement() {
         featureSectionDescriptionAr: settings.featureSectionDescriptionAr || 'اكتشف عالم القهوة الفاخرة مع مجموعة مختارة من أجود أنواع البن المحمص بعناية. كل كوب يحكي قصة من الشغف والحرفية.',
         featureSectionButtonText: settings.featureSectionButtonText || 'Discover More',
         featureSectionButtonTextAr: settings.featureSectionButtonTextAr || 'اكتشف المزيد',
-        featureSectionImage: settings.featureSectionImage || '/images/back.jpg'
+        featureSectionImage: settings.featureSectionImage || '/images/back.jpg',
+        featureSectionBackgroundImage: settings.featureSectionBackgroundImage || '',
+        featureSectionBackgroundColor: settings.featureSectionBackgroundColor || '#f8f9fa',
+        featureSectionBackgroundType: settings.featureSectionBackgroundType || 'color',
+
+        // Latest Release Section
+        showLatestReleaseSection: settings.showLatestReleaseSection ?? true,
+        latestReleaseTitle: settings.latestReleaseTitle || 'LATEST RELEASE',
+        latestReleaseTitleAr: settings.latestReleaseTitleAr || 'أحدث الإصدارات',
+        latestReleaseDescription: settings.latestReleaseDescription || 'Discover our newest additions of specialty coffee crafted with exceptional care',
+        latestReleaseDescriptionAr: settings.latestReleaseDescriptionAr || 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة',
+        latestReleaseBackgroundImage: settings.latestReleaseBackgroundImage || '',
+        latestReleaseBackgroundColor: settings.latestReleaseBackgroundColor || '#ffffff',
+        latestReleaseBackgroundType: settings.latestReleaseBackgroundType || 'color'
       })
       setPreviewVideo(settings.backgroundVideo || '')
     }
@@ -587,7 +610,7 @@ export default function HomepageManagement() {
       </div>
 
       <Tabs defaultValue="coffee-selection" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="coffee-selection" className="flex items-center gap-2">
             <FileVideo className="h-4 w-4" />
             {isArabic ? 'قسم القهوة' : 'Coffee Selection'}
@@ -595,6 +618,10 @@ export default function HomepageManagement() {
           <TabsTrigger value="feature-section" className="flex items-center gap-2">
             <Type className="h-4 w-4" />
             {isArabic ? 'القسم المميز' : 'Feature Section'}
+          </TabsTrigger>
+          <TabsTrigger value="latest-release" className="flex items-center gap-2">
+            <Star className="h-4 w-4" />
+            {isArabic ? 'أحدث الإصدارات' : 'Latest Release'}
           </TabsTrigger>
           <TabsTrigger value="mission-statement" className="flex items-center gap-2">
             <Image className="h-4 w-4" />
@@ -1422,6 +1449,191 @@ export default function HomepageManagement() {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Latest Release Tab */}
+        <TabsContent value="latest-release" className="space-y-6">
+          {/* Content Management */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Star className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'محتوى أحدث الإصدارات' : 'Latest Release Content'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'إدارة العنوان والوصف لقسم أحدث الإصدارات' : 'Manage title and description for Latest Release section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Show/Hide Section */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border/50">
+                <div className="space-y-1">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Eye className="h-4 w-4 text-primary" />
+                    {isArabic ? 'عرض قسم أحدث الإصدارات' : 'Show Latest Release Section'}
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'تفعيل أو إلغاء قسم أحدث الإصدارات في الصفحة الرئيسية' : 'Enable or disable latest release section in homepage'}
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.showLatestReleaseSection}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, showLatestReleaseSection: checked }))
+                  }
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+
+              {/* Title Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="latest-release-title-en" className="text-sm font-medium">
+                    {isArabic ? 'العنوان (إنجليزي)' : 'Title (English)'}
+                  </Label>
+                  <Input
+                    id="latest-release-title-en"
+                    value={formData.latestReleaseTitle}
+                    onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseTitle: e.target.value }))}
+                    placeholder="LATEST RELEASE"
+                    className="text-left"
+                    dir="ltr"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="latest-release-title-ar" className="text-sm font-medium">
+                    {isArabic ? 'العنوان (عربي)' : 'Title (Arabic)'}
+                  </Label>
+                  <Input
+                    id="latest-release-title-ar"
+                    value={formData.latestReleaseTitleAr}
+                    onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseTitleAr: e.target.value }))}
+                    placeholder="أحدث الإصدارات"
+                    className="text-right"
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* Description Fields with RichTextEditor */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="latest-release-desc-en" className="text-sm font-medium">
+                    {isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}
+                  </Label>
+                  <RichTextEditor
+                    value={formData.latestReleaseDescription}
+                    onChange={(value) => setFormData(prev => ({ ...prev, latestReleaseDescription: value }))}
+                    placeholder="Discover our newest additions..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="latest-release-desc-ar" className="text-sm font-medium">
+                    {isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}
+                  </Label>
+                  <RichTextEditor
+                    value={formData.latestReleaseDescriptionAr}
+                    onChange={(value) => setFormData(prev => ({ ...prev, latestReleaseDescriptionAr: value }))}
+                    placeholder="اكتشف أحدث إضافاتنا..."
+                    className="min-h-[200px]"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Background Settings */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'إعدادات الخلفية' : 'Background Settings'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'تحكم في خلفية قسم أحدث الإصدارات' : 'Control the background of latest release section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Background Type Selection */}
+              <div className="space-y-3">
+                <Label htmlFor="latest-release-bg-type" className="text-base font-semibold">
+                  {isArabic ? 'نوع الخلفية' : 'Background Type'}
+                </Label>
+                <select
+                  id="latest-release-bg-type"
+                  value={formData.latestReleaseBackgroundType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundType: e.target.value }))}
+                  className="w-full p-2 border border-border rounded-md bg-background"
+                >
+                  <option value="color">{isArabic ? 'لون' : 'Color'}</option>
+                  <option value="image">{isArabic ? 'صورة' : 'Image'}</option>
+                </select>
+              </div>
+
+              {/* Background Color Picker */}
+              {formData.latestReleaseBackgroundType === 'color' && (
+                <div className="space-y-3">
+                  <Label htmlFor="latest-release-bg-color-picker" className="text-sm font-medium">
+                    {isArabic ? 'لون الخلفية' : 'Background Color'}
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      id="latest-release-bg-color-picker"
+                      value={formData.latestReleaseBackgroundColor}
+                      onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
+                      className="w-12 h-10 rounded border border-border cursor-pointer"
+                      title={isArabic ? 'اختر لون الخلفية' : 'Choose background color'}
+                    />
+                    <Input
+                      value={formData.latestReleaseBackgroundColor}
+                      onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
+                      placeholder="#ffffff"
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Background Image URL */}
+              {formData.latestReleaseBackgroundType === 'image' && (
+                <div className="space-y-3">
+                  <Label htmlFor="latest-release-bg-image-url" className="text-sm font-medium">
+                    {isArabic ? 'رابط صورة الخلفية' : 'Background Image URL'}
+                  </Label>
+                  <Input
+                    id="latest-release-bg-image-url"
+                    value={formData.latestReleaseBackgroundImage}
+                    onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundImage: e.target.value }))}
+                    placeholder={isArabic ? 'https://example.com/background.jpg' : 'https://example.com/background.jpg'}
+                    className="text-left"
+                    dir="ltr"
+                  />
+                  {formData.latestReleaseBackgroundImage && (
+                    <div className="mt-3">
+                      <img
+                        src={formData.latestReleaseBackgroundImage}
+                        alt="Background preview"
+                        className="w-full max-w-md rounded-lg shadow-lg object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
