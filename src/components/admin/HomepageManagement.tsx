@@ -82,7 +82,9 @@ export default function HomepageManagement() {
     featureSectionImage: '/images/back.jpg',
     featureSectionBackgroundImage: '',
     featureSectionBackgroundColor: '#f8f9fa',
-    featureSectionBackgroundType: 'color', // 'color' or 'image'
+    featureSectionBackgroundColorLight: '#f8f9fa',
+    featureSectionBackgroundColorDark: '#1f2937',
+    featureSectionBackgroundType: 'color' as 'color' | 'image', // 'color' or 'image'
 
     // Latest Release Section
     showLatestReleaseSection: true,
@@ -92,7 +94,9 @@ export default function HomepageManagement() {
     latestReleaseDescriptionAr: 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة',
     latestReleaseBackgroundImage: '',
     latestReleaseBackgroundColor: '#ffffff',
-    latestReleaseBackgroundType: 'color' // 'color' or 'image'
+    latestReleaseBackgroundColorLight: '#ffffff',
+    latestReleaseBackgroundColorDark: '#1a1a1a',
+    latestReleaseBackgroundType: 'color' as 'color' | 'image' // 'color' or 'image'
   })
 
   useEffect(() => {
@@ -143,6 +147,8 @@ export default function HomepageManagement() {
         featureSectionImage: settings.featureSectionImage || '/images/back.jpg',
         featureSectionBackgroundImage: settings.featureSectionBackgroundImage || '',
         featureSectionBackgroundColor: settings.featureSectionBackgroundColor || '#f8f9fa',
+        featureSectionBackgroundColorLight: settings.featureSectionBackgroundColorLight || settings.featureSectionBackgroundColor || '#f8f9fa',
+        featureSectionBackgroundColorDark: settings.featureSectionBackgroundColorDark || settings.featureSectionBackgroundColor || '#1f2937',
         featureSectionBackgroundType: settings.featureSectionBackgroundType || 'color',
 
         // Latest Release Section
@@ -153,6 +159,8 @@ export default function HomepageManagement() {
         latestReleaseDescriptionAr: settings.latestReleaseDescriptionAr || 'اكتشف أحدث إضافاتنا من القهوة المتخصصة المحضرة بعناية فائقة',
         latestReleaseBackgroundImage: settings.latestReleaseBackgroundImage || '',
         latestReleaseBackgroundColor: settings.latestReleaseBackgroundColor || '#ffffff',
+        latestReleaseBackgroundColorLight: settings.latestReleaseBackgroundColorLight || '#ffffff',
+        latestReleaseBackgroundColorDark: settings.latestReleaseBackgroundColorDark || '#1a1a1a',
         latestReleaseBackgroundType: settings.latestReleaseBackgroundType || 'color'
       })
       setPreviewVideo(settings.backgroundVideo || '')
@@ -1451,6 +1459,126 @@ export default function HomepageManagement() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Background Settings */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Image className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">
+                  {isArabic ? 'إعدادات الخلفية' : 'Background Settings'}
+                </span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'تحكم في خلفية قسم التجربة الاستثنائية' : 'Control the background of Exceptional Coffee Experience section'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Background Type Selection */}
+              <div className="space-y-3">
+                <Label htmlFor="feature-section-bg-type" className="text-base font-semibold">
+                  {isArabic ? 'نوع الخلفية' : 'Background Type'}
+                </Label>
+                <select
+                  id="feature-section-bg-type"
+                  value={formData.featureSectionBackgroundType}
+                  onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundType: e.target.value as 'color' | 'image' }))}
+                  className="w-full p-2 border border-border rounded-md bg-background"
+                >
+                  <option value="color">{isArabic ? 'لون' : 'Color'}</option>
+                  <option value="image">{isArabic ? 'صورة' : 'Image'}</option>
+                </select>
+              </div>
+
+              {/* Background Color Picker */}
+              {formData.featureSectionBackgroundType === 'color' && (
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">
+                    {isArabic ? 'ألوان الخلفية حسب السمة' : 'Background Colors by Theme'}
+                  </Label>
+
+                  {/* Light Theme Color */}
+                  <div className="space-y-3">
+                    <Label htmlFor="feature-bg-color-light" className="text-sm font-medium flex items-center gap-2">
+                      <div className="w-4 h-4 bg-yellow-400 rounded-full border border-gray-300"></div>
+                      {isArabic ? 'لون الخلفية - السمة الفاتحة' : 'Background Color - Light Theme'}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="feature-bg-color-light"
+                        value={formData.featureSectionBackgroundColorLight || formData.featureSectionBackgroundColor || '#f8f9fa'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundColorLight: e.target.value }))}
+                        className="w-12 h-10 rounded border border-border cursor-pointer"
+                        title={isArabic ? 'اختر لون الخلفية للسمة الفاتحة' : 'Choose background color for light theme'}
+                      />
+                      <Input
+                        value={formData.featureSectionBackgroundColorLight || formData.featureSectionBackgroundColor || '#f8f9fa'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundColorLight: e.target.value }))}
+                        placeholder="#f8f9fa"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dark Theme Color */}
+                  <div className="space-y-3">
+                    <Label htmlFor="feature-bg-color-dark" className="text-sm font-medium flex items-center gap-2">
+                      <div className="w-4 h-4 bg-gray-800 rounded-full border border-gray-300"></div>
+                      {isArabic ? 'لون الخلفية - السمة الداكنة' : 'Background Color - Dark Theme'}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="feature-bg-color-dark"
+                        value={formData.featureSectionBackgroundColorDark || formData.featureSectionBackgroundColor || '#1f2937'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundColorDark: e.target.value }))}
+                        className="w-12 h-10 rounded border border-border cursor-pointer"
+                        title={isArabic ? 'اختر لون الخلفية للسمة الداكنة' : 'Choose background color for dark theme'}
+                      />
+                      <Input
+                        value={formData.featureSectionBackgroundColorDark || formData.featureSectionBackgroundColor || '#1f2937'}
+                        onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundColorDark: e.target.value }))}
+                        placeholder="#1f2937"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Background Image URL */}
+              {formData.featureSectionBackgroundType === 'image' && (
+                <div className="space-y-3">
+                  <Label htmlFor="feature-bg-image-url" className="text-sm font-medium">
+                    {isArabic ? 'رابط صورة الخلفية' : 'Background Image URL'}
+                  </Label>
+                  <Input
+                    id="feature-bg-image-url"
+                    value={formData.featureSectionBackgroundImage}
+                    onChange={(e) => setFormData(prev => ({ ...prev, featureSectionBackgroundImage: e.target.value }))}
+                    placeholder={isArabic ? 'https://example.com/background.jpg' : 'https://example.com/background.jpg'}
+                    className="text-left"
+                    dir="ltr"
+                  />
+                  {formData.featureSectionBackgroundImage && (
+                    <div className="mt-3">
+                      <img
+                        src={formData.featureSectionBackgroundImage}
+                        alt="Background preview"
+                        className="w-full max-w-md rounded-lg shadow-lg object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Latest Release Tab */}
@@ -1573,7 +1701,7 @@ export default function HomepageManagement() {
                 <select
                   id="latest-release-bg-type"
                   value={formData.latestReleaseBackgroundType}
-                  onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundType: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundType: e.target.value as 'color' | 'image' }))}
                   className="w-full p-2 border border-border rounded-md bg-background"
                 >
                   <option value="color">{isArabic ? 'لون' : 'Color'}</option>
@@ -1583,25 +1711,78 @@ export default function HomepageManagement() {
 
               {/* Background Color Picker */}
               {formData.latestReleaseBackgroundType === 'color' && (
-                <div className="space-y-3">
-                  <Label htmlFor="latest-release-bg-color-picker" className="text-sm font-medium">
-                    {isArabic ? 'لون الخلفية' : 'Background Color'}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">
+                    {isArabic ? 'ألوان الخلفية حسب السمة' : 'Theme-Specific Background Colors'}
                   </Label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="color"
-                      id="latest-release-bg-color-picker"
-                      value={formData.latestReleaseBackgroundColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
-                      className="w-12 h-10 rounded border border-border cursor-pointer"
-                      title={isArabic ? 'اختر لون الخلفية' : 'Choose background color'}
-                    />
-                    <Input
-                      value={formData.latestReleaseBackgroundColor}
-                      onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
-                      placeholder="#ffffff"
-                      className="flex-1"
-                    />
+
+                  {/* Light Theme Color */}
+                  <div className="space-y-2">
+                    <Label htmlFor="latest-release-bg-color-light" className="text-sm text-muted-foreground">
+                      {isArabic ? 'لون الخلفية - السمة الفاتحة' : 'Light Theme Background Color'}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="latest-release-bg-color-light"
+                        value={formData.latestReleaseBackgroundColorLight}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColorLight: e.target.value }))}
+                        className="w-12 h-10 rounded border border-border cursor-pointer"
+                        title={isArabic ? 'اختر لون الخلفية للسمة الفاتحة' : 'Choose background color for light theme'}
+                      />
+                      <Input
+                        value={formData.latestReleaseBackgroundColorLight}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColorLight: e.target.value }))}
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dark Theme Color */}
+                  <div className="space-y-2">
+                    <Label htmlFor="latest-release-bg-color-dark" className="text-sm text-muted-foreground">
+                      {isArabic ? 'لون الخلفية - السمة الداكنة' : 'Dark Theme Background Color'}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="latest-release-bg-color-dark"
+                        value={formData.latestReleaseBackgroundColorDark}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColorDark: e.target.value }))}
+                        className="w-12 h-10 rounded border border-border cursor-pointer"
+                        title={isArabic ? 'اختر لون الخلفية للسمة الداكنة' : 'Choose background color for dark theme'}
+                      />
+                      <Input
+                        value={formData.latestReleaseBackgroundColorDark}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColorDark: e.target.value }))}
+                        placeholder="#1a1a1a"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Legacy Color (for backward compatibility) */}
+                  <div className="space-y-2">
+                    <Label htmlFor="latest-release-bg-color-legacy" className="text-sm text-muted-foreground">
+                      {isArabic ? 'لون الخلفية الافتراضي (للتوافق)' : 'Default Background Color (Legacy)'}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="latest-release-bg-color-legacy"
+                        value={formData.latestReleaseBackgroundColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
+                        className="w-12 h-10 rounded border border-border cursor-pointer"
+                        title={isArabic ? 'لون الخلفية الافتراضي' : 'Default background color'}
+                      />
+                      <Input
+                        value={formData.latestReleaseBackgroundColor}
+                        onChange={(e) => setFormData(prev => ({ ...prev, latestReleaseBackgroundColor: e.target.value }))}
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

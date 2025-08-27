@@ -307,7 +307,9 @@ export function Navigation() {
                   className={cn(
                     "transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
-                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -315,7 +317,9 @@ export function Navigation() {
                   className={cn(
                     "transition-all duration-200",
                     isHomePage && !isScrolled
-                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -323,7 +327,9 @@ export function Navigation() {
                   className={cn(
                     "transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
-                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -338,7 +344,9 @@ export function Navigation() {
                   className={cn(
                     "relative transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
-                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 >
@@ -370,7 +378,9 @@ export function Navigation() {
                     className={cn(
                       "transition-all duration-200 pointer-events-auto",
                       isHomePage && !isScrolled
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        ? resolvedTheme === 'dark'
+                          ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                          : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                         : ""
                     )}
                   >
@@ -388,7 +398,9 @@ export function Navigation() {
                     className={cn(
                       "flex items-center gap-2 transition-all duration-200 pointer-events-auto",
                       isHomePage && !isScrolled
-                        ? "text-white hover:text-white hover:bg-white/10"
+                        ? resolvedTheme === 'dark'
+                          ? "text-white hover:text-white hover:bg-white/10"
+                          : "text-black hover:text-black hover:bg-black/10"
                         : "text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                     )}
                   >
@@ -407,7 +419,9 @@ export function Navigation() {
                     className={cn(
                       "transition-all duration-200",
                       isHomePage && !isScrolled
-                        ? "text-white hover:text-white hover:bg-white/10"
+                        ? resolvedTheme === 'dark'
+                          ? "text-white hover:text-white hover:bg-white/10"
+                          : "text-black hover:text-black hover:bg-black/10"
                         : "hover:bg-accent/20"
                     )}
                   >
@@ -419,7 +433,9 @@ export function Navigation() {
                     className={cn(
                       "transition-all duration-200",
                       isHomePage && !isScrolled
-                        ? "bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50"
+                        ? resolvedTheme === 'dark'
+                          ? "bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50"
+                          : "bg-black/20 text-black border-black/30 hover:bg-black/30 hover:border-black/50"
                         : "btn-coffee"
                     )}
                   >
@@ -435,7 +451,9 @@ export function Navigation() {
                 className={cn(
                   "md:hidden transition-all duration-200 pointer-events-auto",
                   isHomePage && !isScrolled
-                    ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                    ? resolvedTheme === 'dark'
+                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                      : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                     : ""
                 )}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

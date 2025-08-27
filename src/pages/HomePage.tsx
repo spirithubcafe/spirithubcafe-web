@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '@/components/theme-provider'
 import { useState, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import type { Product, Category } from '@/lib/firebase'
@@ -16,6 +17,7 @@ import DOMPurify from 'dompurify'
 
 export function HomePage() {
   const { t, i18n } = useTranslation()
+  const { resolvedTheme } = useTheme()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
@@ -92,8 +94,14 @@ export function HomePage() {
 
         className="py-12 lg:py-16 relative"
           style={{
-            backgroundColor: homepageSettings?.featureSectionBackgroundType === 'color' && homepageSettings?.featureSectionBackgroundColor
-              ? homepageSettings.featureSectionBackgroundColor
+            backgroundColor: homepageSettings?.featureSectionBackgroundType === 'color' && (
+              resolvedTheme === 'dark' 
+                ? homepageSettings?.featureSectionBackgroundColorDark || homepageSettings?.featureSectionBackgroundColor
+                : homepageSettings?.featureSectionBackgroundColorLight || homepageSettings?.featureSectionBackgroundColor
+            )
+              ? (resolvedTheme === 'dark' 
+                  ? homepageSettings?.featureSectionBackgroundColorDark || homepageSettings?.featureSectionBackgroundColor
+                  : homepageSettings?.featureSectionBackgroundColorLight || homepageSettings?.featureSectionBackgroundColor)
               : undefined,
             backgroundImage: homepageSettings?.featureSectionBackgroundType === 'image' && homepageSettings?.featureSectionBackgroundImage
               ? `url(${homepageSettings.featureSectionBackgroundImage})`
@@ -173,8 +181,14 @@ export function HomePage() {
         <section 
           className="py-12 md:py-16 lg:py-24 w-full relative"
           style={{
-            backgroundColor: homepageSettings?.latestReleaseBackgroundType === 'color' && homepageSettings?.latestReleaseBackgroundColor
-              ? homepageSettings.latestReleaseBackgroundColor
+            backgroundColor: homepageSettings?.latestReleaseBackgroundType === 'color' && (
+              resolvedTheme === 'dark' 
+                ? homepageSettings?.latestReleaseBackgroundColorDark || homepageSettings?.latestReleaseBackgroundColor
+                : homepageSettings?.latestReleaseBackgroundColorLight || homepageSettings?.latestReleaseBackgroundColor
+            )
+              ? (resolvedTheme === 'dark' 
+                  ? homepageSettings?.latestReleaseBackgroundColorDark || homepageSettings?.latestReleaseBackgroundColor
+                  : homepageSettings?.latestReleaseBackgroundColorLight || homepageSettings?.latestReleaseBackgroundColor)
               : undefined,
             backgroundImage: homepageSettings?.latestReleaseBackgroundType === 'image' && homepageSettings?.latestReleaseBackgroundImage
               ? `url(${homepageSettings.latestReleaseBackgroundImage})`
@@ -254,11 +268,19 @@ export function HomePage() {
                       </div>
                       
                       <div className="space-y-2">
-                        <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors">
+                        <h3 className={`font-semibold text-base transition-colors ${
+                          resolvedTheme === 'dark' 
+                            ? 'text-gray-100 hover:text-blue-300' 
+                            : 'text-gray-900 hover:text-blue-600'
+                        }`}>
                           {isArabic ? (product.name_ar || product.name) : product.name}
                         </h3>
                         
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className={`text-sm line-clamp-2 ${
+                          resolvedTheme === 'dark' 
+                            ? 'text-gray-300' 
+                            : 'text-gray-600'
+                        }`}>
                           {(isArabic ? product.notes_ar : product.notes) ? (
                             isArabic ? (product.notes_ar || product.notes) : product.notes
                           ) : (

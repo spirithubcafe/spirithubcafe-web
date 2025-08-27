@@ -88,7 +88,9 @@ export interface HomepageSettings {
   featureSectionButtonTextAr?: string // Feature section button text in Arabic
   featureSectionImage?: string // Feature section image URL
   featureSectionBackgroundImage?: string // Feature section background image URL
-  featureSectionBackgroundColor?: string // Feature section background color
+  featureSectionBackgroundColor?: string // Feature section background color (legacy)
+  featureSectionBackgroundColorLight?: string // Feature section background color for light theme
+  featureSectionBackgroundColorDark?: string // Feature section background color for dark theme
   featureSectionBackgroundType?: 'color' | 'image' // Background type
 
   // Latest Release Section
@@ -98,7 +100,9 @@ export interface HomepageSettings {
   latestReleaseDescription?: string // Latest release description in English
   latestReleaseDescriptionAr?: string // Latest release description in Arabic
   latestReleaseBackgroundImage?: string // Latest release background image URL
-  latestReleaseBackgroundColor?: string // Latest release background color
+  latestReleaseBackgroundColor?: string // Latest release background color (legacy)
+  latestReleaseBackgroundColorLight?: string // Latest release background color for light theme
+  latestReleaseBackgroundColorDark?: string // Latest release background color for dark theme
   latestReleaseBackgroundType?: 'color' | 'image' // Background type
 }
 
