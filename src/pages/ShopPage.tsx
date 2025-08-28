@@ -150,15 +150,46 @@ export function ShopPage() {
         
         {/* Products Grid Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden py-0">
-              <div className="aspect-square bg-muted animate-pulse"></div>
-              <CardContent className="p-4 space-y-3">
+          {[...Array(9)].map((_, i) => (
+            <Card key={i} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+              {/* Image Skeleton */}
+              <div className="relative aspect-square bg-muted animate-pulse">
+                <div className="absolute top-2 left-2 space-y-1">
+                  <div className="h-5 w-12 bg-background/80 rounded animate-pulse"></div>
+                  <div className="h-5 w-10 bg-background/80 rounded animate-pulse"></div>
+                </div>
+                <div className="absolute top-2 right-2 space-y-2">
+                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
+                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              
+              <CardContent className="p-4 space-y-3 flex flex-col h-40">
+                {/* Category Badge */}
                 <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
-                <div className="h-6 bg-muted rounded animate-pulse"></div>
-                <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                <div className="h-6 bg-muted rounded w-24 animate-pulse"></div>
-                <div className="h-10 bg-muted rounded animate-pulse"></div>
+                
+                {/* Product Name */}
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded animate-pulse"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                </div>
+                
+                {/* Notes */}
+                <div className="space-y-1">
+                  <div className="h-3 bg-muted rounded w-full animate-pulse"></div>
+                  <div className="h-3 bg-muted rounded w-2/3 animate-pulse"></div>
+                </div>
+                
+                {/* Price & Stock */}
+                <div className="mt-auto space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-5 bg-muted rounded w-20 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                  </div>
+                  
+                  {/* Add to Cart Button */}
+                  <div className="h-9 bg-muted rounded animate-pulse"></div>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -415,13 +446,13 @@ export function ShopPage() {
                         {productName}
                       </h3>
 
-                      {/* Notes - Only show on larger screens */}
+                      {/* Notes - Show on all screen sizes */}
                       {(isArabic ? product.notes_ar : product.notes) && (
-                        <div className="hidden lg:block text-xs text-muted-foreground line-clamp-1 flex-1 -mt-1">
+                        <div className="text-xs text-muted-foreground line-clamp-2 flex-1 -mt-1">
                           <HTMLContent 
                             content={isArabic ? (product.notes_ar || product.notes || '') : (product.notes || '')} 
                             className="!max-w-none !text-xs !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
-                            maxLength={80}
+                            maxLength={100}
                           />
                         </div>
                       )}
