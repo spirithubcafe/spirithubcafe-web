@@ -444,6 +444,20 @@ export function Navigation() {
                 </div>
               )}
 
+              {/* Mobile Language Toggle */}
+              <div className="md:hidden">
+                <LanguageToggle 
+                  className={cn(
+                    "transition-all duration-200",
+                    isHomePage && !isScrolled
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                      : ""
+                  )}
+                />
+              </div>
+
               {/* Mobile Menu Button */}
               <Button
                 variant="outline"
