@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { StockIndicator } from '@/components/ui/stock-indicator'
-import { Card, CardContent } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
@@ -297,188 +296,152 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               className=""
             />
 
-            {/* Price Section */}
-            <Card className="py-0">
-              <CardContent className="p-3">
-                <h3 className="text-base font-semibold mb-2">{isArabic ? 'السعر' : 'Price'}</h3>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
-                      <>
-                        <span className="text-xl font-bold text-primary">
-                          {formatPrice(priceDetails.finalPrice)}
-                        </span>
-                        <span className="text-sm text-muted-foreground line-through">
-                          {formatPrice(priceDetails.originalPrice)}
-                        </span>
-                        <Badge variant="destructive" className="text-xs">
-                          -{priceDetails.discountPercentage}%
-                        </Badge>
-                      </>
-                    ) : (
-                      <span className="text-xl font-bold text-primary">
-                        {formatPrice(priceDetails.finalPrice)}
-                      </span>
-                    )}
-                  </div>
-                  <StockIndicator 
-                    stock={product.stock_quantity || product.stock || 0} 
-                    variant="compact"
-                    lowStockThreshold={10}
-                    className="text-green-400"
-                  />
-                </div>
-                {priceDetails.isOnSale && priceDetails.discountAmount > 0 && (
-                  <p className="text-xs text-green-400 font-medium">
-                    {isArabic ? 'توفر' : 'You Save'} {formatPrice(priceDetails.discountAmount)}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Dynamic Properties for Selection */}
+            {/* Product Properties */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
-              <Card className="py-0">
-                <CardContent className="p-3">
-                  <div className="space-y-3">
-                    {product.properties
-                      .filter(property => property.options && property.options.length > 0)
-                      .map((property) => {
-                        const selectedValue = selectedProperties[property.name] || ''
-                        const propertyLabel = isArabic ? property.name : property.name
+              <div className="space-y-2">
+                {product.properties
+                  .filter(property => property.options && property.options.length > 0)
+                  .map((property) => {
+                    const selectedValue = selectedProperties[property.name] || ''
+                    const propertyLabel = isArabic ? property.name : property.name
+                    
+                    return (
+                      <div key={property.name} className="space-y-1">
+                        <label className="text-xs font-medium text-muted-foreground">{propertyLabel}</label>
                         
-                        return (
-                          <div key={property.name} className="space-y-2">
-                            <label className="text-xs font-medium">{propertyLabel}</label>
+                        <div className="flex flex-wrap gap-1">
+                          {property.options.map((option: any) => {
+                            const optionLabel = isArabic ? option.value : option.value
+                            const isSelected = selectedValue === option.value
                             
-                            <div className="grid grid-cols-3 gap-1.5">
-                              {property.options.map((option: any) => {
-                                const optionLabel = isArabic ? option.value : option.value
-                                const isSelected = selectedValue === option.value
-                                
-                                // Get option price for display
-                                const getOptionPrice = () => {
-                                  let regularPrice = 0
-                                  let salePrice = 0
-                                  
-                                  if (currency === 'OMR') {
-                                    regularPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
-                                    salePrice = option.sale_price_omr || option.sale_price_modifier_omr || 0
-                                  } else if (currency === 'SAR') {
-                                    regularPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
-                                    salePrice = option.sale_price_sar || (option.sale_price_modifier_sar || (option.sale_price_modifier_omr || 0) * 9.75)
-                                  } else {
-                                    regularPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
-                                    salePrice = option.sale_price_usd || (option.sale_price_modifier_usd || (option.sale_price_modifier_omr || 0) * 2.6)
-                                  }
-                                  
-                                  const isOnSale = option.on_sale && salePrice > 0
-                                  const finalPrice = isOnSale ? salePrice : regularPrice
-                                  const hasDiscount = isOnSale && salePrice < regularPrice
-                                  
-                                  return { finalPrice, regularPrice, hasDiscount, isOnSale }
-                                }
-                                
-                                const priceInfo = getOptionPrice()
-                                
-                                return (
-                                  <Button
-                                    key={option.value}
-                                    variant={isSelected ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => setSelectedProperties(prev => ({
-                                      ...prev,
-                                      [property.name]: option.value
-                                    }))}
-                                    className={`h-auto p-2 flex flex-col items-center text-center ${
-                                      isSelected 
-                                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                                        : 'bg-muted hover:bg-muted/80 border-border'
-                                    }`}
-                                  >
-                                    <span className="text-xs font-medium">{optionLabel}</span>
-                                    {property.affects_price && priceInfo.finalPrice > 0 && (
-                                      <span className="text-xs mt-0.5 opacity-90">
-                                        {priceInfo.hasDiscount ? (
-                                          <>
-                                            <span className="line-through opacity-70">
-                                              ({formatPrice(priceInfo.regularPrice)})
-                                            </span>
-                                            <br />
-                                            <span className="font-medium">
-                                              {formatPrice(priceInfo.finalPrice)}
-                                            </span>
-                                          </>
-                                        ) : (
+                            // Get option price for display
+                            const getOptionPrice = () => {
+                              let regularPrice = 0
+                              let salePrice = 0
+                              
+                              if (currency === 'OMR') {
+                                regularPrice = option.price_omr || (option.price_modifier_omr || option.price_modifier || 0)
+                                salePrice = option.sale_price_omr || option.sale_price_modifier_omr || 0
+                              } else if (currency === 'SAR') {
+                                regularPrice = option.price_sar || (option.price_modifier_sar || (option.price_modifier_omr || option.price_modifier || 0) * 9.75)
+                                salePrice = option.sale_price_sar || (option.sale_price_modifier_sar || (option.sale_price_modifier_omr || 0) * 9.75)
+                              } else {
+                                regularPrice = option.price_usd || (option.price_modifier_usd || (option.price_modifier_omr || option.price_modifier || 0) * 2.6)
+                                salePrice = option.sale_price_usd || (option.sale_price_modifier_usd || (option.sale_price_modifier_omr || 0) * 2.6)
+                              }
+                              
+                              const isOnSale = option.on_sale && salePrice > 0
+                              const finalPrice = isOnSale ? salePrice : regularPrice
+                              const hasDiscount = isOnSale && salePrice < regularPrice
+                              
+                              return { finalPrice, regularPrice, hasDiscount, isOnSale }
+                            }
+                            
+                            const priceInfo = getOptionPrice()
+                            
+                            return (
+                              <Button
+                                key={option.value}
+                                variant={isSelected ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setSelectedProperties(prev => ({
+                                  ...prev,
+                                  [property.name]: option.value
+                                }))}
+                                className={`h-auto p-1.5 text-xs ${
+                                  isSelected 
+                                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
+                                    : 'bg-background hover:bg-muted border-border'
+                                }`}
+                              >
+                                <div className="flex flex-col items-center">
+                                  <span className="font-medium">{optionLabel}</span>
+                                  {property.affects_price && priceInfo.finalPrice > 0 && (
+                                    <span className="text-xs opacity-80">
+                                      {priceInfo.hasDiscount ? (
+                                        <>
+                                          <span className="line-through">
+                                            {formatPrice(priceInfo.regularPrice)}
+                                          </span>
+                                          {' '}
                                           <span className="font-medium">
                                             {formatPrice(priceInfo.finalPrice)}
                                           </span>
-                                        )}
-                                      </span>
-                                    )}
-                                  </Button>
-                                )
-                              })}
-                            </div>
-                          </div>
-                        )
-                      })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Quantity Selector */}
-            {product.stock_quantity > 0 && (
-              <div className="space-y-2">
-                <label className="text-xs font-medium">
-                  {isArabic ? 'الكمية:' : 'Quantity:'}
-                </label>
-                <div className="flex items-center w-fit">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-r-none"
-                    onClick={decrementQuantity}
-                    disabled={quantity <= 1}
-                  >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <div className="flex h-8 w-12 items-center justify-center border-t border-b bg-muted border-border text-xs font-medium">
-                    {quantity}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-l-none"
-                    onClick={incrementQuantity}
-                    disabled={quantity >= product.stock_quantity}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
+                                        </>
+                                      ) : (
+                                        <span className="font-medium">
+                                          {formatPrice(priceInfo.finalPrice)}
+                                        </span>
+                                      )}
+                                    </span>
+                                  )}
+                                </div>
+                              </Button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
               </div>
             )}
 
-            {/* Total Price */}
-            <div className="bg-muted rounded-lg p-3 border border-border">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold">
-                  {isArabic ? 'المجموع' : 'Total'}
-                </span>
-                <span className="text-lg font-bold text-primary">
-                  {formatPrice(getTotalPrice())}
-                </span>
+            {/* Price and Quantity Section */}
+            <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
+                  <>
+                    <span className="text-lg font-bold text-primary">
+                      {formatPrice(priceDetails.finalPrice)}
+                    </span>
+                    <span className="text-xs text-muted-foreground line-through">
+                      {formatPrice(priceDetails.originalPrice)}
+                    </span>
+                    <Badge variant="destructive" className="text-xs">
+                      -{priceDetails.discountPercentage}%
+                    </Badge>
+                  </>
+                ) : (
+                  <span className="text-lg font-bold text-primary">
+                    {formatPrice(priceDetails.finalPrice)}
+                  </span>
+                )}
               </div>
-              {Object.keys(selectedProperties).length > 0 && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  {Object.entries(selectedProperties).map(([key, value]) => (
-                    <div key={key}>
-                      {isArabic ? 'الحجم المختار:' : 'Choose Size:'} {value}
+              
+              {/* Quantity Controls and Stock */}
+              <div className="flex items-center gap-2">
+                {product.stock_quantity > 0 && (
+                  <div className="flex items-center">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 rounded-r-none"
+                      onClick={decrementQuantity}
+                      disabled={quantity <= 1}
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <div className="flex h-7 w-10 items-center justify-center border-t border-b bg-background border-border text-xs font-medium">
+                      {quantity}
                     </div>
-                  ))}
-                </div>
-              )}
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-7 w-7 rounded-l-none"
+                      onClick={incrementQuantity}
+                      disabled={quantity >= product.stock_quantity}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+                <StockIndicator 
+                  stock={product.stock_quantity || product.stock || 0} 
+                  variant="compact"
+                  lowStockThreshold={10}
+                  className="text-green-400"
+                />
+              </div>
             </div>
 
             {/* Actions */}
@@ -489,9 +452,9 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 onClick={handleAddToCart} 
                 disabled={product.stock_quantity <= 0 || isLoading}
               >
-                🛒 {isLoading 
+                {isLoading 
                   ? (isArabic ? 'جاري الإضافة...' : 'Adding...') 
-                  : (isArabic ? 'أضف إلى السلة' : 'Add to Cart')
+                  : `${formatPrice(getTotalPrice())}  •  ${isArabic ? 'أضف إلى السلة' : 'Add to Cart'}`
                 }
               </Button>
 
