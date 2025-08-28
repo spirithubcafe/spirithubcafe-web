@@ -129,6 +129,13 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
     loadCategories()
     
     if (editingProduct) {
+      console.log('Loading SEO data for product:', editingProduct.id, {
+        meta_title: editingProduct.meta_title,
+        meta_description: editingProduct.meta_description,
+        meta_keywords: editingProduct.meta_keywords,
+        seo_auto_generated: editingProduct.seo_auto_generated
+      })
+      
       setForm({
         name: editingProduct.name || '',
         name_ar: editingProduct.name_ar || '',
@@ -164,7 +171,27 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         intensity: editingProduct.intensity || '',
         intensity_ar: editingProduct.intensity_ar || '',
         compatibility: editingProduct.compatibility || '',
-        compatibility_ar: editingProduct.compatibility_ar || ''
+        compatibility_ar: editingProduct.compatibility_ar || '',
+        // SEO fields - convert from Firebase format to SEOMeta format
+        seo: {
+          title: editingProduct.meta_title || '',
+          titleAr: editingProduct.meta_title || '',
+          description: editingProduct.meta_description || '',
+          descriptionAr: editingProduct.meta_description || '',
+          keywords: editingProduct.meta_keywords || '',
+          keywordsAr: editingProduct.meta_keywords || '',
+          canonicalUrl: editingProduct.canonical_url || '',
+          ogTitle: editingProduct.og_title || '',
+          ogTitleAr: editingProduct.og_title || '',
+          ogDescription: editingProduct.og_description || '',
+          ogDescriptionAr: editingProduct.og_description || '',
+          ogImage: editingProduct.og_image || '',
+          twitterTitle: editingProduct.twitter_title || '',
+          twitterTitleAr: editingProduct.twitter_title || '',
+          twitterDescription: editingProduct.twitter_description || '',
+          twitterDescriptionAr: editingProduct.twitter_description || '',
+          twitterImage: editingProduct.twitter_image || ''
+        }
       })
     }
   }, [editingProduct, isArabic])
@@ -235,6 +262,17 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         intensity_ar: form.intensity_ar,
         compatibility: form.compatibility,
         compatibility_ar: form.compatibility_ar,
+        // SEO fields - convert from SEOMeta format to Firebase format
+        meta_title: form.seo?.title || '',
+        meta_description: form.seo?.description || '',
+        meta_keywords: form.seo?.keywords || '',
+        canonical_url: form.seo?.canonicalUrl || '',
+        og_title: form.seo?.ogTitle || '',
+        og_description: form.seo?.ogDescription || '',
+        og_image: form.seo?.ogImage || '',
+        twitter_title: form.seo?.twitterTitle || '',
+        twitter_description: form.seo?.twitterDescription || '',
+        twitter_image: form.seo?.twitterImage || '',
         updated_at: new Date()
       }
 

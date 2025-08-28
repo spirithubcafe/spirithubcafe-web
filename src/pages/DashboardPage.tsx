@@ -55,6 +55,7 @@ import { AboutManagement } from '@/components/admin/AboutManagement'
 import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 import CacheManagementPage from '@/pages/CacheManagementPage'
+import SEOManagementPage from '@/pages/SEOManagementPage'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -290,6 +291,12 @@ export default function DashboardPage() {
             label: t('dashboard.tabs.about'),
             icon: FileText,
             show: true
+          },
+          {
+            id: 'seo-management',
+            label: isArabic ? 'إدارة السيو' : 'SEO Management',
+            icon: Globe,
+            show: true
           }
         ]
       },
@@ -388,6 +395,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <AboutManagement />
       case 'newsletter':
         return user?.role === 'admin' && <NewsletterSettingsManagement />
+      case 'seo-management':
+        return user?.role === 'admin' && <SEOManagementPage />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }

@@ -106,6 +106,20 @@ export interface Category {
   image?: string;
   is_active: boolean;
   sort_order: number;
+  // SEO Fields
+  meta_title?: string;
+  meta_description?: string;
+  meta_keywords?: string;
+  slug?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+  seo_auto_generated?: boolean;
+  seo_generated_at?: string;
   created: Date;
   updated: Date;
 }
@@ -122,6 +136,18 @@ export interface Page {
   is_active: boolean;
   show_in_footer: boolean;
   sort_order: number;
+  // Additional SEO Fields
+  meta_title?: string;
+  meta_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+  seo_auto_generated?: boolean;
+  seo_generated_at?: string;
   created: Date;
   updated: Date;
 }
@@ -203,6 +229,17 @@ export interface Product {
   sort_order: number;
   meta_title?: string;
   meta_description?: string;
+  // Additional SEO Fields
+  meta_keywords?: string;
+  canonical_url?: string;
+  og_title?: string;
+  og_description?: string;
+  og_image?: string;
+  twitter_title?: string;
+  twitter_description?: string;
+  twitter_image?: string;
+  seo_auto_generated?: boolean;
+  seo_generated_at?: string;
   bean_type?: string;
   // Coffee information fields
   roast_level?: string;
