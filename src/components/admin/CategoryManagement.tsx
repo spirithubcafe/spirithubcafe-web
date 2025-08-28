@@ -209,6 +209,11 @@ export default function CategoryManagement() {
   const openDialog = (category?: Category) => {
     if (category) {
       setEditingCategory(category)
+      const convertedSEO = categoryToSEOMeta(category)
+      console.log('Category SEO Data Loading:', {
+        original: category,
+        converted: convertedSEO
+      })
       setFormData({
         name: category.name,
         name_ar: category.name_ar || '',
@@ -217,7 +222,7 @@ export default function CategoryManagement() {
         image: category.image || '',
         is_active: category.is_active,
         sort_order: category.sort_order,
-        seo: categoryToSEOMeta(category)
+        seo: convertedSEO
       })
     } else {
       setEditingCategory(null)

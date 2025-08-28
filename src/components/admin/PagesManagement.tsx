@@ -277,6 +277,11 @@ export default function PagesManagement() {
   }
 
   const handleEdit = (page: Page) => {
+    const convertedSEO = pageToSEOMeta(page)
+    console.log('Page SEO Data Loading:', {
+      original: page,
+      converted: convertedSEO
+    })
     setForm({
       title: page.title,
       title_ar: page.title_ar,
@@ -288,7 +293,7 @@ export default function PagesManagement() {
       is_active: page.is_active,
       show_in_footer: page.show_in_footer,
       sort_order: page.sort_order,
-      seo: pageToSEOMeta(page)
+      seo: convertedSEO
     })
     setEditingPage(page)
     setShowForm(true)
