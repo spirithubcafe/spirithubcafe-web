@@ -17,7 +17,12 @@ import {
   FileText,
   Phone,
   CreditCard,
-  Mail
+  Mail,
+  Database,
+  Store,
+  Home,
+  Shield,
+  Palette
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -49,6 +54,7 @@ import { ContactManagement } from '@/components/admin/ContactManagement'
 import { AboutManagement } from '@/components/admin/AboutManagement'
 import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
+import CacheManagementPage from '@/pages/CacheManagementPage'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -156,123 +162,176 @@ export default function DashboardPage() {
     setUsers(updatedUsers)
   }
 
-  // Define navigation items
+  // Define navigation items with categories
   const navigationItems = [
+    // Personal Section
     {
-      id: 'overview',
-      label: isArabic ? 'نظرة عامة' : 'Overview',
-      icon: BarChart3,
-      show: true
-    },
-    {
-      id: 'orders',
-      label: isArabic ? 'الطلبات' : 'Orders',
-      icon: ShoppingBag,
-      show: true
-    },
-    {
-      id: 'profile',
-      label: isArabic ? 'الملف الشخصي' : 'Profile',
+      category: isArabic ? 'الحساب الشخصي' : 'Personal',
       icon: User,
-      show: true
+      items: [
+        {
+          id: 'overview',
+          label: isArabic ? 'نظرة عامة' : 'Overview',
+          icon: BarChart3,
+          show: true
+        },
+        {
+          id: 'profile',
+          label: isArabic ? 'الملف الشخصي' : 'Profile',
+          icon: User,
+          show: true
+        },
+        {
+          id: 'orders',
+          label: isArabic ? 'طلباتي' : 'My Orders',
+          icon: ShoppingBag,
+          show: true
+        },
+        {
+          id: 'settings',
+          label: isArabic ? 'الإعدادات' : 'Settings',
+          icon: Settings,
+          show: true
+        }
+      ]
     },
-    {
-      id: 'settings',
-      label: isArabic ? 'الإعدادات' : 'Settings',
-      icon: Settings,
-      show: true
-    },
+    
+    // E-commerce Management (Admin only)
     ...(user && user.role === 'admin' ? [
       {
-        id: 'users',
-        label: isArabic ? 'المستخدمين' : 'Users',
-        icon: Users,
-        show: true
+        category: isArabic ? 'إدارة المتجر' : 'Store Management',
+        icon: Store,
+        items: [
+          {
+            id: 'categories',
+            label: isArabic ? 'الفئات' : 'Categories',
+            icon: Tags,
+            show: true
+          },
+          {
+            id: 'products',
+            label: isArabic ? 'المنتجات' : 'Products',
+            icon: Package,
+            show: true
+          },
+          {
+            id: 'admin-orders',
+            label: isArabic ? 'كل الطلبات' : 'All Orders',
+            icon: ShoppingBag,
+            show: true
+          },
+          {
+            id: 'inventory',
+            label: isArabic ? 'المخزون والتقارير' : 'Inventory & Reports',
+            icon: BarChart3,
+            show: true
+          },
+          {
+            id: 'reviews',
+            label: isArabic ? 'المراجعات' : 'Reviews',
+            icon: MessageSquare,
+            show: true,
+            badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined
+          }
+        ]
       },
+      
+      // Analytics & Reports
       {
-        id: 'hero-slider',
-        label: isArabic ? 'شريط العرض الرئيسي' : 'Hero Slider',
-        icon: Presentation,
-        show: true
-      },
-      {
-        id: 'categories',
-        label: isArabic ? 'الفئات' : 'Categories',
-        icon: Tags,
-        show: true
-      },
-      {
-        id: 'products',
-        label: isArabic ? 'المنتجات' : 'Products',
-        icon: Package,
-        show: true
-      },
-      {
-        id: 'admin-orders',
-        label: isArabic ? 'كل الطلبات' : 'All Orders',
-        icon: ShoppingBag,
-        show: true
-      },
-      {
-        id: 'analytics',
-        label: isArabic ? 'التحليلات' : 'Analytics',
+        category: isArabic ? 'التحليلات والتقارير' : 'Analytics & Reports',
         icon: TrendingUp,
-        show: true
+        items: [
+          {
+            id: 'analytics',
+            label: isArabic ? 'التحليلات' : 'Analytics',
+            icon: TrendingUp,
+            show: true
+          }
+        ]
       },
+      
+      // Website Design & Content
       {
-        id: 'inventory',
-        label: isArabic ? 'المخزون والتقارير' : 'Inventory & Reports',
-        icon: BarChart3,
-        show: true
+        category: isArabic ? 'تصميم الموقع والمحتوى' : 'Website Design & Content',
+        icon: Palette,
+        items: [
+          {
+            id: 'hero-slider',
+            label: isArabic ? 'شريط العرض الرئيسي' : 'Hero Slider',
+            icon: Presentation,
+            show: true
+          },
+          {
+            id: 'homepage-settings',
+            label: isArabic ? 'إعدادات الصفحة الرئيسية' : 'Homepage Settings',
+            icon: Home,
+            show: true
+          },
+          {
+            id: 'footer',
+            label: t('dashboard.admin.footerSettings'),
+            icon: Globe,
+            show: true
+          },
+          {
+            id: 'pages',
+            label: isArabic ? 'إدارة الصفحات' : 'Pages Management',
+            icon: FileText,
+            show: true
+          },
+          {
+            id: 'contact',
+            label: t('dashboard.tabs.contact'),
+            icon: Phone,
+            show: true
+          },
+          {
+            id: 'about',
+            label: t('dashboard.tabs.about'),
+            icon: FileText,
+            show: true
+          }
+        ]
       },
+      
+      // Configuration & Settings
       {
-        id: 'reviews',
-        label: isArabic ? 'المراجعات' : 'Reviews',
-        icon: MessageSquare,
-        show: true,
-        badge: pendingReviewsCount > 0 ? pendingReviewsCount : undefined
-      },
-      {
-        id: 'homepage-settings',
-        label: isArabic ? 'إعدادات الصفحة الرئيسية' : 'Homepage Settings',
+        category: isArabic ? 'التكوين والإعدادات' : 'Configuration & Settings',
         icon: Settings,
-        show: true
+        items: [
+          {
+            id: 'users',
+            label: isArabic ? 'المستخدمين' : 'Users',
+            icon: Users,
+            show: true
+          },
+          {
+            id: 'checkout-settings',
+            label: isArabic ? 'إعدادات الدفع والشحن' : 'Checkout Settings',
+            icon: CreditCard,
+            show: true
+          },
+          {
+            id: 'newsletter',
+            label: isArabic ? 'النشرة الإخبارية' : 'Newsletter',
+            icon: Mail,
+            show: true
+          }
+        ]
       },
+      
+      // System & Maintenance
       {
-        id: 'footer',
-        label: t('dashboard.admin.footerSettings'),
-        icon: Globe,
-        show: true
-      },
-      {
-        id: 'pages',
-        label: isArabic ? 'إدارة الصفحات' : 'Pages Management',
-        icon: FileText,
-        show: true
-      },
-      {
-        id: 'checkout-settings',
-        label: isArabic ? 'إعدادات الدفع والشحن' : 'Checkout Settings',
-        icon: CreditCard,
-        show: true
-      },
-      {
-        id: 'contact',
-        label: t('dashboard.tabs.contact'),
-        icon: Phone,
-        show: true
-      },
-      {
-        id: 'about',
-        label: t('dashboard.tabs.about'),
-        icon: FileText,
-        show: true
-      },
-      {
-        id: 'newsletter',
-        label: isArabic ? 'النشرة الإخبارية' : 'Newsletter',
-        icon: Mail,
-        show: true
+        category: isArabic ? 'النظام والصيانة' : 'System & Maintenance',
+        icon: Shield,
+        items: [
+          {
+            id: 'cache-management',
+            label: isArabic ? 'إدارة التخزين المؤقت' : 'Cache Management',
+            icon: Database,
+            show: true
+          }
+        ]
       }
     ] : [])
   ]
@@ -321,6 +380,8 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <PagesManagement />
       case 'checkout-settings':
         return user?.role === 'admin' && <CheckoutSettingsPage />
+      case 'cache-management':
+        return user?.role === 'admin' && <CacheManagementPage />
       case 'contact':
         return user?.role === 'admin' && <ContactManagement />
       case 'about':
@@ -361,33 +422,47 @@ export default function DashboardPage() {
             <h2 className="text-lg font-semibold mb-6">
               {isArabic ? 'لوحة التحكم' : 'Dashboard'}
             </h2>
-            <nav className="space-y-2 pb-6">
-              {navigationItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id)
-                      setSidebarOpen(false)
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                      activeTab === item.id
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="flex-1 text-left">{item.label}</span>
-                    {item.badge && (
-                      <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </button>
-                )
-              })}
+            <nav className="space-y-6 pb-6">
+              {navigationItems.map((category, categoryIndex) => (
+                <div key={categoryIndex} className="space-y-2">
+                  {/* Category Header */}
+                  <div className="px-1 py-2">
+                    <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                      {category.category}
+                    </h3>
+                  </div>
+                  
+                  {/* Category Items */}
+                  <div className="space-y-1">
+                    {category.items.map((item) => {
+                      const Icon = item.icon
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            setActiveTab(item.id)
+                            setSidebarOpen(false)
+                          }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                            activeTab === item.id
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                          )}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="flex-1 text-left">{item.label}</span>
+                          {item.badge && (
+                            <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
           </div>
         </aside>
@@ -415,33 +490,47 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex-1 p-6 overflow-y-auto">
-                <nav className="space-y-2 pb-6">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => {
-                        setActiveTab(item.id)
-                        setSidebarOpen(false)
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                        activeTab === item.id
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="flex-1 text-left">{item.label}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </button>
-                  )
-                })}
+                <nav className="space-y-6 pb-6">
+                  {navigationItems.map((category, categoryIndex) => (
+                    <div key={categoryIndex} className="space-y-2">
+                      {/* Category Header */}
+                      <div className="px-1 py-2">
+                        <h3 className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
+                          {category.category}
+                        </h3>
+                      </div>
+                      
+                      {/* Category Items */}
+                      <div className="space-y-1">
+                        {category.items.map((item) => {
+                          const Icon = item.icon
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => {
+                                setActiveTab(item.id)
+                                setSidebarOpen(false)
+                              }}
+                              className={cn(
+                                "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                                activeTab === item.id
+                                  ? "bg-primary text-primary-foreground"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              <span className="flex-1 text-left">{item.label}</span>
+                              {item.badge && (
+                                <Badge variant="destructive" className="h-5 min-w-[20px] text-xs flex items-center justify-center">
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </nav>
               </div>
             </div>
