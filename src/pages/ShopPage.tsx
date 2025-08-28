@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShoppingCart, Heart, Star, Eye } from 'lucide-react'
+import { ShoppingCart, Heart, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -309,7 +309,7 @@ export function ShopPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           {filteredProducts.map((product) => {
             const productPrice = getProductPrice(product)
             const salePrice = getSalePrice(product)
@@ -319,7 +319,7 @@ export function ShopPage() {
 
             return (
               <div key={product.id} className="group">
-                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 py-0 h-full flex flex-col">
+                <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col py-0">
                   <Link to={`/product/${product.slug || product.id}`} className="flex-1 flex flex-col">
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
@@ -355,9 +355,9 @@ export function ShopPage() {
                       </div>
 
                       {/* Badges */}
-                      <div className="absolute top-3 left-3 flex flex-col gap-1">
+                      <div className="absolute top-1 left-1 lg:top-2 lg:left-2 flex flex-col gap-1">
                         {badges.map((badge, index) => (
-                          <Badge key={index} className={`text-xs text-white shadow-sm ${badge.color}`}>
+                          <Badge key={index} className={`text-xs text-white shadow-sm px-1 lg:px-2 ${badge.color}`}>
                             {badge.text}
                           </Badge>
                         ))}
@@ -373,82 +373,71 @@ export function ShopPage() {
                       )}
                     </div>
 
-                    <CardContent className="p-4 space-y-3 flex-1 flex flex-col">
+                    <CardContent className="p-2 lg:p-3 pb-1 lg:pb-2 space-y-1 flex-1 flex flex-col">
                       {/* Category */}
                       <div className="flex items-center justify-between">
                         <Badge variant="outline" className="text-xs">
                           {categoryName}
                         </Badge>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < Math.floor(product.average_rating || 0) ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                          <span className="text-xs text-muted-foreground ml-1">
-                            ({(product.average_rating || 0).toFixed(1)})
-                          </span>
-                        </div>
                       </div>
 
                       {/* Product Name */}
-                      <h3 className="font-semibold text-lg leading-tight line-clamp-2 min-h-[3.5rem] flex items-start">
+                      <h3 className="font-semibold text-sm lg:text-base leading-tight line-clamp-2 min-h-[2rem] lg:min-h-[2.5rem]">
                         {productName}
                       </h3>
 
-                      {/* Uses */}
-                      {(isArabic ? product.uses_ar : product.uses) && (
-                        <div className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] flex-1">
+                      {/* Notes - Only show on larger screens */}
+                      {(isArabic ? product.notes_ar : product.notes) && (
+                        <div className="hidden lg:block text-xs text-muted-foreground line-clamp-1 flex-1 -mt-1">
                           <HTMLContent 
-                            content={isArabic ? (product.uses_ar || product.uses || '') : (product.uses || '')} 
-                            className="!max-w-none !text-sm !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
-                            maxLength={150}
+                            content={isArabic ? (product.notes_ar || product.notes || '') : (product.notes || '')} 
+                            className="!max-w-none !text-xs !leading-relaxed [&>*]:mb-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                            maxLength={80}
                           />
                         </div>
                       )}
 
                       {/* Price & Stock */}
-                      <div className="mt-auto space-y-3">
+                      <div className="mt-auto space-y-1">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col lg:flex-row lg:items-center lg:gap-2">
                             {salePrice && salePrice < (productPrice ?? 0) ? (
                               <>
-                                <span className="text-xl font-bold text-red-600">
+                                <span className="text-sm lg:text-base font-bold text-red-600">
                                   {formatPrice(salePrice)}
                                 </span>
-                                <span className="text-sm line-through text-muted-foreground">
-                                  {formatPrice(productPrice ?? 0)}
-                                </span>
-                                {(() => {
-                                  const discountPercent = Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)
-                                  return discountPercent > 0 ? (
-                                    <Badge variant="destructive" className="text-xs">
-                                      {discountPercent}% {isArabic ? 'خصم' : 'OFF'}
-                                    </Badge>
-                                ) : null
-                              })()}
-                            </>
-                          ) : (
-                            <span className="text-xl font-bold text-amber-600">
-                              {formatPrice(productPrice ?? 0)}
-                            </span>
-                          )}
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs line-through text-muted-foreground">
+                                    {formatPrice(productPrice ?? 0)}
+                                  </span>
+                                  {(() => {
+                                    const discountPercent = Math.round(((productPrice ?? 0) - salePrice) / (productPrice ?? 1) * 100)
+                                    return discountPercent > 0 ? (
+                                      <Badge variant="destructive" className="text-xs px-1">
+                                        -{discountPercent}%
+                                      </Badge>
+                                  ) : null
+                                })()}
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-sm lg:text-base font-bold text-amber-600">
+                                {formatPrice(productPrice ?? 0)}
+                              </span>
+                            )}
+                          </div>
+                          <StockIndicator 
+                            stock={product.stock_quantity || product.stock || 0} 
+                            variant="compact"
+                            lowStockThreshold={5}
+                          />
                         </div>
-                        <StockIndicator 
-                          stock={product.stock_quantity || product.stock || 0} 
-                          variant="compact"
-                          lowStockThreshold={5}
-                        />
-                      </div>
                       </div>
                     </CardContent>
                   </Link>
                   
-                  <div className="p-4 pt-0">
-                    <div className="flex gap-2">
+                  <div className="px-2 lg:px-3 pb-2 lg:pb-3">
+                    <div className="flex gap-1">
                       <Button
                         onClick={() => {
                           if (product.stock_quantity > 0) {
@@ -456,29 +445,31 @@ export function ShopPage() {
                           }
                         }}
                         disabled={product.stock_quantity <= 0}
-                        className="flex-1 btn-coffee"
+                        className="flex-1 btn-coffee text-xs h-7 lg:h-8"
                         size="sm"
                       >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {isArabic ? 'أضف للسلة' : 'Add to Cart'}
+                        <ShoppingCart className="h-3 w-3 mr-1" />
+                        <span className="hidden sm:inline">{isArabic ? 'أضف للسلة' : 'Add to Cart'}</span>
+                        <span className="sm:hidden">{isArabic ? 'أضف' : 'Add'}</span>
                       </Button>
                       <ProductQuickView product={product}>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="px-2 h-7 lg:h-8"
                           title={isArabic ? 'نظرة سريعة' : 'Quick View'}
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3 w-3" />
                         </Button>
                       </ProductQuickView>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => toggleWishlist(product.id)}
-                        className={`${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
+                        className={`px-2 h-7 lg:h-8 ${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
                         title={isArabic ? 'إضافة إلى المفضلة' : 'Add to Wishlist'}
                       >
-                        <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                        <Heart className={`h-3 w-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                       </Button>
                     </div>
                   </div>
