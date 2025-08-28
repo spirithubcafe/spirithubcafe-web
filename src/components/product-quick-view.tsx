@@ -411,7 +411,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               {/* Quantity Controls and Stock */}
               <div className="flex items-center gap-2">
                 {product.stock_quantity > 0 && (
-                  <div className="flex items-center">
+                  <div className="flex items-center ltr">
                     <Button
                       variant="outline"
                       size="icon"

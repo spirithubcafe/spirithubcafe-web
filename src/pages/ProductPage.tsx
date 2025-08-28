@@ -448,7 +448,7 @@ export default function ProductPage() {
               {/* Quantity Controls and Stock */}
               <div className="flex items-center gap-3">
                 {product.stock_quantity > 0 && (
-                  <div className="flex items-center">
+                  <div className="flex items-center ltr">
                     <Button
                       variant="outline"
                       size="icon"
