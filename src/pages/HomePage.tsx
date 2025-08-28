@@ -31,7 +31,7 @@ export function HomePage() {
   const latestProducts = useMemo(() => {
     return products
       .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
-      .slice(0, 5)
+      .slice(0, 6)
   }, [products])
   
   // Functions for image modal
@@ -214,30 +214,21 @@ export function HomePage() {
                   }
                 </h2>
                 <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
-                {(homepageSettings?.latestReleaseDescription || homepageSettings?.latestReleaseDescriptionAr) && (
-                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                    {isArabic 
-                      ? homepageSettings?.latestReleaseDescriptionAr
-                      : homepageSettings?.latestReleaseDescription
-                    }
-                  </p>
-                )}
               </div>
               
             {loadingProducts ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {[1, 2, 3, 4, 5].map((i) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="flex flex-col items-center space-y-3">
                     <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
                     <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
                     <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
-                    <div className="animate-pulse h-3 bg-muted rounded w-1/3"></div>
                   </div>
                 ))}
               </div>
             ) : latestProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {latestProducts.map((product) => {
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {latestProducts.slice(0, 6).map((product) => {
                   const productPrice = getProductPrice(product)
                   const salePrice = getSalePrice(product)
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'
@@ -246,9 +237,9 @@ export function HomePage() {
                     <Link
                       key={product.id}
                       to={`/product/${product.slug || product.id}`}
-                      className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                      className="group flex flex-col h-full bg-background border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                      <div className="w-full aspect-square overflow-hidden bg-muted">
                         <img
                           src={
                             product.image_url || 
@@ -267,8 +258,8 @@ export function HomePage() {
                         />
                       </div>
                       
-                      <div className="space-y-2">
-                        <h3 className={`font-semibold text-base transition-colors ${
+                      <div className="flex flex-col flex-1 p-3 space-y-2">
+                        <h3 className={`font-semibold text-sm product-name-truncate transition-colors ${
                           resolvedTheme === 'dark' 
                             ? 'text-gray-100 hover:text-blue-300' 
                             : 'text-gray-900 hover:text-blue-600'
@@ -276,7 +267,8 @@ export function HomePage() {
                           {isArabic ? (product.name_ar || product.name) : product.name}
                         </h3>
                         
-                        <p className={`text-sm line-clamp-2 ${
+                        {/* Product Uses/Notes */}
+                        <p className={`text-xs leading-relaxed product-name-truncate ${
                           resolvedTheme === 'dark' 
                             ? 'text-gray-300' 
                             : 'text-gray-600'
@@ -288,21 +280,23 @@ export function HomePage() {
                           )}
                         </p>
                         
-                        <div className="flex items-center justify-center gap-2">
-                          {salePrice && salePrice < productPrice ? (
-                            <>
-                              <span className="text-base font-bold text-red-500">
-                                {formatPrice(salePrice)}
-                              </span>
-                              <span className="text-sm text-muted-foreground line-through">
+                        <div className="mt-auto">
+                          <div className="product-price-container">
+                            {salePrice && salePrice < productPrice ? (
+                              <>
+                                <span className="text-sm font-bold text-red-500">
+                                  {formatPrice(salePrice)}
+                                </span>
+                                <span className="text-xs text-muted-foreground line-through">
+                                  {formatPrice(productPrice)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-sm font-bold text-primary">
                                 {formatPrice(productPrice)}
                               </span>
-                            </>
-                          ) : (
-                            <span className="text-base font-bold text-primary">
-                              {formatPrice(productPrice)}
-                            </span>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
                     </Link>
@@ -392,8 +386,7 @@ export function HomePage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {categories.map((category: Category) => {
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'
-                  // Count products in this category
-                  const productCount = latestProducts.filter(product => product.category_id === category.id).length
+                  const categoryName = isArabic ? (category.name_ar || category.name) : category.name
                   
                   return (
                     <Link
@@ -404,7 +397,7 @@ export function HomePage() {
                       <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                         <img
                           src={category.image || '/images/logo.png'}
-                          alt={isArabic ? (category.name_ar || category.name) : category.name}
+                          alt={categoryName}
                           className="w-full h-full object-cover"
                           loading="lazy"
                           onError={(e) => {
@@ -414,12 +407,12 @@ export function HomePage() {
                       </div>
                       
                       <div className="space-y-1">
-                        <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors">
-                          {isArabic ? (category.name_ar || category.name) : category.name}
+                        <h3 
+                          className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" 
+                          title={categoryName}
+                        >
+                          {categoryName}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {productCount} {isArabic ? 'منتج' : 'Products'}
-                        </p>
                       </div>
                     </Link>
                   )

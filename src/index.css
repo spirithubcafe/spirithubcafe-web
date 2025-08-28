@@ -14,6 +14,34 @@
   display: none;
 }
 
+/* Text truncation utilities */
+.category-name-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Product name truncation - max 2 lines */
+.product-name-truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.4;
+  max-height: 2.8em; /* 2 lines * line-height */
+  min-height: 2.8em; /* Ensure consistent height */
+}
+
+/* Product price container for alignment */
+.product-price-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 1.5rem; /* Consistent height for price section */
+}
+
 /* Arabic Font - Tajawal */
 @font-face {
   font-family: 'Tajawal';
