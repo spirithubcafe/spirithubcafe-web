@@ -60,6 +60,27 @@ export interface Category {
   sort_order: number
   is_active: boolean
   created_at: string
+  // SEO fields
+  meta_title?: string
+  meta_title_ar?: string
+  meta_description?: string
+  meta_description_ar?: string
+  meta_keywords?: string
+  meta_keywords_ar?: string
+  slug?: string
+  canonical_url?: string
+  og_title?: string
+  og_title_ar?: string
+  og_description?: string
+  og_description_ar?: string
+  og_image?: string
+  twitter_title?: string
+  twitter_title_ar?: string
+  twitter_description?: string
+  twitter_description_ar?: string
+  twitter_image?: string
+  seo_auto_generated?: boolean
+  seo_generated_at?: string
 }
 
 // Coffee Origin Interface
@@ -490,7 +511,24 @@ export interface StaticPage {
   content?: string
   content_ar?: string
   meta_title?: string
+  meta_title_ar?: string
   meta_description?: string
+  meta_description_ar?: string
+  meta_keywords?: string
+  meta_keywords_ar?: string
+  canonical_url?: string
+  og_title?: string
+  og_title_ar?: string
+  og_description?: string
+  og_description_ar?: string
+  og_image?: string
+  twitter_title?: string
+  twitter_title_ar?: string
+  twitter_description?: string
+  twitter_description_ar?: string
+  twitter_image?: string
+  seo_auto_generated?: boolean
+  seo_generated_at?: string
   is_published: boolean
   created_at: string
   updated_at: string

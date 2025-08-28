@@ -40,6 +40,52 @@ interface PageForm {
   seo?: SEOMeta
 }
 
+// Helper function to convert Firebase Page to SEOMeta format
+const pageToSEOMeta = (page: Page): SEOMeta => {
+  return {
+    title: page.meta_title || '',
+    titleAr: page.meta_title_ar || '',
+    description: page.meta_description || '',
+    descriptionAr: page.meta_description_ar || '',
+    keywords: page.meta_keywords || '',
+    keywordsAr: page.meta_keywords_ar || '',
+    canonicalUrl: page.canonical_url || '',
+    ogTitle: page.og_title || '',
+    ogTitleAr: page.og_title_ar || '',
+    ogDescription: page.og_description || '',
+    ogDescriptionAr: page.og_description_ar || '',
+    ogImage: page.og_image || '',
+    twitterTitle: page.twitter_title || '',
+    twitterTitleAr: page.twitter_title_ar || '',
+    twitterDescription: page.twitter_description || '',
+    twitterDescriptionAr: page.twitter_description_ar || '',
+    twitterImage: page.twitter_image || ''
+  }
+}
+
+// Helper function to convert SEOMeta to Firebase Page fields
+const seoMetaToPage = (seo: SEOMeta): Partial<Page> => {
+  return {
+    meta_title: seo.title,
+    meta_title_ar: seo.titleAr,
+    meta_description: seo.description,
+    meta_description_ar: seo.descriptionAr,
+    meta_keywords: seo.keywords,
+    meta_keywords_ar: seo.keywordsAr,
+    canonical_url: seo.canonicalUrl,
+    og_title: seo.ogTitle,
+    og_title_ar: seo.ogTitleAr,
+    og_description: seo.ogDescription,
+    og_description_ar: seo.ogDescriptionAr,
+    og_image: seo.ogImage,
+    twitter_title: seo.twitterTitle,
+    twitter_title_ar: seo.twitterTitleAr,
+    twitter_description: seo.twitterDescription,
+    twitter_description_ar: seo.twitterDescriptionAr,
+    twitter_image: seo.twitterImage
+  }
+}
+
 // Default page templates with content from public/pages
 const DEFAULT_PAGES = {
   'privacy-policy': {
@@ -242,7 +288,7 @@ export default function PagesManagement() {
       is_active: page.is_active,
       show_in_footer: page.show_in_footer,
       sort_order: page.sort_order,
-      seo: (page as any).seo || {}
+      seo: pageToSEOMeta(page)
     })
     setEditingPage(page)
     setShowForm(true)
@@ -261,6 +307,7 @@ export default function PagesManagement() {
 
     setSaving(true)
     try {
+      // Prepare data with SEO conversion
       const pageData = {
         title: form.title,
         title_ar: form.title_ar,
@@ -271,7 +318,8 @@ export default function PagesManagement() {
         meta_description_ar: form.meta_description_ar,
         is_active: form.is_active,
         show_in_footer: form.show_in_footer,
-        sort_order: form.sort_order
+        sort_order: form.sort_order,
+        ...(form.seo ? seoMetaToPage(form.seo) : {})
       }
 
       if (editingPage) {

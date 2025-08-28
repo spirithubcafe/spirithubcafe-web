@@ -26,6 +26,52 @@ interface CategoryFormData {
   seo?: SEOMeta
 }
 
+// Helper function to convert Firebase Category to SEOMeta format
+const categoryToSEOMeta = (category: Category): SEOMeta => {
+  return {
+    title: category.meta_title || '',
+    titleAr: category.meta_title_ar || '',
+    description: category.meta_description || '',
+    descriptionAr: category.meta_description_ar || '',
+    keywords: category.meta_keywords || '',
+    keywordsAr: category.meta_keywords_ar || '',
+    canonicalUrl: category.canonical_url || '',
+    ogTitle: category.og_title || '',
+    ogTitleAr: category.og_title_ar || '',
+    ogDescription: category.og_description || '',
+    ogDescriptionAr: category.og_description_ar || '',
+    ogImage: category.og_image || '',
+    twitterTitle: category.twitter_title || '',
+    twitterTitleAr: category.twitter_title_ar || '',
+    twitterDescription: category.twitter_description || '',
+    twitterDescriptionAr: category.twitter_description_ar || '',
+    twitterImage: category.twitter_image || ''
+  }
+}
+
+// Helper function to convert SEOMeta to Firebase Category fields
+const seoMetaToCategory = (seo: SEOMeta): Partial<Category> => {
+  return {
+    meta_title: seo.title,
+    meta_title_ar: seo.titleAr,
+    meta_description: seo.description,
+    meta_description_ar: seo.descriptionAr,
+    meta_keywords: seo.keywords,
+    meta_keywords_ar: seo.keywordsAr,
+    canonical_url: seo.canonicalUrl,
+    og_title: seo.ogTitle,
+    og_title_ar: seo.ogTitleAr,
+    og_description: seo.ogDescription,
+    og_description_ar: seo.ogDescriptionAr,
+    og_image: seo.ogImage,
+    twitter_title: seo.twitterTitle,
+    twitter_title_ar: seo.twitterTitleAr,
+    twitter_description: seo.twitterDescription,
+    twitter_description_ar: seo.twitterDescriptionAr,
+    twitter_image: seo.twitterImage
+  }
+}
+
 export default function CategoryManagement() {
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
@@ -171,7 +217,7 @@ export default function CategoryManagement() {
         image: category.image || '',
         is_active: category.is_active,
         sort_order: category.sort_order,
-        seo: (category as any).seo || {}
+        seo: categoryToSEOMeta(category)
       })
     } else {
       setEditingCategory(null)
@@ -214,10 +260,22 @@ export default function CategoryManagement() {
     try {
       setFormLoading(true)
 
+      // Prepare data with SEO conversion
+      const categoryData = {
+        name: formData.name,
+        name_ar: formData.name_ar,
+        description: formData.description,
+        description_ar: formData.description_ar,
+        image: formData.image,
+        is_active: formData.is_active,
+        sort_order: formData.sort_order,
+        ...(formData.seo ? seoMetaToCategory(formData.seo) : {})
+      }
+
       if (editingCategory) {
-        await firestoreService.categories.update(editingCategory.id, formData)
+        await firestoreService.categories.update(editingCategory.id, categoryData)
       } else {
-        await firestoreService.categories.create(formData)
+        await firestoreService.categories.create(categoryData)
       }
 
       await loadCategories()

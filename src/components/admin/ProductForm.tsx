@@ -175,21 +175,21 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         // SEO fields - convert from Firebase format to SEOMeta format
         seo: {
           title: editingProduct.meta_title || '',
-          titleAr: editingProduct.meta_title || '',
+          titleAr: editingProduct.meta_title_ar || '',
           description: editingProduct.meta_description || '',
-          descriptionAr: editingProduct.meta_description || '',
+          descriptionAr: editingProduct.meta_description_ar || '',
           keywords: editingProduct.meta_keywords || '',
-          keywordsAr: editingProduct.meta_keywords || '',
+          keywordsAr: editingProduct.meta_keywords_ar || '',
           canonicalUrl: editingProduct.canonical_url || '',
           ogTitle: editingProduct.og_title || '',
-          ogTitleAr: editingProduct.og_title || '',
+          ogTitleAr: editingProduct.og_title_ar || '',
           ogDescription: editingProduct.og_description || '',
-          ogDescriptionAr: editingProduct.og_description || '',
+          ogDescriptionAr: editingProduct.og_description_ar || '',
           ogImage: editingProduct.og_image || '',
           twitterTitle: editingProduct.twitter_title || '',
-          twitterTitleAr: editingProduct.twitter_title || '',
+          twitterTitleAr: editingProduct.twitter_title_ar || '',
           twitterDescription: editingProduct.twitter_description || '',
-          twitterDescriptionAr: editingProduct.twitter_description || '',
+          twitterDescriptionAr: editingProduct.twitter_description_ar || '',
           twitterImage: editingProduct.twitter_image || ''
         }
       })
@@ -264,14 +264,21 @@ export default function ProductForm({ editingProduct, onSave, onCancel }: Produc
         compatibility_ar: form.compatibility_ar,
         // SEO fields - convert from SEOMeta format to Firebase format
         meta_title: form.seo?.title || '',
+        meta_title_ar: form.seo?.titleAr || '',
         meta_description: form.seo?.description || '',
+        meta_description_ar: form.seo?.descriptionAr || '',
         meta_keywords: form.seo?.keywords || '',
+        meta_keywords_ar: form.seo?.keywordsAr || '',
         canonical_url: form.seo?.canonicalUrl || '',
         og_title: form.seo?.ogTitle || '',
+        og_title_ar: form.seo?.ogTitleAr || '',
         og_description: form.seo?.ogDescription || '',
+        og_description_ar: form.seo?.ogDescriptionAr || '',
         og_image: form.seo?.ogImage || '',
         twitter_title: form.seo?.twitterTitle || '',
+        twitter_title_ar: form.seo?.twitterTitleAr || '',
         twitter_description: form.seo?.twitterDescription || '',
+        twitter_description_ar: form.seo?.twitterDescriptionAr || '',
         twitter_image: form.seo?.twitterImage || '',
         updated_at: new Date()
       }

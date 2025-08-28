@@ -1,17 +1,24 @@
 import { firestoreService } from '@/lib/firebase'
-import type { Product } from '@/lib/firebase'
+import type { Product, Category, Page } from '@/lib/firebase'
 
 interface SEOData {
   meta_title?: string
+  meta_title_ar?: string
   meta_description?: string
+  meta_description_ar?: string
   meta_keywords?: string
+  meta_keywords_ar?: string
   slug?: string
   canonical_url?: string
   og_title?: string
+  og_title_ar?: string
   og_description?: string
+  og_description_ar?: string
   og_image?: string
   twitter_title?: string
+  twitter_title_ar?: string
   twitter_description?: string
+  twitter_description_ar?: string
   twitter_image?: string
 }
 
@@ -19,178 +26,248 @@ export class SEOGenerator {
   
   // Generate SEO for Product
   static generateProductSEO(product: Product, siteName: string = 'SpiritHub Cafe'): SEOData {
-    const name = product.name || ''
-    const description = product.description || ''
+    const nameEn = product.name || ''
+    const nameAr = product.name_ar || product.name || ''
+    const descriptionEn = product.description || ''
+    const descriptionAr = product.description_ar || product.description || ''
     
-    // Clean HTML from description
-    const cleanDescription = this.cleanHTML(description)
+    // Clean HTML from descriptions
+    const cleanDescriptionEn = this.cleanHTML(descriptionEn)
+    const cleanDescriptionAr = this.cleanHTML(descriptionAr)
     
     // Generate titles
-    const metaTitle = `${name} - قهوة مختصة | ${siteName}`
+    const metaTitleEn = `${nameEn} - Premium Coffee | ${siteName}`
+    const metaTitleAr = `${nameAr} - قهوة مختصة | ${siteName}`
     
     // Generate descriptions (max 160 characters)
-    const metaDescription = this.truncateText(
-      cleanDescription || `اكتشف ${name} من ${siteName}. قهوة عالية الجودة مع أفضل الأسعار والتوصيل السريع.`,
+    const metaDescriptionEn = this.truncateText(
+      cleanDescriptionEn || `Discover ${nameEn} from ${siteName}. High quality coffee with the best prices and fast delivery.`,
+      160
+    )
+    const metaDescriptionAr = this.truncateText(
+      cleanDescriptionAr || `اكتشف ${nameAr} من ${siteName}. قهوة عالية الجودة مع أفضل الأسعار والتوصيل السريع.`,
       160
     )
     
     // Generate keywords
-    const keywords = this.generateProductKeywords(product)
+    const keywordsEn = this.generateProductKeywords(product, 'en')
+    const keywordsAr = this.generateProductKeywords(product, 'ar')
     
     // Generate slug if not exists
-    const slug = product.slug || this.generateSlug(name)
+    const slug = product.slug || this.generateSlug(nameEn)
     
     // Get main image
     const mainImage = product.image_url || product.image || product.images?.[0] || ''
     
     return {
-      meta_title: metaTitle,
-      meta_description: metaDescription,
-      meta_keywords: keywords.join(', '),
+      meta_title: metaTitleEn,
+      meta_title_ar: metaTitleAr,
+      meta_description: metaDescriptionEn,
+      meta_description_ar: metaDescriptionAr,
+      meta_keywords: keywordsEn.join(', '),
+      meta_keywords_ar: keywordsAr.join(', '),
       slug: slug,
       canonical_url: `/products/${slug}`,
-      og_title: metaTitle,
-      og_description: metaDescription,
+      og_title: metaTitleEn,
+      og_title_ar: metaTitleAr,
+      og_description: metaDescriptionEn,
+      og_description_ar: metaDescriptionAr,
       og_image: mainImage,
-      twitter_title: metaTitle,
-      twitter_description: metaDescription,
+      twitter_title: metaTitleEn,
+      twitter_title_ar: metaTitleAr,
+      twitter_description: metaDescriptionEn,
+      twitter_description_ar: metaDescriptionAr,
       twitter_image: mainImage
     }
   }
   
   // Generate SEO for Category
-  static generateCategorySEO(category: any, siteName: string = 'SpiritHub Cafe'): SEOData {
-    const name = category.name || ''
-    const nameAr = category.name_ar || ''
-    const description = category.description || ''
-    const descriptionAr = category.description_ar || ''
+  static generateCategorySEO(category: Category, siteName: string = 'SpiritHub Cafe'): SEOData {
+    const nameEn = category.name || ''
+    const nameAr = category.name_ar || category.name || ''
+    const descriptionEn = category.description || ''
+    const descriptionAr = category.description_ar || category.description || ''
     
-    // Clean HTML from description
-    const cleanDescription = this.cleanHTML(description)
+    // Clean HTML from descriptions
+    const cleanDescriptionEn = this.cleanHTML(descriptionEn)
     const cleanDescriptionAr = this.cleanHTML(descriptionAr)
     
     // Generate titles
-    const metaTitle = `${name} - تسوق من مجموعة ${nameAr} | ${siteName}`
+    const metaTitleEn = `${nameEn} - Shop from ${nameEn} Collection | ${siteName}`
+    const metaTitleAr = `${nameAr} - تسوق من مجموعة ${nameAr} | ${siteName}`
     
     // Generate descriptions
-    const metaDescription = this.truncateText(
-      cleanDescription || cleanDescriptionAr || `اكتشف مجموعة ${nameAr} الرائعة في ${siteName}. أفضل المنتجات بأفضل الأسعار مع التوصيل السريع.`,
+    const metaDescriptionEn = this.truncateText(
+      cleanDescriptionEn || `Discover the amazing ${nameEn} collection at ${siteName}. Best products with the best prices and fast delivery.`,
+      160
+    )
+    const metaDescriptionAr = this.truncateText(
+      cleanDescriptionAr || `اكتشف مجموعة ${nameAr} الرائعة في ${siteName}. أفضل المنتجات بأفضل الأسعار مع التوصيل السريع.`,
       160
     )
     
     // Generate keywords
-    const keywords = this.generateCategoryKeywords(category)
+    const keywordsEn = this.generateCategoryKeywords(category, 'en')
+    const keywordsAr = this.generateCategoryKeywords(category, 'ar')
     
     // Generate slug if not exists
-    const slug = category.slug || this.generateSlug(name)
+    const slug = category.slug || this.generateSlug(nameEn)
     
     // Get main image
-    const mainImage = category.image || category.banner_image || ''
+    const mainImage = category.image || ''
     
     return {
-      meta_title: metaTitle,
-      meta_description: metaDescription,
-      meta_keywords: keywords.join(', '),
+      meta_title: metaTitleEn,
+      meta_title_ar: metaTitleAr,
+      meta_description: metaDescriptionEn,
+      meta_description_ar: metaDescriptionAr,
+      meta_keywords: keywordsEn.join(', '),
+      meta_keywords_ar: keywordsAr.join(', '),
       slug: slug,
       canonical_url: `/categories/${slug}`,
-      og_title: metaTitle,
-      og_description: metaDescription,
+      og_title: metaTitleEn,
+      og_title_ar: metaTitleAr,
+      og_description: metaDescriptionEn,
+      og_description_ar: metaDescriptionAr,
       og_image: mainImage,
-      twitter_title: metaTitle,
-      twitter_description: metaDescription,
+      twitter_title: metaTitleEn,
+      twitter_title_ar: metaTitleAr,
+      twitter_description: metaDescriptionEn,
+      twitter_description_ar: metaDescriptionAr,
       twitter_image: mainImage
     }
   }
   
   // Generate SEO for Page
-  static generatePageSEO(page: any, siteName: string = 'SpiritHub Cafe'): SEOData {
-    const title = page.title || ''
-    const content = page.content || ''
-    const contentAr = page.content_ar || ''
+  static generatePageSEO(page: Page, siteName: string = 'SpiritHub Cafe'): SEOData {
+    const titleEn = page.title || ''
+    const titleAr = page.title_ar || page.title || ''
+    const contentEn = page.content || ''
+    const contentAr = page.content_ar || page.content || ''
     
     // Clean HTML from content
-    const cleanContent = this.cleanHTML(content)
+    const cleanContentEn = this.cleanHTML(contentEn)
     const cleanContentAr = this.cleanHTML(contentAr)
     
     // Generate titles
-    const metaTitle = `${title} | ${siteName}`
+    const metaTitleEn = `${titleEn} | ${siteName}`
+    const metaTitleAr = `${titleAr} | ${siteName}`
     
     // Generate descriptions from content (first 160 chars)
-    const metaDescription = this.truncateText(
-      cleanContent || cleanContentAr || `${title} - معلومات مهمة من ${siteName}`,
+    const metaDescriptionEn = this.truncateText(
+      cleanContentEn || `${titleEn} - Important information from ${siteName}`,
+      160
+    )
+    const metaDescriptionAr = this.truncateText(
+      cleanContentAr || `${titleAr} - معلومات مهمة من ${siteName}`,
       160
     )
     
     // Generate keywords
-    const keywords = this.generatePageKeywords(page)
+    const keywordsEn = this.generatePageKeywords(page, 'en')
+    const keywordsAr = this.generatePageKeywords(page, 'ar')
     
     // Generate slug if not exists
-    const slug = page.slug || this.generateSlug(title)
+    const slug = page.slug || this.generateSlug(titleEn)
     
     return {
-      meta_title: metaTitle,
-      meta_description: metaDescription,
-      meta_keywords: keywords.join(', '),
+      meta_title: metaTitleEn,
+      meta_title_ar: metaTitleAr,
+      meta_description: metaDescriptionEn,
+      meta_description_ar: metaDescriptionAr,
+      meta_keywords: keywordsEn.join(', '),
+      meta_keywords_ar: keywordsAr.join(', '),
       slug: slug,
       canonical_url: `/pages/${slug}`,
-      og_title: metaTitle,
-      og_description: metaDescription,
-      twitter_title: metaTitle,
-      twitter_description: metaDescription
+      og_title: metaTitleEn,
+      og_title_ar: metaTitleAr,
+      og_description: metaDescriptionEn,
+      og_description_ar: metaDescriptionAr,
+      twitter_title: metaTitleEn,
+      twitter_title_ar: metaTitleAr,
+      twitter_description: metaDescriptionEn,
+      twitter_description_ar: metaDescriptionAr
     }
   }
   
   // Generate keywords for product
-  private static generateProductKeywords(product: Product): string[] {
+  private static generateProductKeywords(product: Product, language: 'en' | 'ar' = 'en'): string[] {
     const keywords: string[] = []
     
-    // Add product name
-    if (product.name) keywords.push(product.name)
-    if (product.name_ar) keywords.push(product.name_ar)
-    
-    // Add coffee-specific keywords
-    if (product.roast_level) keywords.push(product.roast_level, product.roast_level_ar || '')
-    if (product.processing_method) keywords.push(product.processing_method, product.processing_method_ar || '')
-    if (product.variety) keywords.push(product.variety, product.variety_ar || '')
-    if (product.notes) keywords.push(...product.notes.split(',').map(n => n.trim()))
-    if (product.notes_ar) keywords.push(...product.notes_ar.split(',').map(n => n.trim()))
-    
-    // Add general coffee keywords
-    keywords.push('قهوة', 'coffee', 'كافيه', 'قهوة عربية', 'قهوة مختصة', 'specialty coffee')
+    if (language === 'en') {
+      // English keywords
+      if (product.name) keywords.push(product.name)
+      if (product.roast_level) keywords.push(product.roast_level)
+      if (product.processing_method) keywords.push(product.processing_method)
+      if (product.variety) keywords.push(product.variety)
+      if (product.notes) keywords.push(...product.notes.split(',').map(n => n.trim()))
+      
+      // Add general English coffee keywords
+      keywords.push('coffee', 'specialty coffee', 'premium coffee', 'roasted coffee', 'beans')
+    } else {
+      // Arabic keywords
+      if (product.name_ar) keywords.push(product.name_ar)
+      if (product.roast_level_ar) keywords.push(product.roast_level_ar)
+      if (product.processing_method_ar) keywords.push(product.processing_method_ar)
+      if (product.variety_ar) keywords.push(product.variety_ar)
+      if (product.notes_ar) keywords.push(...product.notes_ar.split(',').map(n => n.trim()))
+      
+      // Add general Arabic coffee keywords
+      keywords.push('قهوة', 'كافيه', 'قهوة عربية', 'قهوة مختصة', 'قهوة محمصة', 'حبوب قهوة')
+    }
     
     // Remove empty strings and duplicates
     return [...new Set(keywords.filter(k => k && k.trim() !== ''))]
   }
   
   // Generate keywords for category
-  private static generateCategoryKeywords(category: any): string[] {
+  private static generateCategoryKeywords(category: Category, language: 'en' | 'ar' = 'en'): string[] {
     const keywords: string[] = []
     
-    if (category.name) keywords.push(category.name)
-    if (category.name_ar) keywords.push(category.name_ar)
-    
-    // Add general keywords
-    keywords.push('تسوق', 'منتجات', 'قهوة', 'coffee', 'shop', 'products')
+    if (language === 'en') {
+      // English keywords
+      if (category.name) keywords.push(category.name)
+      keywords.push('shop', 'products', 'coffee', 'collection', 'category', 'buy')
+    } else {
+      // Arabic keywords
+      if (category.name_ar) keywords.push(category.name_ar)
+      keywords.push('تسوق', 'منتجات', 'قهوة', 'مجموعة', 'فئة', 'شراء')
+    }
     
     return [...new Set(keywords.filter(k => k && k.trim() !== ''))]
   }
   
   // Generate keywords for page
-  private static generatePageKeywords(page: any): string[] {
+  private static generatePageKeywords(page: Page, language: 'en' | 'ar' = 'en'): string[] {
     const keywords: string[] = []
     
-    if (page.title) keywords.push(page.title)
-    if (page.title_ar) keywords.push(page.title_ar)
-    
-    // Extract keywords from content (first 100 words)
-    const content = this.cleanHTML(page.content || page.content_ar || '')
-    const words = content.split(' ').slice(0, 100)
-    const importantWords = words.filter(word => 
-      word.length > 3 && 
-      !['that', 'this', 'with', 'from', 'they', 'have', 'been', 'will', 'would', 'could', 'should'].includes(word.toLowerCase())
-    )
-    
-    keywords.push(...importantWords.slice(0, 10))
+    if (language === 'en') {
+      // English keywords
+      if (page.title) keywords.push(page.title)
+      
+      // Extract keywords from English content
+      const content = this.cleanHTML(page.content || '')
+      const words = content.split(' ').slice(0, 100)
+      const importantWords = words.filter(word => 
+        word.length > 3 && 
+        !['that', 'this', 'with', 'from', 'they', 'have', 'been', 'will', 'would', 'could', 'should'].includes(word.toLowerCase())
+      )
+      keywords.push(...importantWords.slice(0, 8))
+      keywords.push('page', 'information', 'details')
+    } else {
+      // Arabic keywords
+      if (page.title_ar) keywords.push(page.title_ar)
+      
+      // Extract keywords from Arabic content
+      const content = this.cleanHTML(page.content_ar || '')
+      const words = content.split(' ').slice(0, 100)
+      const importantWords = words.filter(word => 
+        word.length > 3 && 
+        !['هذا', 'هذه', 'ذلك', 'التي', 'الذي', 'كان', 'كانت', 'يكون', 'تكون'].includes(word)
+      )
+      keywords.push(...importantWords.slice(0, 8))
+      keywords.push('صفحة', 'معلومات', 'تفاصيل')
+    }
     
     return [...new Set(keywords.filter(k => k && k.trim() !== ''))]
   }
@@ -248,15 +325,22 @@ export class SEOGenerator {
           
           await firestoreService.products.update(product.id, {
             meta_title: seoData.meta_title,
+            meta_title_ar: seoData.meta_title_ar,
             meta_description: seoData.meta_description,
+            meta_description_ar: seoData.meta_description_ar,
             meta_keywords: seoData.meta_keywords,
+            meta_keywords_ar: seoData.meta_keywords_ar,
             slug: seoData.slug,
             canonical_url: seoData.canonical_url,
             og_title: seoData.og_title,
+            og_title_ar: seoData.og_title_ar,
             og_description: seoData.og_description,
+            og_description_ar: seoData.og_description_ar,
             og_image: seoData.og_image,
             twitter_title: seoData.twitter_title,
+            twitter_title_ar: seoData.twitter_title_ar,
             twitter_description: seoData.twitter_description,
+            twitter_description_ar: seoData.twitter_description_ar,
             twitter_image: seoData.twitter_image,
             seo_auto_generated: true,
             seo_generated_at: new Date().toISOString()
@@ -290,15 +374,22 @@ export class SEOGenerator {
           
           await firestoreService.categories.update(category.id, {
             meta_title: seoData.meta_title,
+            meta_title_ar: seoData.meta_title_ar,
             meta_description: seoData.meta_description,
+            meta_description_ar: seoData.meta_description_ar,
             meta_keywords: seoData.meta_keywords,
+            meta_keywords_ar: seoData.meta_keywords_ar,
             slug: seoData.slug,
             canonical_url: seoData.canonical_url,
             og_title: seoData.og_title,
+            og_title_ar: seoData.og_title_ar,
             og_description: seoData.og_description,
+            og_description_ar: seoData.og_description_ar,
             og_image: seoData.og_image,
             twitter_title: seoData.twitter_title,
+            twitter_title_ar: seoData.twitter_title_ar,
             twitter_description: seoData.twitter_description,
+            twitter_description_ar: seoData.twitter_description_ar,
             twitter_image: seoData.twitter_image,
             seo_auto_generated: true,
             seo_generated_at: new Date().toISOString()
@@ -331,14 +422,21 @@ export class SEOGenerator {
           
           await firestoreService.pages.update(page.id, {
             meta_title: seoData.meta_title,
+            meta_title_ar: seoData.meta_title_ar,
             meta_description: seoData.meta_description,
+            meta_description_ar: seoData.meta_description_ar,
             meta_keywords: seoData.meta_keywords,
+            meta_keywords_ar: seoData.meta_keywords_ar,
             slug: seoData.slug,
             canonical_url: seoData.canonical_url,
             og_title: seoData.og_title,
+            og_title_ar: seoData.og_title_ar,
             og_description: seoData.og_description,
+            og_description_ar: seoData.og_description_ar,
             twitter_title: seoData.twitter_title,
+            twitter_title_ar: seoData.twitter_title_ar,
             twitter_description: seoData.twitter_description,
+            twitter_description_ar: seoData.twitter_description_ar,
             seo_auto_generated: true,
             seo_generated_at: new Date().toISOString()
           })

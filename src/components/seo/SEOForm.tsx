@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -38,6 +38,8 @@ export function SEOForm({
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   
+  console.log('SEOForm initialData:', initialData)
+  
   const [seoData, setSeoData] = useState<SEOMeta>({
     title: '',
     titleAr: '',
@@ -65,6 +67,15 @@ export function SEOForm({
     noFollow: false,
     ...initialData
   })
+
+  // Update seoData when initialData changes
+  useEffect(() => {
+    console.log('SEOForm useEffect - initialData changed:', initialData)
+    setSeoData(prev => ({
+      ...prev,
+      ...initialData
+    }))
+  }, [initialData])
 
   const analysis = useSEOAnalysis(seoData)
 
