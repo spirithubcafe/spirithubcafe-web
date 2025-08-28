@@ -171,105 +171,134 @@ export function ShopPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
               {isArabic ? 'متجر القهوة' : 'Coffee Shop'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground text-sm lg:text-base">
               {isArabic 
-                ? `اكتشف مجموعتنا المميزة من ${products.length} منتج` 
-                : `Discover our premium collection of ${products.length} products`
+                ? `اكتشف مجموعتنا المميزة من ${products.length} منتج عالي الجودة` 
+                : `Discover our premium collection of ${products.length} high-quality products`
               }
             </p>
           </div>
           
-          <div className="hidden md:flex items-center gap-4">
-            <Badge variant="secondary" className="text-sm">
-              {isArabic ? `${filteredProducts.length} منتج` : `${filteredProducts.length} Products`}
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm font-medium border-amber-200 text-amber-700 bg-amber-50">
+              {isArabic ? `${filteredProducts.length} منتج متاح` : `${filteredProducts.length} Available`}
             </Badge>
+            {searchQuery && (
+              <Badge variant="secondary" className="text-sm">
+                {isArabic ? 'نتائج البحث' : 'Search Results'}
+              </Badge>
+            )}
           </div>
         </div>
         
-        {/* Filters */}
-        <div className="space-y-4">
+        {/* Enhanced Filters */}
+        <div className="bg-card border rounded-lg p-4 lg:p-6 shadow-sm">
           <div className="flex flex-col lg:flex-row gap-4">
+            {/* Search Input */}
             <div className="flex-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                {isArabic ? 'البحث' : 'Search'}
+              </label>
               <Input
-                placeholder={isArabic ? 'البحث عن المنتجات...' : 'Search products...'}
+                placeholder={isArabic ? 'ابحث عن اسم المنتج، النوع، أو الوصف...' : 'Search by name, type, or description...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full"
+                className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center px-3"
               />
             </div>
             
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categoryOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Category Filter */}
+            <div className="lg:w-56">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                {isArabic ? 'التصنيف' : 'Category'}
+              </label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
+                  <SelectValue placeholder={isArabic ? 'اختر التصنيف' : 'Select Category'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full lg:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">{isArabic ? 'الاسم' : 'Name'}</SelectItem>
-                <SelectItem value="price-low">{isArabic ? 'السعر: الأقل إلى الأعلى' : 'Price: Low to High'}</SelectItem>
-                <SelectItem value="price-high">{isArabic ? 'السعر: الأعلى إلى الأقل' : 'Price: High to Low'}</SelectItem>
-                <SelectItem value="featured">{isArabic ? 'المميزة' : 'Featured'}</SelectItem>
-                <SelectItem value="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Bestseller'}</SelectItem>
-                <SelectItem value="new">{isArabic ? 'وصل حديثاً' : 'New Arrivals'}</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Sort Filter */}
+            <div className="lg:w-56">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                {isArabic ? 'ترتيب حسب' : 'Sort By'}
+              </label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
+                  <SelectValue placeholder={isArabic ? 'اختر الترتيب' : 'Select Sort'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">{isArabic ? 'الاسم (أ-ي)' : 'Name (A-Z)'}</SelectItem>
+                  <SelectItem value="price-low">{isArabic ? 'السعر: الأقل إلى الأعلى' : 'Price: Low to High'}</SelectItem>
+                  <SelectItem value="price-high">{isArabic ? 'السعر: الأعلى إلى الأقل' : 'Price: High to Low'}</SelectItem>
+                  <SelectItem value="featured">{isArabic ? 'المنتجات المميزة' : 'Featured Products'}</SelectItem>
+                  <SelectItem value="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Best Sellers'}</SelectItem>
+                  <SelectItem value="new">{isArabic ? 'وصل حديثاً' : 'New Arrivals'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Active Filters Summary */}
           {(searchQuery || selectedCategory !== 'all') && (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">
-                {isArabic ? 'الفلاتر النشطة:' : 'Active filters:'}
-              </span>
-              {searchQuery && (
-                <Badge variant="secondary" className="gap-1">
-                  {isArabic ? 'البحث:' : 'Search:'} "{searchQuery}"
-                  <button 
-                    onClick={() => setSearchQuery('')}
-                    className="ml-1 hover:text-destructive"
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">
+                  {isArabic ? 'الفلاتر النشطة:' : 'Active Filters:'}
+                </span>
+                {searchQuery && (
+                  <Badge variant="secondary" className="gap-2 bg-amber-100 text-amber-800 border-amber-200">
+                    <span className="text-xs">{isArabic ? 'البحث:' : 'Search:'}</span>
+                    <span className="font-medium">"{searchQuery}"</span>
+                    <button 
+                      onClick={() => setSearchQuery('')}
+                      className="ml-1 hover:text-destructive transition-colors"
+                      title={isArabic ? 'إزالة' : 'Remove'}
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                )}
+                {selectedCategory !== 'all' && (
+                  <Badge variant="secondary" className="gap-2 bg-blue-100 text-blue-800 border-blue-200">
+                    <span className="text-xs">{isArabic ? 'التصنيف:' : 'Category:'}</span>
+                    <span className="font-medium">{categoryOptions.find(c => c.value === selectedCategory)?.label}</span>
+                    <button 
+                      onClick={() => setSelectedCategory('all')}
+                      className="ml-1 hover:text-destructive transition-colors"
+                      title={isArabic ? 'إزالة' : 'Remove'}
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                )}
+                {(searchQuery || selectedCategory !== 'all') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setSelectedCategory('all')
+                    }}
+                    className="text-xs h-7 text-muted-foreground hover:text-destructive"
                   >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {selectedCategory !== 'all' && (
-                <Badge variant="secondary" className="gap-1">
-                  {categoryOptions.find(c => c.value === selectedCategory)?.label}
-                  <button 
-                    onClick={() => setSelectedCategory('all')}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery('')
-                  setSelectedCategory('all')
-                }}
-                className="text-xs h-6"
-              >
-                {isArabic ? 'مسح الكل' : 'Clear all'}
-              </Button>
+                    {isArabic ? 'مسح جميع الفلاتر' : 'Clear All Filters'}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>

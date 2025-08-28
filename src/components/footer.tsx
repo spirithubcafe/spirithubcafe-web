@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Facebook, Twitter, Instagram } from 'lucide-react'
+import { Facebook, Twitter, Instagram, Mail, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useFooterSettings } from '@/hooks/useFooterSettings'
 import { useState, useEffect, useCallback } from 'react'
@@ -222,8 +222,8 @@ export function Footer() {
               />
             </div>
 
-            {/* Quick Links - Smaller column */}
-            <div className="space-y-4">
+            {/* Quick Links - Smaller column with top margin to align with description */}
+            <div className="space-y-4 lg:mt-24">
               <h3 
                 className="text-base font-semibold"
                 style={{ color: footerStyles.headingColor }}
@@ -238,8 +238,8 @@ export function Footer() {
               </nav>
             </div>
 
-            {/* Legal Pages - Smaller column */}
-            <div className="space-y-4">
+            {/* Legal Pages - Smaller column with top margin to align with description */}
+            <div className="space-y-4 lg:mt-24">
               <h3 
                 className="text-base font-semibold"
                 style={{ color: footerStyles.headingColor }}
@@ -278,8 +278,8 @@ export function Footer() {
               </nav>
             </div>
 
-            {/* Contact Info - Smaller column */}
-            <div className="space-y-4">
+            {/* Contact Info - Smaller column with top margin to align with description */}
+            <div className="space-y-4 lg:mt-24">
               <h3 
                 className="text-base font-semibold"
                 style={{ color: footerStyles.headingColor }}
@@ -337,6 +337,22 @@ export function Footer() {
                     label="Instagram"
                   >
                     <Instagram className="h-6 w-6 no-flip" />
+                  </StyledSocialIcon>
+                )}
+                {settings?.whatsapp && (
+                  <StyledSocialIcon 
+                    href={`https://wa.me/${settings.whatsapp.replace(/\D/g, '')}`}
+                    label="WhatsApp"
+                  >
+                    <MessageCircle className="h-6 w-6 no-flip" />
+                  </StyledSocialIcon>
+                )}
+                {settings?.email && (
+                  <StyledSocialIcon 
+                    href={`mailto:${settings.email}`}
+                    label="Email"
+                  >
+                    <Mail className="h-6 w-6 no-flip" />
                   </StyledSocialIcon>
                 )}
                 {/* Fallback to translation keys if settings not available */}

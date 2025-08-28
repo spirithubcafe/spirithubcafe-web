@@ -259,7 +259,7 @@ export function FooterManagement() {
           </TabsContent>
 
           <TabsContent value="social" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="instagram">{t('dashboard.admin.footerForm.instagram')}</Label>
                 <Input
@@ -285,6 +285,28 @@ export function FooterManagement() {
                   value={settings.twitter || ''}
                   onChange={(e) => updateSetting('twitter', e.target.value)}
                   placeholder="spirithubcafe"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp">{t('dashboard.admin.footerForm.whatsapp')}</Label>
+                <Input
+                  id="whatsapp"
+                  value={settings.whatsapp || ''}
+                  onChange={(e) => updateSetting('whatsapp', e.target.value)}
+                  placeholder="+968 1234 5678"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center space-x-2">
+                  <Mail className="h-4 w-4" />
+                  <span>{t('dashboard.admin.footerForm.email')}</span>
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={settings.email}
+                  onChange={(e) => updateSetting('email', e.target.value)}
+                  placeholder="info@spirithubcafe.com"
                 />
               </div>
             </div>
