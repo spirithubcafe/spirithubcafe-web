@@ -106,10 +106,32 @@ export interface HomepageSettings {
   latestReleaseBackgroundType?: 'color' | 'image' // Background type
 }
 
+export interface NewsletterSettings {
+  // Newsletter section visibility
+  showNewsletterSection?: boolean
+  
+  // Background settings
+  newsletterBackgroundType?: 'color' | 'image' // Background type for newsletter section
+  newsletterBackgroundColor?: string // Background color (legacy)
+  newsletterBackgroundColorLight?: string // Background color for light theme
+  newsletterBackgroundColorDark?: string // Background color for dark theme
+  newsletterBackgroundImage?: string // Background image URL
+  
+  // Newsletter image
+  newsletterImage?: string // Image displayed next to newsletter form
+  
+  // Content settings
+  newsletterTitle?: string // Newsletter title in English
+  newsletterTitleAr?: string // Newsletter title in Arabic
+  newsletterDescription?: string // Newsletter description in English
+  newsletterDescriptionAr?: string // Newsletter description in Arabic
+}
+
 export interface AppSettings {
   footer: FooterSettings
   categories: CategoriesSettings
   homepage: HomepageSettings
+  newsletter: NewsletterSettings
 }
 
 class SettingsService {
@@ -343,6 +365,62 @@ class SettingsService {
     }
   }
 
+  async getNewsletterSettings(): Promise<NewsletterSettings> {
+    const cacheKey = 'newsletter'
+    
+    // Try cache first
+    const cached = this.getFromCache<NewsletterSettings>(cacheKey)
+    if (cached) return cached
+
+    try {
+      const doc = await firestoreService.getDocument(this.collection, 'newsletter')
+      if (doc.exists()) {
+        const data = doc.data() as NewsletterSettings
+        console.log('SettingsService - Loaded newsletter settings from Firestore:', data)
+        this.setCache(cacheKey, data)
+        return data
+      }
+      
+      // Return default settings if not found
+      console.log('SettingsService - No newsletter settings found, returning defaults')
+      const defaults = this.getDefaultNewsletterSettings()
+      this.setCache(cacheKey, defaults)
+      return defaults
+    } catch (error) {
+      console.error('Error getting newsletter settings:', error)
+      console.log('SettingsService - Error occurred, returning defaults')
+      return this.getDefaultNewsletterSettings()
+    }
+  }
+
+  async updateNewsletterSettings(settings: NewsletterSettings): Promise<void> {
+    try {
+      console.log('SettingsService - Saving newsletter settings to Firestore:', settings)
+      await firestoreService.setDocument(this.collection, 'newsletter', settings)
+      this.invalidateCache('newsletter')
+      console.log('SettingsService - Newsletter settings saved successfully')
+    } catch (error) {
+      console.error('Error updating newsletter settings:', error)
+      throw error
+    }
+  }
+
+  private getDefaultNewsletterSettings(): NewsletterSettings {
+    return {
+      showNewsletterSection: true,
+      newsletterBackgroundType: 'color',
+      newsletterBackgroundColor: '#f8fafc',
+      newsletterBackgroundColorLight: '#f8fafc',
+      newsletterBackgroundColorDark: '#1e293b',
+      newsletterBackgroundImage: '/images/back.jpg',
+      newsletterImage: '/images/cats/specialty-coffee-capsules.webp',
+      newsletterTitle: 'Stay Updated with Spirit Hub Cafe!',
+      newsletterTitleAr: 'ابق على اطلاع مع آخر أخبار سبيريت هب كافيه!',
+      newsletterDescription: 'Sign up to our newsletter and be the first to know about our new products and special offers.',
+      newsletterDescriptionAr: 'اشترك في نشرتنا الإخبارية وكن أول من يعرف عن منتجاتنا الجديدة والعروض الخاصة.'
+    }
+  }
+
   // Utility methods for cache management
   invalidateAllCache(): void {
     this.cache.clear()
@@ -355,6 +433,10 @@ class SettingsService {
 
   forceRefreshHomepage(): void {
     this.invalidateCache('homepage')
+  }
+
+  forceRefreshNewsletter(): void {
+    this.invalidateCache('newsletter')
   }
 
   forceRefreshFooter(): void {

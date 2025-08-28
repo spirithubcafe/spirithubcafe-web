@@ -47,7 +47,7 @@ import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
 import { AboutManagement } from '@/components/admin/AboutManagement'
-import { NewsletterManagement } from '@/components/admin/NewsletterManagement'
+import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 
 export default function DashboardPage() {
@@ -326,7 +326,7 @@ export default function DashboardPage() {
       case 'about':
         return user?.role === 'admin' && <AboutManagement />
       case 'newsletter':
-        return user?.role === 'admin' && <NewsletterManagement />
+        return user?.role === 'admin' && <NewsletterSettingsManagement />
       default:
         return <DashboardOverview orders={orders} products={products} />
     }

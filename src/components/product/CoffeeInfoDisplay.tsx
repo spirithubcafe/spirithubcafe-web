@@ -123,23 +123,23 @@ export default function CoffeeInfoDisplay({
   }
 
   return (
-    <Card className={className}>
-      <CardContent className="p-5" dir={isArabic ? 'rtl' : 'ltr'}>
-        <div className={`w-full mb-4 ${isArabic ? 'text-right' : 'text-left'}`}>
+    <Card className={`${className} compact-mode py-0`}>
+      <CardContent className="p-3" dir={isArabic ? 'rtl' : 'ltr'}>
+        <div className={`w-full mb-2 ${isArabic ? 'text-right' : 'text-left'}`}>
           <div className={`flex items-center gap-2 ${isArabic ? 'justify-end' : 'justify-start'}`}>
-            <Coffee className="h-5 w-5 text-amber-800 dark:text-amber-200" />
+            <Coffee className="h-4 w-4 text-amber-800 dark:text-amber-200" />
             <h3 className="font-medium text-sm">
               {t('product.coffeeInformation')}
             </h3>
           </div>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-2">
           {coffeeInfo.map((item, index) => (
-            <div key={index} className={`w-full ${(item as any).highlight ? 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3' : ''}`}>
+            <div key={index} className={`w-full ${(item as any).highlight ? 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-2' : ''}`}>
               {isArabic ? (
-                <div className="flex items-center text-sm text-right" dir="rtl">
+                <div className="flex items-center text-xs text-right" dir="rtl">
                   {item.icon}
-                  <span className={`font-medium mx-2 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`font-medium mx-1.5 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
                     {item.label}:
                   </span>
                   <span className={`font-medium mr-auto text-right ${(item as any).highlight ? 'text-red-800 dark:text-red-200 font-semibold' : 'text-foreground'}`}>
@@ -147,9 +147,9 @@ export default function CoffeeInfoDisplay({
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center text-sm">
+                <div className="flex items-center text-xs">
                   {item.icon}
-                  <span className={`font-medium mx-2 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
+                  <span className={`font-medium mx-1.5 ${(item as any).highlight ? 'text-red-700 dark:text-red-300 font-semibold' : 'text-muted-foreground'}`}>
                     {item.label}:
                   </span>
                   <span className={`font-medium ml-auto ${(item as any).highlight ? 'text-red-800 dark:text-red-200 font-semibold' : 'text-foreground'}`}>

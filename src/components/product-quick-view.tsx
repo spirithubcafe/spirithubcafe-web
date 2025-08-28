@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Star, Plus, Minus, Heart } from 'lucide-react'
+import { Plus, Minus, Heart } from 'lucide-react'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -138,13 +138,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
       })
     }
     
-    if (product.is_featured) {
-      badges.push({
-        text: isArabic ? 'مميز' : 'Featured',
-        color: 'bg-amber-500'
-      })
-    }
-    
     if (product.stock_quantity <= 5 && product.stock_quantity > 0) {
       badges.push({
         text: isArabic ? 'كمية محدودة' : 'Limited Stock',
@@ -157,8 +150,6 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
   const badges = getProductBadges()
   const productName = isArabic ? (product.name_ar || product.name) : product.name
-  const averageRating = product.average_rating || 0
-  const totalReviews = product.total_reviews || 0
 
   // Get all available images
   const getProductImages = () => {
@@ -210,10 +201,10 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
-        <div className="grid lg:grid-cols-2 gap-8 p-6">
+      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-y-auto">
+        <div className="grid lg:grid-cols-2 gap-6 p-4">
           {/* Product Images - Left Side */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Main Image */}
             <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
               {productImages.length > 0 ? (
@@ -262,32 +253,16 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
           </div>
 
           {/* Product Information - Right Side */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Title and Rating */}
             <div>
-              <h1 className="text-2xl font-bold mb-3">
+              <h1 className="text-xl font-bold mb-2">
                 {productName}
               </h1>
-              
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(averageRating) ? 'text-yellow-400 fill-current' : 'text-muted-foreground'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  ({averageRating.toFixed(1)}) • {totalReviews} {isArabic ? 'مراجعة' : 'reviews'}
-                </span>
-              </div>
 
               {/* Badges */}
               {badges.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {badges.map((badge, index) => (
                     <Badge key={index} className={`text-white ${badge.color}`}>
                       {badge.text}
@@ -297,71 +272,64 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               )}
             </div>
 
-            {/* Coffee Information Card */}
-            <Card className="py-0">
-              <CardContent className="p-4">
-                <h3 className="text-primary font-semibold mb-3 flex items-center gap-2">
-                  ☕ {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
-                </h3>
-                <CoffeeInfoDisplay
-                  roastLevel={product.roast_level}
-                  roastLevel_ar={product.roast_level_ar}
-                  process={product.processing_method}
-                  process_ar={product.processing_method_ar}
-                  variety={product.variety}
-                  variety_ar={product.variety_ar}
-                  altitude={product.altitude}
-                  altitude_ar={product.altitude_ar}
-                  notes={product.notes}
-                  notes_ar={product.notes_ar}
-                  uses={product.uses}
-                  uses_ar={product.uses_ar}
-                  farm={product.farm}
-                  farm_ar={product.farm_ar}
-                  aromatic_profile={product.aromatic_profile}
-                  aromatic_profile_ar={product.aromatic_profile_ar}
-                  intensity={product.intensity}
-                  intensity_ar={product.intensity_ar}
-                  compatibility={product.compatibility}
-                  compatibility_ar={product.compatibility_ar}
-                  className=""
-                />
-              </CardContent>
-            </Card>
+            {/* Coffee Information */}
+            <CoffeeInfoDisplay
+              roastLevel={product.roast_level}
+              roastLevel_ar={product.roast_level_ar}
+              process={product.processing_method}
+              process_ar={product.processing_method_ar}
+              variety={product.variety}
+              variety_ar={product.variety_ar}
+              altitude={product.altitude}
+              altitude_ar={product.altitude_ar}
+              notes={product.notes}
+              notes_ar={product.notes_ar}
+              uses={product.uses}
+              uses_ar={product.uses_ar}
+              farm={product.farm}
+              farm_ar={product.farm_ar}
+              aromatic_profile={product.aromatic_profile}
+              aromatic_profile_ar={product.aromatic_profile_ar}
+              intensity={product.intensity}
+              intensity_ar={product.intensity_ar}
+              compatibility={product.compatibility}
+              compatibility_ar={product.compatibility_ar}
+              className=""
+            />
 
             {/* Price Section */}
             <Card className="py-0">
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold mb-3">{isArabic ? 'السعر' : 'Price'}</h3>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
+              <CardContent className="p-3">
+                <h3 className="text-base font-semibold mb-2">{isArabic ? 'السعر' : 'Price'}</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
                     {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
                       <>
-                        <span className="text-2xl font-bold text-primary">
+                        <span className="text-xl font-bold text-primary">
                           {formatPrice(priceDetails.finalPrice)}
                         </span>
-                        <span className="text-lg text-muted-foreground line-through">
+                        <span className="text-sm text-muted-foreground line-through">
                           {formatPrice(priceDetails.originalPrice)}
                         </span>
-                        <Badge variant="destructive" className="text-sm">
+                        <Badge variant="destructive" className="text-xs">
                           -{priceDetails.discountPercentage}%
                         </Badge>
                       </>
                     ) : (
-                      <span className="text-2xl font-bold text-primary">
+                      <span className="text-xl font-bold text-primary">
                         {formatPrice(priceDetails.finalPrice)}
                       </span>
                     )}
                   </div>
                   <StockIndicator 
                     stock={product.stock_quantity || product.stock || 0} 
-                    variant="detailed"
+                    variant="compact"
                     lowStockThreshold={10}
                     className="text-green-400"
                   />
                 </div>
                 {priceDetails.isOnSale && priceDetails.discountAmount > 0 && (
-                  <p className="text-sm text-green-400 font-medium">
+                  <p className="text-xs text-green-400 font-medium">
                     {isArabic ? 'توفر' : 'You Save'} {formatPrice(priceDetails.discountAmount)}
                   </p>
                 )}
@@ -371,8 +339,8 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             {/* Dynamic Properties for Selection */}
             {product.properties && product.properties.some(p => p.options && p.options.length > 0) && (
               <Card className="py-0">
-                <CardContent className="p-4">
-                  <div className="space-y-4">
+                <CardContent className="p-3">
+                  <div className="space-y-3">
                     {product.properties
                       .filter(property => property.options && property.options.length > 0)
                       .map((property) => {
@@ -380,10 +348,10 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                         const propertyLabel = isArabic ? property.name : property.name
                         
                         return (
-                          <div key={property.name} className="space-y-3">
-                            <label className="text-sm font-medium">{propertyLabel}</label>
+                          <div key={property.name} className="space-y-2">
+                            <label className="text-xs font-medium">{propertyLabel}</label>
                             
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-3 gap-1.5">
                               {property.options.map((option: any) => {
                                 const optionLabel = isArabic ? option.value : option.value
                                 const isSelected = selectedValue === option.value
@@ -422,15 +390,15 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                                       ...prev,
                                       [property.name]: option.value
                                     }))}
-                                    className={`h-auto p-3 flex flex-col items-center text-center ${
+                                    className={`h-auto p-2 flex flex-col items-center text-center ${
                                       isSelected 
                                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
                                         : 'bg-muted hover:bg-muted/80 border-border'
                                     }`}
                                   >
-                                    <span className="font-medium">{optionLabel}</span>
+                                    <span className="text-xs font-medium">{optionLabel}</span>
                                     {property.affects_price && priceInfo.finalPrice > 0 && (
-                                      <span className="text-xs mt-1 opacity-90">
+                                      <span className="text-xs mt-0.5 opacity-90">
                                         {priceInfo.hasDiscount ? (
                                           <>
                                             <span className="line-through opacity-70">
@@ -462,48 +430,48 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
             {/* Quantity Selector */}
             {product.stock_quantity > 0 && (
-              <div className="space-y-3">
-                <label className="text-sm font-medium">
+              <div className="space-y-2">
+                <label className="text-xs font-medium">
                   {isArabic ? 'الكمية:' : 'Quantity:'}
                 </label>
                 <div className="flex items-center w-fit">
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 rounded-r-none"
+                    className="h-8 w-8 rounded-r-none"
                     onClick={decrementQuantity}
                     disabled={quantity <= 1}
                   >
-                    <Minus className="h-4 w-4" />
+                    <Minus className="h-3 w-3" />
                   </Button>
-                  <div className="flex h-10 w-16 items-center justify-center border-t border-b bg-muted border-border text-sm font-medium">
+                  <div className="flex h-8 w-12 items-center justify-center border-t border-b bg-muted border-border text-xs font-medium">
                     {quantity}
                   </div>
                   <Button
                     variant="outline"
                     size="icon"
-                    className="h-10 w-10 rounded-l-none"
+                    className="h-8 w-8 rounded-l-none"
                     onClick={incrementQuantity}
                     disabled={quantity >= product.stock_quantity}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
             )}
 
             {/* Total Price */}
-            <div className="bg-muted rounded-lg p-4 border border-border">
+            <div className="bg-muted rounded-lg p-3 border border-border">
               <div className="flex items-center justify-between">
-                <span className="text-lg font-semibold">
+                <span className="text-sm font-semibold">
                   {isArabic ? 'المجموع' : 'Total'}
                 </span>
-                <span className="text-2xl font-bold text-primary">
+                <span className="text-lg font-bold text-primary">
                   {formatPrice(getTotalPrice())}
                 </span>
               </div>
               {Object.keys(selectedProperties).length > 0 && (
-                <div className="text-sm text-muted-foreground mt-2">
+                <div className="text-xs text-muted-foreground mt-1">
                   {Object.entries(selectedProperties).map(([key, value]) => (
                     <div key={key}>
                       {isArabic ? 'الحجم المختار:' : 'Choose Size:'} {value}
@@ -514,10 +482,10 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               {/* Add to Cart Button */}
               <Button 
-                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 text-base" 
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-sm" 
                 onClick={handleAddToCart} 
                 disabled={product.stock_quantity <= 0 || isLoading}
               >
@@ -533,9 +501,9 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 size="icon"
                 onClick={handleWishlistToggle}
                 disabled={wishlistLoading}
-                className="p-3"
+                className="h-10 w-10"
               >
-                <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
           </div>

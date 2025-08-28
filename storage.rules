@@ -28,6 +28,13 @@ service firebase.storage {
                    && request.resource.contentType.matches('video/.*');
     }
     
+    // Allow authenticated users to upload newsletter images
+    match /newsletter/{imageType}/{fileName} {
+      allow write: if request.auth != null 
+                   && request.resource.size < 10 * 1024 * 1024 // 10MB limit
+                   && request.resource.contentType.matches('image/.*');
+    }
+    
     // Allow authenticated users to upload hero slides (images and videos)
     match /hero-slides/{fileName} {
       allow write: if request.auth != null 

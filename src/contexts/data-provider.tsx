@@ -5,6 +5,7 @@ import {
   type HomepageSettings, 
   type FooterSettings, 
   type CategoriesSettings,
+  type NewsletterSettings,
   settingsService
 } from '@/services/settings'
 import { heroService } from '@/services/hero'
@@ -24,6 +25,7 @@ interface DataCache {
   footerSettings: CachedData<FooterSettings> | null
   categoriesSettings: CachedData<CategoriesSettings> | null
   heroSettings: CachedData<HeroSettings> | null
+  newsletterSettings: CachedData<NewsletterSettings> | null
 }
 
 interface DataContextType {
@@ -34,6 +36,7 @@ interface DataContextType {
   footerSettings: FooterSettings | null
   categoriesSettings: CategoriesSettings | null
   heroSettings: HeroSettings | null
+  newsletterSettings: NewsletterSettings | null
   
   // Loading states
   loadingProducts: boolean
@@ -42,6 +45,7 @@ interface DataContextType {
   loadingFooterSettings: boolean
   loadingCategoriesSettings: boolean
   loadingHeroSettings: boolean
+  loadingNewsletterSettings: boolean
   
   // Actions
   refreshProducts: () => Promise<void>
@@ -50,6 +54,7 @@ interface DataContextType {
   refreshFooterSettings: () => Promise<void>
   refreshCategoriesSettings: () => Promise<void>
   refreshHeroSettings: () => Promise<void>
+  refreshNewsletterSettings: () => Promise<void>
   refreshAllData: () => Promise<void>
   
   // Get specific product
@@ -70,6 +75,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     footerSettings: null,
     categoriesSettings: null,
     heroSettings: null,
+    newsletterSettings: null,
   })
   
   const [loadingStates, setLoadingStates] = useState({
@@ -79,6 +85,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     loadingFooterSettings: true,
     loadingCategoriesSettings: true,
     loadingHeroSettings: true,
+    loadingNewsletterSettings: true,
   })
 
   // Check if cache is valid
@@ -216,6 +223,24 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Load newsletter settings
+  const loadNewsletterSettings = async (forceRefresh = false): Promise<void> => {
+    if (!forceRefresh && isCacheValid(cache.newsletterSettings)) {
+      return
+    }
+    
+    updateLoadingState('loadingNewsletterSettings', true)
+    try {
+      const settings = await settingsService.getNewsletterSettings()
+      updateCache('newsletterSettings', settings)
+    } catch (error) {
+      console.error('Error loading newsletter settings:', error)
+      updateCache('newsletterSettings', null)
+    } finally {
+      updateLoadingState('loadingNewsletterSettings', false)
+    }
+  }
+
   // Load all data on initial load
   useEffect(() => {
     const loadAllData = async () => {
@@ -226,6 +251,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         loadFooterSettings(),
         loadCategoriesSettings(),
         loadHeroSettings(),
+        loadNewsletterSettings(),
       ])
     }
     
@@ -239,6 +265,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const refreshFooterSettings = () => loadFooterSettings(true)
   const refreshCategoriesSettings = () => loadCategoriesSettings(true)
   const refreshHeroSettings = () => loadHeroSettings(true)
+  const refreshNewsletterSettings = () => loadNewsletterSettings(true)
   
   const refreshAllData = async () => {
     await Promise.all([
@@ -248,6 +275,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       refreshFooterSettings(),
       refreshCategoriesSettings(),
       refreshHeroSettings(),
+      refreshNewsletterSettings(),
     ])
   }
 
@@ -272,6 +300,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     footerSettings: cache.footerSettings?.data || null,
     categoriesSettings: cache.categoriesSettings?.data || null,
     heroSettings: cache.heroSettings?.data || null,
+    newsletterSettings: cache.newsletterSettings?.data || null,
     
     // Loading states
     ...loadingStates,
@@ -283,6 +312,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     refreshFooterSettings,
     refreshCategoriesSettings,
     refreshHeroSettings,
+    refreshNewsletterSettings,
     refreshAllData,
     
     // Helpers
@@ -335,4 +365,9 @@ export function useGlobalCategoriesSettings() {
 export function useGlobalHeroSettings() {
   const { heroSettings, loadingHeroSettings, refreshHeroSettings } = useData()
   return { settings: heroSettings, loading: loadingHeroSettings, refresh: refreshHeroSettings }
+}
+
+export function useGlobalNewsletterSettings() {
+  const { newsletterSettings, loadingNewsletterSettings, refreshNewsletterSettings } = useData()
+  return { settings: newsletterSettings, loading: loadingNewsletterSettings, refresh: refreshNewsletterSettings }
 }

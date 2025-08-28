@@ -4,11 +4,15 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from '@/components/theme-provider'
 import { firestoreService } from '@/lib/firebase'
+import { useGlobalNewsletterSettings } from '@/contexts/data-provider'
 import toast from 'react-hot-toast'
 
 export function NewsletterSection() {
   const { i18n } = useTranslation()
+  const { resolvedTheme } = useTheme()
+  const { settings: newsletterSettings } = useGlobalNewsletterSettings()
   const [email, setEmail] = useState('')
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -85,14 +89,35 @@ export function NewsletterSection() {
 
   if (isSubscribed) {
     return (
-      <section className="py-12 lg:py-16 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <section 
+        className="py-12 lg:py-16 relative"
+        style={{
+          backgroundColor: newsletterSettings?.newsletterBackgroundType === 'color' 
+            ? (resolvedTheme === 'dark' 
+                ? newsletterSettings?.newsletterBackgroundColorDark || newsletterSettings?.newsletterBackgroundColor
+                : newsletterSettings?.newsletterBackgroundColorLight || newsletterSettings?.newsletterBackgroundColor)
+            : undefined,
+          backgroundImage: newsletterSettings?.newsletterBackgroundType === 'image' && newsletterSettings?.newsletterBackgroundImage
+            ? `url(${newsletterSettings.newsletterBackgroundImage})`
+            : undefined,
+          backgroundSize: newsletterSettings?.newsletterBackgroundType === 'image' ? 'cover' : undefined,
+          backgroundPosition: newsletterSettings?.newsletterBackgroundType === 'image' ? 'center' : undefined,
+          backgroundRepeat: newsletterSettings?.newsletterBackgroundType === 'image' ? 'no-repeat' : undefined,
+          backgroundAttachment: newsletterSettings?.newsletterBackgroundType === 'image' ? 'fixed' : undefined
+        }}
+      >
+        {/* Overlay for better text readability when using background image */}
+        {newsletterSettings?.newsletterBackgroundType === 'image' && newsletterSettings?.newsletterBackgroundImage && (
+          <div className="absolute inset-0 bg-black/20"></div>
+        )}
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left side - Image */}
             <div className={`${isArabic ? 'lg:order-2' : 'lg:order-1'}`}>
               <div className="relative h-[280px] lg:h-[400px] rounded-xl overflow-hidden shadow-lg">
                 <img 
-                  src="/images/cats/specialty-coffee-capsules.webp" 
+                  src={newsletterSettings?.newsletterImage || "/images/cats/specialty-coffee-capsules.webp"} 
                   alt="Coffee Newsletter"
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -125,14 +150,35 @@ export function NewsletterSection() {
   }
 
   return (
-    <section className="py-12 lg:py-16 bg-card">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section 
+      className="py-12 lg:py-16 relative"
+      style={{
+        backgroundColor: newsletterSettings?.newsletterBackgroundType === 'color' 
+          ? (resolvedTheme === 'dark' 
+              ? newsletterSettings?.newsletterBackgroundColorDark || newsletterSettings?.newsletterBackgroundColor
+              : newsletterSettings?.newsletterBackgroundColorLight || newsletterSettings?.newsletterBackgroundColor)
+          : undefined,
+        backgroundImage: newsletterSettings?.newsletterBackgroundType === 'image' && newsletterSettings?.newsletterBackgroundImage
+          ? `url(${newsletterSettings.newsletterBackgroundImage})`
+          : undefined,
+        backgroundSize: newsletterSettings?.newsletterBackgroundType === 'image' ? 'cover' : undefined,
+        backgroundPosition: newsletterSettings?.newsletterBackgroundType === 'image' ? 'center' : undefined,
+        backgroundRepeat: newsletterSettings?.newsletterBackgroundType === 'image' ? 'no-repeat' : undefined,
+        backgroundAttachment: newsletterSettings?.newsletterBackgroundType === 'image' ? 'fixed' : undefined
+      }}
+    >
+      {/* Overlay for better text readability when using background image */}
+      {newsletterSettings?.newsletterBackgroundType === 'image' && newsletterSettings?.newsletterBackgroundImage && (
+        <div className="absolute inset-0 bg-black/40"></div>
+      )}
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left side - Image */}
           <div className={`${isArabic ? 'lg:order-2' : 'lg:order-1'}`}>
             <div className="relative h-[280px] lg:h-[400px] rounded-xl overflow-hidden shadow-lg">
               <img 
-                src="/images/cats/specialty-coffee-capsules.webp" 
+                src={newsletterSettings?.newsletterImage || "/images/cats/specialty-coffee-capsules.webp"} 
                 alt="Coffee Newsletter"
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -146,17 +192,21 @@ export function NewsletterSection() {
           {/* Right side - Newsletter form */}
           <div className={`${isArabic ? 'lg:order-1' : 'lg:order-2'}`}>
             <div className="max-w-lg">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4 leading-tight text-foreground">
+              <h2 className={`text-2xl md:text-3xl font-bold mb-4 leading-tight ${
+                newsletterSettings?.newsletterBackgroundType === 'image' ? 'text-white' : 'text-foreground'
+              }`}>
                 {isArabic 
-                  ? 'ابق على اطلاع مع آخر أخبار سبيريت هب كافيه!' 
-                  : 'Stay Updated with Spirit Hub Cafe!'
+                  ? (newsletterSettings?.newsletterTitleAr || 'ابق على اطلاع مع آخر أخبار سبيريت هب كافيه!')
+                  : (newsletterSettings?.newsletterTitle || 'Stay Updated with Spirit Hub Cafe!')
                 }
               </h2>
               
-              <p className="text-base text-muted-foreground mb-6 leading-relaxed">
+              <p className={`text-base mb-6 leading-relaxed ${
+                newsletterSettings?.newsletterBackgroundType === 'image' ? 'text-gray-200' : 'text-muted-foreground'
+              }`}>
                 {isArabic 
-                  ? 'اشترك في نشرتنا الإخبارية وكن أول من يعرف عن منتجاتنا الجديدة والعروض الخاصة.'
-                  : 'Sign up to our newsletter and be the first to know about our new products and special offers.'
+                  ? (newsletterSettings?.newsletterDescriptionAr || 'اشترك في نشرتنا الإخبارية وكن أول من يعرف عن منتجاتنا الجديدة والعروض الخاصة.')
+                  : (newsletterSettings?.newsletterDescription || 'Sign up to our newsletter and be the first to know about our new products and special offers.')
                 }
               </p>
 
