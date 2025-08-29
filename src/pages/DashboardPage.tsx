@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
+import { usePendingOrders } from '@/hooks/usePendingOrders'
 import type { Order } from '@/types'
 import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
 import { productsService } from '@/services/products'
@@ -44,7 +45,7 @@ import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
 import CategoryManagement from '@/components/admin/CategoryManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
-import OrderManagement from '@/components/admin/OrderManagement'
+import { OrderManagementProfessional } from '@/components/admin/OrderManagementProfessional'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
   const user = currentUser
   const { t, i18n } = useTranslation()
+  const { pendingCount } = usePendingOrders()
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const isArabic = i18n.language === 'ar'
@@ -219,7 +221,8 @@ export default function DashboardPage() {
             id: 'admin-orders',
             label: isArabic ? 'كل الطلبات' : 'All Orders',
             icon: ShoppingBag,
-            show: true
+            show: true,
+            badge: pendingCount > 0 ? pendingCount : undefined
           },
           {
             id: 'inventory',
@@ -370,7 +373,7 @@ export default function DashboardPage() {
       case 'products':
         return user?.role === 'admin' && <ProductManagement />
       case 'admin-orders':
-        return user?.role === 'admin' && <OrderManagement />
+        return user?.role === 'admin' && <OrderManagementProfessional />
       case 'analytics':
         return user?.role === 'admin' && (
           <DashboardAnalytics users={users} products={products} />

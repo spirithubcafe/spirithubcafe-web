@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
+import { usePendingOrders } from '@/hooks/usePendingOrders'
 import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
@@ -22,6 +23,7 @@ export function Navigation() {
   const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
   const { wishlistCount } = useWishlist()
+  const { pendingCount } = usePendingOrders()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
@@ -119,9 +121,9 @@ export function Navigation() {
           "sticky top-0 w-full border-b transition-all duration-300",
           "z-20", // higher than hero z-10
           mobileMenuOpen && "z-[60] shadow-2xl", // when mobile menu is open, ensure solid bg and higher z-index
-          // Apply transparent background on HomePage when at top
+          // Apply transparent background on HomePage when at top, but keep pointer events for controls
           isHomePage && !isScrolled
-            ? "bg-transparent backdrop-blur-0 border-transparent pointer-events-none"
+            ? "bg-transparent backdrop-blur-0 border-transparent"
             : "nav-coffee"
         )}
       >
@@ -315,7 +317,7 @@ export function Navigation() {
                 />
                 <LanguageToggle 
                   className={cn(
-                    "transition-all duration-200",
+                    "transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
@@ -384,11 +386,20 @@ export function Navigation() {
                         : ""
                     )}
                   >
-                    <Link to="/dashboard" className="flex items-center gap-2">
+                    <Link to="/dashboard" className="flex items-center gap-2 relative">
                       <User className="h-4 w-4" />
                       <span className="hidden lg:block">
                         {t('navigation.dashboard')}
                       </span>
+                      {/* Show pending orders count for admin/staff */}
+                      {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                        >
+                          {pendingCount > 99 ? '99+' : pendingCount}
+                        </Badge>
+                      )}
                     </Link>
                   </Button>
                   <Button 
@@ -448,7 +459,7 @@ export function Navigation() {
               <div className="md:hidden pointer-events-auto">
                 <LanguageToggle 
                   className={cn(
-                    "transition-all duration-200",
+                    "transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
@@ -734,11 +745,20 @@ export function Navigation() {
                     )}>
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
-                          "flex items-center gap-2 justify-center",
+                          "flex items-center gap-2 justify-center relative",
                           isArabic ? "flex-row-reverse" : "flex-row"
                         )}>
                           <User className="h-4 w-4" />
                           {t('navigation.dashboard')}
+                          {/* Show pending orders count for admin/staff */}
+                          {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
+                            <Badge 
+                              variant="destructive" 
+                              className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                            >
+                              {pendingCount > 99 ? '99+' : pendingCount}
+                            </Badge>
+                          )}
                         </Link>
                       </Button>
                       {auth.currentUser?.role === 'admin' && (
