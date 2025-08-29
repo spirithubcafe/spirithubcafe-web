@@ -143,8 +143,58 @@ export default function CheckoutPage() {
     notes: ''
   })
 
+  // Oman cities with delivery pricing
+  const omanCities = [
+    { value: 'al-burimi', name: 'Al-Burimi', name_ar: 'البريمي', price: 2 },
+    { value: 'shinas', name: 'Shinas', name_ar: 'شناص', price: 2 },
+    { value: 'suhar', name: 'Suhar', name_ar: 'صحار', price: 2 },
+    { value: 'saham', name: 'Saham', name_ar: 'صحم', price: 2 },
+    { value: 'al-suwaiq', name: 'Al-Suwaiq', name_ar: 'الصويق', price: 2 },
+    { value: 'al-rustaq', name: 'Al-Rustaq', name_ar: 'الرستاق', price: 2 },
+    { value: 'al-khaburah', name: 'Al Khaburah', name_ar: 'الخابورة', price: 2 },
+    { value: 'barka', name: 'Barka', name_ar: 'بركاء', price: 2 },
+    { value: 'al-mubilah', name: 'Al-Mubilah', name_ar: 'المبيلة', price: 2 },
+    { value: 'qurayyat', name: 'Qurayyat', name_ar: 'قريات', price: 2 },
+    { value: 'al-khoudh', name: 'Al-Khoudh', name_ar: 'الخوض', price: 2 },
+    { value: 'al-amrat', name: 'Al-Amrat', name_ar: 'العامرات', price: 2 },
+    { value: 'busher', name: 'Busher', name_ar: 'بوشر', price: 2 },
+    { value: 'nizwa', name: 'Nizwa', name_ar: 'نزوى', price: 2 },
+    { value: 'izki', name: 'Izki', name_ar: 'إزكي', price: 2 },
+    { value: 'bahla', name: 'Bahla', name_ar: 'بهلاء', price: 2 },
+    { value: 'ibra', name: 'Ibra', name_ar: 'إبراء', price: 2 },
+    { value: 'jalan', name: 'Jalan', name_ar: 'جعلان', price: 2 },
+    { value: 'sur', name: 'Sur', name_ar: 'صور', price: 2 },
+    { value: 'al-kamil', name: 'Al Kamil', name_ar: 'الكامل', price: 2 },
+    { value: 'sinaw', name: 'Sinaw', name_ar: 'سناو', price: 2 },
+    { value: 'ibri', name: 'Ibri', name_ar: 'عبري', price: 2 },
+    { value: 'yanqul', name: 'Yanqul', name_ar: 'ينقل', price: 2 },
+    { value: 'salalah', name: 'Salalah', name_ar: 'صلالة', price: 2 },
+    { value: 'khasab', name: 'Khasab', name_ar: 'خصب', price: 3 } // Special pricing for Khasab
+  ]
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value }
+      
+      // When country changes to Oman, reset city if it was previously selected
+      if (field === 'country') {
+        if (value === 'OM') {
+          // Keep existing city if it's valid for Oman, otherwise reset
+          const validOmanCity = omanCities.find(city => city.value === prev.city)
+          if (!validOmanCity) {
+            newData.city = ''
+          }
+        } else {
+          // For non-Oman countries, keep the city as free text
+          // Reset shipping method if it was nool_oman
+          if (prev.shippingMethod === 'nool_oman') {
+            newData.shippingMethod = 'pickup'
+          }
+        }
+      }
+      
+      return newData
+    })
   }
 
   const calculateTotals = () => {
@@ -158,18 +208,32 @@ export default function CheckoutPage() {
       )
       
       if (selectedMethod && !selectedMethod.is_free) {
-        switch (currency) {
-          case 'OMR':
-            shippingCost = selectedMethod.base_cost_omr || 0
-            break
-          case 'SAR':
-            shippingCost = selectedMethod.base_cost_sar || 0
-            break
-          case 'USD':
-            shippingCost = selectedMethod.base_cost_usd || 0
-            break
-          default:
-            shippingCost = selectedMethod.base_cost_omr || 0
+        // Special handling for Nool Oman delivery
+        if (formData.shippingMethod === 'nool_oman' && formData.country === 'OM' && formData.city) {
+          const selectedCity = omanCities.find(city => city.value === formData.city)
+          if (selectedCity) {
+            // Use city-specific pricing
+            shippingCost = selectedCity.price
+            // Convert to current currency if needed
+            if (currency !== 'OMR') {
+              shippingCost = shippingCost * conversionRates[currency as keyof typeof conversionRates]
+            }
+          }
+        } else {
+          // Regular shipping method pricing
+          switch (currency) {
+            case 'OMR':
+              shippingCost = selectedMethod.base_cost_omr || 0
+              break
+            case 'SAR':
+              shippingCost = selectedMethod.base_cost_sar || 0
+              break
+            case 'USD':
+              shippingCost = selectedMethod.base_cost_usd || 0
+              break
+            default:
+              shippingCost = selectedMethod.base_cost_omr || 0
+          }
         }
       }
     }
@@ -523,12 +587,27 @@ export default function CheckoutPage() {
                       <Label htmlFor="city">
                         {isArabic ? 'المدينة' : 'City'}
                       </Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        placeholder={isArabic ? 'أدخل المدينة' : 'Enter city'}
-                      />
+                      {formData.country === 'OM' ? (
+                        <Select value={formData.city} onValueChange={(value) => handleInputChange('city', value)}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={isArabic ? 'اختر المدينة' : 'Select city'} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {omanCities.map((city) => (
+                              <SelectItem key={city.value} value={city.value}>
+                                {isArabic ? city.name_ar : city.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          id="city"
+                          value={formData.city}
+                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          placeholder={isArabic ? 'أدخل المدينة' : 'Enter city'}
+                        />
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="state">
@@ -560,7 +639,7 @@ export default function CheckoutPage() {
                         {isArabic ? 'البلد' : 'Country'}
                       </Label>
                       <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder={isArabic ? 'اختر البلد' : 'Select country'} />
                         </SelectTrigger>
                         <SelectContent>
@@ -670,30 +749,62 @@ export default function CheckoutPage() {
                       value={formData.shippingMethod} 
                       onValueChange={(value: string) => handleInputChange('shippingMethod', value)}
                     >
-                      {checkoutSettings?.shipping_methods?.filter(method => method.enabled).map((method) => {
+                      {checkoutSettings?.shipping_methods?.filter(method => {
+                        // Only show enabled methods
+                        if (!method.enabled) return false
+                        
+                        // Only show nool_oman for Oman
+                        if (method.id === 'nool_oman' && formData.country !== 'OM') return false
+                        
+                        return true
+                      }).map((method) => {
                         let cost = 0
                         if (!method.is_free) {
-                          switch (currency) {
-                            case 'OMR':
-                              cost = method.base_cost_omr || 0
-                              break
-                            case 'SAR':
-                              cost = method.base_cost_sar || 0
-                              break
-                            case 'USD':
-                              cost = method.base_cost_usd || 0
-                              break
-                            default:
-                              cost = method.base_cost_omr || 0
+                          // Special handling for nool_oman with city-specific pricing
+                          if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city) {
+                            const selectedCity = omanCities.find(city => city.value === formData.city)
+                            if (selectedCity) {
+                              cost = selectedCity.price
+                              // Convert to current currency if needed
+                              if (currency !== 'OMR') {
+                                cost = cost * conversionRates[currency as keyof typeof conversionRates]
+                              }
+                            }
+                          } else {
+                            switch (currency) {
+                              case 'OMR':
+                                cost = method.base_cost_omr || 0
+                                break
+                              case 'SAR':
+                                cost = method.base_cost_sar || 0
+                                break
+                              case 'USD':
+                                cost = method.base_cost_usd || 0
+                                break
+                              default:
+                                cost = method.base_cost_omr || 0
+                            }
                           }
                         }
 
                         return (
                           <div key={method.id} className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                              <RadioGroupItem value={method.id} id={method.id} />
-                              <Label htmlFor={method.id} className="text-sm">
+                              <RadioGroupItem 
+                                value={method.id} 
+                                id={method.id}
+                                disabled={method.id === 'nool_oman' && (!formData.city || formData.country !== 'OM')}
+                              />
+                              <Label 
+                                htmlFor={method.id} 
+                                className={`text-sm ${method.id === 'nool_oman' && (!formData.city || formData.country !== 'OM') ? 'text-muted-foreground' : ''}`}
+                              >
                                 {isArabic ? method.name_ar : method.name}
+                                {method.id === 'nool_oman' && formData.country === 'OM' && !formData.city && (
+                                  <span className="text-xs text-muted-foreground block">
+                                    {isArabic ? 'يرجى اختيار المدينة أولاً' : 'Please select city first'}
+                                  </span>
+                                )}
                               </Label>
                             </div>
                             <span className={`text-sm font-medium ${method.is_free ? 'text-green-600' : ''}`}>
