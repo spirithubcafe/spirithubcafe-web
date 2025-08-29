@@ -7,9 +7,10 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useCheckoutSettings, type ShippingMethod, type CheckoutSettings } from '@/hooks/useCheckoutSettings'
+import { useCheckoutSettings, type ShippingMethod, type CheckoutSettings, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
 import { useTranslation } from 'react-i18next'
 import { Loader2, Save, Plus, Trash2, Settings } from 'lucide-react'
+import { firestoreService, type Category } from '@/lib/firebase'
 import toast from 'react-hot-toast'
 
 export default function CheckoutSettingsPage() {
@@ -17,8 +18,30 @@ export default function CheckoutSettingsPage() {
   const { settings, loading, updateSettings, initializeSettings } = useCheckoutSettings()
   const [localSettings, setLocalSettings] = useState<CheckoutSettings | null>(null)
   const [saving, setSaving] = useState(false)
+  
+  // Category tax states
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
 
   const isArabic = i18n.language === 'ar'
+
+  // Load categories from Firebase
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoadingCategories(true)
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+        toast.error(isArabic ? 'فشل في تحميل الفئات' : 'Failed to load categories')
+      } finally {
+        setLoadingCategories(false)
+      }
+    }
+
+    loadCategories()
+  }, [isArabic])
 
   useEffect(() => {
     if (settings) {
@@ -78,6 +101,72 @@ export default function CheckoutSettingsPage() {
         ...localSettings,
         tax_rate: rate / 100 // Convert percentage to decimal
       })
+    }
+  }
+
+  const updateCategoryTaxRate = (categoryId: string, taxRate: number, enabled: boolean) => {
+    if (localSettings) {
+      const existingRates = localSettings.category_tax_rates || []
+      const category = categories.find(c => c.id === categoryId)
+      
+      if (!category) return
+      
+      // Check if rate already exists for this category
+      const existingIndex = existingRates.findIndex(rate => rate.category_id === categoryId)
+      
+      if (existingIndex >= 0) {
+        // Update existing rate
+        const updatedRates = [...existingRates]
+        updatedRates[existingIndex] = {
+          category_id: categoryId,
+          category_name: category.name,
+          category_name_ar: category.name_ar,
+          tax_rate: taxRate / 100, // Convert percentage to decimal
+          enabled
+        }
+        setLocalSettings({
+          ...localSettings,
+          category_tax_rates: updatedRates
+        })
+      } else {
+        // Add new rate
+        const newRate: CategoryTaxRate = {
+          category_id: categoryId,
+          category_name: category.name,
+          category_name_ar: category.name_ar,
+          tax_rate: taxRate / 100,
+          enabled
+        }
+        setLocalSettings({
+          ...localSettings,
+          category_tax_rates: [...existingRates, newRate]
+        })
+      }
+    }
+  }
+
+  const removeCategoryTaxRate = (categoryId: string) => {
+    if (localSettings) {
+      const updatedRates = (localSettings.category_tax_rates || []).filter(
+        rate => rate.category_id !== categoryId
+      )
+      setLocalSettings({
+        ...localSettings,
+        category_tax_rates: updatedRates
+      })
+    }
+  }
+
+  const getCategoryTaxRate = (categoryId: string): { rate: number; enabled: boolean } => {
+    if (!localSettings?.category_tax_rates) return { rate: 0, enabled: false }
+    
+    const existingRate = localSettings.category_tax_rates.find(
+      rate => rate.category_id === categoryId
+    )
+    
+    return {
+      rate: existingRate ? existingRate.tax_rate * 100 : 0, // Convert decimal to percentage
+      enabled: existingRate ? existingRate.enabled : false
     }
   }
 
@@ -233,8 +322,9 @@ export default function CheckoutSettingsPage() {
           </div>
 
           <Tabs defaultValue="tax" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="tax">{isArabic ? 'الضرائب' : 'Tax'}</TabsTrigger>
+              <TabsTrigger value="category-tax">{isArabic ? 'ضرائب الفئات' : 'Category Tax'}</TabsTrigger>
               <TabsTrigger value="countries">{isArabic ? 'البلدان' : 'Countries'}</TabsTrigger>
               <TabsTrigger value="shipping">{isArabic ? 'الشحن' : 'Shipping'}</TabsTrigger>
               <TabsTrigger value="payment">{isArabic ? 'الدفع' : 'Payment'}</TabsTrigger>
@@ -265,6 +355,117 @@ export default function CheckoutSettingsPage() {
                       {isArabic ? 'معدل الضریبة یتم تطبیقه على المجموع الفرعي + تكلفة الشحن' : 'Tax rate applied to subtotal + shipping cost'}
                     </p>
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Category Tax Settings */}
+            <TabsContent value="category-tax">
+              <Card>
+                <CardHeader>
+                  <CardTitle>{isArabic ? 'ضرائب الفئات' : 'Category Tax Rates'}</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {isArabic ? 'تحديد معدلات ضريبية مختلفة لكل فئة من المنتجات' : 'Set different tax rates for each product category'}
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {loadingCategories ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                      <span>{isArabic ? 'جاري تحميل الفئات...' : 'Loading categories...'}</span>
+                    </div>
+                  ) : categories.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      {isArabic ? 'لا توجد فئات متاحة' : 'No categories available'}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {categories.map((category) => {
+                        const { rate, enabled } = getCategoryTaxRate(category.id)
+                        return (
+                          <div key={category.id} className="border rounded-lg p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium">
+                                  {isArabic ? category.name_ar : category.name}
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                  {isArabic ? category.name : category.name_ar}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                <Switch
+                                  checked={enabled}
+                                  onCheckedChange={(checked) => 
+                                    updateCategoryTaxRate(category.id, rate, checked)
+                                  }
+                                />
+                                <Label>{isArabic ? 'مفعل' : 'Enabled'}</Label>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>{isArabic ? 'معدل الضريبة (%)' : 'Tax Rate (%)'}</Label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  value={rate.toFixed(1)}
+                                  onChange={(e) => 
+                                    updateCategoryTaxRate(
+                                      category.id, 
+                                      parseFloat(e.target.value) || 0, 
+                                      enabled
+                                    )
+                                  }
+                                  placeholder="5.0"
+                                  disabled={!enabled}
+                                />
+                              </div>
+                              
+                              <div className="flex items-end">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => removeCategoryTaxRate(category.id)}
+                                  disabled={!enabled}
+                                  className="w-full"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  {isArabic ? 'إزالة' : 'Remove'}
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {enabled && (
+                              <div className="bg-muted p-3 rounded text-sm">
+                                <strong>{isArabic ? 'المعاينة:' : 'Preview:'}</strong>{' '}
+                                {isArabic 
+                                  ? `سيتم تطبيق ضريبة ${rate.toFixed(1)}% على جميع منتجات فئة "${category.name_ar}"`
+                                  : `${rate.toFixed(1)}% tax will be applied to all "${category.name}" category products`
+                                }
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                      
+                      <div className="border-t pt-4 mt-6">
+                        <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                          <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
+                            {isArabic ? 'ملاحظات مهمة:' : 'Important Notes:'}
+                          </h5>
+                          <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                            <li>• {isArabic ? 'ضرائب الفئات لها أولوية أعلى من الضريبة العامة' : 'Category taxes take priority over global tax rate'}</li>
+                            <li>• {isArabic ? 'إذا لم تكن الفئة مُفعّلة، سيتم استخدام الضريبة العامة' : 'If category tax is not enabled, global tax rate will be used'}</li>
+                            <li>• {isArabic ? 'يتم حساب الضريبة على المجموع الفرعي + تكلفة الشحن' : 'Tax is calculated on subtotal + shipping cost'}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

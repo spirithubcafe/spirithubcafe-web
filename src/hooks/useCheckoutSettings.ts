@@ -2,10 +2,19 @@ import { useState, useEffect } from 'react'
 import { checkoutSettingsService } from '@/services/checkoutSettings'
 
 export interface CheckoutSettings {
-  tax_rate: number
+  tax_rate: number // Legacy global tax rate (keep for backward compatibility)
+  category_tax_rates: CategoryTaxRate[] // New category-based tax rates
   enabled_countries: string[]
   shipping_methods: ShippingMethod[]
   payment_gateway: PaymentGateway
+}
+
+export interface CategoryTaxRate {
+  category_id: string
+  category_name: string
+  category_name_ar: string
+  tax_rate: number // 0.05 for 5%, 0 for 0%
+  enabled: boolean
 }
 
 export interface ShippingMethod {

@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
-import { firestoreService, type Order, type OrderItem } from '@/lib/firebase'
+import { firestoreService, type Order, type OrderItem, type Product } from '@/lib/firebase'
 import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
 import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
 import toast from 'react-hot-toast'
@@ -197,6 +197,22 @@ export default function CheckoutPage() {
     })
   }
 
+  // Helper function to determine tax rate for a product
+  const getProductTaxRate = (product: Product): number => {
+    // Use category-based tax rates from settings
+    if (checkoutSettings?.category_tax_rates && product.category_id) {
+      const categoryTaxRate = checkoutSettings.category_tax_rates.find(
+        rate => rate.category_id === product.category_id && rate.enabled
+      )
+      if (categoryTaxRate) {
+        return categoryTaxRate.tax_rate
+      }
+    }
+    
+    // Fallback to legacy global tax rate
+    return checkoutSettings?.tax_rate || 0
+  }
+
   const calculateTotals = () => {
     const subtotal = getTotalPrice()
     
@@ -238,10 +254,24 @@ export default function CheckoutPage() {
       }
     }
     
-    // Calculate tax based on settings
-    const taxRate = checkoutSettings?.tax_rate || 0.1
-    const taxableAmount = subtotal + shippingCost
-    const taxAmount = taxableAmount * taxRate
+    // Calculate tax based on product categories
+    let taxAmount = 0
+    
+    if (cart?.items) {
+      for (const cartItem of cart.items) {
+        if (!cartItem.product) continue
+        
+        const itemPrice = getProductPrice(cartItem.product, cartItem.selectedProperties)
+        const itemTotal = itemPrice * cartItem.quantity
+        
+        // Determine tax rate based on category
+        const taxRate = getProductTaxRate(cartItem.product)
+        
+        const itemTax = itemTotal * taxRate
+        taxAmount += itemTax
+      }
+    }
+    
     const total = subtotal + shippingCost + taxAmount
     
     return {
@@ -836,7 +866,10 @@ export default function CheckoutPage() {
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-sm">
                       <span>
-                        {isArabic ? 'الضريبة' : 'Tax'} ({((checkoutSettings?.tax_rate || 0.1) * 100).toFixed(0)}%)
+                        {isArabic ? 'الضريبة' : 'Tax'}
+                        <span className="text-xs text-muted-foreground block">
+                          {isArabic ? 'حبوب القهوة: 0% • الكبسولات: 5%' : 'Coffee Beans: 0% • Capsules: 5%'}
+                        </span>
                       </span>
                       <span>{formatPrice(calculateTotals().tax)}</span>
                     </div>
