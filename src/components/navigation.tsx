@@ -445,7 +445,7 @@ export function Navigation() {
               )}
 
               {/* Mobile Language Toggle */}
-              <div className="md:hidden">
+              <div className="md:hidden pointer-events-auto">
                 <LanguageToggle 
                   className={cn(
                     "transition-all duration-200",
