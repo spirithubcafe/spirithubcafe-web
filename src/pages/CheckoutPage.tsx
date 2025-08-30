@@ -143,34 +143,6 @@ export default function CheckoutPage() {
     notes: ''
   })
 
-  // Oman cities with delivery pricing
-  const omanCities = [
-    { value: 'al-burimi', name: 'Al-Burimi', name_ar: 'البريمي', price: 2 },
-    { value: 'shinas', name: 'Shinas', name_ar: 'شناص', price: 2 },
-    { value: 'suhar', name: 'Suhar', name_ar: 'صحار', price: 2 },
-    { value: 'saham', name: 'Saham', name_ar: 'صحم', price: 2 },
-    { value: 'al-suwaiq', name: 'Al-Suwaiq', name_ar: 'الصويق', price: 2 },
-    { value: 'al-rustaq', name: 'Al-Rustaq', name_ar: 'الرستاق', price: 2 },
-    { value: 'al-khaburah', name: 'Al Khaburah', name_ar: 'الخابورة', price: 2 },
-    { value: 'barka', name: 'Barka', name_ar: 'بركاء', price: 2 },
-    { value: 'al-mubilah', name: 'Al-Mubilah', name_ar: 'المبيلة', price: 2 },
-    { value: 'qurayyat', name: 'Qurayyat', name_ar: 'قريات', price: 2 },
-    { value: 'al-khoudh', name: 'Al-Khoudh', name_ar: 'الخوض', price: 2 },
-    { value: 'al-amrat', name: 'Al-Amrat', name_ar: 'العامرات', price: 2 },
-    { value: 'busher', name: 'Busher', name_ar: 'بوشر', price: 2 },
-    { value: 'nizwa', name: 'Nizwa', name_ar: 'نزوى', price: 2 },
-    { value: 'izki', name: 'Izki', name_ar: 'إزكي', price: 2 },
-    { value: 'bahla', name: 'Bahla', name_ar: 'بهلاء', price: 2 },
-    { value: 'ibra', name: 'Ibra', name_ar: 'إبراء', price: 2 },
-    { value: 'jalan', name: 'Jalan', name_ar: 'جعلان', price: 2 },
-    { value: 'sur', name: 'Sur', name_ar: 'صور', price: 2 },
-    { value: 'al-kamil', name: 'Al Kamil', name_ar: 'الكامل', price: 2 },
-    { value: 'sinaw', name: 'Sinaw', name_ar: 'سناو', price: 2 },
-    { value: 'ibri', name: 'Ibri', name_ar: 'عبري', price: 2 },
-    { value: 'yanqul', name: 'Yanqul', name_ar: 'ينقل', price: 2 },
-    { value: 'salalah', name: 'Salalah', name_ar: 'صلالة', price: 2 },
-    { value: 'khasab', name: 'Khasab', name_ar: 'خصب', price: 3 } // Special pricing for Khasab
-  ]
 
   // Oman states/provinces
   const omanStates = [
