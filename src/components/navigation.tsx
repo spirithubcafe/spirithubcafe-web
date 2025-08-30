@@ -118,13 +118,13 @@ export function Navigation() {
       {/* Navigation Bar */}
       <nav
         className={cn(
-          "sticky top-0 w-full border-b transition-all duration-300",
+          "sticky top-0 w-full transition-all duration-700 ease-in-out",
           "z-20", // higher than hero z-10
           mobileMenuOpen && "z-[60] shadow-2xl", // when mobile menu is open, ensure solid bg and higher z-index
           // Apply transparent background on HomePage when at top, but keep pointer events for controls
           isHomePage && !isScrolled
-            ? "bg-transparent backdrop-blur-0 border-transparent"
-            : "nav-coffee"
+            ? "bg-transparent backdrop-blur-0 border-transparent shadow-none"
+            : "nav-coffee border-b"
         )}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -136,7 +136,7 @@ export function Navigation() {
               isArabic ? "order-3" : "order-1"
             )}>
               <Link to="/" className={cn(
-                "flex items-center gap-2 transition-all duration-300 logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
+                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
                 isHomePage && !isScrolled 
                   ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30"
                   : resolvedTheme === 'dark'
@@ -146,7 +146,7 @@ export function Navigation() {
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
-                  className="h-12 w-auto object-contain no-flip"
+                  className="h-12 w-auto object-contain no-flip transition-all duration-500 ease-out"
                 />
               </Link>
             </div>
@@ -162,7 +162,7 @@ export function Navigation() {
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
+                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                   isActive('/')
                     ? isHomePage && !isScrolled
                       ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
@@ -184,7 +184,7 @@ export function Navigation() {
                   variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
                     location.pathname.startsWith('/shop')
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
@@ -284,7 +284,7 @@ export function Navigation() {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                     isActive(item.href)
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
