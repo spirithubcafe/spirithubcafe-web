@@ -136,13 +136,17 @@ export function Navigation() {
               isArabic ? "order-3" : "order-1"
             )}>
               <Link to="/" className={cn(
-                "flex items-center gap-2 hover:opacity-80 transition-all duration-300 logo-hover pointer-events-auto",
-                isHomePage && !isScrolled && "hover:opacity-90"
+                "flex items-center gap-2 transition-all duration-300 logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
+                isHomePage && !isScrolled 
+                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30"
+                  : resolvedTheme === 'dark'
+                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30"
+                    : "hover:opacity-80 bg-white/80 hover:bg-white/95 border border-gray-300/40"
               )}>
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
-                  className="h-14 w-auto object-contain no-flip"
+                  className="h-12 w-auto object-contain no-flip"
                 />
               </Link>
             </div>
@@ -158,14 +162,14 @@ export function Navigation() {
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto",
+                  "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                   isActive('/')
                     ? isHomePage && !isScrolled
-                      ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
-                      : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
+                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                     : isHomePage && !isScrolled
-                      ? "text-white hover:text-white hover:bg-white/10"
-                      : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
+                      ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
+                      : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -180,14 +184,14 @@ export function Navigation() {
                   variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto",
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
                     location.pathname.startsWith('/shop')
                       ? isHomePage && !isScrolled
-                        ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
-                        : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                        ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                       : isHomePage && !isScrolled
-                        ? "text-white hover:text-white hover:bg-white/10"
-                        : "text-foreground hover:text-primary hover:bg-accent/10 dark:hover:bg-accent/25 dark:text-foreground",
+                        ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
+                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -209,7 +213,7 @@ export function Navigation() {
                     <Link
                       to="/shop"
                       className={cn(
-                        "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-accent/50 dark:hover:bg-accent/30 transition-colors",
+                        "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white",
                         isArabic ? "text-right" : "text-left"
                       )}
                     >
@@ -237,7 +241,7 @@ export function Navigation() {
                           key={category.id}
                           to={`/shop?category=${category.id}`}
                           className={cn(
-                            "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-accent/50 dark:hover:bg-accent/30 transition-colors",
+                            "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white",
                             isArabic ? "text-right" : "text-left"
                           )}
                         >
@@ -280,14 +284,14 @@ export function Navigation() {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto",
+                    "nav-link transition-all duration-200 rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                     isActive(item.href)
                       ? isHomePage && !isScrolled
-                        ? "text-white bg-white/20 shadow-sm border border-white/30 hover:bg-white/30"
-                        : "text-primary bg-accent/30 shadow-sm border border-primary/30 dark:bg-primary/20 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                        ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                       : isHomePage && !isScrolled
-                        ? "text-white hover:text-white hover:bg-white/10"
-                        : "text-foreground hover:text-primary hover:bg-accent/10 dark:text-foreground",
+                        ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
+                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -407,12 +411,12 @@ export function Navigation() {
                     size="sm" 
                     onClick={handleLogout}
                     className={cn(
-                      "flex items-center gap-2 transition-all duration-200 pointer-events-auto",
+                      "flex items-center gap-2 transition-all duration-200 pointer-events-auto backdrop-blur-sm",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "text-white hover:text-white hover:bg-white/10"
-                          : "text-black hover:text-black hover:bg-black/10"
-                        : "text-destructive hover:text-destructive/90 hover:bg-destructive/10"
+                          ? "text-red-400 hover:text-red-300 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-400/15"
+                          : "text-red-600 hover:text-red-700 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-500/15"
+                        : "text-red-600 hover:text-red-700 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-500/15"
                     )}
                   >
                     <LogOut className="h-4 w-4" />
@@ -428,12 +432,12 @@ export function Navigation() {
                     size="sm" 
                     asChild 
                     className={cn(
-                      "transition-all duration-200",
+                      "transition-all duration-200 backdrop-blur-sm",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "text-white hover:text-white hover:bg-white/10"
-                          : "text-black hover:text-black hover:bg-black/10"
-                        : "hover:bg-accent/20"
+                          ? "text-green-400 hover:text-green-300 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-400/15"
+                          : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
+                        : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
                     )}
                   >
                     <Link to="/login">{t('navigation.login')}</Link>
@@ -445,9 +449,9 @@ export function Navigation() {
                       "transition-all duration-200",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "bg-white/20 text-white border-white/30 hover:bg-white/30 hover:border-white/50"
-                          : "bg-black/20 text-black border-black/30 hover:bg-black/30 hover:border-black/50"
-                        : "btn-coffee"
+                          ? "bg-green-600/80 text-white border-green-500/50 hover:bg-green-600 hover:border-green-500"
+                          : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
+                        : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
                     )}
                   >
                     <Link to="/register">{t('navigation.register')}</Link>
@@ -805,12 +809,12 @@ export function Navigation() {
                     "grid grid-cols-2 gap-2",
                     isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                   )}>
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" asChild className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/20">
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.login')}
                       </Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700 dark:bg-green-600 dark:hover:bg-green-700">
                       <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.register')}
                       </Link>
