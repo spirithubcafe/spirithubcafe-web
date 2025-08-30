@@ -54,7 +54,7 @@ function ConditionalFooter() {
 function App() {
   return (
     <ThemeProvider defaultTheme="system" storageKey="spirithub-ui-theme">
-      <CurrencyProvider defaultCurrency="USD" storageKey="spirithub-currency">
+  <CurrencyProvider defaultCurrency="OMR" storageKey="spirithub-currency">
         <AuthProvider>
           <CartProvider>
             <DataProvider>
