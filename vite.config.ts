@@ -17,6 +17,13 @@ export default defineConfig({
   globIgnores: ['**/images/gallery/**'],
   // increase file size limit (12 MiB) to allow larger assets if necessary
   maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
+  // Exclude dynamic URLs from navigation fallback
+  navigateFallback: '/index.html',
+  navigateFallbackDenylist: [
+    /^\/api\//,
+    /firestore\.googleapis\.com/,
+    /firebase/
+  ],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image',
@@ -41,14 +48,40 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com\//,
+            urlPattern: ({ url }) => {
+              // Only cache static Firestore API calls, exclude dynamic session URLs
+              const isFirestore = url.origin === 'https://firestore.googleapis.com';
+              const hasSession = url.pathname.includes(':runQuery') || 
+                                url.pathname.includes(':listen') || 
+                                url.pathname.includes('/sessions/') ||
+                                url.searchParams.has('database');
+              return isFirestore && !hasSession;
+            },
             handler: 'NetworkFirst',
             options: {
               cacheName: 'firestore-api-cache',
               networkTimeoutSeconds: 3,
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 5 * 60,
+                maxEntries: 50,
+                maxAgeSeconds: 2 * 60, // Reduced cache time
+              },
+            },
+          },
+          {
+            // Cache static document reads only
+            urlPattern: ({ url, request }) => {
+              const isFirestore = url.origin === 'https://firestore.googleapis.com';
+              const isDocumentRead = url.pathname.includes('/documents/') && 
+                                   !url.pathname.includes(':') &&
+                                   request.method === 'GET';
+              return isFirestore && isDocumentRead;
+            },
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'firestore-documents-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 10 * 60, // 10 minutes for static documents
               },
             },
           },

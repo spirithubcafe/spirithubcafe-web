@@ -24,6 +24,8 @@ import DashboardPage from '@/pages/DashboardPage'
 import { WishlistPage } from '@/pages/WishlistPage'
 import { HeroSlidePage } from '@/pages/HeroSlidePage'
 import PageDisplayPage from '@/pages/PageDisplayPage'
+import InitializeAramexPage from '@/pages/InitializeAramexPage'
+import AramexTrackingPage from '@/pages/AramexTrackingPage'
 import './App.css'
 
 // Component to conditionally show navigation and footer
@@ -97,6 +99,15 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
+                    <Route 
+                      path="/admin/initialize-aramex" 
+                      element={
+                        <ProtectedRoute>
+                          <InitializeAramexPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="/track/:trackingNumber" element={<AramexTrackingPage />} />
                     <Route 
                       path="/hero-slide/add" 
                       element={

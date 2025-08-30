@@ -144,6 +144,7 @@ export interface CoffeePropertyOption {
   is_on_sale: boolean
   stock?: number
   sku?: string
+  weight_grams?: number // Add weight for each option
   is_active: boolean
   sort_order: number
 }

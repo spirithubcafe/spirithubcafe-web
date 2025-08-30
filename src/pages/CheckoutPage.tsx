@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle, ShoppingCart, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,8 @@ import { conversionRates } from '@/lib/currency'
 import { firestoreService, type Order, type OrderItem, type Product } from '@/lib/firebase'
 import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
 import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
+import { ShippingService, type ShippingCalculationRequest } from '@/services/shipping'
+import { calculateProductWeight } from '@/utils/productWeightUtils'
 import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
@@ -30,6 +32,8 @@ export default function CheckoutPage() {
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
+  const [aramexShippingCost, setAramexShippingCost] = useState(0)
+  const [isCalculatingAramex, setIsCalculatingAramex] = useState(false)
 
   const isArabic = i18n.language === 'ar'
 
@@ -264,49 +268,141 @@ export default function CheckoutPage() {
     return checkoutSettings?.tax_rate || 0
   }
 
-  const calculateTotals = () => {
-    const subtotal = getTotalPrice()
-    
-    // Calculate shipping cost based on method and settings
-    let shippingCost = 0
-    if (checkoutSettings && checkoutSettings.shipping_methods) {
-      const selectedMethod = checkoutSettings.shipping_methods.find(
-        method => method.id === formData.shippingMethod && method.enabled
-      )
+  // Calculate Aramex shipping cost (independent of method selection)
+  const calculateAramexShippingCost = async () => {
+    if (!cart?.items || cart.items.length === 0) {
+      setAramexShippingCost(0)
+      return
+    }
+
+    try {
+      setIsCalculatingAramex(true)
       
-      if (selectedMethod && !selectedMethod.is_free) {
-        // Special handling for Nool Oman delivery
-        if (formData.shippingMethod === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
-          const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
-          if (stateCities) {
-            const selectedCity = stateCities.find(city => city.value === formData.city)
-            if (selectedCity) {
-              // Use city-specific pricing
-              shippingCost = selectedCity.price
-              // Convert to current currency if needed
-              if (currency !== 'OMR') {
-                shippingCost = shippingCost * conversionRates[currency as keyof typeof conversionRates]
-              }
-            }
+      const packages = cart.items.map(item => {
+        const product = item.product
+        if (!product) {
+          return {
+            weight: 0.5,
+            length: 20,
+            width: 15,
+            height: 10,
+            value: 0
           }
-        } else {
-          // Regular shipping method pricing
-          switch (currency) {
-            case 'OMR':
-              shippingCost = selectedMethod.base_cost_omr || 0
-              break
-            case 'SAR':
-              shippingCost = selectedMethod.base_cost_sar || 0
-              break
-            case 'USD':
-              shippingCost = selectedMethod.base_cost_usd || 0
-              break
-            default:
-              shippingCost = selectedMethod.base_cost_omr || 0
+        }
+        
+        const weight = calculateProductWeight(product as any, item.selectedProperties)
+        const value = getProductPrice(product, item.selectedProperties) * item.quantity
+        
+        return {
+          weight: weight * item.quantity,
+          length: 20,
+          width: 15,
+          height: 10,
+          value
+        }
+      })
+
+      const shippingRequest: ShippingCalculationRequest = {
+        origin: {
+          country: 'OM',
+          city: 'Muscat',
+          postal_code: '111'
+        },
+        destination: {
+          country: formData.country,
+          city: formData.city,
+          postal_code: formData.zipCode || '111'
+        },
+        packages,
+        currency: currency as 'OMR' | 'USD' | 'SAR'
+      }
+
+      // Find Aramex method from settings for API configuration
+      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
+      if (aramexMethod) {
+        const shippingRate = await ShippingService.calculateAramexRate(shippingRequest, aramexMethod)
+        setAramexShippingCost(shippingRate.cost)
+      }
+    } catch (error) {
+      console.error('Error calculating Aramex shipping:', error)
+      // Fallback to base cost
+      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
+      if (aramexMethod) {
+        let fallbackCost = 0
+        switch (currency) {
+          case 'OMR':
+            fallbackCost = aramexMethod.base_cost_omr || 1.73
+            break
+          case 'SAR':
+            fallbackCost = aramexMethod.base_cost_sar || 16.86
+            break
+          case 'USD':
+            fallbackCost = aramexMethod.base_cost_usd || 4.5
+            break
+          default:
+            fallbackCost = 1.73
+        }
+        setAramexShippingCost(fallbackCost)
+      }
+    } finally {
+      setIsCalculatingAramex(false)
+    }
+  }
+
+  // Calculate shipping cost for current selected method
+  const getCurrentShippingCost = () => {
+    // If Aramex is selected, return pre-calculated cost
+    if (formData.shippingMethod === 'aramex') {
+      return aramexShippingCost
+    }
+
+    // For other methods, calculate on the fly
+    if (!checkoutSettings?.shipping_methods) return 0
+    
+    const selectedMethod = checkoutSettings.shipping_methods.find(
+      method => method.id === formData.shippingMethod && method.enabled
+    )
+    
+    if (!selectedMethod || selectedMethod.is_free) return 0
+
+    // Special handling for Nool Oman delivery
+    if (formData.shippingMethod === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
+      const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
+      if (stateCities) {
+        const selectedCity = stateCities.find(city => city.value === formData.city)
+        if (selectedCity) {
+          let cost = selectedCity.price
+          if (currency !== 'OMR') {
+            cost = cost * conversionRates[currency as keyof typeof conversionRates]
           }
+          return cost
         }
       }
     }
+
+    // Regular flat rate pricing for other methods
+    switch (currency) {
+      case 'OMR':
+        return selectedMethod.base_cost_omr || 0
+      case 'SAR':
+        return selectedMethod.base_cost_sar || 0
+      case 'USD':
+        return selectedMethod.base_cost_usd || 0
+      default:
+        return selectedMethod.base_cost_omr || 0
+    }
+  }
+
+  // Calculate Aramex shipping cost when cart or destination changes
+  useEffect(() => {
+    calculateAramexShippingCost()
+  }, [formData.country, formData.city, formData.zipCode, currency, cart?.items, checkoutSettings])
+
+  const calculateTotals = () => {
+    const subtotal = getTotalPrice()
+    
+    // Use the current shipping cost based on selected method
+    const calculatedShippingCost = getCurrentShippingCost()
     
     // Calculate tax based on product categories
     let taxAmount = 0
@@ -326,11 +422,11 @@ export default function CheckoutPage() {
       }
     }
     
-    const total = subtotal + shippingCost + taxAmount
-    
+    const total = subtotal + calculatedShippingCost + taxAmount
+
     return {
       subtotal,
-      shipping: shippingCost,
+      shipping: calculatedShippingCost,
       tax: taxAmount,
       total
     }
@@ -862,8 +958,12 @@ export default function CheckoutPage() {
                       }).map((method) => {
                         let cost = 0
                         if (!method.is_free) {
+                          // For Aramex, use the pre-calculated cost
+                          if (method.id === 'aramex') {
+                            cost = aramexShippingCost
+                          }
                           // Special handling for nool_oman with city-specific pricing
-                          if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
+                          else if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
                             const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
                             if (stateCities) {
                               const selectedCity = stateCities.find(city => city.value === formData.city)
@@ -875,7 +975,9 @@ export default function CheckoutPage() {
                                 }
                               }
                             }
-                          } else {
+                          } 
+                          // Regular flat rate pricing for other methods
+                          else {
                             switch (currency) {
                               case 'OMR':
                                 cost = method.base_cost_omr || 0
@@ -913,10 +1015,15 @@ export default function CheckoutPage() {
                               </Label>
                             </div>
                             <span className={`text-sm font-medium ${method.is_free ? 'text-green-600' : ''}`}>
-                              {method.is_free 
-                                ? (isArabic ? 'مجاناً' : 'Free')
-                                : formatPrice(cost)
-                              }
+                              {method.is_free ? (
+                                isArabic ? 'مجاناً' : 'Free'
+                              ) : method.id === 'aramex' && isCalculatingAramex ? (
+                                <span className="text-muted-foreground">
+                                  {isArabic ? 'جاري الحساب...' : 'Calculating...'}
+                                </span>
+                              ) : (
+                                formatPrice(cost)
+                              )}
                             </span>
                           </div>
                         )
@@ -938,6 +1045,23 @@ export default function CheckoutPage() {
                   </div>
 
                   {/* Tax Section */}
+                  {/* Shipping Cost */}
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between text-sm">
+                      <span>{isArabic ? 'الشحن' : 'Shipping'}</span>
+                      <span>
+                        {formData.shippingMethod === 'aramex' && isCalculatingAramex ? (
+                          <span className="text-muted-foreground text-xs">
+                            {isArabic ? 'جاري الحساب...' : 'Calculating...'}
+                          </span>
+                        ) : (
+                          formatPrice(calculateTotals().shipping)
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Tax */}
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-sm">
                       <span>

@@ -31,7 +31,7 @@ export interface ShippingCalculationRequest {
 
 export class ShippingService {
   /**
-   * Calculate shipping rates for Aramex
+   * Calculate shipping rates for Aramex using real API
    */
   static async calculateAramexRate(
     request: ShippingCalculationRequest,
@@ -42,103 +42,133 @@ export class ShippingService {
         throw new Error('Aramex API settings not configured')
       }
 
-      // const { username, password, account_number } = method.api_settings
-
-      // Aramex API call (This is a simplified version - real implementation would need proper SOAP/REST API)
-      /*
-      const aramexRequest = {
-        ClientInfo: {
-          UserName: username,
-          Password: password,
-          AccountNumber: account_number,
-          AccountPin: '', // Add if required
-          AccountEntity: 'MCT',
-          AccountCountryCode: 'OM',
-          Source: 24 // Source ID
-        },
-        OriginAddress: {
-          Country: request.origin.country,
-          City: request.origin.city,
-          PostCode: request.origin.postal_code || ''
-        },
-        DestinationAddress: {
-          Country: request.destination.country,
-          City: request.destination.city,
-          PostCode: request.destination.postal_code || ''
-        },
-        ShipmentDetails: {
-          Dimensions: request.packages.map(pkg => ({
-            Length: pkg.length,
-            Width: pkg.width,
-            Height: pkg.height,
-            Unit: 'CM'
-          })),
-          ActualWeight: {
-            Value: request.packages.reduce((sum, pkg) => sum + pkg.weight, 0),
-            Unit: 'KG'
-          },
-          ChargeableWeight: {
-            Value: request.packages.reduce((sum, pkg) => sum + pkg.weight, 0),
-            Unit: 'KG'
-          },
-          CashOnDeliveryAmount: {
-            Value: 0,
-            CurrencyCode: request.currency
-          },
-          InsuranceAmount: {
-            Value: request.packages.reduce((sum, pkg) => sum + pkg.value, 0),
-            CurrencyCode: request.currency
-          },
-          NumberOfPieces: request.packages.length,
-          ProductGroup: 'EXP', // Express
-          ProductType: 'PDX', // Aramex product type
-          PaymentType: 'P', // Prepaid
-          PaymentOptions: '',
-          Services: '',
-          CashAdditionalAmount: {
-            Value: 0,
-            CurrencyCode: request.currency
-          },
-          CashAdditionalAmountDescription: '',
-          CollectAmount: {
-            Value: 0,
-            CurrencyCode: request.currency
-          },
-          CustomsValueAmount: {
-            Value: request.packages.reduce((sum, pkg) => sum + pkg.value, 0),
-            CurrencyCode: request.currency
-          },
-          Items: request.packages.map(pkg => ({
-            PackageType: 'Box',
-            Quantity: 1,
-            Weight: {
-              Value: pkg.weight,
-              Unit: 'KG'
-            },
-            Comments: 'Coffee products',
-            Reference: ''
-          }))
-        }
-      }
-      */
-
-      // In a real implementation, you would call the Aramex API here
-      // const response = await fetch(method.api_settings.api_url, { ... })
+      // Get Aramex settings from Firestore
+      const { firestoreService } = await import('@/lib/firebase')
+      let aramexSettings: any = null
+      let useRealAPI = false
       
-      // For now, return a calculated rate based on weight and distance
+      try {
+        const settingsDoc = await firestoreService.getDocument('settings', 'aramex')
+        aramexSettings = settingsDoc
+        useRealAPI = aramexSettings?.credentials && aramexSettings.enabled
+      } catch (settingsError) {
+        console.warn('Could not load Aramex settings from Firestore, using weight-based calculation')
+        useRealAPI = false
+      }
+
       const totalWeight = request.packages.reduce((sum, pkg) => sum + pkg.weight, 0)
       const isInternational = request.origin.country !== request.destination.country
+
+      // If we have proper Aramex settings, try the real API first
+      if (useRealAPI) {
+        try {
+          const { aramexService } = await import('./aramexService')
+          
+          const aramexRequest: any = {
+            originAddress: {
+              line1: aramexSettings.shipperInfo.addressLine1,
+              city: aramexSettings.shipperInfo.city,
+              stateOrProvinceCode: aramexSettings.shipperInfo.stateProvince,
+              postalCode: aramexSettings.shipperInfo.postalCode,
+              countryCode: aramexSettings.shipperInfo.countryCode
+            },
+            destinationAddress: {
+              line1: `${request.destination.city}, ${request.destination.country}`,
+              city: request.destination.city,
+              stateOrProvinceCode: request.destination.city,
+              postalCode: request.destination.postal_code || '111',
+              countryCode: request.destination.country
+            },
+            shipmentDetails: {
+              dimensions: {
+                length: Math.max(...request.packages.map(p => p.length)),
+                width: Math.max(...request.packages.map(p => p.width)),
+                height: Math.max(...request.packages.map(p => p.height)),
+                unit: 'CM'
+              },
+              actualWeight: {
+                value: totalWeight,
+                unit: 'KG'
+              },
+              productGroup: 'EXP',
+              productType: request.destination.country === 'OM' ? 'OND' : 'EPX',
+              paymentType: 'P',
+              paymentOptions: '',
+              services: '',
+              descriptionOfGoods: 'Coffee Products',
+              goodsOriginCountry: 'OM'
+            }
+          }
+
+          const response = await aramexService.calculateShippingRate(aramexRequest, aramexSettings.credentials)
+          
+          if (response && response.totalAmount) {
+            // Convert from Aramex currency to requested currency
+            let cost = response.totalAmount.value
+            
+            // Aramex typically returns in AED, convert to requested currency
+            if (response.totalAmount.currencyCode === 'AED') {
+              switch (request.currency) {
+                case 'OMR':
+                  cost = cost * 0.1 // AED to OMR conversion
+                  break
+                case 'USD':
+                  cost = cost * 0.27 // AED to USD conversion
+                  break
+                case 'SAR':
+                  cost = cost * 1.02 // AED to SAR conversion
+                  break
+              }
+            }
+            
+            return {
+              service_name: 'Aramex Express',
+              cost: Math.round(cost * 100) / 100,
+              currency: request.currency,
+              estimated_delivery_days: request.destination.country === 'OM' ? '1-2 days' : '3-5 days'
+            }
+          }
+        } catch (apiError) {
+          console.error('Aramex API call failed, falling back to weight-based calculation:', apiError)
+        }
+      }
+
+      // Fallback weight-based calculation (always executed if API fails or not available)
+      console.log(`Aramex calculation: Weight=${totalWeight}kg, International=${isInternational}, Destination=${request.destination.country}`)
       
       let baseCost = method.base_cost_omr || 1.73
       
-      // Add weight-based cost
-      if (totalWeight > 1) {
-        baseCost += (totalWeight - 1) * 0.5 // 0.5 OMR per additional kg
+      // More accurate weight-based pricing
+      if (totalWeight <= 0.5) {
+        // Very light packages (up to 0.5kg)
+        baseCost = 1.5
+      } else if (totalWeight <= 1) {
+        // Light packages (0.5-1kg)
+        baseCost = 2.0
+      } else if (totalWeight <= 2) {
+        // Medium packages (1-2kg)
+        baseCost = 2.5 + (totalWeight - 1) * 0.8
+      } else if (totalWeight <= 5) {
+        // Heavy packages (2-5kg)
+        baseCost = 3.3 + (totalWeight - 2) * 1.2
+      } else {
+        // Very heavy packages (5kg+)
+        baseCost = 6.9 + (totalWeight - 5) * 1.5
       }
       
-      // Add international surcharge
+      // International surcharge
       if (isInternational) {
-        baseCost += 2.0
+        baseCost += Math.min(totalWeight * 0.8, 5.0) // Max 5 OMR international surcharge
+      }
+      
+      // City-specific adjustments (example)
+      if (request.destination.city) {
+        const city = request.destination.city.toLowerCase()
+        if (city.includes('dubai') || city.includes('abu dhabi')) {
+          baseCost += 0.5 // Premium destinations
+        } else if (city.includes('riyadh') || city.includes('jeddah')) {
+          baseCost += 0.3 // Saudi cities
+        }
       }
 
       // Convert to requested currency
@@ -158,10 +188,19 @@ export class ShippingService {
 
     } catch (error) {
       console.error('Aramex API error:', error)
+      
+      // Final fallback to method base cost
+      let fallbackCost = method.base_cost_omr || 1.73
+      if (request.currency === 'USD') {
+        fallbackCost = method.base_cost_usd || 4.5
+      } else if (request.currency === 'SAR') {
+        fallbackCost = method.base_cost_sar || 16.86
+      }
+      
       return {
         service_name: 'Aramex Express',
-        cost: method.base_cost_omr || 1.73,
-        currency: 'OMR',
+        cost: fallbackCost,
+        currency: request.currency,
         estimated_delivery_days: '2-3 days',
         error: 'Could not calculate exact rate, using base rate'
       }
