@@ -12,8 +12,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,gif,webp,woff,woff2,ttf,eot}'],
-        maximumFileSizeToCacheInBytes: 3000000,
+  // exclude very large gallery assets from the precache manifest
+  globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,gif,webp,woff,woff2,ttf,eot}'],
+  globIgnores: ['**/images/gallery/**'],
+  // increase file size limit (12 MiB) to allow larger assets if necessary
+  maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image',
