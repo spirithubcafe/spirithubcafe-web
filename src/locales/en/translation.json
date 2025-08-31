@@ -621,6 +621,7 @@
     "pleaseLogin": "Please login",
     "brandName": "SPIRITHUB ROASTERY",
     "checkForUpdates": "Check for updates",
+    "installUpdate": "Install update",
     "updateInstalled": "Update installed! Refreshing...",
     "checkingForUpdates": "Checking for updates...",
     "noUpdatesAvailable": "No updates available",

@@ -16,6 +16,7 @@ import { usePendingOrders } from '@/hooks/usePendingOrders'
 import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
+import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
 
 const NavigationComponent = memo(() => {
   const { t, i18n } = useTranslation()
@@ -31,6 +32,7 @@ const NavigationComponent = memo(() => {
   const [loadingCategories, setLoadingCategories] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
   const isArabic = i18n.language === 'ar'
+  const updateAvailable = useUpdateAvailable()
 
   const totalItems = getTotalItems()
   const totalPrice = getTotalPrice()
@@ -672,7 +674,7 @@ const NavigationComponent = memo(() => {
                       {t('navigation.settings')}
                     </h3>
                     <div className={cn(
-                      "grid grid-cols-2 gap-2",
+                      updateAvailable ? "grid grid-cols-2 gap-2" : "grid grid-cols-3 gap-2",
                       isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                     )}>
                       <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
@@ -693,12 +695,14 @@ const NavigationComponent = memo(() => {
                           {isArabic ? 'العملة' : 'Currency'}
                         </span>
                       </div>
-                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
-                        <UpdateToggle />
-                        <span className="text-xs text-muted-foreground text-center">
-                          {isArabic ? 'التحديث' : 'Update'}
-                        </span>
-                      </div>
+                      {updateAvailable && (
+                        <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
+                          <UpdateToggle />
+                          <span className="text-xs text-muted-foreground text-center">
+                            {isArabic ? 'التحديث' : 'Update'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
