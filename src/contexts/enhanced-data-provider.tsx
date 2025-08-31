@@ -9,7 +9,7 @@ import {
   settingsService
 } from '@/services/settings'
 import { heroService } from '@/services/hero'
-import { useAdvancedCache, advancedCacheManager } from '@/hooks/useAdvancedCache'
+import { useAdvancedCache } from '@/hooks/useAdvancedCache'
 import { AdvancedLoading } from '@/components/ui/advanced-loading'
 
 interface DataContextType {
@@ -53,7 +53,7 @@ interface DataContextType {
   
   // Cache management
   clearDataCache: () => void
-  preloadCriticalData: () => Promise<void>
+  // preloadCriticalData removed to avoid API calls
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined)
@@ -252,26 +252,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
     invalidateNewsletterSettings()
   }
 
-  // Preload critical data
-  const preloadCriticalData = async () => {
-    const criticalUrls = [
-      '/api/products',
-      '/api/categories',
-      '/api/settings/homepage'
-    ]
-    
-    await advancedCacheManager.preload(criticalUrls, {
-      ttl: 15 * 60 * 1000,
-      priority: 'high',
-      persist: true,
-      tags: ['critical', 'preload']
-    })
-  }
+  // Preload functionality disabled to avoid API calls
+  // const preloadCriticalData = async () => {
+  //   const criticalUrls = [
+  //     '/api/products',
+  //     '/api/categories',
+  //     '/api/settings/homepage'
+  //   ]
+  //   
+  //   await advancedCacheManager.preload(criticalUrls, {
+  //     ttl: 15 * 60 * 1000,
+  //     priority: 'high',
+  //     persist: true,
+  //     tags: ['critical', 'preload']
+  //   })
+  // }
 
-  // Preload critical data on mount
-  useEffect(() => {
-    preloadCriticalData()
-  }, [])
+  // Preload critical data on mount - DISABLED
+  // useEffect(() => {
+  //   preloadCriticalData()
+  // }, [])
 
   const value: DataContextType = {
     // Data
@@ -309,8 +309,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     getCategory,
     
     // Cache management
-    clearDataCache,
-    preloadCriticalData
+    clearDataCache
+    // preloadCriticalData removed to avoid API calls
   }
 
   // Show loading screen for initial critical data
