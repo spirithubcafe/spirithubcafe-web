@@ -2,6 +2,7 @@ import { createContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { authService, type UserProfile } from '@/lib/firebase'
 import type { User } from 'firebase/auth'
+import { ensureUserDocument } from '@/utils/user-management'
 
 interface AuthContextType {
   currentUser: UserProfile | null
@@ -71,6 +72,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (user.emailVerified && !userProfile.email_verified) {
             await authService.checkEmailVerification()
           }
+        } else {
+          // If no user profile exists, try to ensure user document is created
+          console.log('No user profile found, ensuring user document exists...');
+          await ensureUserDocument();
+          
+          // Try to get user profile again after ensuring document exists
+          const newUserProfile = await authService.getUserProfile(user.uid);
+          if (newUserProfile) {
+            newUserProfile.email_verified = user.emailVerified;
+          }
+          setCurrentUser(newUserProfile);
+          return; // Early return to avoid setting current user twice
         }
         setCurrentUser(userProfile)
       } else {

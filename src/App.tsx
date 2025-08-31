@@ -15,6 +15,15 @@ import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { usePerformanceMonitoring, logPerformanceMetrics } from '@/hooks/usePerformanceMonitoring'
 import './App.css'
 
+// Debug utilities (development only)
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/auth-debug')
+  import('./utils/firebase-emulator')
+}
+
+// Lazy load debug panel for development
+const AuthDebugPanel = lazy(() => import('@/components/auth-debug-panel'))
+
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
 const ShopPage = lazy(() => import('@/pages/ShopPage').then(module => ({ default: module.ShopPage })))
@@ -203,7 +212,14 @@ function App() {
                       }}
                     />
                     <AutoUpdater />
+                    {/* Performance Budget - Only show if admin has enabled it */}
                     <PerformanceBudget />
+                    {/* Debug panel for development - Only show if admin has enabled it */}
+                    {import.meta.env.DEV && (
+                      <Suspense fallback={null}>
+                        <AuthDebugPanel />
+                      </Suspense>
+                    )}
                   </div>
                 </Router>
               </DataProvider>

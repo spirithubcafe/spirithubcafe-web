@@ -32,21 +32,30 @@ try {
   
   // Enable offline persistence for better performance
   if (typeof window !== 'undefined') {
-    import('firebase/firestore').then(({ enableNetwork }) => {
+    import('firebase/firestore').then(({ enableNetwork, connectFirestoreEmulator }) => {
       // Add global error handling for Firestore
       window.addEventListener('unhandledrejection', (event) => {
-        if (event.reason?.code?.includes('firestore')) {
-          console.warn('⚠️ Firestore connection issue, continuing with offline data');
+        if (event.reason?.code?.includes('firestore') || 
+            event.reason?.message?.includes('Missing or insufficient permissions')) {
+          console.warn('⚠️ Firestore permission issue, continuing with limited functionality');
           event.preventDefault();
         }
       });
       
-      // Only enable in production
-      if (import.meta.env.PROD) {
-        enableNetwork(db).catch((error) => {
-          console.warn('⚠️ Firestore network issue:', error);
-        });
+      // Connect to local emulator in development
+      if (import.meta.env.DEV && !import.meta.env.VITE_USE_PRODUCTION_FIREBASE) {
+        try {
+          connectFirestoreEmulator(db, 'localhost', 8080);
+          console.log('🔧 Connected to Firestore emulator');
+        } catch (error) {
+          console.log('📡 Using production Firestore');
+        }
       }
+      
+      // Enable network connection
+      enableNetwork(db).catch((error) => {
+        console.warn('⚠️ Firestore network issue:', error);
+      });
     });
   }
 } catch (error) {
@@ -1704,10 +1713,20 @@ export const firestoreService = {
   orders: {
     list: async (userId?: string) => {
       try {
+        // Check if user is authenticated for orders
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          console.warn('⚠️ User not authenticated for orders');
+          return { items: [], totalItems: 0 };
+        }
+
         let q = query(collection(db, 'orders'), orderBy('created', 'desc'));
         
         if (userId) {
           q = query(q, where('user_id', '==', userId));
+        } else {
+          // If no userId specified, only return current user's orders
+          q = query(q, where('user_id', '==', currentUser.uid));
         }
         
         const querySnapshot = await getDocs(q);
@@ -1715,8 +1734,15 @@ export const firestoreService = {
           items: querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order)),
           totalItems: querySnapshot.docs.length
         };
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error getting orders:', error);
+        
+        // Return empty result for permission errors instead of throwing
+        if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+          console.warn('⚠️ Permission denied for orders, returning empty result');
+          return { items: [], totalItems: 0 };
+        }
+        
         throw error;
       }
     },
@@ -1736,23 +1762,37 @@ export const firestoreService = {
     
     create: async (data: Omit<Order, 'id' | 'created' | 'updated'>) => {
       try {
+        // Check if user is authenticated
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          throw new Error('User must be authenticated to create orders');
+        }
+
+        // Ensure user_id is set to current user
+        const orderData = {
+          ...data,
+          user_id: currentUser.uid, // Always use current user's ID
+          created: serverTimestamp(),
+          updated: serverTimestamp()
+        };
+
         // Filter out undefined values to prevent Firebase errors
-        const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        const cleanData = Object.entries(orderData).reduce((acc, [key, value]) => {
           if (value !== undefined) {
             acc[key] = value;
           }
           return acc;
         }, {} as any);
 
-        const orderData = {
-          ...cleanData,
-          created: serverTimestamp(),
-          updated: serverTimestamp()
-        };
-        const docRef = await addDoc(collection(db, 'orders'), orderData);
-        return { id: docRef.id, ...orderData };
-      } catch (error) {
+        const docRef = await addDoc(collection(db, 'orders'), cleanData);
+        return { id: docRef.id, ...cleanData };
+      } catch (error: any) {
         console.error('Error creating order:', error);
+        
+        if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
+          throw new Error('Permission denied: Unable to create order. Please ensure you are logged in.');
+        }
+        
         throw error;
       }
     },

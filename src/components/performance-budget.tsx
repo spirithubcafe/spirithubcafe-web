@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { AlertTriangle, CheckCircle, Clock, Zap, TrendingUp, X } from 'lucide-react'
 import { usePerformanceMonitoring } from '@/hooks/usePerformanceMonitoring'
+import { shouldShowDebugTool } from '@/stores/admin-debug-store'
+import { useAuth } from '@/hooks/useAuth'
 
 interface PerformanceBudget {
   metric: string
@@ -15,19 +17,23 @@ interface PerformanceBudget {
 }
 
 const PerformanceBudgetComponent = memo(() => {
+  const { currentUser } = useAuth()
   const [budgets, setBudgets] = useState<PerformanceBudget[]>([])
   const [overallScore, setOverallScore] = useState(0)
-  const [isVisible, setIsVisible] = useState(() => {
-    // Default to true in development, false in production
-    if (import.meta.env.DEV) return true
-    return localStorage.getItem('show-performance-budget') === 'true'
-  })
+
+  // Check if component should be visible based on admin settings
+  const shouldShow = shouldShowDebugTool('performance', currentUser?.role)
+  
+  // If admin hasn't enabled performance budget, don't render anything
+  if (!shouldShow) {
+    return null
+  }
+
+  const [isVisible, setIsVisible] = useState(true)
 
   // Toggle visibility function
   const toggleVisibility = () => {
-    const newVisibility = !isVisible
-    setIsVisible(newVisibility)
-    localStorage.setItem('show-performance-budget', newVisibility.toString())
+    setIsVisible(!isVisible)
   }
 
   const { } = usePerformanceMonitoring({

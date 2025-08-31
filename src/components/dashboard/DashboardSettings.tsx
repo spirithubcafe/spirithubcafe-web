@@ -2,13 +2,22 @@ import { CreditCard, MapPin, Settings as SettingsIcon } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/hooks/useAuth'
+import AdminDebugControlPanel from '@/components/admin/admin-debug-control-panel'
 
 export default function DashboardSettings() {
   const { i18n } = useTranslation()
+  const { currentUser } = useAuth()
   const isArabic = i18n.language === 'ar'
+  const isAdmin = currentUser?.role === 'admin'
 
   return (
     <div className="space-y-6">
+      {/* Admin Debug Control Panel - Only visible for admins */}
+      {isAdmin && (
+        <AdminDebugControlPanel />
+      )}
+      
       <Card>
         <CardHeader>
           <CardTitle>{isArabic ? 'الإعدادات' : 'Settings'}</CardTitle>
