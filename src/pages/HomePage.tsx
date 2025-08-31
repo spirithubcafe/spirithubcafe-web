@@ -108,8 +108,7 @@ export function HomePage() {
               : undefined,
             backgroundSize: homepageSettings?.featureSectionBackgroundType === 'image' ? 'cover' : undefined,
             backgroundPosition: homepageSettings?.featureSectionBackgroundType === 'image' ? 'center' : undefined,
-            backgroundRepeat: homepageSettings?.featureSectionBackgroundType === 'image' ? 'no-repeat' : undefined,
-            backgroundAttachment: homepageSettings?.featureSectionBackgroundType === 'image' ? 'fixed' : undefined
+            backgroundRepeat: homepageSettings?.featureSectionBackgroundType === 'image' ? 'no-repeat' : undefined
           }}
         >
           {/* Overlay for better text readability when using background image */}
@@ -134,7 +133,7 @@ export function HomePage() {
               {/* Content */}
               <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                 {/* Text Content */}
-                <div className="flex-1 text-center lg:text-left">
+                <div className="flex-1 text-center lg:text-left order-2 lg:order-1">
                   <div 
                     className="text-lg md:text-xl text-muted-foreground leading-relaxed feature-content"
                     dangerouslySetInnerHTML={{
@@ -146,10 +145,10 @@ export function HomePage() {
                 </div>
                 
                 {/* Feature Image */}
-                <div className="flex-1 flex justify-center">
+                <div className="flex-1 flex justify-center w-full order-1 lg:order-2">
                   {homepageSettings?.featureSectionImage && (
                     <div 
-                      className="w-full aspect-video overflow-hidden rounded-lg shadow-xl cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                      className="w-full max-w-lg aspect-video overflow-hidden rounded-lg shadow-xl cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                       onClick={() => openImageModal(homepageSettings.featureSectionImage)}
                     >
                       <img
