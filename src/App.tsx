@@ -12,7 +12,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AutoUpdater } from '@/components/auto-updater'
 import { Suspense, lazy, memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
+// import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
 import { AdvancedLoading } from '@/components/ui/advanced-loading'
 import { RouteLoader } from '@/components/ui/page-loader'
 import './App.css'
@@ -81,13 +81,12 @@ const ConditionalFooter = memo(() => {
 })
 
 function AppContent() {
-  // Performance monitoring (silent - no logs)
-  usePerformanceMonitor({
-    enableCoreWebVitals: true,
-    enableResourceTiming: true,
-    enableCacheMetrics: true,
-    // Remove onMetricsUpdate to prevent console logs
-  })
+  // Performance monitoring disabled to reduce console noise
+  // usePerformanceMonitor({
+  //   enableCoreWebVitals: true,
+  //   enableResourceTiming: true,
+  //   enableCacheMetrics: true,
+  // })
 
   return (
     <ThemeProvider defaultTheme="system" storageKey="spirithub-ui-theme">

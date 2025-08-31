@@ -200,31 +200,10 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
     return Math.max(0, score)
   }, [])
 
-  const reportToAnalytics = useCallback((metrics: PerformanceMetrics) => {
-    // Report to Google Analytics or other analytics service
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'performance_metrics', {
-        page_load_time: metrics.pageLoadTime,
-        fcp: metrics.fcp,
-        lcp: metrics.lcp,
-        fid: metrics.fid,
-        cls: metrics.cls,
-        cache_hit_rate: metrics.cacheHitRate,
-        custom_parameter: getPerformanceScore(metrics)
-      })
-    }
-    
-    // Disable external analytics endpoint for now
-    // if (process.env.NODE_ENV === 'production') {
-    //   fetch('/api/analytics/performance', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(metrics)
-    //   }).catch(() => {
-    //     // Silently fail analytics reporting
-    //   })
-    // }
-  }, [getPerformanceScore])
+  const reportToAnalytics = useCallback((_metrics: PerformanceMetrics) => {
+    // Analytics reporting disabled to reduce console noise and unnecessary API calls
+    // You can re-enable this when you have proper analytics endpoints set up
+  }, [])
 
   // Auto-start monitoring when component mounts
   useEffect(() => {
