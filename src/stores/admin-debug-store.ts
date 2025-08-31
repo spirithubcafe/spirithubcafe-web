@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 
 interface AdminDebugSettings {
-  showPerformanceBudget: boolean;
-  showAuthDebugPanel: boolean;
   enableDebugMode: boolean;
 }
 
@@ -10,8 +8,6 @@ const STORAGE_KEY = 'admin-debug-settings';
 
 // Default settings
 const defaultSettings: AdminDebugSettings = {
-  showPerformanceBudget: false,
-  showAuthDebugPanel: false,
   enableDebugMode: false,
 };
 
@@ -22,10 +18,11 @@ const getStoredSettings = (): AdminDebugSettings => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return { ...defaultSettings, ...JSON.parse(stored) };
+      const parsed = JSON.parse(stored);
+      return { ...defaultSettings, ...parsed };
     }
   } catch (error) {
-    console.warn('Failed to parse stored admin debug settings:', error);
+    console.warn('Failed to parse admin debug settings from localStorage:', error);
   }
   
   return defaultSettings;
@@ -38,7 +35,7 @@ const saveSettings = (settings: AdminDebugSettings): void => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
   } catch (error) {
-    console.warn('Failed to save admin debug settings:', error);
+    console.warn('Failed to save admin debug settings to localStorage:', error);
   }
 };
 
@@ -51,14 +48,6 @@ export const useAdminDebugSettings = () => {
     saveSettings(settings);
   }, [settings]);
 
-  const togglePerformanceBudget = () => {
-    setSettings(prev => ({ ...prev, showPerformanceBudget: !prev.showPerformanceBudget }));
-  };
-
-  const toggleAuthDebugPanel = () => {
-    setSettings(prev => ({ ...prev, showAuthDebugPanel: !prev.showAuthDebugPanel }));
-  };
-
   const toggleDebugMode = () => {
     setSettings(prev => ({ ...prev, enableDebugMode: !prev.enableDebugMode }));
   };
@@ -69,8 +58,6 @@ export const useAdminDebugSettings = () => {
 
   return {
     ...settings,
-    togglePerformanceBudget,
-    toggleAuthDebugPanel,
     toggleDebugMode,
     resetAllSettings,
   };
@@ -84,13 +71,13 @@ export const canShowDebugTools = (userRole?: string, debugEnabled?: boolean): bo
   // In development, always allow debug tools for testing
   if (isDev) return true;
   
-  // In production, only show if user is admin AND debug is explicitly enabled
+  // In production, only allow for admins with debug enabled
   return isAdmin && (debugEnabled ?? false);
 };
 
-// Helper to check if specific debug tool should be shown
+// Specific tool visibility check
 export const shouldShowDebugTool = (
-  toolType: 'performance' | 'auth',
+  toolType: 'console',
   userRole?: string
 ): boolean => {
   const settings = getStoredSettings();
@@ -100,10 +87,8 @@ export const shouldShowDebugTool = (
   }
   
   switch (toolType) {
-    case 'performance':
-      return settings.showPerformanceBudget;
-    case 'auth':
-      return settings.showAuthDebugPanel;
+    case 'console':
+      return settings.enableDebugMode;
     default:
       return false;
   }
