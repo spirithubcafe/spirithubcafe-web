@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
-import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/data-provider'
+import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/enhanced-data-provider'
 import { conversionRates } from '@/lib/currency'
 import { NewsletterSection } from '@/components/newsletter-section'
 import DOMPurify from 'dompurify'
@@ -227,7 +227,7 @@ export function HomePage() {
               </div>
             ) : latestProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {latestProducts.slice(0, 6).map((product) => {
+                {latestProducts.slice(0, 6).map((product: Product) => {
                   const productPrice = getProductPrice(product)
                   const salePrice = getSalePrice(product)
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'

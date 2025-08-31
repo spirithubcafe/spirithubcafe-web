@@ -6,7 +6,7 @@ import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
 import { firestoreService } from '@/lib/firebase'
-import { useGlobalNewsletterSettings } from '@/contexts/data-provider'
+import { useGlobalNewsletterSettings } from '@/contexts/enhanced-data-provider'
 import toast from 'react-hot-toast'
 
 export function NewsletterSection() {
