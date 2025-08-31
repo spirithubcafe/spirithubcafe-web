@@ -220,9 +220,6 @@ const NavigationComponent = memo(() => {
                       <div className="font-medium">
                         {isArabic ? 'جميع المنتجات' : 'All Products'}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {isArabic ? 'تصفح جميع منتجاتنا' : 'Browse all our products'}
-                      </div>
                     </Link>
                     
                     {/* Categories Divider */}
@@ -248,11 +245,6 @@ const NavigationComponent = memo(() => {
                           <div className="font-medium">
                             {isArabic ? (category.name_ar || category.name) : category.name}
                           </div>
-                          {category.description && (
-                            <div className="text-xs text-muted-foreground line-clamp-1">
-                              {isArabic ? (category.description_ar || category.description) : category.description}
-                            </div>
-                          )}
                         </Link>
                       ))
                     )}

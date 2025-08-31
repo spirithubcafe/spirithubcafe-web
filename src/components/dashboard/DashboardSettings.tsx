@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
-import { AdminDebugControlPanel } from '@/components/admin/admin-debug-control-panel'
+import AdminDebugControlPanel from '@/components/admin/admin-debug-control-panel'
 
 export default function DashboardSettings() {
   const { i18n } = useTranslation()

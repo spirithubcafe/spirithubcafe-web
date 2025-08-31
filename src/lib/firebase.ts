@@ -36,26 +36,29 @@ try {
       // Add global error handling for Firestore
       window.addEventListener('unhandledrejection', (event) => {
         if (event.reason?.code?.includes('firestore') || 
-            event.reason?.message?.includes('Missing or insufficient permissions')) {
-          console.warn('⚠️ Firestore permission issue, continuing with limited functionality');
+            event.reason?.message?.includes('Missing or insufficient permissions') ||
+            event.reason?.message?.includes('400')) {
+          console.warn('⚠️ Firestore issue detected, continuing with limited functionality:', event.reason?.message);
           event.preventDefault();
         }
       });
       
-      // Connect to local emulator in development
-      if (import.meta.env.DEV && !import.meta.env.VITE_USE_PRODUCTION_FIREBASE) {
+      // Only connect to emulator if explicitly enabled
+      if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
         try {
           connectFirestoreEmulator(db, 'localhost', 8080);
           console.log('🔧 Connected to Firestore emulator');
         } catch (error) {
-          console.log('📡 Using production Firestore');
+          console.log('📡 Using production Firestore (emulator connection failed)');
         }
       }
       
-      // Enable network connection
+      // Enable network connection with better error handling
       enableNetwork(db).catch((error) => {
-        console.warn('⚠️ Firestore network issue:', error);
+        console.warn('⚠️ Firestore network issue (continuing with offline mode):', error.message);
       });
+    }).catch((error) => {
+      console.warn('⚠️ Firestore module loading failed:', error.message);
     });
   }
 } catch (error) {
@@ -92,6 +95,52 @@ const setCachedData = (key: string, data: any, ttlMs: number = 5 * 60 * 1000) =>
     ttl: ttlMs
   });
 };
+
+// Firebase error handler (for future use)
+/*
+const handleFirebaseError = (error: any, operation: string) => {
+  console.warn(`⚠️ Firebase ${operation} error:`, error.message);
+  
+  // Handle specific Firebase errors
+  if (error.code === 'permission-denied') {
+    console.warn('Permission denied - continuing with limited functionality');
+    return null;
+  }
+  
+  if (error.code === 'unavailable' || error.message?.includes('400')) {
+    console.warn('Firebase service unavailable - continuing offline');
+    return null;
+  }
+  
+  if (error.code === 'not-found') {
+    console.warn('Document not found - returning null');
+    return null;
+  }
+  
+  // For other errors, still log but don't throw
+  console.warn('Continuing with limited functionality due to Firebase error');
+  return null;
+};
+*/
+
+// Safe Firebase operation wrapper (for future use)
+/*
+const safeFirebaseOperation = async <T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  fallback: T | null = null
+): Promise<T | null> => {
+  try {
+    if (!db) {
+      console.warn(`Firebase not initialized for ${operationName}`);
+      return fallback;
+    }
+    return await operation();
+  } catch (error) {
+    return handleFirebaseError(error, operationName) ?? fallback;
+  }
+};
+*/
 
 // Types for our collections
 export interface UserProfile {

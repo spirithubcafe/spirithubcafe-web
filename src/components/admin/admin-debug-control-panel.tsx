@@ -80,3 +80,5 @@ export const AdminDebugControlPanel: React.FC<AdminDebugControlPanelProps> = ({ 
     </Card>
   );
 };
+
+export default AdminDebugControlPanel;
