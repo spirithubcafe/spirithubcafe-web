@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo, useCallback } from 'react'
 import { useImageCache } from '@/hooks/useCache'
 
 interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
@@ -10,7 +10,7 @@ interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> 
   className?: string
 }
 
-export function OptimizedImage({
+const OptimizedImageComponent = memo(({
   src,
   alt,
   fallback = '/images/placeholder.png',
@@ -18,7 +18,7 @@ export function OptimizedImage({
   placeholder,
   className = '',
   ...props
-}: OptimizedImageProps) {
+}: OptimizedImageProps) => {
   const [currentSrc, setCurrentSrc] = useState<string>(lazy ? '' : src)
   const [isVisible, setIsVisible] = useState(!lazy)
   const imgRef = useRef<HTMLImageElement>(null)
@@ -56,11 +56,11 @@ export function OptimizedImage({
     }
   }, [src, lazy])
 
-  const handleError = () => {
+  const handleError = useCallback(() => {
     if (currentSrc !== fallback) {
       setCurrentSrc(fallback)
     }
-  }
+  }, [currentSrc, fallback])
 
   const showPlaceholder = lazy && !isVisible
   const showImage = currentSrc && (loaded || !lazy)
@@ -86,6 +86,7 @@ export function OptimizedImage({
             loaded ? 'opacity-100' : 'opacity-0'
           } ${className}`}
           loading={lazy ? 'lazy' : 'eager'}
+          decoding="async"
         />
       )}
       
@@ -103,7 +104,10 @@ export function OptimizedImage({
       )}
     </div>
   )
-}
+})
+
+OptimizedImageComponent.displayName = 'OptimizedImage'
+export const OptimizedImage = OptimizedImageComponent
 
 // Progressive image component with multiple sizes
 interface ProgressiveImageProps extends OptimizedImageProps {

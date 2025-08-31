@@ -445,10 +445,10 @@ export function HomePage() {
           
           {/* Scrolling Content */}
           <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8">
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-7xl mx-auto">
               <div className="space-y-12">
                 {/* Community Text */}
-                <div className="text-center max-w-4xl mx-auto">
+                <div className="text-center max-w-5xl mx-auto">
                   <p className="text-lg md:text-xl lg:text-2xl text-white/95 leading-relaxed drop-shadow-lg font-medium">
                     {isArabic 
                       ? (homepageSettings?.communityTextAr || 'كن جزءًا لا يتجزأ من عائلة سبيريت هب! تواصل معنا على وسائل التواصل الاجتماعي للحصول على تحديثات حصرية، ولمحات من وراء الكواليس، ومحتوى مثير. تابعنا لتبقى على اطلاع دائم. من النظرات الخاطفة على عمليتنا الإبداعية إلى العروض الترويجية الخاصة، قنواتنا الاجتماعية هي تذكرتك للأحدث. تفاعل مع المتحمسين ذوي التفكير المماثل، وشارك تجاربك، وكن عضوًا مهمًا في مجتمعنا الديناميكي عبر الإنترنت. لا تفوت الإثارة؛ انضم إلينا اليوم!')
@@ -499,10 +499,10 @@ export function HomePage() {
                 
                 {/* Community Images Gallery */}
                 {(homepageSettings?.communityImage1 || homepageSettings?.communityImage2 || homepageSettings?.communityImage3 || homepageSettings?.communityImage4) && (
-                  <div className="grid grid-cols-2 gap-4 max-w-4xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto px-4">
                     {homepageSettings?.communityImage1 && (
                       <div 
-                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        className="aspect-[3/2] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                         onClick={() => openImageModal(homepageSettings.communityImage1)}
                       >
                         <img
@@ -521,7 +521,7 @@ export function HomePage() {
                     )}
                     {homepageSettings?.communityImage2 && (
                       <div 
-                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        className="aspect-[3/2] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                         onClick={() => openImageModal(homepageSettings.communityImage2)}
                       >
                         <img
@@ -540,7 +540,7 @@ export function HomePage() {
                     )}
                     {homepageSettings?.communityImage3 && (
                       <div 
-                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        className="aspect-[3/2] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                         onClick={() => openImageModal(homepageSettings.communityImage3)}
                       >
                         <img
@@ -559,7 +559,7 @@ export function HomePage() {
                     )}
                     {homepageSettings?.communityImage4 && (
                       <div 
-                        className="aspect-square overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
+                        className="aspect-[3/2] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
                         onClick={() => openImageModal(homepageSettings.communityImage4)}
                       >
                         <img

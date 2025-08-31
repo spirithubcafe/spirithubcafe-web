@@ -6,9 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:analyze": "tsc -b && vite build --mode analyze",
+    "build:prod": "NODE_ENV=production tsc -b && vite build --mode production",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
-    "setup:firebase": "node setupFirebase.mjs"
+    "setup:firebase": "node setupFirebase.mjs",
+    "optimize": "npm run lint:fix && npm run build:prod"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu, X, User, LogOut, ShoppingCart, Heart, Crown, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 
-export function Navigation() {
+const NavigationComponent = memo(() => {
   const { t, i18n } = useTranslation()
   const { resolvedTheme } = useTheme()
   const auth = useAuth()
@@ -828,4 +828,7 @@ export function Navigation() {
       )}
     </>
   )
-}
+})
+
+NavigationComponent.displayName = 'Navigation'
+export const Navigation = NavigationComponent

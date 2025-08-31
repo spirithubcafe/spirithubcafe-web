@@ -9,6 +9,19 @@
     <meta name="theme-color" content="#d97706" />
     <meta name="description" content="Premium Coffee Roastery - Quality Coffee Beans & Brewing Equipment" />
     
+    <!-- Performance optimization: DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="//firestore.googleapis.com">
+    <link rel="dns-prefetch" href="//firebasestorage.googleapis.com">
+    <link rel="dns-prefetch" href="//firebase.google.com">
+    
+    <!-- Preconnect to external origins for faster loading -->
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossorigin>
+    
+    <!-- Critical resource hints -->
+    <link rel="preload" href="/images/logo.png" as="image" type="image/png">
+    <link rel="preload" href="/images/icon.png" as="image" type="image/png">
+    
     <!-- PWA Meta Tags -->
     <meta name="application-name" content="SPIRITHUB ROASTERY" />
     <meta name="mobile-web-app-capable" content="yes" />

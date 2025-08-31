@@ -12,18 +12,18 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-  // exclude very large gallery assets from the precache manifest
-  globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,gif,webp,woff,woff2,ttf,eot}'],
-  globIgnores: ['**/images/gallery/**'],
-  // increase file size limit (12 MiB) to allow larger assets if necessary
-  maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
-  // Exclude dynamic URLs from navigation fallback
-  navigateFallback: '/index.html',
-  navigateFallbackDenylist: [
-    /^\/api\//,
-    /firestore\.googleapis\.com/,
-    /firebase/
-  ],
+        // exclude very large gallery assets from the precache manifest
+        globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,gif,webp,woff,woff2,ttf,eot}'],
+        globIgnores: ['**/images/gallery/**'],
+        // increase file size limit (12 MiB) to allow larger assets if necessary
+        maximumFileSizeToCacheInBytes: 12 * 1024 * 1024,
+        // Exclude dynamic URLs from navigation fallback
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /firestore\.googleapis\.com/,
+          /firebase/
+        ],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image',
@@ -31,9 +31,9 @@ export default defineConfig({
             options: {
               cacheName: 'images-cache',
               expiration: {
-                maxEntries: 200,
+                maxEntries: 300,
                 maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
+              }
             },
           },
           {
@@ -42,7 +42,7 @@ export default defineConfig({
             options: {
               cacheName: 'firebase-storage-cache',
               expiration: {
-                maxEntries: 300,
+                maxEntries: 400,
                 maxAgeSeconds: 7 * 24 * 60 * 60,
               },
             },
@@ -60,10 +60,10 @@ export default defineConfig({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'firestore-api-cache',
-              networkTimeoutSeconds: 3,
+              networkTimeoutSeconds: 2,
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 2 * 60, // Reduced cache time
+                maxEntries: 100,
+                maxAgeSeconds: 5 * 60, // 5 minutes
               },
             },
           },
@@ -80,8 +80,8 @@ export default defineConfig({
             options: {
               cacheName: 'firestore-documents-cache',
               expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 10 * 60, // 10 minutes for static documents
+                maxEntries: 300,
+                maxAgeSeconds: 15 * 60, // 15 minutes for static documents
               },
             },
           },
@@ -91,8 +91,19 @@ export default defineConfig({
             options: {
               cacheName: 'fonts-cache',
               expiration: {
-                maxEntries: 30,
+                maxEntries: 50,
                 maxAgeSeconds: 365 * 24 * 60 * 60,
+              },
+            },
+          },
+          {
+            urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 24 * 60 * 60, // 1 day
               },
             },
           },
@@ -100,6 +111,8 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        // Add background sync
+        mode: 'production'
       },
       devOptions: {
         enabled: false
@@ -158,10 +171,19 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
-          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu']
+          ui: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          routing: ['react-router-dom'],
+          forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          i18n: ['react-i18next', 'i18next', 'i18next-browser-languagedetector']
         }
       }
-    }
+    },
+    target: 'esnext',
+    minify: 'esbuild',
+    cssMinify: 'esbuild',
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1000,
+    sourcemap: false
   },
   server: {
     fs: {
