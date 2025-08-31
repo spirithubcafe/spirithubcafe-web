@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { LanguageToggle } from '@/components/language-toggle'
 import { CurrencyToggle } from '@/components/currency-toggle'
+import { UpdateToggle } from '@/components/update-toggle'
 import { CartSidebar } from '@/components/cart-sidebar'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
@@ -322,6 +323,16 @@ const NavigationComponent = memo(() => {
                   )}
                 />
                 <CurrencyToggle 
+                  className={cn(
+                    "transition-all duration-200 pointer-events-auto",
+                    isHomePage && !isScrolled
+                      ? resolvedTheme === 'dark'
+                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                      : ""
+                  )}
+                />
+                <UpdateToggle 
                   className={cn(
                     "transition-all duration-200 pointer-events-auto",
                     isHomePage && !isScrolled
@@ -661,7 +672,7 @@ const NavigationComponent = memo(() => {
                       {t('navigation.settings')}
                     </h3>
                     <div className={cn(
-                      "grid grid-cols-3 gap-2",
+                      "grid grid-cols-2 gap-2",
                       isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                     )}>
                       <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
@@ -680,6 +691,12 @@ const NavigationComponent = memo(() => {
                         <CurrencyToggle />
                         <span className="text-xs text-muted-foreground text-center">
                           {isArabic ? 'العملة' : 'Currency'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-muted/50">
+                        <UpdateToggle />
+                        <span className="text-xs text-muted-foreground text-center">
+                          {isArabic ? 'التحديث' : 'Update'}
                         </span>
                       </div>
                     </div>

@@ -9,7 +9,6 @@ import { GlobalLoadingProvider } from '@/contexts/global-loading-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { AutoUpdater } from '@/components/auto-updater'
 import { Suspense, lazy, memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 // import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
@@ -227,7 +226,6 @@ function AppContent() {
                     },
                   }}
                 />
-                <AutoUpdater />
                 
                 {/* Performance Monitor for Development - Disabled */}
                 {/* <PerformanceMonitor /> */}
