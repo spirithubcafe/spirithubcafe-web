@@ -120,9 +120,27 @@ class AdvancedCacheManager {
     // Persist to localStorage if requested
     if (persist) {
       try {
+        // Check localStorage quota before storing
+        const itemSize = JSON.stringify(cacheItem).length
+        const available = this.getAvailableStorage()
+        
+        if (itemSize > available) {
+          // Clear some old items to make space
+          this.clearOldItems()
+        }
+        
         localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem))
       } catch (error) {
-        console.warn('Failed to persist cache item:', error)
+        // Silently handle quota errors
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          this.clearOldItems()
+          // Try once more after cleanup
+          try {
+            localStorage.setItem(`cache_${key}`, JSON.stringify(cacheItem))
+          } catch {
+            // If still fails, just continue without persisting
+          }
+        }
       }
     }
 
@@ -264,15 +282,82 @@ class AdvancedCacheManager {
       try {
         const response = await fetch(url)
         if (response.ok) {
-          const data = await response.json()
+          // Check content type to determine how to handle the response
+          const contentType = response.headers.get('content-type') || ''
+          let data: any
+          
+          if (contentType.includes('application/json')) {
+            data = await response.json()
+          } else if (contentType.includes('text/')) {
+            data = await response.text()
+          } else {
+            // For binary files (images, etc.), store the URL only
+            data = { url, cached: true, timestamp: Date.now() }
+          }
+          
           this.set(url, data, { ...options, tags: ['preload'] })
         }
       } catch (error) {
-        console.warn(`Failed to preload ${url}:`, error)
+        // Silently handle preload errors - they're not critical
       }
     })
 
     await Promise.all(promises)
+  }
+
+  // Get available localStorage space (estimated)
+  private getAvailableStorage(): number {
+    try {
+      let totalSize = 0
+      
+      // Calculate current usage
+      for (let key in localStorage) {
+        if (localStorage.hasOwnProperty(key) && key.startsWith('cache_')) {
+          totalSize += localStorage[key].length
+        }
+      }
+      
+      // Assume 5MB limit (conservative estimate)
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      return Math.max(0, maxSize - totalSize)
+    } catch {
+      return 0
+    }
+  }
+
+  // Clear old items to free up space
+  private clearOldItems(): void {
+    try {
+      const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('cache_'))
+      
+      // Sort by timestamp (oldest first)
+      const sortedKeys = cacheKeys
+        .map(key => {
+          try {
+            const item = JSON.parse(localStorage[key])
+            return { key, timestamp: item.timestamp || 0 }
+          } catch {
+            return { key, timestamp: 0 }
+          }
+        })
+        .sort((a, b) => a.timestamp - b.timestamp)
+
+      // Remove oldest 25% of items
+      const itemsToRemove = Math.ceil(sortedKeys.length * 0.25)
+      for (let i = 0; i < itemsToRemove; i++) {
+        localStorage.removeItem(sortedKeys[i].key)
+        const cacheKey = sortedKeys[i].key.replace('cache_', '')
+        this.cache.delete(cacheKey)
+      }
+    } catch {
+      // If error, clear all cache items
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cache_')) {
+          localStorage.removeItem(key)
+        }
+      })
+      this.cache.clear()
+    }
   }
 }
 

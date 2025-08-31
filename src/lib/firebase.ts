@@ -1384,9 +1384,7 @@ export const firestoreService = {
           );
         }
         
-        console.time('Firestore Query');
         const querySnapshot = await getDocs(q);
-        console.timeEnd('Firestore Query');
         
         let products = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
         
@@ -1444,9 +1442,7 @@ export const firestoreService = {
           return cachedResult;
         }
 
-        console.time(`Product Get: ${id}`);
         const docSnap = await getDoc(doc(db, 'products', id));
-        console.timeEnd(`Product Get: ${id}`);
         
         if (docSnap.exists()) {
           const product = { id: docSnap.id, ...docSnap.data() } as Product;

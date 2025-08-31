@@ -214,16 +214,16 @@ export function usePerformanceMonitor(config: PerformanceConfig = {}) {
       })
     }
     
-    // You can also send to your own analytics endpoint
-    if (process.env.NODE_ENV === 'production') {
-      fetch('/api/analytics/performance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(metrics)
-      }).catch(() => {
-        // Silently fail analytics reporting
-      })
-    }
+    // Disable external analytics endpoint for now
+    // if (process.env.NODE_ENV === 'production') {
+    //   fetch('/api/analytics/performance', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(metrics)
+    //   }).catch(() => {
+    //     // Silently fail analytics reporting
+    //   })
+    // }
   }, [getPerformanceScore])
 
   // Auto-start monitoring when component mounts

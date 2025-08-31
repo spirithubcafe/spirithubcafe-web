@@ -230,19 +230,16 @@ class SettingsService {
       const doc = await firestoreService.getDocument(this.collection, 'categories')
       if (doc.exists()) {
         const data = doc.data() as CategoriesSettings
-        console.log('SettingsService - Loaded categories settings from Firestore:', data)
         this.setCache(cacheKey, data)
         return data
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No categories settings found, returning defaults')
       const defaults = this.getDefaultCategoriesSettings()
       this.setCache(cacheKey, defaults)
       return defaults
     } catch (error) {
       console.error('Error getting categories settings:', error)
-      console.log('SettingsService - Error occurred, returning defaults')
       return this.getDefaultCategoriesSettings()
     }
   }
@@ -363,7 +360,6 @@ class SettingsService {
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No newsletter settings found, returning defaults')
       const defaults = this.getDefaultNewsletterSettings()
       this.setCache(cacheKey, defaults)
       return defaults
@@ -375,10 +371,8 @@ class SettingsService {
 
   async updateNewsletterSettings(settings: NewsletterSettings): Promise<void> {
     try {
-      console.log('SettingsService - Saving newsletter settings to Firestore:', settings)
       await firestoreService.setDocument(this.collection, 'newsletter', settings)
       this.invalidateCache('newsletter')
-      console.log('SettingsService - Newsletter settings saved successfully')
     } catch (error) {
       console.error('Error updating newsletter settings:', error)
       throw error
@@ -404,7 +398,6 @@ class SettingsService {
   // Utility methods for cache management
   invalidateAllCache(): void {
     this.cache.clear()
-    console.log('SettingsService - All cache cleared')
   }
 
   forceRefreshCategories(): void {
