@@ -370,6 +370,7 @@ export function HomePage() {
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
                 {t('homepage.categories.title', 'SpiritHub Categories')}
               </h2>
+              <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
             </div>
             
             {loadingCategories ? (
