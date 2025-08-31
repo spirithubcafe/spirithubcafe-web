@@ -1,4 +1,5 @@
 // Service Worker Registration and Management
+import { logger } from "@/utils/logger";
 import { useState, useEffect, useCallback } from 'react'
 
 interface ServiceWorkerManager {
@@ -19,7 +20,7 @@ class SWManager implements ServiceWorkerManager {
 
   async register(): Promise<ServiceWorkerRegistration | null> {
     if (!this.isSupported()) {
-      console.warn('Service Worker not supported')
+      logger.warn('Service Worker not supported')
       return null
     }
 
@@ -29,7 +30,7 @@ class SWManager implements ServiceWorkerManager {
         updateViaCache: 'none'
       })
 
-      console.log('✅ Service Worker registered successfully')
+      logger.log('✅ Service Worker registered successfully')
 
       // Handle updates
       this.registration.addEventListener('updatefound', () => {
@@ -37,7 +38,7 @@ class SWManager implements ServiceWorkerManager {
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('🔄 New Service Worker available')
+              logger.log('🔄 New Service Worker available')
               this.showUpdateNotification()
             }
           })
@@ -51,7 +52,7 @@ class SWManager implements ServiceWorkerManager {
 
       return this.registration
     } catch (error) {
-      console.error('❌ Service Worker registration failed:', error)
+      logger.error('❌ Service Worker registration failed:', error)
       return null
     }
   }
@@ -65,7 +66,7 @@ class SWManager implements ServiceWorkerManager {
       await this.registration.update()
       return true
     } catch (error) {
-      console.error('Service Worker update failed:', error)
+      logger.error('Service Worker update failed:', error)
       return false
     }
   }
@@ -80,7 +81,7 @@ class SWManager implements ServiceWorkerManager {
       this.registration = null
       return result
     } catch (error) {
-      console.error('Service Worker unregistration failed:', error)
+      logger.error('Service Worker unregistration failed:', error)
       return false
     }
   }
@@ -94,7 +95,7 @@ class SWManager implements ServiceWorkerManager {
       const registration = await navigator.serviceWorker.getRegistration()
       return registration || null
     } catch (error) {
-      console.error('Failed to get Service Worker registration:', error)
+      logger.error('Failed to get Service Worker registration:', error)
       return null
     }
   }
@@ -170,7 +171,7 @@ export function useServiceWorker() {
         window.location.reload()
       }
     } catch (error) {
-      console.error('Update failed:', error)
+      logger.error('Update failed:', error)
     } finally {
       setIsUpdating(false)
     }
@@ -181,7 +182,7 @@ export function useServiceWorker() {
       await serviceWorkerManager.unregister()
       setIsRegistered(false)
     } catch (error) {
-      console.error('Unregister failed:', error)
+      logger.error('Unregister failed:', error)
     }
   }, [])
 
@@ -189,7 +190,7 @@ export function useServiceWorker() {
     try {
       return await serviceWorkerManager.sendMessage({ type: 'GET_CACHE_STATS' })
     } catch (error) {
-      console.error('Failed to get cache stats:', error)
+      logger.error('Failed to get cache stats:', error)
       return null
     }
   }, [])
@@ -202,7 +203,7 @@ export function useServiceWorker() {
       })
       return true
     } catch (error) {
-      console.error('Failed to clear cache:', error)
+      logger.error('Failed to clear cache:', error)
       return false
     }
   }, [])
@@ -215,7 +216,7 @@ export function useServiceWorker() {
       })
       return true
     } catch (error) {
-      console.error('Failed to preload resources:', error)
+      logger.error('Failed to preload resources:', error)
       return false
     }
   }, [])

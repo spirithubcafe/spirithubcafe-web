@@ -317,7 +317,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
   if (isInitialLoading) {
     return (
       <AdvancedLoading
-        variant="coffee"
         size="lg"
         fullScreen
         overlay

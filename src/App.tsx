@@ -10,18 +10,18 @@ import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AutoUpdater } from '@/components/auto-updater'
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
 import { AdvancedLoading } from '@/components/ui/advanced-loading'
 import { RouteLoader } from '@/components/ui/page-loader'
 import './App.css'
 
-// Debug utilities (development only)
-if (process.env.NODE_ENV === 'development') {
-  import('./utils/auth-debug')
-  import('./utils/firebase-emulator')
-}
+// Debug utilities (development only - disabled to reduce console noise)
+// if (process.env.NODE_ENV === 'development') {
+//   import('./utils/auth-debug')
+//   import('./utils/firebase-emulator')
+// }
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
@@ -48,7 +48,6 @@ const AramexTrackingPage = lazy(() => import('@/pages/AramexTrackingPage'))
 const PageLoader = () => (
   <div className="min-h-screen bg-background flex items-center justify-center">
     <AdvancedLoading
-      variant="coffee"
       size="lg"
       message="Loading page..."
       animated
@@ -57,7 +56,7 @@ const PageLoader = () => (
 )
 
 // Component to conditionally show navigation and footer
-function ConditionalNavigation() {
+const ConditionalNavigation = memo(() => {
   const location = useLocation()
   
   // Hide navigation only on hero-slide pages
@@ -67,9 +66,9 @@ function ConditionalNavigation() {
   )
   
   return shouldHideNav ? null : <Navigation />
-}
+})
 
-function ConditionalFooter() {
+const ConditionalFooter = memo(() => {
   const location = useLocation()
   
   // Hide footer on dashboard pages
@@ -79,7 +78,7 @@ function ConditionalFooter() {
   )
   
   return shouldHideFooter ? null : <Footer />
-}
+})
 
 function AppContent() {
   // Performance monitoring (silent - no logs)

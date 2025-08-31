@@ -1,35 +1,29 @@
 import { useState, useEffect } from 'react'
-import { Coffee } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Loader } from './loader'
 import './loading-animations.css'
 
 interface AdvancedLoadingProps {
-  variant?: 'spinner' | 'pulse' | 'coffee' | 'skeleton' | 'progress'
   size?: 'sm' | 'md' | 'lg' | 'xl'
   fullScreen?: boolean
   message?: string
-  progress?: number
-  showProgress?: boolean
   className?: string
   overlay?: boolean
   animated?: boolean
 }
 
 const loadingMessages = [
-  'Loading delicious coffee...',
-  'Brewing your experience...',
-  'Preparing fresh content...',
-  'Fetching coffee beans...',
-  'Almost ready...'
+  'Loading...',
+  'Please wait...',
+  'Almost ready...',
+  'Loading content...',
+  'Just a moment...'
 ]
 
 export function AdvancedLoading({
-  variant = 'spinner',
   size = 'md',
   fullScreen = false,
   message,
-  progress,
-  showProgress = false,
   className,
   overlay = false,
   animated = true
@@ -53,95 +47,19 @@ export function AdvancedLoading({
     }
   }, [messageIndex, message])
 
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-    xl: 'w-16 h-16'
-  }
-
-  const SpinnerLoader = () => (
-    <div
-      className={cn(
-        'border-2 border-gray-300 border-t-primary rounded-full animate-spin',
-        sizeClasses[size]
-      )}
-    />
-  )
-
-  const PulseLoader = () => (
-    <div className="flex space-x-2">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className={cn(
-            'rounded-full bg-primary animate-pulse-dot',
-            size === 'sm' ? 'w-2 h-2' : size === 'md' ? 'w-3 h-3' : size === 'lg' ? 'w-4 h-4' : 'w-5 h-5',
-            i === 0 ? 'pulse-delay-0' : i === 1 ? 'pulse-delay-200' : 'pulse-delay-400'
-          )}
-        />
-      ))}
-    </div>
-  )
-
-  const CoffeeLoader = () => (
-    <div className="relative">
-      <Coffee className={cn('text-amber-600 animate-spin', sizeClasses[size])} />
-      <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-ping" />
-    </div>
-  )
-
-  const SkeletonLoader = () => (
-    <div className="space-y-3 w-full max-w-sm">
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className={cn(
-            'bg-gray-300 rounded skeleton-shimmer',
-            i === 1 ? 'h-4' : i === 2 ? 'h-3 w-3/4' : 'h-3 w-1/2',
-            i === 0 ? 'pulse-delay-0' : i === 1 ? 'pulse-delay-200' : 'pulse-delay-400'
-          )}
-        />
-      ))}
-    </div>
-  )
-
-  const ProgressLoader = () => (
-    <div className="w-full max-w-xs space-y-3">
-      <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
-        <div
-          className={cn(
-            'h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-500 ease-out progress-bar-animated',
-            progress ? '' : 'animate-progress'
-          )}
-          style={{
-            width: progress ? `${progress}%` : undefined
-          }}
-        />
-      </div>
-      {showProgress && progress && (
-        <div className="text-center text-sm text-gray-600">
-          {Math.round(progress)}%
-        </div>
-      )}
-    </div>
-  )
-
   const renderLoader = () => {
-    switch (variant) {
-      case 'spinner':
-        return <SpinnerLoader />
-      case 'pulse':
-        return <PulseLoader />
-      case 'coffee':
-        return <CoffeeLoader />
-      case 'skeleton':
-        return <SkeletonLoader />
-      case 'progress':
-        return <ProgressLoader />
-      default:
-        return <SpinnerLoader />
+    const sizeMap = {
+      sm: 'sm' as const,
+      md: 'md' as const, 
+      lg: 'lg' as const,
+      xl: 'lg' as const
     }
+    
+    return (
+      <div className="flex items-center justify-center">
+        <Loader size={sizeMap[size]} />
+      </div>
+    )
   }
 
   const LoadingContent = () => (
@@ -153,8 +71,8 @@ export function AdvancedLoading({
     >
       {renderLoader()}
       
-      {(message || animated) && variant !== 'skeleton' && (
-        <p className="text-sm text-gray-600 text-center font-medium animate-fade-in">
+      {(message || animated) && (
+        <p className="text-sm text-muted-foreground text-center font-medium animate-fade-in">
           {currentMessage}
         </p>
       )}
@@ -166,7 +84,7 @@ export function AdvancedLoading({
       <div
         className={cn(
           'fixed inset-0 z-50 flex items-center justify-center animate-fade-in',
-          overlay ? 'bg-white/80 backdrop-blur-sm' : 'bg-background'
+          overlay ? 'loading-overlay' : 'bg-background'
         )}
       >
         <LoadingContent />
@@ -209,7 +127,6 @@ interface LoadingWrapperProps {
   loading: boolean
   children: React.ReactNode
   fallback?: React.ReactNode
-  skeleton?: boolean
   minLoadingTime?: number
 }
 
@@ -217,28 +134,34 @@ export function LoadingWrapper({
   loading,
   children,
   fallback,
-  skeleton = false,
   minLoadingTime = 300
 }: LoadingWrapperProps) {
   const [showLoading, setShowLoading] = useState(loading)
+  const [fadeOut, setFadeOut] = useState(false)
 
   useEffect(() => {
     if (loading) {
       setShowLoading(true)
+      setFadeOut(false)
     } else {
+      // Start fade out animation
+      setFadeOut(true)
       const timer = setTimeout(() => {
         setShowLoading(false)
-      }, minLoadingTime)
+        setFadeOut(false)
+      }, 200) // Reduced from minLoadingTime to 200ms for faster fade
       return () => clearTimeout(timer)
     }
   }, [loading, minLoadingTime])
 
   if (showLoading) {
     return (
-      <div className="animate-fade-in">
+      <div className={cn(
+        'transition-opacity duration-200 ease-out',
+        fadeOut ? 'animate-fade-out opacity-0' : 'animate-fade-in opacity-100'
+      )}>
         {fallback || (
           <AdvancedLoading
-            variant={skeleton ? 'skeleton' : 'spinner'}
             message="Loading content..."
           />
         )}

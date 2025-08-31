@@ -46,10 +46,10 @@ export function Footer() {
   
   // Debug: Add console.log to check if settings are loaded
   useEffect(() => {
-    console.log('Footer - Settings loaded:', settings)
-    console.log('Footer - Blur intensity:', blurIntensity)
+    // console.log('Footer - Settings loaded:', settings)
+    // console.log('Footer - Blur intensity:', blurIntensity)
   }, [settings, blurIntensity])
-  
+
   // Get overlay opacity class based on blur intensity
   const getOverlayClass = useCallback(() => {
     if (blurIntensity <= 20) return 'bg-black/30'
@@ -83,13 +83,10 @@ export function Footer() {
   const getFooterLogo = useCallback(() => {
     const logoTheme = settings?.logoTheme || 'auto'
     const colorTheme = settings?.colorTheme || 'auto'
-    console.log('Footer - Logo theme:', logoTheme, 'Color theme:', colorTheme, 'Global theme:', theme)
     
     if (logoTheme === 'light') {
-      console.log('Footer - Using light logo (explicit setting)')
       return "/images/logo/logo-light.png"
     } else if (logoTheme === 'dark') {
-      console.log('Footer - Using dark logo (explicit setting)')
       return "/images/logo/logo-dark.png"
     } else {
       // Auto mode - determine based on effective color theme
@@ -100,7 +97,6 @@ export function Footer() {
       // In dark theme/background, use light (white) logo
       // In light theme/background, use dark (black) logo
       const logo = effectiveTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"
-      console.log('Footer - Auto mode, effective theme:', effectiveTheme, 'using logo:', logo)
       return logo
     }
   }, [settings, theme])
@@ -159,7 +155,6 @@ export function Footer() {
                      blurIntensity <= 25 ? 'blur-sm' :
                      blurIntensity <= 50 ? 'blur' :
                      blurIntensity <= 75 ? 'blur-md' : 'blur-lg'
-    console.log('Footer - Blur class:', blurClass, 'for intensity:', blurIntensity)
     return blurClass
   }
 

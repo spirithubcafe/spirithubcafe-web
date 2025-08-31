@@ -6,9 +6,7 @@ interface PageLoaderProps {
   loading: boolean
   children: React.ReactNode
   loadingMessage?: string
-  variant?: 'spinner' | 'pulse' | 'coffee' | 'skeleton' | 'progress'
   size?: 'sm' | 'md' | 'lg' | 'xl'
-  showProgress?: boolean
   minLoadingTime?: number
   preloadCritical?: boolean
 }
@@ -17,33 +15,18 @@ export function PageLoader({
   loading,
   children,
   loadingMessage = 'Loading page...',
-  variant = 'coffee',
   size = 'lg',
-  showProgress = false,
   minLoadingTime = 500,
   preloadCritical = false
 }: PageLoaderProps) {
-  const [progress, setProgress] = useState(0)
   const [actualLoading, setActualLoading] = useState(loading)
   const { stats, preloadCritical: preload } = useCacheManager()
 
-  // Simulate progress for better UX
+  // Handle loading state with minimum time
   useEffect(() => {
     if (loading) {
       setActualLoading(true)
-      setProgress(0)
-      
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) return prev
-          return prev + Math.random() * 15
-        })
-      }, 200)
-
-      return () => clearInterval(interval)
     } else {
-      setProgress(100)
-      
       // Ensure minimum loading time for smooth UX
       const timer = setTimeout(() => {
         setActualLoading(false)
@@ -69,13 +52,9 @@ export function PageLoader({
     return (
       <div className="fixed inset-0 z-50 bg-background">
         <AdvancedLoading
-          variant={variant}
           size={size}
           fullScreen
           message={loadingMessage}
-          progress={showProgress ? progress : undefined}
-          showProgress={showProgress}
-          animated
         />
         
         {/* Cache stats for debugging in development */}
@@ -145,13 +124,11 @@ export function usePageLoader(initialLoading = false) {
 interface RouteLoaderProps {
   children: React.ReactNode
   loadingMessage?: string
-  variant?: 'spinner' | 'pulse' | 'coffee' | 'skeleton' | 'progress'
 }
 
 export function RouteLoader({
   children,
-  loadingMessage = 'Loading page...',
-  variant = 'coffee'
+  loadingMessage = 'Loading page...'
 }: RouteLoaderProps) {
   const [loading, setLoading] = useState(true)
 
@@ -167,7 +144,6 @@ export function RouteLoader({
     <PageLoader
       loading={loading}
       loadingMessage={loadingMessage}
-      variant={variant}
       minLoadingTime={300}
       preloadCritical
     >

@@ -300,11 +300,11 @@ export function useCacheManager() {
       await Promise.all(cachePromises)
       await loadCacheStats()
       
-      toast.success('Critical resources preloaded successfully')
+      // Silent preload - no toast notification
       return true
     } catch (error) {
       console.error('Error preloading critical resources:', error)
-      toast.error('Failed to preload critical resources')
+      // Silent error - no toast notification for failed preloads
       return false
     } finally {
       setLoading(false)

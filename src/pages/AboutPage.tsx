@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { aboutService, type AboutSectionData, type AboutHeaderData } from '@/services/about';
 import { HTMLContent } from '@/components/ui/html-content';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
+import { AlertCircle } from 'lucide-react';
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function AboutPage() {
@@ -63,7 +64,7 @@ export function AboutPage() {
       <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <Loader size="md" />
             <span>Loading...</span>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -65,9 +66,9 @@ export function NewsletterSection() {
         source: 'homepage'
       }
       
-      console.log('Creating newsletter subscription with data:', subscriptionData)
+      logger.log('Creating newsletter subscription with data:', subscriptionData)
       const result = await firestoreService.newsletters.create(subscriptionData)
-      console.log('Newsletter subscription result:', result)
+      logger.log('Newsletter subscription result:', result)
 
       setIsSubscribed(true)
       setEmail('')
@@ -80,7 +81,7 @@ export function NewsletterSection() {
       }, 3000)
 
     } catch (error) {
-      console.error('Newsletter subscription error:', error)
+      logger.error('Newsletter subscription error:', error)
       toast.error(isArabic ? 'حدث خطأ، يرجى المحاولة مرة أخرى' : 'An error occurred, please try again')
     } finally {
       setIsLoading(false)

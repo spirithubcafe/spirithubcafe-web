@@ -427,9 +427,9 @@ export function useCacheManager() {
         tags: ['critical', 'preload']
       })
       refreshStats()
-      toast.success('Critical resources preloaded')
+      // Silent preload - no toast notification
     } catch (error) {
-      toast.error('Failed to preload resources')
+      // Silent error - no toast notification for failed preloads
     } finally {
       setLoading(false)
     }

@@ -107,10 +107,7 @@ export function GlobalLoadingProvider({ children }: { children: ReactNode }) {
       {/* Global loading overlay */}
       {currentLoading && (
         <AdvancedLoading
-          variant={currentLoading.variant}
           message={currentLoading.message}
-          progress={currentLoading.progress}
-          showProgress={currentLoading.progress !== undefined}
           fullScreen
           overlay
           animated

@@ -3,6 +3,7 @@ import { firestoreService, type Product } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
+import { Loader } from '@/components/ui/loader'
 
 export default function ProductsList() {
   const [products, setProducts] = useState<Product[]>([])
@@ -62,7 +63,16 @@ export default function ProductsList() {
   }
 
   if (loading) {
-    return <div className="p-4">{isArabic ? 'جارٍ تحميل المنتجات...' : 'Loading products...'}</div>
+    return (
+      <div className="p-4 flex items-center justify-center">
+        <div className="text-center">
+          <Loader size="md" />
+          <p className="mt-4 text-muted-foreground">
+            {isArabic ? 'جارٍ تحميل المنتجات...' : 'Loading products...'}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   if (error) {

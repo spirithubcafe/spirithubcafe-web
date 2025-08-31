@@ -254,7 +254,6 @@ export default function PerformanceDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <AdvancedLoading
-          variant="pulse"
           size="lg"
           message="Loading performance dashboard..."
           animated

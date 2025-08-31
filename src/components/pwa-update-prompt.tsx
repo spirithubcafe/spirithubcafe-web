@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useState, useEffect } from 'react'
 import { RefreshCw, X, Download, Coffee, Wifi } from 'lucide-react'
@@ -13,17 +14,17 @@ export function PWAUpdatePrompt() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(registration) {
-      console.log('✅ Service Worker registered successfully:', registration)
+      logger.log('✅ Service Worker registered successfully:', registration)
     },
     onRegisterError(error) {
-      console.error('❌ Service Worker registration failed:', error)
+      logger.error('❌ Service Worker registration failed:', error)
     },
     onNeedRefresh() {
-      console.log('🔄 New version available')
+      logger.log('🔄 New version available')
       setShow(true)
     },
     onOfflineReady() {
-      console.log('📱 App ready to work offline')
+      logger.log('📱 App ready to work offline')
       setShow(true)
       // Auto hide offline ready message after 6 seconds
       const timer = setTimeout(() => {
@@ -57,7 +58,7 @@ export function PWAUpdatePrompt() {
     try {
       await updateServiceWorker(true)
     } catch (error) {
-      console.error('Update failed:', error)
+      logger.error('Update failed:', error)
       setIsUpdating(false)
     }
   }

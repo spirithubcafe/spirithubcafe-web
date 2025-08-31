@@ -176,7 +176,6 @@ export default function EnhancedCacheManagementPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <AdvancedLoading
-          variant="coffee"
           size="lg"
           message="Loading cache management..."
           animated

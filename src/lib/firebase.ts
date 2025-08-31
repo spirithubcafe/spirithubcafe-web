@@ -5,6 +5,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import type { User } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { logger } from "@/utils/logger";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -38,7 +39,7 @@ try {
         if (event.reason?.code?.includes('firestore') || 
             event.reason?.message?.includes('Missing or insufficient permissions') ||
             event.reason?.message?.includes('400')) {
-          console.warn('⚠️ Firestore issue detected, continuing with limited functionality:', event.reason?.message);
+          logger.warn('⚠️ Firestore issue detected, continuing with limited functionality:', event.reason?.message);
           event.preventDefault();
         }
       });
@@ -47,22 +48,22 @@ try {
       if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
         try {
           connectFirestoreEmulator(db, 'localhost', 8080);
-          console.log('🔧 Connected to Firestore emulator');
+          logger.log('🔧 Connected to Firestore emulator');
         } catch (error) {
-          console.log('📡 Using production Firestore (emulator connection failed)');
+          logger.log('📡 Using production Firestore (emulator connection failed)');
         }
       }
       
       // Enable network connection with better error handling
       enableNetwork(db).catch((error) => {
-        console.warn('⚠️ Firestore network issue (continuing with offline mode):', error.message);
+        logger.warn('⚠️ Firestore network issue (continuing with offline mode):', error.message);
       });
     }).catch((error) => {
-      console.warn('⚠️ Firestore module loading failed:', error.message);
+      logger.warn('⚠️ Firestore module loading failed:', error.message);
     });
   }
 } catch (error) {
-  console.error('❌ Firestore initialization failed:', error);
+  logger.error('❌ Firestore initialization failed:', error);
   db = null;
 }
 
@@ -72,7 +73,7 @@ if (typeof window !== 'undefined' && import.meta.env.PROD) {
   try {
     analytics = getAnalytics(app);
   } catch (error) {
-    console.warn('Analytics initialization failed:', error);
+    logger.warn('Analytics initialization failed:', error);
   }
 }
 
@@ -99,26 +100,26 @@ const setCachedData = (key: string, data: any, ttlMs: number = 5 * 60 * 1000) =>
 // Firebase error handler (for future use)
 /*
 const handleFirebaseError = (error: any, operation: string) => {
-  console.warn(`⚠️ Firebase ${operation} error:`, error.message);
+  logger.warn(`⚠️ Firebase ${operation} error:`, error.message);
   
   // Handle specific Firebase errors
   if (error.code === 'permission-denied') {
-    console.warn('Permission denied - continuing with limited functionality');
+    logger.warn('Permission denied - continuing with limited functionality');
     return null;
   }
   
   if (error.code === 'unavailable' || error.message?.includes('400')) {
-    console.warn('Firebase service unavailable - continuing offline');
+    logger.warn('Firebase service unavailable - continuing offline');
     return null;
   }
   
   if (error.code === 'not-found') {
-    console.warn('Document not found - returning null');
+    logger.warn('Document not found - returning null');
     return null;
   }
   
   // For other errors, still log but don't throw
-  console.warn('Continuing with limited functionality due to Firebase error');
+  logger.warn('Continuing with limited functionality due to Firebase error');
   return null;
 };
 */
@@ -132,7 +133,7 @@ const safeFirebaseOperation = async <T>(
 ): Promise<T | null> => {
   try {
     if (!db) {
-      console.warn(`Firebase not initialized for ${operationName}`);
+      logger.warn(`Firebase not initialized for ${operationName}`);
       return fallback;
     }
     return await operation();
@@ -803,14 +804,14 @@ async function safeFirestoreOperation<T>(
   operationName: string
 ): Promise<T> {
   if (!isFirestoreAvailable()) {
-    console.warn(`⚠️ Firestore not available for operation: ${operationName}`);
+    logger.warn(`⚠️ Firestore not available for operation: ${operationName}`);
     return fallbackValue;
   }
   
   try {
     return await operation();
   } catch (error) {
-    console.error(`❌ Firestore operation failed (${operationName}):`, error);
+    logger.error(`❌ Firestore operation failed (${operationName}):`, error);
     return fallbackValue;
   }
 }
@@ -819,19 +820,19 @@ async function safeFirestoreOperation<T>(
 export const authService = {
   login: async (email: string, password: string) => {
     try {
-      console.log('🔐 Attempting login with Firebase...');
-      console.log('Email:', email);
+      logger.log('🔐 Attempting login with Firebase...');
+      logger.log('Email:', email);
       
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      console.log('✅ Firebase login successful');
-      console.log('User:', user);
-      console.log('Email verified:', user.emailVerified);
+      logger.log('✅ Firebase login successful');
+      logger.log('User:', user);
+      logger.log('Email verified:', user.emailVerified);
       
       // Check if email is verified
       if (!user.emailVerified) {
-        console.log('❌ Email not verified');
+        logger.log('❌ Email not verified');
         return { 
           success: false, 
           error: 'Please verify your email before logging in',
@@ -874,35 +875,35 @@ export const authService = {
       
       return { success: true, user: finalProfile };
     } catch (error: any) {
-      console.error('❌ Firebase login error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
+      logger.error('❌ Firebase login error:', error);
+      logger.error('Error code:', error.code);
+      logger.error('Error message:', error.message);
       return { success: false, error: error.message };
     }
   },
 
   register: async (email: string, password: string, userData: { full_name: string; phone?: string }) => {
     try {
-      console.log('📝 Attempting registration with Firebase...');
-      console.log('Email:', email);
-      console.log('User data:', userData);
+      logger.log('📝 Attempting registration with Firebase...');
+      logger.log('Email:', email);
+      logger.log('User data:', userData);
       
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      console.log('✅ Firebase registration successful');
-      console.log('User:', user);
+      logger.log('✅ Firebase registration successful');
+      logger.log('User:', user);
       
       // Update the user's display name
       await updateProfile(user, {
         displayName: userData.full_name
       });
       
-      console.log('✅ User display name updated');
+      logger.log('✅ User display name updated');
       
       // Send email verification
       await sendEmailVerification(user);
-      console.log('📧 Email verification sent');
+      logger.log('📧 Email verification sent');
       
       // Check if this is the first user (admin) BEFORE creating the user document
       const usersCollection = collection(db, 'users');
@@ -915,7 +916,7 @@ export const authService = {
       const isFirstUser = usersSnapshot.docs.length === 0;
       const userRole = isFirstUser ? 'admin' : 'user';
       
-      console.log(`👤 User role: ${userRole} (First user: ${isFirstUser})`);
+      logger.log(`👤 User role: ${userRole} (First user: ${isFirstUser})`);
       
       // Create user profile in Firestore safely
       const userProfile: UserProfile = {
@@ -940,7 +941,7 @@ export const authService = {
             created: serverTimestamp(),
             updated: serverTimestamp()
           });
-          console.log('✅ User profile saved to Firestore');
+          logger.log('✅ User profile saved to Firestore');
           return true;
         },
         false,
@@ -953,9 +954,9 @@ export const authService = {
         requiresEmailVerification: true
       };
     } catch (error: any) {
-      console.error('❌ Firebase registration error:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
+      logger.error('❌ Firebase registration error:', error);
+      logger.error('Error code:', error.code);
+      logger.error('Error message:', error.message);
       return { success: false, error: error.message };
     }
   },
@@ -998,16 +999,16 @@ export const authService = {
   // Admin function to send password reset email to any user
   resetUserPassword: async (userEmail: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      console.log('🔐 Sending password reset email to:', userEmail);
+      logger.log('🔐 Sending password reset email to:', userEmail);
       
       await sendPasswordResetEmail(auth, userEmail);
       
-      console.log('✅ Password reset email sent successfully');
+      logger.log('✅ Password reset email sent successfully');
       return {
         success: true
       };
     } catch (error: any) {
-      console.error('❌ Password reset error:', error);
+      logger.error('❌ Password reset error:', error);
       return {
         success: false,
         error: error.message
@@ -1027,13 +1028,13 @@ export const authService = {
       }
 
       await sendEmailVerification(user);
-      console.log('📧 Email verification sent');
+      logger.log('📧 Email verification sent');
       
       return {
         success: true
       };
     } catch (error: any) {
-      console.error('❌ Email verification error:', error);
+      logger.error('❌ Email verification error:', error);
       return {
         success: false,
         error: error.message
@@ -1077,7 +1078,7 @@ export const authService = {
         verified: isVerified
       };
     } catch (error: any) {
-      console.error('❌ Check email verification error:', error);
+      logger.error('❌ Check email verification error:', error);
       return {
         success: false,
         verified: false,
@@ -1103,12 +1104,12 @@ export const authService = {
       // Update password
       await updatePassword(credential.user, newPassword);
       
-      console.log('✅ Password changed successfully');
+      logger.log('✅ Password changed successfully');
       return {
         success: true
       };
     } catch (error: any) {
-      console.error('❌ Password change error:', error);
+      logger.error('❌ Password change error:', error);
       return {
         success: false,
         error: error.message
@@ -1124,7 +1125,7 @@ export const authService = {
         success: true
       };
     } catch (error: any) {
-      console.error('❌ Forgot password error:', error);
+      logger.error('❌ Forgot password error:', error);
       return {
         success: false,
         error: error.message
@@ -1171,7 +1172,7 @@ export const firestoreService = {
             role: newRole,
             updated: serverTimestamp()
           });
-          console.log(`✅ User ${userId} role updated to ${newRole}`);
+          logger.log(`✅ User ${userId} role updated to ${newRole}`);
           return true;
         },
         false,
@@ -1193,7 +1194,7 @@ export const firestoreService = {
           delete updateData.created;
           
           await updateDoc(doc(db, 'users', userId), updateData);
-          console.log(`✅ User ${userId} profile updated`);
+          logger.log(`✅ User ${userId} profile updated`);
           return true;
         },
         false,
@@ -1226,7 +1227,7 @@ export const firestoreService = {
       return await safeFirestoreOperation(
         async () => {
           await deleteDoc(doc(db, 'users', userId));
-          console.log(`✅ User ${userId} deleted`);
+          logger.log(`✅ User ${userId} deleted`);
           return true;
         },
         false,
@@ -1276,7 +1277,7 @@ export const firestoreService = {
           totalItems: categories.length
         };
       } catch (error) {
-        console.error('Error getting categories:', error);
+        logger.error('Error getting categories:', error);
         throw error;
       }
     },
@@ -1289,7 +1290,7 @@ export const firestoreService = {
         }
         return null;
       } catch (error) {
-        console.error('Error getting category:', error);
+        logger.error('Error getting category:', error);
         throw error;
       }
     },
@@ -1304,7 +1305,7 @@ export const firestoreService = {
         const docRef = await addDoc(collection(db, 'categories'), categoryData);
         return { id: docRef.id, ...categoryData };
       } catch (error) {
-        console.error('Error creating category:', error);
+        logger.error('Error creating category:', error);
         throw error;
       }
     },
@@ -1318,7 +1319,7 @@ export const firestoreService = {
         await updateDoc(doc(db, 'categories', id), updateData);
         return { id, ...updateData };
       } catch (error) {
-        console.error('Error updating category:', error);
+        logger.error('Error updating category:', error);
         throw error;
       }
     },
@@ -1327,7 +1328,7 @@ export const firestoreService = {
       try {
         await deleteDoc(doc(db, 'categories', id));
       } catch (error) {
-        console.error('Error deleting category:', error);
+        logger.error('Error deleting category:', error);
         throw error;
       }
     }
@@ -1341,7 +1342,7 @@ export const firestoreService = {
         const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
         const cachedResult = getCachedData(cacheKey);
         if (cachedResult) {
-          console.log('🚀 Returning cached products');
+          logger.log('🚀 Returning cached products');
           return cachedResult;
         }
 
@@ -1420,13 +1421,13 @@ export const firestoreService = {
         
         return result;
       } catch (error) {
-        console.error('Error getting products:', error);
+        logger.error('Error getting products:', error);
         
         // Try to return cached results even if expired
         const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
         const staleCache = cache.get(cacheKey);
         if (staleCache) {
-          console.warn('⚠️ Returning stale cached data due to network error');
+          logger.warn('⚠️ Returning stale cached data due to network error');
           return staleCache.data;
         }
         
@@ -1439,7 +1440,7 @@ export const firestoreService = {
         const cacheKey = `product_${id}`;
         const cachedResult = getCachedData(cacheKey);
         if (cachedResult) {
-          console.log(`🚀 Returning cached product: ${id}`);
+          logger.log(`🚀 Returning cached product: ${id}`);
           return cachedResult;
         }
 
@@ -1455,13 +1456,13 @@ export const firestoreService = {
         }
         return null;
       } catch (error) {
-        console.error('Error getting product:', error);
+        logger.error('Error getting product:', error);
         
         // Try to return cached result even if expired
         const cacheKey = `product_${id}`;
         const staleCache = cache.get(cacheKey);
         if (staleCache) {
-          console.warn(`⚠️ Returning stale cached product: ${id}`);
+          logger.warn(`⚠️ Returning stale cached product: ${id}`);
           return staleCache.data;
         }
         
@@ -1479,7 +1480,7 @@ export const firestoreService = {
         const docRef = await addDoc(collection(db, 'products'), productData);
         return { id: docRef.id, ...productData };
       } catch (error) {
-        console.error('Error creating product:', error);
+        logger.error('Error creating product:', error);
         throw error;
       }
     },
@@ -1493,7 +1494,7 @@ export const firestoreService = {
         await updateDoc(doc(db, 'products', id), updateData);
         return { id, ...updateData };
       } catch (error) {
-        console.error('Error updating product:', error);
+        logger.error('Error updating product:', error);
         throw error;
       }
     },
@@ -1502,7 +1503,7 @@ export const firestoreService = {
       try {
         await deleteDoc(doc(db, 'products', id));
       } catch (error) {
-        console.error('Error deleting product:', error);
+        logger.error('Error deleting product:', error);
         throw error;
       }
     }
@@ -1537,7 +1538,7 @@ export const firestoreService = {
           totalItems: itemsWithProducts.length
         };
       } catch (error) {
-        console.error('Error getting user cart:', error);
+        logger.error('Error getting user cart:', error);
         throw error;
       }
     },
@@ -1646,7 +1647,7 @@ export const firestoreService = {
           return { id: docRef.id, ...cartItemData };
         }
       } catch (error) {
-        console.error('Error adding cart item:', error);
+        logger.error('Error adding cart item:', error);
         throw error;
       }
     },
@@ -1658,7 +1659,7 @@ export const firestoreService = {
           updated: serverTimestamp()
         });
       } catch (error) {
-        console.error('Error updating cart item:', error);
+        logger.error('Error updating cart item:', error);
         throw error;
       }
     },
@@ -1667,7 +1668,7 @@ export const firestoreService = {
       try {
         await deleteDoc(doc(db, 'cart_items', itemId));
       } catch (error) {
-        console.error('Error removing cart item:', error);
+        logger.error('Error removing cart item:', error);
         throw error;
       }
     },
@@ -1682,7 +1683,7 @@ export const firestoreService = {
         const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
         await Promise.all(deletePromises);
       } catch (error) {
-        console.error('Error clearing cart:', error);
+        logger.error('Error clearing cart:', error);
         throw error;
       }
     }
@@ -1722,7 +1723,7 @@ export const firestoreService = {
             subscribed_at: data.subscribed_at || new Date().toISOString(),
             status: data.status || 'active'
           });
-          console.log('✅ Newsletter subscription created:', docRef.id);
+          logger.log('✅ Newsletter subscription created:', docRef.id);
           return docRef.id;
         },
         '',
@@ -1734,7 +1735,7 @@ export const firestoreService = {
       return await safeFirestoreOperation(
         async () => {
           await deleteDoc(doc(db, 'newsletters', id));
-          console.log('✅ Newsletter subscription deleted:', id);
+          logger.log('✅ Newsletter subscription deleted:', id);
           return true;
         },
         false,
@@ -1749,7 +1750,7 @@ export const firestoreService = {
             status,
             updated_at: new Date().toISOString()
           });
-          console.log('✅ Newsletter subscription status updated:', id);
+          logger.log('✅ Newsletter subscription status updated:', id);
           return true;
         },
         false,
@@ -1765,7 +1766,7 @@ export const firestoreService = {
         // Check if user is authenticated for orders
         const currentUser = auth.currentUser;
         if (!currentUser) {
-          console.warn('⚠️ User not authenticated for orders');
+          logger.warn('⚠️ User not authenticated for orders');
           return { items: [], totalItems: 0 };
         }
 
@@ -1784,11 +1785,11 @@ export const firestoreService = {
           totalItems: querySnapshot.docs.length
         };
       } catch (error: any) {
-        console.error('Error getting orders:', error);
+        logger.error('Error getting orders:', error);
         
         // Return empty result for permission errors instead of throwing
         if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
-          console.warn('⚠️ Permission denied for orders, returning empty result');
+          logger.warn('⚠️ Permission denied for orders, returning empty result');
           return { items: [], totalItems: 0 };
         }
         
@@ -1804,7 +1805,7 @@ export const firestoreService = {
         }
         return null;
       } catch (error) {
-        console.error('Error getting order:', error);
+        logger.error('Error getting order:', error);
         throw error;
       }
     },
@@ -1836,7 +1837,7 @@ export const firestoreService = {
         const docRef = await addDoc(collection(db, 'orders'), cleanData);
         return { id: docRef.id, ...cleanData };
       } catch (error: any) {
-        console.error('Error creating order:', error);
+        logger.error('Error creating order:', error);
         
         if (error.code === 'permission-denied' || error.message?.includes('Missing or insufficient permissions')) {
           throw new Error('Permission denied: Unable to create order. Please ensure you are logged in.');
@@ -1855,7 +1856,7 @@ export const firestoreService = {
         await updateDoc(doc(db, 'orders', id), updateData);
         return { id, ...updateData };
       } catch (error) {
-        console.error('Error updating order:', error);
+        logger.error('Error updating order:', error);
         throw error;
       }
     }
@@ -1891,7 +1892,7 @@ export const firestoreService = {
           totalItems: itemsWithProducts.length
         };
       } catch (error) {
-        console.error('Error getting order items:', error);
+        logger.error('Error getting order items:', error);
         throw error;
       }
     },
@@ -1914,7 +1915,7 @@ export const firestoreService = {
         const docRef = await addDoc(collection(db, 'order_items'), orderItemData);
         return { id: docRef.id, ...orderItemData };
       } catch (error) {
-        console.error('Error creating order item:', error);
+        logger.error('Error creating order item:', error);
         throw error;
       }
     }
@@ -2047,7 +2048,7 @@ export const firestoreService = {
           delete updateData.created;
           
           await updateDoc(doc(db, 'pages', id), updateData);
-          console.log(`✅ Page ${id} updated`);
+          logger.log(`✅ Page ${id} updated`);
           return true;
         },
         false,
@@ -2059,7 +2060,7 @@ export const firestoreService = {
       return await safeFirestoreOperation(
         async () => {
           await deleteDoc(doc(db, 'pages', id));
-          console.log(`✅ Page ${id} deleted`);
+          logger.log(`✅ Page ${id} deleted`);
           return true;
         },
         false,
@@ -2147,7 +2148,7 @@ export const firestoreService = {
         
         return { items: reviews, total: reviews.length };
       } catch (error) {
-        console.error('Error listing reviews:', error);
+        logger.error('Error listing reviews:', error);
         throw error;
       }
     },
@@ -2162,7 +2163,7 @@ export const firestoreService = {
         }
         return null;
       } catch (error) {
-        console.error('Error getting review:', error);
+        logger.error('Error getting review:', error);
         throw error;
       }
     },
@@ -2178,7 +2179,7 @@ export const firestoreService = {
         const docRef = await addDoc(collection(db, 'reviews'), reviewData);
         return { id: docRef.id, ...reviewData } as ProductReview;
       } catch (error) {
-        console.error('Error creating review:', error);
+        logger.error('Error creating review:', error);
         throw error;
       }
     },
@@ -2188,7 +2189,7 @@ export const firestoreService = {
         const docRef = doc(db, 'reviews', id);
         await updateDoc(docRef, updates);
       } catch (error) {
-        console.error('Error updating review:', error);
+        logger.error('Error updating review:', error);
         throw error;
       }
     },
@@ -2198,7 +2199,7 @@ export const firestoreService = {
         const docRef = doc(db, 'reviews', id);
         await deleteDoc(docRef);
       } catch (error) {
-        console.error('Error deleting review:', error);
+        logger.error('Error deleting review:', error);
         throw error;
       }
     },
@@ -2219,7 +2220,7 @@ export const firestoreService = {
         
         return reviews;
       } catch (error) {
-        console.error('Error getting approved reviews:', error);
+        logger.error('Error getting approved reviews:', error);
         throw error;
       }
     },
@@ -2237,7 +2238,7 @@ export const firestoreService = {
         
         return { average: Math.round(average * 10) / 10, count: reviews.length };
       } catch (error) {
-        console.error('Error calculating average rating:', error);
+        logger.error('Error calculating average rating:', error);
         return { average: 0, count: 0 };
       }
     },
@@ -2253,7 +2254,7 @@ export const firestoreService = {
         const querySnapshot = await getDocs(q);
         return !querySnapshot.empty;
       } catch (error) {
-        console.error('Error checking user review:', error);
+        logger.error('Error checking user review:', error);
         return false;
       }
     },
@@ -2270,7 +2271,7 @@ export const firestoreService = {
           });
         }
       } catch (error) {
-        console.error('Error incrementing helpful count:', error);
+        logger.error('Error incrementing helpful count:', error);
         throw error;
       }
     }
@@ -2384,7 +2385,7 @@ export const firestoreService = {
             ...settingsData,
             updated_at: serverTimestamp()
           });
-          console.log('✅ Checkout settings updated successfully');
+          logger.log('✅ Checkout settings updated successfully');
           return true;
         },
         false,
@@ -2477,7 +2478,7 @@ export const firestoreService = {
             };
             
             await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
-            console.log('✅ Default checkout settings initialized');
+            logger.log('✅ Default checkout settings initialized');
           }
           return true;
         },
@@ -2527,7 +2528,7 @@ export const storageService = {
       const downloadURL = await getDownloadURL(snapshot.ref);
       return downloadURL;
     } catch (error: any) {
-      console.error('Error uploading file:', error);
+      logger.error('Error uploading file:', error);
       
       // Provide more specific error messages
       if (error.code === 'storage/unauthorized') {
@@ -2560,7 +2561,7 @@ export const storageService = {
       
       return await Promise.all(uploadPromises);
     } catch (error) {
-      console.error('Error uploading multiple files:', error);
+      logger.error('Error uploading multiple files:', error);
       throw error;
     }
   },
@@ -2591,7 +2592,7 @@ export const storageService = {
       ref(storage, 'test/connection.txt');
       return true;
     } catch (error) {
-      console.warn('Firebase Storage not available:', error);
+      logger.warn('Firebase Storage not available:', error);
       return false;
     }
   },
@@ -2601,7 +2602,7 @@ export const storageService = {
       const fileRef = ref(storage, url);
       await deleteObject(fileRef);
     } catch (error) {
-      console.error('Error deleting file:', error);
+      logger.error('Error deleting file:', error);
       throw error;
     }
   },
@@ -2714,7 +2715,7 @@ export const storageService = {
             ...settingsData,
             updated_at: serverTimestamp()
           });
-          console.log('✅ Checkout settings updated successfully');
+          logger.log('✅ Checkout settings updated successfully');
           return true;
         },
         false,
@@ -2807,7 +2808,7 @@ export const storageService = {
             };
             
             await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
-            console.log('✅ Default checkout settings initialized');
+            logger.log('✅ Default checkout settings initialized');
           }
           return true;
         },
@@ -2822,7 +2823,7 @@ export const storageService = {
 export const subscriptions = {
   onCartChange: (userId: string, callback: (cartItems: any[]) => void) => {
     if (!db) {
-      console.warn('Database not initialized');
+      logger.warn('Database not initialized');
       return () => {};
     }
 
@@ -2836,12 +2837,12 @@ export const subscriptions = {
         const cartItems = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         callback(cartItems);
       }, (error) => {
-        console.error('❌ Cart listener error:', error);
+        logger.error('❌ Cart listener error:', error);
         // Fallback to empty array on error
         callback([]);
       });
     } catch (error) {
-      console.error('❌ Failed to set up cart listener:', error);
+      logger.error('❌ Failed to set up cart listener:', error);
       return () => {};
     }
   },
@@ -2953,7 +2954,7 @@ export const subscriptions = {
           };
           
           await setDoc(doc(db, 'settings', 'checkout'), updateData, { merge: true });
-          console.log('✅ Checkout settings updated');
+          logger.log('✅ Checkout settings updated');
           return true;
         },
         false,
@@ -3045,7 +3046,7 @@ export const subscriptions = {
             };
             
             await setDoc(doc(db, 'settings', 'checkout'), defaultSettings);
-            console.log('✅ Default checkout settings initialized');
+            logger.log('✅ Default checkout settings initialized');
           }
           return true;
         },
@@ -3057,7 +3058,7 @@ export const subscriptions = {
   
   onOrderChange: (orderId: string, callback: (order: Order | null) => void) => {
     if (!db) {
-      console.warn('Database not initialized');
+      logger.warn('Database not initialized');
       return () => {};
     }
 
@@ -3071,12 +3072,12 @@ export const subscriptions = {
           callback(null);
         }
       }, (error) => {
-        console.error('❌ Order listener error:', error);
+        logger.error('❌ Order listener error:', error);
         // Fallback to null on error
         callback(null);
       });
     } catch (error) {
-      console.error('❌ Failed to set up order listener:', error);
+      logger.error('❌ Failed to set up order listener:', error);
       return () => {};
     }
   }
