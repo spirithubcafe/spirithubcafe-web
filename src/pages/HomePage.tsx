@@ -128,6 +128,7 @@ export function HomePage() {
                       : (homepageSettings?.featureSectionTitle || 'Exceptional Coffee Experience'))
                   }}
                 />
+                <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
               </div>
               
               {/* Content */}
