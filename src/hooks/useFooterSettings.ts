@@ -34,15 +34,13 @@ export function useFooterSettings() {
       setLoading(true)
       setError(null)
       const footerSettings = await settingsService.getFooterSettings()
-      console.log('useFooterSettings - Loaded settings:', footerSettings)
+      
       setSettings(footerSettings)
     } catch (err) {
-      console.error('Error loading footer settings:', err)
-      setError('Failed to load footer settings')
+       setError('Failed to load footer settings')
       // Use default settings as fallback
       const defaultSettings = settingsService.getDefaultFooterSettings()
-      console.log('useFooterSettings - Using default settings:', defaultSettings)
-      setSettings(defaultSettings)
+       setSettings(defaultSettings)
     } finally {
       setLoading(false)
     }
@@ -58,8 +56,7 @@ export function useFooterSettings() {
       
       return true
     } catch (err) {
-      console.error('Error updating footer settings:', err)
-      setError('Failed to update footer settings')
+       setError('Failed to update footer settings')
       return false
     }
   }

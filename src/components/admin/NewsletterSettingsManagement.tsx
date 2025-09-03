@@ -22,7 +22,7 @@ import {
   FileImage
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useGlobalNewsletterSettings } from '@/contexts/data-provider'
+import { useData, useGlobalNewsletterSettings } from '@/contexts/enhanced-data-provider'
 import { settingsService } from '@/services/settings'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { storage } from '@/lib/firebase'
@@ -31,7 +31,10 @@ import toast from 'react-hot-toast'
 
 export default function NewsletterSettingsManagement() {
   const { i18n } = useTranslation()
-  const { settings, loading, refresh } = useGlobalNewsletterSettings()
+  const { settings, loading } = useGlobalNewsletterSettings()
+  
+  // Get refresh function from context
+  const { refreshNewsletterSettings } = useData()
   
   const [formData, setFormData] = useState({
     showNewsletterSection: true,
@@ -120,7 +123,7 @@ export default function NewsletterSettingsManagement() {
     try {
       await settingsService.updateNewsletterSettings(formData)
       toast.success(isArabic ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully')
-      refresh()
+      refreshNewsletterSettings()
     } catch (error) {
       console.error('Error saving newsletter settings:', error)
       toast.error(isArabic ? 'خطأ في حفظ الإعدادات' : 'Error saving settings')

@@ -14,7 +14,7 @@ import { useWishlist } from '@/hooks/useWishlist'
 import type { Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
-import { useProducts, useCategories } from '@/contexts/data-provider'
+import { useProducts, useCategories } from '@/contexts/enhanced-data-provider'
 import { ProductQuickView } from '@/components/product-quick-view'
 
 export function ShopPage() {

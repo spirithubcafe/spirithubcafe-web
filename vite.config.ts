@@ -119,9 +119,6 @@ export default defineConfig({
       },
       includeAssets: [
         'favicon.ico', 
-        'images/icon.png', 
-        'images/logo.png',
-        'images/logo-s.png',
         'images/adaptive-icon.png',
         'images/splash-icon.png'
       ],

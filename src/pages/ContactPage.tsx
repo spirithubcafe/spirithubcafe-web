@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Loader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
@@ -189,7 +190,7 @@ export function ContactPage() {
     return (
       <div className="w-full min-h-screen bg-gradient-to-b from-background to-muted/10 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <Loader size="lg" />
           <p className="text-muted-foreground">{isRTL ? 'جاري التحميل...' : 'Loading...'}</p>
         </div>
       </div>

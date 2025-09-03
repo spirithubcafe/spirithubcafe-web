@@ -620,6 +620,13 @@
     "toggleLanguage": "Toggle language",
     "pleaseLogin": "Please login",
     "brandName": "SPIRITHUB ROASTERY",
+    "checkForUpdates": "Check for updates",
+    "installUpdate": "Install update",
+    "updateInstalled": "Update installed! Refreshing...",
+    "checkingForUpdates": "Checking for updates...",
+    "noUpdatesAvailable": "No updates available",
+    "serviceWorkerNotSupported": "Service Worker not supported",
+    "updateCheckFailed": "Failed to check for updates",
     "error": {
       "load": "Failed to load data",
       "save": "Failed to save data",

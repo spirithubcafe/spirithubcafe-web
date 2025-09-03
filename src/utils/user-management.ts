@@ -1,3 +1,4 @@
+import { logger } from "@/utils/logger";
 import { auth, db } from '@/lib/firebase';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
@@ -54,7 +55,7 @@ export const createUserDocument = async (
     const userDoc = await getDoc(userDocRef);
     
     if (userDoc.exists()) {
-      console.log('User document already exists');
+      logger.log('User document already exists');
       return { id: userDoc.id, ...userDoc.data() } as unknown as UserDocument;
     }
 
@@ -89,12 +90,12 @@ export const createUserDocument = async (
 
     await setDoc(userDocRef, userData);
     
-    console.log('✅ User document created successfully');
+    logger.log('✅ User document created successfully');
     toast.success('User profile created successfully');
     
     return userData;
   } catch (error: any) {
-    console.error('❌ Error creating user document:', error);
+    logger.error('❌ Error creating user document:', error);
     toast.error(`Failed to create user profile: ${error.message}`);
     return null;
   }
@@ -107,7 +108,7 @@ export const ensureUserDocument = async (): Promise<UserDocument | null> => {
   try {
     const user = auth.currentUser;
     if (!user) {
-      console.warn('No authenticated user found');
+      logger.warn('No authenticated user found');
       return null;
     }
 
@@ -117,11 +118,11 @@ export const ensureUserDocument = async (): Promise<UserDocument | null> => {
     if (userDoc.exists()) {
       return { id: userDoc.id, ...userDoc.data() } as unknown as UserDocument;
     } else {
-      console.log('User document missing, creating...');
+      logger.log('User document missing, creating...');
       return await createUserDocument();
     }
   } catch (error: any) {
-    console.error('Error ensuring user document:', error);
+    logger.error('Error ensuring user document:', error);
     return null;
   }
 };
@@ -146,12 +147,12 @@ export const updateUserDocument = async (
 
     await setDoc(userDocRef, updateData, { merge: true });
     
-    console.log('✅ User document updated successfully');
+    logger.log('✅ User document updated successfully');
     toast.success('Profile updated successfully');
     
     return true;
   } catch (error: any) {
-    console.error('❌ Error updating user document:', error);
+    logger.error('❌ Error updating user document:', error);
     toast.error(`Failed to update profile: ${error.message}`);
     return false;
   }
@@ -166,7 +167,7 @@ export const getUserDocument = async (uid?: string): Promise<UserDocument | null
     const userId = uid || user?.uid;
     
     if (!userId) {
-      console.warn('No user ID provided');
+      logger.warn('No user ID provided');
       return null;
     }
 
@@ -176,11 +177,11 @@ export const getUserDocument = async (uid?: string): Promise<UserDocument | null
     if (userDoc.exists()) {
       return { id: userDoc.id, ...userDoc.data() } as unknown as UserDocument;
     } else {
-      console.warn('User document does not exist');
+      logger.warn('User document does not exist');
       return null;
     }
   } catch (error: any) {
-    console.error('Error getting user document:', error);
+    logger.error('Error getting user document:', error);
     return null;
   }
 };
@@ -194,11 +195,11 @@ export const debugUserPermissions = async () => {
   try {
     const user = auth.currentUser;
     if (!user) {
-      console.warn('⚠️ No authenticated user');
+      logger.warn('⚠️ No authenticated user');
       return;
     }
 
-    console.log('Current User:', {
+    logger.log('Current User:', {
       uid: user.uid,
       email: user.email,
       emailVerified: user.emailVerified,
@@ -208,30 +209,30 @@ export const debugUserPermissions = async () => {
     // Check user document
     const userDoc = await getUserDocument();
     if (userDoc) {
-      console.log('✅ User Document:', userDoc);
-      console.log('User Role:', userDoc.role);
-      console.log('User Status:', userDoc.status);
+      logger.log('✅ User Document:', userDoc);
+      logger.log('User Role:', userDoc.role);
+      logger.log('User Status:', userDoc.status);
     } else {
-      console.warn('⚠️ User document missing');
-      console.log('Creating user document...');
+      logger.warn('⚠️ User document missing');
+      logger.log('Creating user document...');
       const newUserDoc = await createUserDocument();
       if (newUserDoc) {
-        console.log('✅ User document created:', newUserDoc);
+        logger.log('✅ User document created:', newUserDoc);
       } else {
-        console.error('❌ Failed to create user document');
+        logger.error('❌ Failed to create user document');
       }
     }
 
     // Test token claims
     try {
       const tokenResult = await user.getIdTokenResult();
-      console.log('Token Claims:', tokenResult.claims);
+      logger.log('Token Claims:', tokenResult.claims);
     } catch (error) {
-      console.error('❌ Error getting token claims:', error);
+      logger.error('❌ Error getting token claims:', error);
     }
 
   } catch (error) {
-    console.error('❌ Debug error:', error);
+    logger.error('❌ Debug error:', error);
   } finally {
     console.groupEnd();
   }

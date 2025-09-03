@@ -652,6 +652,13 @@
     "toggleLanguage": "تغيير اللغة",
     "pleaseLogin": "يرجى تسجيل الدخول",
     "brandName": "SPIRITHUB ROASTERY",
+    "checkForUpdates": "البحث عن تحديثات",
+    "installUpdate": "تثبيت التحديث",
+    "updateInstalled": "تم تثبيت التحديث! جاري التحديث...",
+    "checkingForUpdates": "جاري البحث عن تحديثات...",
+    "noUpdatesAvailable": "لا توجد تحديثات متاحة",
+    "serviceWorkerNotSupported": "Service Worker غير مدعوم",
+    "updateCheckFailed": "فشل في فحص التحديثات",
     "error": {
       "load": "فشل في تحميل البيانات",
       "save": "فشل في حفظ البيانات",

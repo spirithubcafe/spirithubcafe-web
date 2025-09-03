@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
+import { Loader } from '@/components/ui/loader'
 import type { HeroSettings, HeroSlide } from '@/types'
 import { heroService } from '@/services/hero'
 import './hero-slider.css'
@@ -386,18 +387,8 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
     return (
       <div className="w-full min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="relative mx-auto mb-8 w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56">
-            <div className="hero-loading-spinner mx-auto"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <img 
-                src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
-                alt="SpiritHub Logo" 
-                className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 object-contain hero-loading-logo"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/logo-s.png'
-                }}
-              />
-            </div>
+          <div className="relative mx-auto mb-8 w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center">
+            <Loader size="lg" />
           </div>
           <h3 className="text-foreground font-semibold text-xl mb-2">
             {t('common.loading', 'Loading...')}

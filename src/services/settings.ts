@@ -147,8 +147,7 @@ class SettingsService {
 
   private getFromCache<T>(key: string): T | null {
     if (this.isCacheValid(key)) {
-      console.log(`SettingsService - Returning cached data for: ${key}`)
-      return this.cache.get(key)?.data as T || null
+       return this.cache.get(key)?.data as T || null
     }
     return null
   }
@@ -159,8 +158,7 @@ class SettingsService {
 
   private invalidateCache(key: string): void {
     this.cache.delete(key)
-    console.log(`SettingsService - Cache invalidated for: ${key}`)
-  }
+   }
 
   async getFooterSettings(): Promise<FooterSettings> {
     const cacheKey = 'footer'
@@ -173,32 +171,25 @@ class SettingsService {
       const doc = await firestoreService.getDocument(this.collection, 'footer')
       if (doc.exists()) {
         const data = doc.data() as FooterSettings
-        console.log('SettingsService - Loaded footer settings from Firestore:', data)
-        this.setCache(cacheKey, data)
+         this.setCache(cacheKey, data)
         return data
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No footer settings found, returning defaults')
-      const defaults = this.getDefaultFooterSettings()
+       const defaults = this.getDefaultFooterSettings()
       this.setCache(cacheKey, defaults)
       return defaults
     } catch (error) {
-      console.error('Error getting footer settings:', error)
-      console.log('SettingsService - Error occurred, returning defaults')
-      return this.getDefaultFooterSettings()
+       return this.getDefaultFooterSettings()
     }
   }
 
   async updateFooterSettings(settings: FooterSettings): Promise<void> {
     try {
-      console.log('SettingsService - Saving footer settings to Firestore:', settings)
-      await firestoreService.setDocument(this.collection, 'footer', settings)
+       await firestoreService.setDocument(this.collection, 'footer', settings)
       this.invalidateCache('footer')
-      console.log('SettingsService - Footer settings saved successfully')
-    } catch (error) {
-      console.error('Error updating footer settings:', error)
-      throw error
+     } catch (error) {
+       throw error
     }
   }
 
@@ -239,32 +230,26 @@ class SettingsService {
       const doc = await firestoreService.getDocument(this.collection, 'categories')
       if (doc.exists()) {
         const data = doc.data() as CategoriesSettings
-        console.log('SettingsService - Loaded categories settings from Firestore:', data)
         this.setCache(cacheKey, data)
         return data
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No categories settings found, returning defaults')
       const defaults = this.getDefaultCategoriesSettings()
       this.setCache(cacheKey, defaults)
       return defaults
     } catch (error) {
       console.error('Error getting categories settings:', error)
-      console.log('SettingsService - Error occurred, returning defaults')
       return this.getDefaultCategoriesSettings()
     }
   }
 
   async updateCategoriesSettings(settings: CategoriesSettings): Promise<void> {
     try {
-      console.log('SettingsService - Saving categories settings to Firestore:', settings)
-      await firestoreService.setDocument(this.collection, 'categories', settings)
+       await firestoreService.setDocument(this.collection, 'categories', settings)
       this.invalidateCache('categories')
-      console.log('SettingsService - Categories settings saved successfully')
-    } catch (error) {
-      console.error('Error updating categories settings:', error)
-      throw error
+     } catch (error) {
+       throw error
     }
   }
 
@@ -288,33 +273,27 @@ class SettingsService {
       const doc = await firestoreService.getDocument(this.collection, 'homepage')
       if (doc.exists()) {
         const data = doc.data() as HomepageSettings
-        console.log('SettingsService - Loaded homepage settings from Firestore:', data)
-        this.setCache(cacheKey, data)
+         this.setCache(cacheKey, data)
         return data
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No homepage settings found, returning defaults')
-      const defaults = this.getDefaultHomepageSettings()
+       const defaults = this.getDefaultHomepageSettings()
       this.setCache(cacheKey, defaults)
       return defaults
     } catch (error) {
       console.error('Error getting homepage settings:', error)
-      console.log('SettingsService - Error occurred, returning defaults')
       return this.getDefaultHomepageSettings()
     }
   }
 
   async updateHomepageSettings(settings: HomepageSettings): Promise<void> {
     try {
-      console.log('SettingsService - Saving homepage settings to Firestore:', settings)
       await firestoreService.setDocument(this.collection, 'homepage', settings)
       this.invalidateCache('homepage')
-      console.log('SettingsService - Homepage settings saved successfully')
     } catch (error) {
-      console.error('Error updating homepage settings:', error)
       throw error
-    }
+     }
   }
 
   private getDefaultHomepageSettings(): HomepageSettings {
@@ -376,29 +355,24 @@ class SettingsService {
       const doc = await firestoreService.getDocument(this.collection, 'newsletter')
       if (doc.exists()) {
         const data = doc.data() as NewsletterSettings
-        console.log('SettingsService - Loaded newsletter settings from Firestore:', data)
-        this.setCache(cacheKey, data)
+         this.setCache(cacheKey, data)
         return data
       }
       
       // Return default settings if not found
-      console.log('SettingsService - No newsletter settings found, returning defaults')
       const defaults = this.getDefaultNewsletterSettings()
       this.setCache(cacheKey, defaults)
       return defaults
     } catch (error) {
       console.error('Error getting newsletter settings:', error)
-      console.log('SettingsService - Error occurred, returning defaults')
       return this.getDefaultNewsletterSettings()
     }
   }
 
   async updateNewsletterSettings(settings: NewsletterSettings): Promise<void> {
     try {
-      console.log('SettingsService - Saving newsletter settings to Firestore:', settings)
       await firestoreService.setDocument(this.collection, 'newsletter', settings)
       this.invalidateCache('newsletter')
-      console.log('SettingsService - Newsletter settings saved successfully')
     } catch (error) {
       console.error('Error updating newsletter settings:', error)
       throw error
@@ -424,7 +398,6 @@ class SettingsService {
   // Utility methods for cache management
   invalidateAllCache(): void {
     this.cache.clear()
-    console.log('SettingsService - All cache cleared')
   }
 
   forceRefreshCategories(): void {
