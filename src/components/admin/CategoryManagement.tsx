@@ -266,7 +266,9 @@ export default function CategoryManagement() {
       setFormLoading(true)
 
       // Prepare data with SEO conversion
-      const categoryData = {
+
+      // Build categoryData and remove undefined fields
+      const rawCategoryData = {
         name: formData.name,
         name_ar: formData.name_ar,
         description: formData.description,
@@ -275,7 +277,19 @@ export default function CategoryManagement() {
         is_active: formData.is_active,
         sort_order: formData.sort_order,
         ...(formData.seo ? seoMetaToCategory(formData.seo) : {})
-      }
+      };
+      // Remove undefined fields recursively
+      const removeUndefined = (obj: any) => {
+        if (Array.isArray(obj)) return obj.map(removeUndefined);
+        if (obj && typeof obj === 'object') {
+          return Object.entries(obj).reduce((acc, [key, value]) => {
+            if (value !== undefined) acc[key] = removeUndefined(value);
+            return acc;
+          }, {} as any);
+        }
+        return obj;
+      };
+      const categoryData = removeUndefined(rawCategoryData);
 
       if (editingCategory) {
         await firestoreService.categories.update(editingCategory.id, categoryData)
@@ -286,8 +300,9 @@ export default function CategoryManagement() {
       await loadCategories()
       closeDialog()
     } catch (error) {
-      console.error('Error saving category:', error)
-      alert(isArabic ? 'حدث خطأ أثناء الحفظ' : 'Error saving category')
+      // Enhanced error logging for debugging
+      console.error('Error saving category:', error, JSON.stringify(error), error?.message, error?.code, error?.stack);
+      alert((isArabic ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving category: ') + (error?.message || ''))
     } finally {
       setFormLoading(false)
     }
