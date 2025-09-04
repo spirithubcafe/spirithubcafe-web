@@ -131,7 +131,9 @@ export default function CheckoutPage() {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+  phone: '',
+  // Selected phone country dial code (e.g. +968)
+  phoneCountry: '+968',
     
     // Address
     address: '',
@@ -220,6 +222,24 @@ export default function CheckoutPage() {
     ]
   }
 
+  // Dial codes for supported countries
+  const countryDialCodes: Record<string, string> = {
+    'OM': '+968',
+    'AE': '+971',
+    'SA': '+966',
+    'KW': '+965',
+    'IQ': '+964'
+  }
+
+  // Example local number formats per dial code (used for placeholder/hint)
+  const phonePlaceholders: Record<string, string> = {
+    '+968': '91234567', // Oman (8 digits)
+    '+971': '501234567', // UAE (9 digits)
+    '+966': '501234567', // Saudi Arabia (9 digits)
+    '+965': '65123456',  // Kuwait (8 digits)
+    '+964': '7701234567' // Iraq (10 digits)
+  }
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => {
       const newData = { ...prev, [field]: value }
@@ -230,10 +250,14 @@ export default function CheckoutPage() {
           // Reset state and city when changing to Oman
           newData.state = 'Muscat'
           newData.city = 'muscat'
+          // Set phone country code for Oman if available
+          newData.phoneCountry = countryDialCodes['OM'] || newData.phoneCountry
         } else {
           // For non-Oman countries, reset state and city
           newData.state = ''
           newData.city = ''
+          // Try to set phone code based on selected country
+          newData.phoneCountry = countryDialCodes[value] || newData.phoneCountry
           // Reset shipping method if it was nool_oman
           if (prev.shippingMethod === 'nool_oman') {
             newData.shippingMethod = 'pickup'
@@ -460,19 +484,28 @@ export default function CheckoutPage() {
       
       // Generate order number
       const orderNumber = `ORD-${Date.now()}`
+      // Helper to format phone with selected country dial code
+      const formatPhone = (dialCode: string | undefined, localNumber: string | undefined) => {
+        const num = (localNumber || '').toString().trim()
+        if (!num) return ''
+        if (num.startsWith('+')) return num
+        return `${dialCode || ''}${num}`
+      }
+
+      const formattedPhone = formatPhone(formData.phoneCountry, formData.phone)
       
       // Create order data
       const orderData: Omit<Order, 'id' | 'created' | 'updated'> = {
         order_number: orderNumber,
         user_id: currentUser?.id,
-        customer_email: formData.email,
-        customer_phone: formData.phone,
+  customer_email: formData.email,
+  customer_phone: formattedPhone,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         
         // Address data (we'll create proper address records later)
         shipping_address: {
           recipient_name: `${formData.firstName} ${formData.lastName}`,
-          phone: formData.phone,
+          phone: formattedPhone,
           country: formData.country,
           city: formData.city,
           state: formData.state,
@@ -548,7 +581,7 @@ export default function CheckoutPage() {
         currency: currency as 'OMR' | 'USD' | 'SAR',
         customer_email: formData.email,
         customer_name: `${formData.firstName} ${formData.lastName}`,
-        customer_phone: formData.phone,
+        customer_phone: formattedPhone,
         return_url: `${window.location.origin}/checkout-success?order_id=${order.id}`,
         cancel_url: `${window.location.origin}/checkout-success?order_id=${order.id}`
       }
@@ -731,13 +764,30 @@ export default function CheckoutPage() {
                       <Label htmlFor="phone">
                         {isArabic ? 'رقم الهاتف' : 'Phone Number'}
                       </Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        placeholder={isArabic ? 'أدخل رقم الهاتف' : 'Enter phone number'}
-                      />
+                      <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                        <div className="w-32">
+                          <Select value={formData.phoneCountry} onValueChange={(value) => handleInputChange('phoneCountry', value)}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={formData.phoneCountry} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(countryDialCodes).map(([code, dial]) => (
+                                <SelectItem key={dial} value={dial}>{dial} {isArabic ? code : code}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            id="phone"
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => handleInputChange('phone', e.target.value)}
+                            placeholder={phonePlaceholders[formData.phoneCountry] || (isArabic ? 'أدخل رقم الهاتف' : 'Enter phone number')}
+                          />
+                          {/* example hint removed as requested */}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
