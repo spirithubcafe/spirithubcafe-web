@@ -228,7 +228,9 @@ export default function CheckoutPage() {
     'AE': '+971',
     'SA': '+966',
     'KW': '+965',
-    'IQ': '+964'
+  'IQ': '+964',
+  'QA': '+974',
+  'BH': '+973'
   }
 
   // Example local number formats per dial code (used for placeholder/hint)
@@ -832,7 +834,9 @@ export default function CheckoutPage() {
                               'AE': {name: 'UAE', name_ar: 'الإمارات العربية المتحدة'},
                               'SA': {name: 'Saudi Arabia', name_ar: 'السعودية'},
                               'KW': {name: 'Kuwait', name_ar: 'الكويت'},
-                              'IQ': {name: 'Iraq', name_ar: 'العراق'}
+                              'IQ': {name: 'Iraq', name_ar: 'العراق'},
+                              'QA': {name: 'Qatar', name_ar: 'قطر'},
+                              'BH': {name: 'Bahrain', name_ar: 'البحرين'}
                             }
                             const country = countryNames[countryCode]
                             if (!country) return null
@@ -847,7 +851,9 @@ export default function CheckoutPage() {
                             <SelectItem key="AE" value="AE">{isArabic ? 'الإمارات العربية المتحدة' : 'UAE'}</SelectItem>,
                             <SelectItem key="SA" value="SA">{isArabic ? 'السعودية' : 'Saudi Arabia'}</SelectItem>,
                             <SelectItem key="KW" value="KW">{isArabic ? 'الكويت' : 'Kuwait'}</SelectItem>,
-                            <SelectItem key="IQ" value="IQ">{isArabic ? 'العراق' : 'Iraq'}</SelectItem>
+                            <SelectItem key="IQ" value="IQ">{isArabic ? 'العراق' : 'Iraq'}</SelectItem>,
+                            <SelectItem key="QA" value="QA">{isArabic ? 'قطر' : 'Qatar'}</SelectItem>,
+                            <SelectItem key="BH" value="BH">{isArabic ? 'البحرين' : 'Bahrain'}</SelectItem>
                           ]}
                         </SelectContent>
                       </Select>
