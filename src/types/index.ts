@@ -25,6 +25,8 @@ export interface Profile {
   job_title?: string
   role: UserRole
   is_active: boolean
+  /** Whether this category should be shown on the home page widgets/lists. Defaults to true. */
+  showOnHome?: boolean
   created_at: string
   updated_at: string
 }

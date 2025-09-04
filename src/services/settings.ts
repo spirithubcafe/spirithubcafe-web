@@ -104,6 +104,10 @@ export interface HomepageSettings {
   latestReleaseBackgroundColorLight?: string // Latest release background color for light theme
   latestReleaseBackgroundColorDark?: string // Latest release background color for dark theme
   latestReleaseBackgroundType?: 'color' | 'image' // Background type
+  // Optional explicit list of category IDs to show on the homepage.
+  // If provided and non-empty, the Home page will use this list (in this order)
+  // instead of deriving the visible categories from per-category flags.
+  homepageCategoryIds?: string[]
 }
 
 export interface NewsletterSettings {
@@ -341,6 +345,9 @@ class SettingsService {
       featureSectionButtonText: 'Discover More',
       featureSectionButtonTextAr: 'اكتشف المزيد',
       featureSectionImage: '/images/back.jpg'
+  ,
+  // By default do not force an explicit list of categories — keep undefined/empty
+  homepageCategoryIds: []
     }
   }
 

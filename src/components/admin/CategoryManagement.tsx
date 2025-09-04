@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Save, X, Upload, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Save, X, Upload, Search, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -22,6 +22,8 @@ interface CategoryFormData {
   description_ar: string
   image: string
   is_active: boolean
+  /** Whether to show this category on the home page */
+  showOnHome?: boolean
   sort_order: number
   seo?: SEOMeta
 }
@@ -78,6 +80,7 @@ export default function CategoryManagement() {
 
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
+  const [updatingRows, setUpdatingRows] = useState<Set<string>>(new Set())
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [formLoading, setFormLoading] = useState(false)
@@ -93,6 +96,7 @@ export default function CategoryManagement() {
     description_ar: '',
     image: '',
     is_active: true,
+  showOnHome: true,
     sort_order: 1,
     seo: {}
   })
@@ -221,6 +225,7 @@ export default function CategoryManagement() {
         description_ar: category.description_ar || '',
         image: category.image || '',
         is_active: category.is_active,
+  showOnHome: category.showOnHome !== undefined ? category.showOnHome : true,
         sort_order: category.sort_order,
         seo: convertedSEO
       })
@@ -233,6 +238,7 @@ export default function CategoryManagement() {
         description_ar: '',
         image: '',
         is_active: true,
+  showOnHome: true,
         sort_order: categories.length + 1,
         seo: {}
       })
@@ -275,11 +281,12 @@ export default function CategoryManagement() {
         description_ar: formData.description_ar,
         image: formData.image,
         is_active: formData.is_active,
+  showOnHome: formData.showOnHome,
         sort_order: formData.sort_order,
         ...(formData.seo ? seoMetaToCategory(formData.seo) : {})
       };
       // Remove undefined fields recursively
-      const removeUndefined = (obj: any) => {
+      const removeUndefined = (obj: any): any => {
         if (Array.isArray(obj)) return obj.map(removeUndefined);
         if (obj && typeof obj === 'object') {
           return Object.entries(obj).reduce((acc, [key, value]) => {
@@ -301,8 +308,9 @@ export default function CategoryManagement() {
       closeDialog()
     } catch (error) {
       // Enhanced error logging for debugging
-      console.error('Error saving category:', error, JSON.stringify(error), error?.message, error?.code, error?.stack);
-      alert((isArabic ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving category: ') + (error?.message || ''))
+      const err: any = error
+      console.error('Error saving category:', err, JSON.stringify(err), err?.message, err?.code, err?.stack);
+      alert((isArabic ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving category: ') + (err?.message || ''))
     } finally {
       setFormLoading(false)
     }
@@ -330,6 +338,36 @@ export default function CategoryManagement() {
     setDeleteDialogOpen(true)
   }
 
+  // Toggle showOnHome directly from list (optimistic update)
+  const toggleShowOnHome = async (category: Category, value: boolean) => {
+    const id = category.id
+    // mark as updating
+    setUpdatingRows(prev => {
+      const s = new Set(prev)
+      s.add(id)
+      return s
+    })
+
+    // optimistic update
+    setCategories(prev => prev.map(c => c.id === id ? ({ ...c, showOnHome: value }) : c))
+
+    try {
+      await firestoreService.categories.update(id, { showOnHome: value })
+      toast.success(i18n.language === 'ar' ? 'تم تحديث العرض على الصفحة الرئيسية' : 'Updated home visibility')
+    } catch (err) {
+      // revert on error
+      setCategories(prev => prev.map(c => c.id === id ? ({ ...c, showOnHome: category.showOnHome }) : c))
+      console.error('Error updating showOnHome:', err)
+      toast.error(i18n.language === 'ar' ? 'فشل تحديث العرض على الصفحة الرئيسية' : 'Failed to update home visibility')
+    } finally {
+      // clear updating flag
+      setUpdatingRows(prev => {
+        const s = new Set(prev)
+        s.delete(id)
+        return s
+      })
+    }
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -509,6 +547,25 @@ export default function CategoryManagement() {
                           : (isArabic ? 'غير نشط' : 'Inactive')
                         }
                       </Badge>
+                    </div>
+
+                    {/* Show on Home toggle */}
+                    <div className="w-28 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`show_on_home_${category.id}`}
+                        checked={!!category.showOnHome}
+                        onChange={(e) => toggleShowOnHome(category, e.target.checked)}
+                        className="rounded"
+                        title={isArabic ? 'عرض في الصفحة الرئيسية' : 'Show on Home Page'}
+                        disabled={updatingRows.has(category.id)}
+                      />
+                      {updatingRows.has(category.id) && (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      )}
+                      <Label htmlFor={`show_on_home_${category.id}`} className="text-xs">
+                        {isArabic ? 'عرض بالصفحة' : 'ShowHome'}
+                      </Label>
                     </div>
 
                     {/* Sort Order */}
@@ -750,6 +807,17 @@ export default function CategoryManagement() {
                 title={isArabic ? 'فئة نشطة' : 'Active Category'}
               />
               <Label htmlFor="is_active">{isArabic ? 'فئة نشطة' : 'Active Category'}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="show_on_home"
+                checked={!!formData.showOnHome}
+                onChange={(e) => setFormData({ ...formData, showOnHome: e.target.checked })}
+                className="rounded"
+                title={isArabic ? 'عرض في الصفحة الرئيسية' : 'Show on Home Page'}
+              />
+              <Label htmlFor="show_on_home">{isArabic ? 'عرض في الصفحة الرئيسية' : 'Show on Home Page'}</Label>
             </div>
               </TabsContent>
 

@@ -24,6 +24,7 @@ import {
 import { useHomepageSettings } from '@/hooks/useHomepageSettings'
 import { storageService, auth } from '@/lib/firebase'
 import { settingsService } from '@/services/settings'
+import { firestoreService } from '@/lib/firebase'
 import toast from 'react-hot-toast'
 
 export default function HomepageManagement() {
@@ -97,6 +98,9 @@ export default function HomepageManagement() {
     latestReleaseBackgroundColorLight: '#ffffff',
     latestReleaseBackgroundColorDark: '#1a1a1a',
     latestReleaseBackgroundType: 'color' as 'color' | 'image' // 'color' or 'image'
+  ,
+  // explicit homepage category ids
+  homepageCategoryIds: [] as string[]
   })
 
   useEffect(() => {
@@ -162,10 +166,34 @@ export default function HomepageManagement() {
         latestReleaseBackgroundColorLight: settings.latestReleaseBackgroundColorLight || '#ffffff',
         latestReleaseBackgroundColorDark: settings.latestReleaseBackgroundColorDark || '#1a1a1a',
         latestReleaseBackgroundType: settings.latestReleaseBackgroundType || 'color'
+        ,
+        homepageCategoryIds: settings.homepageCategoryIds || []
       })
       setPreviewVideo(settings.backgroundVideo || '')
     }
   }, [settings])
+
+  // Load available categories for admin selection
+  const [availableCategories, setAvailableCategories] = useState<any[]>([])
+  const [loadingCategoriesForAdmin, setLoadingCategoriesForAdmin] = useState(false)
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        setLoadingCategoriesForAdmin(true)
+        const res = await firestoreService.categories.list()
+        if (!mounted) return
+        setAvailableCategories(res.items || [])
+      } catch (error) {
+        console.error('Failed to load categories for homepage selection:', error)
+      } finally {
+        setLoadingCategoriesForAdmin(false)
+      }
+    })()
+
+    return () => { mounted = false }
+  }, [])
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -748,6 +776,53 @@ export default function HomepageManagement() {
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Homepage Categories Selection */}
+          <Card className="border border-border/50 shadow-lg py-0">
+            <CardHeader className="bg-gradient-to-r from-primary/5 to-accent/5 rounded-t-lg py-6">
+              <CardTitle className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Settings className="h-5 w-5 text-primary" />
+                </div>
+                <span className="text-xl">{isArabic ? 'فئات الصفحة الرئيسية' : 'Homepage Categories'}</span>
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                {isArabic ? 'اختر الفئات التي تريد عرضها في الصفحة الرئيسية. اترك القائمة فارغة لاستخدام إعدادات الفئة الفردية.' : 'Select categories to show on the homepage. Leave empty to use per-category flags.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-6">
+              {loadingCategoriesForAdmin ? (
+                <div className="text-sm text-muted-foreground">{isArabic ? 'جاري تحميل الفئات...' : 'Loading categories...'}</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {availableCategories.map((cat) => {
+                    const checked = (formData.homepageCategoryIds || []).includes(cat.id)
+                    return (
+                      <label key={cat.id} className="flex items-center gap-3 p-2 border rounded">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            const checkedNow = e.target.checked
+                            setFormData(prev => {
+                              const ids = new Set(prev.homepageCategoryIds || [])
+                              if (checkedNow) ids.add(cat.id)
+                              else ids.delete(cat.id)
+                              return { ...prev, homepageCategoryIds: Array.from(ids) }
+                            })
+                          }}
+                        />
+                        <div className="flex-1 text-sm">
+                          <div className="font-medium">{isArabic ? (cat.name_ar || cat.name) : cat.name}</div>
+                          <div className="text-xs text-muted-foreground">{cat.is_active ? (isArabic ? 'نشط' : 'Active') : (isArabic ? 'غير نشط' : 'Inactive')}</div>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
 

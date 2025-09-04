@@ -186,6 +186,8 @@ export interface Category {
   twitter_image?: string;
   seo_auto_generated?: boolean;
   seo_generated_at?: string;
+  /** Whether this category should be shown on the home page widgets/lists. Defaults to true. */
+  showOnHome?: boolean;
   created: Date;
   updated: Date;
 }

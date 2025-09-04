@@ -385,39 +385,79 @@ export function HomePage() {
               </div>
             ) : categories.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {categories.map((category: Category) => {
+                {(() => {
+                  // If homepage settings contains an explicit list of category IDs, use that order.
+                  const explicitIds = homepageSettings?.homepageCategoryIds || []
+                  if (explicitIds && explicitIds.length > 0) {
+                    // Map ids to category objects, filter out missing ones
+                    return explicitIds
+                      .map(id => categories.find(c => c.id === id))
+                      .filter(Boolean)
+                      .map((category: Category | undefined) => {
+                        if (!category) return null
+                        const isArabic = localStorage.getItem('i18nextLng') === 'ar'
+                        const categoryName = isArabic ? (category.name_ar || category.name) : category.name
+
+                        return (
+                          <Link
+                            key={category.id}
+                            to={`/shop?category=${category.id}`}
+                            className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                          >
+                            <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                              <img
+                                src={category.image || '/images/logo.png'}
+                                alt={categoryName}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                onError={(e) => { e.currentTarget.src = '/images/logo.png' }}
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" title={categoryName}>
+                                {categoryName}
+                              </h3>
+                            </div>
+                          </Link>
+                        )
+                      })
+                  }
+
+                  // Fallback: show categories where showOnHome !== false
+                  return categories
+                    .filter((c: Category) => c.showOnHome !== false)
+                    .map((category: Category) => {
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'
                   const categoryName = isArabic ? (category.name_ar || category.name) : category.name
-                  
-                  return (
-                    <Link
-                      key={category.id}
-                      to={`/shop?category=${category.id}`}
-                      className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
-                        <img
-                          src={category.image || '/images/logo.png'}
-                          alt={categoryName}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/logo.png'
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <h3 
-                          className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" 
-                          title={categoryName}
-                        >
-                          {categoryName}
-                        </h3>
-                      </div>
-                    </Link>
-                  )
-                })}
+                    
+                    return (
+                      <Link
+                        key={category.id}
+                        to={`/shop?category=${category.id}`}
+                        className="group flex flex-col items-center text-center space-y-3 p-4 rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
+                          <img
+                            src={category.image || '/images/logo.png'}
+                            alt={categoryName}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => { e.currentTarget.src = '/images/logo.png' }}
+                          />
+                        </div>
+                        
+                        <div className="space-y-1">
+                          <h3 
+                            className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" 
+                            title={categoryName}
+                          >
+                            {categoryName}
+                          </h3>
+                        </div>
+                      </Link>
+                    )
+                  })
+                })()}
               </div>
             ) : (
               <div className="text-center py-12">
