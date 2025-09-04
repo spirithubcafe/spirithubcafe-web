@@ -213,6 +213,8 @@ export default function CheckoutPage() {
     ],
     'Wusta': [
       { value: 'haima', name: 'Haima', name_ar: 'هيما', price: 2 },
+      { value: 'duqm', name: 'Duqm', name_ar: 'دقم', price: 2 },
+      { value: 'al jazer', name: 'Al Jazer', name_ar: 'الجازر', price: 2 },
       { value: 'mahout', name: 'Mahout', name_ar: 'محوت', price: 2 }
       // Add cities for Wusta if needed
     ]
