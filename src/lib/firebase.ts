@@ -188,10 +188,23 @@ export interface Category {
   seo_generated_at?: string;
   /** Whether this category should be shown on the home page widgets/lists. Defaults to true. */
   showOnHome?: boolean;
+  /** UI controls for category header rendering (optional admin-configured) */
+  show_title?: boolean;
+  show_subtitle?: boolean;
+  show_availability_badge?: boolean;
+  badge_text_source?: 'total' | 'available';
+  badge_variant?: string;
+  badge_position?: string;
+  item_count_format?: string;
+  subtitle_override?: string;
   /** Optional per-category page subtitle for the shop/category page (English) */
   page_subtitle?: string;
+  /** Optional per-category page title for the shop/category page (English) */
+  page_title?: string;
   /** Optional per-category page subtitle for the shop/category page (Arabic) */
   page_subtitle_ar?: string;
+  /** Optional per-category page title for the shop/category page (Arabic) */
+  page_title_ar?: string;
   created: Date;
   updated: Date;
 }

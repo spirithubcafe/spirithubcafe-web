@@ -140,6 +140,10 @@ export function ShopPage() {
     if (selectedCategory && selectedCategory !== 'all') {
       const cat = categories.find(c => c.id === selectedCategory)
       if (cat) {
+        // Prefer admin-provided page title when available
+        if (isArabic && (cat as any).page_title_ar) return (cat as any).page_title_ar
+        if (!isArabic && (cat as any).page_title) return (cat as any).page_title
+
         const catName = isArabic ? (cat.name_ar || cat.name) : cat.name
         // Match case-insensitively to the known category label
         if (String(catName).toLowerCase().includes('spirithub apparel')) {

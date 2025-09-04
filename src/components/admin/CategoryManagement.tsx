@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -18,6 +19,8 @@ import toast from 'react-hot-toast'
 interface CategoryFormData {
   name: string
   name_ar: string
+  page_title?: string
+  page_title_ar?: string
   description: string
   description_ar: string
   image: string
@@ -26,6 +29,15 @@ interface CategoryFormData {
   is_active: boolean
   /** Whether to show this category on the home page */
   showOnHome?: boolean
+  /** Display controls for category header */
+  show_title?: boolean
+  show_subtitle?: boolean
+  show_availability_badge?: boolean
+  badge_text_source?: 'total' | 'available'
+  badge_variant?: string
+  badge_position?: string
+  item_count_format?: string
+  subtitle_override?: string
   sort_order: number
   seo?: SEOMeta
 }
@@ -99,7 +111,16 @@ export default function CategoryManagement() {
     image: '',
     is_active: true,
   showOnHome: true,
-    sort_order: 1,
+  // defaults for header controls
+  show_title: true,
+  show_subtitle: true,
+  show_availability_badge: true,
+  badge_text_source: 'available',
+  badge_variant: 'default',
+  badge_position: 'right',
+  item_count_format: 'short',
+  subtitle_override: '',
+  sort_order: 1,
     page_subtitle: '',
     page_subtitle_ar: '',
     seo: {}
@@ -225,14 +246,25 @@ export default function CategoryManagement() {
       setFormData({
         name: category.name,
         name_ar: category.name_ar || '',
+  page_title: (category as any).page_title || '',
         description: category.description || '',
         description_ar: category.description_ar || '',
         image: category.image || '',
   page_subtitle: category.page_subtitle || '',
   page_subtitle_ar: category.page_subtitle_ar || '',
-        is_active: category.is_active,
+  page_title_ar: (category as any).page_title_ar || '',
+  is_active: category.is_active,
   showOnHome: category.showOnHome !== undefined ? category.showOnHome : true,
-        sort_order: category.sort_order,
+  // header control mappings
+  show_title: (category as any).show_title !== undefined ? (category as any).show_title : true,
+  show_subtitle: (category as any).show_subtitle !== undefined ? (category as any).show_subtitle : true,
+  show_availability_badge: (category as any).show_availability_badge !== undefined ? (category as any).show_availability_badge : true,
+  badge_text_source: (category as any).badge_text_source || 'available',
+  badge_variant: (category as any).badge_variant || 'default',
+  badge_position: (category as any).badge_position || 'right',
+  item_count_format: (category as any).item_count_format || 'short',
+  subtitle_override: (category as any).subtitle_override || '',
+  sort_order: category.sort_order,
         seo: convertedSEO
       })
     } else {
@@ -240,14 +272,25 @@ export default function CategoryManagement() {
       setFormData({
         name: '',
         name_ar: '',
+  page_title: '',
         description: '',
         description_ar: '',
         image: '',
   page_subtitle: '',
   page_subtitle_ar: '',
-        is_active: true,
+  page_title_ar: '',
+  is_active: true,
   showOnHome: true,
-        sort_order: categories.length + 1,
+  // ensure defaults present when creating new
+  show_title: true,
+  show_subtitle: true,
+  show_availability_badge: true,
+  badge_text_source: 'available',
+  badge_variant: 'default',
+  badge_position: 'right',
+  item_count_format: 'short',
+  subtitle_override: '',
+  sort_order: categories.length + 1,
         seo: {}
       })
     }
@@ -287,6 +330,8 @@ export default function CategoryManagement() {
       const rawCategoryData = {
         name: formData.name,
         name_ar: formData.name_ar,
+  page_title: formData.page_title,
+  page_title_ar: formData.page_title_ar,
         description: formData.description,
         description_ar: formData.description_ar,
         image: formData.image,
@@ -294,6 +339,15 @@ export default function CategoryManagement() {
   showOnHome: formData.showOnHome,
   page_subtitle: formData.page_subtitle,
   page_subtitle_ar: formData.page_subtitle_ar,
+  // Header control fields
+  show_title: formData.show_title,
+  show_subtitle: formData.show_subtitle,
+  show_availability_badge: formData.show_availability_badge,
+  badge_text_source: formData.badge_text_source,
+  badge_variant: formData.badge_variant,
+  badge_position: formData.badge_position,
+  item_count_format: formData.item_count_format,
+  subtitle_override: formData.subtitle_override,
         sort_order: formData.sort_order,
         ...(formData.seo ? seoMetaToCategory(formData.seo) : {})
       };
@@ -677,6 +731,15 @@ export default function CategoryManagement() {
                 />
               </div>
               <div>
+                <Label htmlFor="page_title" className="mb-2 block">{isArabic ? 'عنوان الصفحة (إنجليزي)' : 'Page Title (English)'}</Label>
+                <Input
+                  id="page_title"
+                  value={formData.page_title || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, page_title: e.target.value }))}
+                  placeholder={isArabic ? 'عنوان صفحة الفئة (إنجليزي)' : 'Category page title in English'}
+                />
+              </div>
+              <div>
                 <Label htmlFor="name_ar" className="mb-2 block">{isArabic ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
                 <Input
                   id="name_ar"
@@ -730,6 +793,15 @@ export default function CategoryManagement() {
                   placeholder={isArabic ? 'نص العنوان الفرعي لصفحة المتجر (عربي)' : 'Subtitle text for the shop/category page in Arabic'}
                   rows={4}
                 />
+                <div className="mt-2">
+                  <Label htmlFor="page_title_ar" className="mb-2 block">{isArabic ? 'عنوان الصفحة (عربي)' : 'Page Title (Arabic)'}</Label>
+                  <Input
+                    id="page_title_ar"
+                    value={formData.page_title_ar || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, page_title_ar: e.target.value }))}
+                    placeholder={isArabic ? 'عنوان صفحة الفئة (عربي)' : 'Category page title in Arabic'}
+                  />
+                </div>
               </div>
             </div>
 
@@ -853,6 +925,54 @@ export default function CategoryManagement() {
                 title={isArabic ? 'عرض في الصفحة الرئيسية' : 'Show on Home Page'}
               />
               <Label htmlFor="show_on_home">{isArabic ? 'عرض في الصفحة الرئيسية' : 'Show on Home Page'}</Label>
+            </div>
+            {/* New header display controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show_title"
+                  checked={!!formData.show_title}
+                  onChange={(e) => setFormData({ ...formData, show_title: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="show_title">{isArabic ? 'عرض العنوان' : 'Show Title'}</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show_subtitle"
+                  checked={!!formData.show_subtitle}
+                  onChange={(e) => setFormData({ ...formData, show_subtitle: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="show_subtitle">{isArabic ? 'عرض العنوان الفرعي' : 'Show Subtitle'}</Label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="show_availability_badge"
+                  checked={!!formData.show_availability_badge}
+                  onChange={(e) => setFormData({ ...formData, show_availability_badge: e.target.checked })}
+                  className="rounded"
+                />
+                <Label htmlFor="show_availability_badge">{isArabic ? 'عرض شارة التوفر' : 'Show Availability Badge'}</Label>
+              </div>
+
+              <div>
+                <Label htmlFor="badge_text_source" className="mb-2 block">{isArabic ? 'مصدر نص الشارة' : 'Badge Text Source'}</Label>
+                <Select onValueChange={(val) => setFormData(prev => ({ ...prev, badge_text_source: val as any }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>{formData.badge_text_source}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="available">{isArabic ? 'متاح' : 'Available'}</SelectItem>
+                    <SelectItem value="total">{isArabic ? 'الإجمالي' : 'Total'}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
               </TabsContent>
 
