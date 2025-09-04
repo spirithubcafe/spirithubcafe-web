@@ -9,6 +9,8 @@ export type Metric = {
   value: number // milliseconds
   id?: string
   entries?: PerformanceEntry[]
+  // optional additional info (for LCP we may include resourceURL or element tag)
+  info?: Record<string, any>
 }
 
 type Subscriber = (m: Metric) => void
@@ -80,14 +82,33 @@ export function initPerformanceMonitoring() {
         const entries = list.getEntries()
         if (entries.length) {
           lastLCP = entries[entries.length - 1]
-          notify({ name: 'lcp', value: Math.round(lastLCP.startTime), entries: [lastLCP] })
+          // try to extract resource url or element info
+          const info: Record<string, any> = {}
+          try {
+            const e: any = lastLCP as any
+            if (e.url) info.resource = e.url
+            if (e.element && e.element.tagName) info.element = e.element.tagName
+            if (e.size) info.size = e.size
+          } catch (err) {
+            // ignore
+          }
+          notify({ name: 'lcp', value: Math.round(lastLCP.startTime), entries: [lastLCP], info })
         }
       })
       lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true })
 
       // Finalize LCP on pagehide/visibilitychange
       const finalize = () => {
-        if (lastLCP) notify({ name: 'lcp', value: Math.round(lastLCP.startTime), entries: [lastLCP] })
+        if (lastLCP) {
+          const info: Record<string, any> = {}
+          try {
+            const e: any = lastLCP as any
+            if (e.url) info.resource = e.url
+            if (e.element && e.element.tagName) info.element = e.element.tagName
+            if (e.size) info.size = e.size
+          } catch (err) {}
+          notify({ name: 'lcp', value: Math.round(lastLCP.startTime), entries: [lastLCP], info })
+        }
       }
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') finalize() })
       addEventListener('pagehide', finalize)

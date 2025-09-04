@@ -9,10 +9,14 @@ function fmt(ms: number) {
 
 export default function PerformanceWidget() {
   const [metrics, setMetrics] = useState<Record<string, number>>({})
+  const [lcpInfo, setLcpInfo] = useState<{resource?:string, element?:string, size?:number} | null>(null)
 
   useEffect(() => {
     const unsub = perf.subscribe((m: Metric) => {
       setMetrics(prev => ({ ...prev, [m.name]: Math.round(m.value) }))
+      if (m.name === 'lcp' && m.info) {
+        setLcpInfo({ resource: m.info.resource, element: m.info.element, size: m.info.size })
+      }
     })
     return () => { unsub() }
   }, [])
@@ -54,6 +58,12 @@ export default function PerformanceWidget() {
         <div style={labelStyle}>largest contentful paint</div>
         <div style={valueStyle}>{metrics.lcp ? fmt(metrics.lcp) : '—'}</div>
       </div>
+      {lcpInfo && (
+        <div style={{ marginTop: 4, fontSize: 12, opacity: 0.9 }}>
+          <div>Element: {lcpInfo.element || '—'}</div>
+          <div style={{ wordBreak: 'break-all' }}>Resource: {lcpInfo.resource ? (lcpInfo.resource.length > 50 ? `${lcpInfo.resource.slice(0,50)}...` : lcpInfo.resource) : '—'}</div>
+        </div>
+      )}
       <div style={rowStyle}>
         <div style={labelStyle}>First input delay</div>
         <div style={valueStyle}>{metrics.fid ? fmt(metrics.fid) : '—'}</div>
