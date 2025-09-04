@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ShoppingCart, Heart, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -135,6 +135,39 @@ export function ShopPage() {
     return badges
   }
 
+  // Header title: special-case for the "SpiritHub Apparel" category only.
+  const headerTitle = useMemo(() => {
+    if (selectedCategory && selectedCategory !== 'all') {
+      const cat = categories.find(c => c.id === selectedCategory)
+      if (cat) {
+        const catName = isArabic ? (cat.name_ar || cat.name) : cat.name
+        // Match case-insensitively to the known category label
+        if (String(catName).toLowerCase().includes('spirithub apparel')) {
+          return catName
+        }
+      }
+    }
+    return isArabic ? 'متجر القهوة' : 'Coffee Shop'
+  }, [selectedCategory, categories, isArabic])
+
+  // Selected category object (if any)
+  const selectedCategoryObj = selectedCategory !== 'all' ? categories.find(c => c.id === selectedCategory) : null
+
+  // Compute subtitle text (prefer category-specific fields)
+  const subtitleText = (() => {
+    if (isArabic) {
+      if (selectedCategoryObj && selectedCategoryObj.page_subtitle_ar) return selectedCategoryObj.page_subtitle_ar
+      return `اكتشف مجموعتنا المميزة من ${products.length} منتج عالي الجودة`
+    } else {
+      if (selectedCategoryObj && selectedCategoryObj.page_subtitle) return selectedCategoryObj.page_subtitle
+      const catName = selectedCategoryObj ? (selectedCategoryObj.name || '') : ''
+      if (catName.toLowerCase().includes('spirithub apparel')) {
+        return `SPIRITHUB COLLECTIBLE TEES – WEAR THE JOURNEY\n\nAt Spirithub Roastery, every cup tells a story and so do you. Our community has grown with us, celebrating every milestone, from discovering the vibrant notes of Yemeni Odaini to introducing the world to rare Omani origins. Now, with the launch of our new Collection, we invite you to commemorate the adventure.\n\nSpirithub Collectible Tees are more than just apparel. Each tee marks a landmark chapter in our journey, turning achievements into wearable memories. Collect them, share in our story, and show the world you’re part of the Spirithub experience.\n\nAvailable now at Spirithub Roastery and online at spirithubcafe.com.`
+      }
+      return `Discover our premium collection of ${products.length} high-quality products`
+    }
+  })()
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -205,13 +238,10 @@ export function ShopPage() {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
           <div>
             <h1 className="text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              {isArabic ? 'متجر القهوة' : 'Coffee Shop'}
+              {isArabic ? headerTitle : String(headerTitle).toUpperCase()}
             </h1>
-            <p className="text-muted-foreground text-sm lg:text-base">
-              {isArabic 
-                ? `اكتشف مجموعتنا المميزة من ${products.length} منتج عالي الجودة` 
-                : `Discover our premium collection of ${products.length} high-quality products`
-              }
+            <p className="text-muted-foreground text-sm lg:text-base whitespace-pre-line">
+              {subtitleText}
             </p>
           </div>
           

@@ -21,6 +21,8 @@ interface CategoryFormData {
   description: string
   description_ar: string
   image: string
+  page_subtitle?: string
+  page_subtitle_ar?: string
   is_active: boolean
   /** Whether to show this category on the home page */
   showOnHome?: boolean
@@ -98,6 +100,8 @@ export default function CategoryManagement() {
     is_active: true,
   showOnHome: true,
     sort_order: 1,
+    page_subtitle: '',
+    page_subtitle_ar: '',
     seo: {}
   })
 
@@ -224,6 +228,8 @@ export default function CategoryManagement() {
         description: category.description || '',
         description_ar: category.description_ar || '',
         image: category.image || '',
+  page_subtitle: category.page_subtitle || '',
+  page_subtitle_ar: category.page_subtitle_ar || '',
         is_active: category.is_active,
   showOnHome: category.showOnHome !== undefined ? category.showOnHome : true,
         sort_order: category.sort_order,
@@ -237,6 +243,8 @@ export default function CategoryManagement() {
         description: '',
         description_ar: '',
         image: '',
+  page_subtitle: '',
+  page_subtitle_ar: '',
         is_active: true,
   showOnHome: true,
         sort_order: categories.length + 1,
@@ -255,8 +263,10 @@ export default function CategoryManagement() {
       description: '',
       description_ar: '',
       image: '',
-      is_active: true,
-      sort_order: 1
+  page_subtitle: '',
+  page_subtitle_ar: '',
+  is_active: true,
+  sort_order: 1
     })
   }
 
@@ -282,6 +292,8 @@ export default function CategoryManagement() {
         image: formData.image,
         is_active: formData.is_active,
   showOnHome: formData.showOnHome,
+  page_subtitle: formData.page_subtitle,
+  page_subtitle_ar: formData.page_subtitle_ar,
         sort_order: formData.sort_order,
         ...(formData.seo ? seoMetaToCategory(formData.seo) : {})
       };
@@ -694,6 +706,29 @@ export default function CategoryManagement() {
                   onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
                   placeholder={isArabic ? 'وصف الفئة بالعربية' : 'Category description in Arabic'}
                   rows={3}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="page_subtitle" className="mb-2 block">{isArabic ? 'نص العنوان الفرعي (إنجليزي)' : 'Page Subtitle (English)'}</Label>
+                <Textarea
+                  id="page_subtitle"
+                  value={formData.page_subtitle}
+                  onChange={(e) => setFormData({ ...formData, page_subtitle: e.target.value })}
+                  placeholder={isArabic ? 'نص العنوان الفرعي لصفحة المتجر (إنجليزي)' : 'Subtitle text for the shop/category page in English'}
+                  rows={4}
+                />
+              </div>
+              <div>
+                <Label htmlFor="page_subtitle_ar" className="mb-2 block">{isArabic ? 'نص العنوان الفرعي (عربي)' : 'Page Subtitle (Arabic)'}</Label>
+                <Textarea
+                  id="page_subtitle_ar"
+                  value={formData.page_subtitle_ar}
+                  onChange={(e) => setFormData({ ...formData, page_subtitle_ar: e.target.value })}
+                  placeholder={isArabic ? 'نص العنوان الفرعي لصفحة المتجر (عربي)' : 'Subtitle text for the shop/category page in Arabic'}
+                  rows={4}
                 />
               </div>
             </div>

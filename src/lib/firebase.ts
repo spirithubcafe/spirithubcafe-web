@@ -188,6 +188,10 @@ export interface Category {
   seo_generated_at?: string;
   /** Whether this category should be shown on the home page widgets/lists. Defaults to true. */
   showOnHome?: boolean;
+  /** Optional per-category page subtitle for the shop/category page (English) */
+  page_subtitle?: string;
+  /** Optional per-category page subtitle for the shop/category page (Arabic) */
+  page_subtitle_ar?: string;
   created: Date;
   updated: Date;
 }
