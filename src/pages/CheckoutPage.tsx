@@ -212,6 +212,8 @@ export default function CheckoutPage() {
       { value: 'sur', name: 'Sur', name_ar: 'صور', price: 2 }
     ],
     'Wusta': [
+      { value: 'haima', name: 'Haima', name_ar: 'هيما', price: 2 },
+      { value: 'mahout', name: 'Mahout', name_ar: 'محوت', price: 2 }
       // Add cities for Wusta if needed
     ]
   }
