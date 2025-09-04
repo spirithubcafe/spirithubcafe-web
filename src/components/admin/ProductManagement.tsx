@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Search, Filter, Eye, Package2, Grid3X3, List } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, Filter, Eye, Package2, Grid3X3, List, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -144,6 +144,50 @@ export default function ProductManagement() {
       toast.error(isArabic ? 'خطأ في حذف المنتج' : 'Error deleting product')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
+  }
+
+  const handleDuplicate = async (product: Product) => {
+    try {
+      setLoading(true)
+
+      // Deep clone product data (simple approach)
+      const cloned: any = JSON.parse(JSON.stringify(product))
+
+      // Remove identifiers and timestamps
+      delete cloned.id
+      delete cloned.created_at
+      delete cloned.updated_at
+
+      // Create unique slug
+      const baseSlug = product.slug || generateSlug(product.name || 'product')
+      cloned.slug = `${baseSlug}-copy-${Date.now()}`
+
+      // Adjust names to indicate copy
+      cloned.name = product.name ? `${product.name} (Copy)` : product.name
+      if (product.name_ar) cloned.name_ar = `${product.name_ar} (نسخة)`
+
+      // Ensure product is active by default (keep same state) or you can toggle
+      // cloned.is_active = false // optional: set copied products inactive
+
+      // Call create service (reuses image URLs)
+      await firestoreService.products.create(cloned)
+      toast.success(isArabic ? 'تم تكرار المنتج بنجاح' : 'Product duplicated successfully')
+      await loadData()
+    } catch (error) {
+      console.error('Error duplicating product:', error)
+      toast.error(isArabic ? 'خطأ في تكرار المنتج' : 'Error duplicating product')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -433,6 +477,14 @@ export default function ProductManagement() {
                       <Edit className="h-3 w-3" />
                     </Button>
                     <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleDuplicate(product)}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                    <Button 
                       variant="destructive" 
                       size="sm"
                       onClick={() => openDeleteDialog(product)}
@@ -532,6 +584,13 @@ export default function ProductManagement() {
                             onClick={() => handleEdit(product)}
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDuplicate(product)}
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="destructive" 
