@@ -168,7 +168,9 @@ export default function CheckoutPage() {
   // Cities organized by state for Oman
   const omanCitiesByState = {
     'Buraymi': [
-      { value: 'al-burimi', name: 'Al-Burimi', name_ar: 'البريمي', price: 2 }
+      { value: 'al-burimi', name: 'Al-Burimi', name_ar: 'البريمي', price: 2 },
+      { value: 'mahdha', name: 'Mahdha', name_ar: 'محضة', price: 2 },
+      { value: 'al sinainah', name: 'Al Sinainah', name_ar: 'الصناعية', price: 2 }
     ],
     'Dakhiliyah': [
       { value: 'nizwa', name: 'Nizwa', name_ar: 'نزوى', price: 2 },
@@ -197,7 +199,7 @@ export default function CheckoutPage() {
       { value: 'shinas', name: 'Shinas', name_ar: 'شناص', price: 2 },
       { value: 'suhar', name: 'Suhar', name_ar: 'صحار', price: 2 },
       { value: 'saham', name: 'Saham', name_ar: 'صحم', price: 2 },
-      { value: 'al-suwaiq', name: 'Al-Suwaiq', name_ar: 'الصويق', price: 2 },
+      { value: 'al-suwaiq', name: 'Al-Suwaiq', name_ar: 'السويق', price: 2 },
       { value: 'al-khaburah', name: 'Al Khaburah', name_ar: 'الخابورة', price: 2 }
     ],
     'North Sharqiyah': [
