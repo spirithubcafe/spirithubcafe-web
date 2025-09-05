@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShoppingCart, Heart, Eye } from 'lucide-react'
+import { ShoppingCart, Heart, Eye, ZoomIn } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +16,7 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
 import { useProducts, useCategories } from '@/contexts/enhanced-data-provider'
 import { ProductQuickView } from '@/components/product-quick-view'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export function ShopPage() {
   const { i18n } = useTranslation()
@@ -34,6 +35,20 @@ export function ShopPage() {
   useScrollToTopOnRouteChange()
   
   const isArabic = i18n.language === 'ar'
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const openImageModal = (imageSrc: string | undefined) => {
+    if (imageSrc) {
+      setSelectedImage(imageSrc)
+      setIsModalOpen(true)
+    }
+  }
+
+  const closeImageModal = () => {
+    setSelectedImage(null)
+    setIsModalOpen(false)
+  }
 
   // Check for category parameter in URL
   useEffect(() => {
@@ -573,6 +588,72 @@ export function ShopPage() {
           })}
         </div>
       )}
+
+      {/* Spirithub Apparel gallery - show 3 photos below products when apparel category selected */}
+      {String(headerTitle).toLowerCase().includes('spirithub apparel') && (
+        <div className="mt-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-0 justify-items-center">
+            {[
+              { src: '/images/spirithub-apparel-1.jpg', caption: 'World Brewers Cup Tee' },
+              { src: '/images/spirithub-apparel-2.jpg', caption: 'Archers Coffee Tee' },
+              { src: '/images/spirithub-apparel-3.jpg', caption: 'Archers Back Print Tee' },
+              { src: '/images/spirithub-apparel-4.jpg', caption: 'Ultimate Panama Collection Tee' }
+            ].map((item, i) => (
+              <div key={i} className="overflow-hidden rounded-lg shadow-sm">
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openImageModal(item.src)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openImageModal(item.src) }}
+                  className="group w-[160px] h-[156px] sm:w-[220px] sm:h-[215px] md:w-[266px] md:h-[263px] cursor-pointer select-none flex items-center justify-center overflow-hidden relative"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.caption || `Spirithub Apparel ${i + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/logo.png' }}
+                  />
+
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm">
+                      <ZoomIn className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Image Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none [&>button]:hidden">
+          <div className="relative">
+            <button
+              onClick={closeImageModal}
+              className="absolute top-4 right-4 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full p-3 transition-colors duration-200 backdrop-blur-sm border border-white/20"
+              aria-label={isArabic ? 'إغلاق' : 'Close'}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt={isArabic ? 'صورة مكبرة' : 'Enlarged image'}
+                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/logo.png'
+                }}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   )
 }
