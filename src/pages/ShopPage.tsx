@@ -194,7 +194,7 @@ export function ShopPage() {
         }
       }
     }
-    return isArabic ? 'متجر القهوة' : 'Coffee Shop'
+    return isArabic ? 'رحلتنا مع القهوة' : 'OUR COFFEE JOURNEY'
   }, [selectedCategory, categories, isArabic])
 
   // Selected category object (if any)
@@ -204,14 +204,14 @@ export function ShopPage() {
   const subtitleText = (() => {
     if (isArabic) {
       if (selectedCategoryObj && selectedCategoryObj.page_subtitle_ar) return selectedCategoryObj.page_subtitle_ar
-      return `اكتشف مجموعتنا المميزة من ${products.length} منتج عالي الجودة`
+      return `محمصة سبيريت هب، فريق عُماني بالكامل، تلتزم بعمق بتكريم الجهود العظيمة التي يبذلها مزارعو القهوة والحفاظ على أصالة كل منشأ. يجمع نهجنا بين التحميص الدقيق، والانتقاء الموسمي، والفهم العلمي للقهوة لتقديم فنجان يعكس هوية أرضه ويحكي قصته الفريدة .في سبيريت هب، كل فنجان ليس مجرد مشروب، بل هو صلة تجمع بين التراث والحرفية وروح القهوة.`
     } else {
       if (selectedCategoryObj && selectedCategoryObj.page_subtitle) return selectedCategoryObj.page_subtitle
       const catName = selectedCategoryObj ? (selectedCategoryObj.name || '') : ''
       if (catName.toLowerCase().includes('spirithub apparel')) {
         return `SPIRITHUB COLLECTIBLE TEES – WEAR THE JOURNEY\n\nAt Spirithub Roastery, every cup tells a story and so do you. Our community has grown with us, celebrating every milestone, from discovering the vibrant notes of Yemeni Odaini to introducing the world to rare Omani origins. Now, with the launch of our new Collection, we invite you to commemorate the adventure.\n\nSpirithub Collectible Tees are more than just apparel. Each tee marks a landmark chapter in our journey, turning achievements into wearable memories. Collect them, share in our story, and show the world you’re part of the Spirithub experience.\n\nAvailable now at Spirithub Roastery and online at spirithubcafe.com.`
       }
-      return `Discover our premium collection of ${products.length} high-quality products`
+      return `SpiritHub Roastery, operated by an all-OMANI TEAM, is deeply committed to honoring the hard work of coffee farmers and preserving the authenticity of each origin. Our approach blends precision roasting, seasonal sourcing, and scientific understanding of coffee to deliver a cup that reflects its terroir and story. At SpiritHub, every cup is more than a drink, it’s a connection to heritage, craftsmanship, and the spirit of coffee.`
     }
   })()
 
