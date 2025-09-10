@@ -5,7 +5,6 @@ import './i18n'
 import App from './App.tsx'
 import { registerServiceWorker } from './utils/service-worker'
 import { initPerformanceMonitoring } from './utils/performance-monitor'
-import PerformanceWidget from './components/performance-widget'
 
 // Filter out verbose console logs
 if (import.meta.env.DEV) {
@@ -76,9 +75,6 @@ initPerformanceMonitoring()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <>
-      <App />
-      <PerformanceWidget />
-    </>
+    <App />
   </StrictMode>,
 )
