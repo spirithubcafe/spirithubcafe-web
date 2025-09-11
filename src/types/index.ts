@@ -57,7 +57,8 @@ export interface Category {
   name_ar?: string
   description?: string
   description_ar?: string
-  image_url?: string
+  image?: string  // Main image from JSON data
+  image_url?: string  // Alternative image field
   parent_id?: number
   sort_order: number
   is_active: boolean
@@ -181,7 +182,8 @@ export interface Product {
   name_ar?: string
   description?: string
   description_ar?: string
-  image_url?: string
+  image?: string  // Main image from JSON data
+  image_url?: string  // Alternative image field
   gallery_images?: string[]
   price_usd: number
   price_omr?: number

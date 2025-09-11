@@ -182,13 +182,12 @@ export function CartSidebar() {
                   {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {item.product?.image || item.product?.image_url || item.product?.images?.[0] || item.product?.gallery?.[0] ? (
+                        {item.product?.image || item.product?.image_url || item.product?.gallery_images?.[0] ? (
                           <img 
                             src={
                               item.product.image || 
                               item.product.image_url || 
-                              item.product.images?.[0] || 
-                              item.product.gallery?.[0] || 
+                              item.product.gallery_images?.[0] || 
                               '/images/logo-s.png'
                             }
                             alt={i18n.language === 'ar' ? (item.product.name_ar || item.product.name) : item.product.name}

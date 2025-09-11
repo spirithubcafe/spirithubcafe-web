@@ -267,6 +267,7 @@ export function HomePage() {
                       <div className="w-full aspect-square overflow-hidden bg-muted">
                         <img
                           src={
+                            product.image || 
                             product.image_url || 
                             product.gallery_images?.[0] || 
                             '/images/logo.png'
@@ -428,7 +429,7 @@ export function HomePage() {
                           >
                             <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                               <img
-                                src={(category as any).image_url || '/images/logo.png'}
+                                src={(category as any).image || (category as any).image_url || '/images/logo.png'}
                                 alt={categoryName}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -460,7 +461,7 @@ export function HomePage() {
                       >
                         <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                           <img
-                            src={(category as any).image_url || '/images/logo.png'}
+                            src={(category as any).image || (category as any).image_url || '/images/logo.png'}
                             alt={categoryName}
                             className="w-full h-full object-cover"
                             loading="lazy"

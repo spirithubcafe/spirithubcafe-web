@@ -324,6 +324,7 @@ export default function ProductPage() {
               const availableImages = []
               
               // Add main image first (highest priority)
+              if (product.image) availableImages.push(product.image)
               if (product.image_url) availableImages.push(product.image_url)
               
               // Then add gallery images
