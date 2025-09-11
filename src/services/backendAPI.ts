@@ -13,34 +13,40 @@ export interface SaveDataResponse {
 }
 
 class BackendAPIService {
+  private baseUrl = '/api'
+
   // Save JSON data through API
   async saveJSONData(filename: string, data: any): Promise<SaveDataResponse> {
     try {
-      // In development, we'll simulate the API call
-      console.log(`Simulating API call to save ${filename}:`, data)
+      console.log(`Saving ${filename} to server:`, data)
       
       // Store in localStorage as backup
       localStorage.setItem(`backup_${filename}`, JSON.stringify(data))
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // TODO: Replace with actual API call
-      /*
+      // Try to save to actual file via API endpoint
       const response = await fetch(`${this.baseUrl}/save-json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename, data })
+        body: JSON.stringify({ 
+          filename, 
+          data,
+          timestamp: new Date().toISOString()
+        })
       })
       
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`)
+        // If API is not available, save locally via download
+        await this.saveFileLocally(filename, data)
+        return {
+          success: true,
+          message: `✅ تم حفظ الملف ${filename} محلياً!\n✅ File ${filename} saved locally!`
+        }
       }
       
-      return await response.json()
-      */
+      const result = await response.json()
+      return result
       
       return {
         success: true,
@@ -48,11 +54,62 @@ class BackendAPIService {
       }
     } catch (error) {
       console.error(`Error saving ${filename}:`, error)
-      return {
-        success: false,
-        message: `❌ خطأ في حفظ الملف ${filename}\n❌ Error saving file ${filename}`,
-        error: error instanceof Error ? error.message : 'Unknown error'
+      
+      // Fallback: save locally via download
+      try {
+        await this.saveFileLocally(filename, data)
+        return {
+          success: true,
+          message: `✅ تم حفظ الملف ${filename} محلياً (وضع الطوارئ)!\n✅ File ${filename} saved locally (fallback mode)!`
+        }
+      } catch (fallbackError) {
+        return {
+          success: false,
+          message: `❌ خطأ في حفظ الملف ${filename}\n❌ Error saving file ${filename}`,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        }
       }
+    }
+  }
+
+  // Save file locally via browser download
+  private async saveFileLocally(filename: string, data: any): Promise<void> {
+    const jsonString = JSON.stringify(data, null, 2)
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename.endsWith('.json') ? filename : `${filename}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    
+    // Also try to update the public file if we can access it
+    await this.updatePublicFile(filename, data)
+  }
+
+  // Try to update the file in public directory (for development)
+  private async updatePublicFile(filename: string, data: any): Promise<void> {
+    try {
+      // In development mode, try to save to the public/data directory
+      const publicPath = `/data/${filename.endsWith('.json') ? filename : `${filename}.json`}`
+      
+      // This will only work if we have a development server endpoint
+      await fetch(`/api/save-public-file`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          path: publicPath, 
+          data,
+          timestamp: new Date().toISOString()
+        })
+      })
+    } catch (error) {
+      console.log('Could not update public file (this is normal in production):', error)
     }
   }
 

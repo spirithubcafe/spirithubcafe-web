@@ -1,4 +1,5 @@
 import type { HeroSlide, HeroSettings } from '@/types'
+import { backendAPI } from './backendAPI'
 
 export class JSONSettingsService {
   private static CACHE: Map<string, any> = new Map()
@@ -44,24 +45,33 @@ export class JSONSettingsService {
     }
   }
   
-  // Save settings to localStorage (localhost only)
+  // Save settings to JSON file and localStorage
   async saveSettings<T>(settingName: string, data: T): Promise<boolean> {
     try {
-      if (!this.isLocalhost()) {
-        console.warn('Saving settings only works in localhost environment')
-        return false
-      }
-      
       const cacheKey = `settings_${settingName}`
+      const filename = `${settingName}-settings.json`
       
-      // Save to localStorage
+      // Save to localStorage as backup
       localStorage.setItem(cacheKey, JSON.stringify(data))
       
       // Update cache
       JSONSettingsService.CACHE.set(settingName, data)
       
-      console.log(`✅ Saved ${settingName} settings to localStorage`)
-      return true
+      // Save to actual file via backend API
+      try {
+        const result = await backendAPI.saveJSONData(filename, data)
+        if (result.success) {
+          console.log(`✅ Saved ${settingName} settings to file: ${filename}`)
+          return true
+        } else {
+          console.error(`Failed to save ${settingName} settings:`, result.message)
+          return false
+        }
+      } catch (apiError) {
+        console.error(`API error saving ${settingName} settings:`, apiError)
+        console.log(`📦 Settings saved to localStorage only`)
+        return true // Still consider it successful if localStorage worked
+      }
     } catch (error) {
       console.error(`Error saving ${settingName} settings:`, error)
       return false

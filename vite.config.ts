@@ -3,12 +3,14 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react-swc"
 import { defineConfig } from "vite"
 import { VitePWA } from 'vite-plugin-pwa'
+import { fileSavePlugin } from './vite-plugins/file-save-plugin'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(), 
     tailwindcss(),
+    fileSavePlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -20,9 +22,7 @@ export default defineConfig({
         // Exclude dynamic URLs from navigation fallback
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
-          /^\/api\//,
-          /firestore\.googleapis\.com/,
-          /firebase/
+          /^\/api\//
         ],
         runtimeCaching: [
           {
@@ -34,55 +34,6 @@ export default defineConfig({
                 maxEntries: 300,
                 maxAgeSeconds: 30 * 24 * 60 * 60,
               }
-            },
-          },
-          {
-            urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'firebase-storage-cache',
-              expiration: {
-                maxEntries: 400,
-                maxAgeSeconds: 7 * 24 * 60 * 60,
-              },
-            },
-          },
-          {
-            urlPattern: ({ url }) => {
-              // Only cache static Firestore API calls, exclude dynamic session URLs
-              const isFirestore = url.origin === 'https://firestore.googleapis.com';
-              const hasSession = url.pathname.includes(':runQuery') || 
-                                url.pathname.includes(':listen') || 
-                                url.pathname.includes('/sessions/') ||
-                                url.searchParams.has('database');
-              return isFirestore && !hasSession;
-            },
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'firestore-api-cache',
-              networkTimeoutSeconds: 2,
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 5 * 60, // 5 minutes
-              },
-            },
-          },
-          {
-            // Cache static document reads only
-            urlPattern: ({ url, request }) => {
-              const isFirestore = url.origin === 'https://firestore.googleapis.com';
-              const isDocumentRead = url.pathname.includes('/documents/') && 
-                                   !url.pathname.includes(':') &&
-                                   request.method === 'GET';
-              return isFirestore && isDocumentRead;
-            },
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'firestore-documents-cache',
-              expiration: {
-                maxEntries: 300,
-                maxAgeSeconds: 15 * 60, // 15 minutes for static documents
-              },
             },
           },
           {
