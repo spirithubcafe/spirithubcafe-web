@@ -1,0 +1,103 @@
+[
+  {
+    "id": "order_001",
+    "user_id": "user_1",
+    "user_email": "customer1@example.com",
+    "status": "completed",
+    "total": 75.50,
+    "subtotal": 68.00,
+    "tax": 5.50,
+    "shipping": 2.00,
+    "items": [
+      {
+        "product_id": "1",
+        "name": "Ethiopian Single Origin",
+        "quantity": 2,
+        "price": 25.00,
+        "total": 50.00
+      },
+      {
+        "product_id": "2", 
+        "name": "Colombian Supremo",
+        "quantity": 1,
+        "price": 18.00,
+        "total": 18.00
+      }
+    ],
+    "shipping_address": {
+      "name": "John Doe",
+      "street": "123 Main St",
+      "city": "Muscat",
+      "country": "Oman",
+      "postal_code": "100"
+    },
+    "payment_method": "credit_card",
+    "created_at": "2024-01-15T10:30:00Z",
+    "updated_at": "2024-01-15T14:20:00Z"
+  },
+  {
+    "id": "order_002",
+    "user_id": "user_2",
+    "user_email": "customer2@example.com",
+    "status": "pending",
+    "total": 42.25,
+    "subtotal": 38.00,
+    "tax": 3.25,
+    "shipping": 1.00,
+    "items": [
+      {
+        "product_id": "3",
+        "name": "Yemen Mocca",
+        "quantity": 1,
+        "price": 38.00,
+        "total": 38.00
+      }
+    ],
+    "shipping_address": {
+      "name": "Jane Smith",
+      "street": "456 Al Noor St",
+      "city": "Salalah",
+      "country": "Oman",
+      "postal_code": "200"
+    },
+    "payment_method": "cash_on_delivery",
+    "created_at": "2024-01-16T09:15:00Z",
+    "updated_at": "2024-01-16T09:15:00Z"
+  },
+  {
+    "id": "order_003",
+    "user_id": "user_3", 
+    "user_email": "customer3@example.com",
+    "status": "shipped",
+    "total": 92.80,
+    "subtotal": 85.00,
+    "tax": 6.80,
+    "shipping": 1.00,
+    "items": [
+      {
+        "product_id": "1",
+        "name": "Ethiopian Single Origin",
+        "quantity": 3,
+        "price": 25.00,
+        "total": 75.00
+      },
+      {
+        "product_id": "4",
+        "name": "Brazilian Santos",
+        "quantity": 1,
+        "price": 10.00,
+        "total": 10.00
+      }
+    ],
+    "shipping_address": {
+      "name": "Ahmed Al Rashid",
+      "street": "789 Sultan Qaboos St",
+      "city": "Nizwa",
+      "country": "Oman",
+      "postal_code": "300"
+    },
+    "payment_method": "credit_card",
+    "created_at": "2024-01-17T15:45:00Z",
+    "updated_at": "2024-01-18T10:30:00Z"
+  }
+]

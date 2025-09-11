@@ -1,0 +1,27 @@
+[
+  {
+    "id": "1",
+    "email": "user1@example.com",
+    "status": "active",
+    "subscribed_at": "2024-01-15T10:30:00Z",
+    "source": "Homepage",
+    "ip_address": "192.168.1.1",
+    "user_agent": "Mozilla/5.0..."
+  },
+  {
+    "id": "2",
+    "email": "user2@example.com", 
+    "status": "active",
+    "subscribed_at": "2024-01-16T14:20:00Z",
+    "source": "Product Page",
+    "ip_address": "192.168.1.2"
+  },
+  {
+    "id": "3",
+    "email": "user3@example.com",
+    "status": "inactive",
+    "subscribed_at": "2024-01-17T09:15:00Z",
+    "source": "Checkout",
+    "ip_address": "192.168.1.3"
+  }
+]

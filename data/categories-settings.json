@@ -1,0 +1,11 @@
+{
+  "id": "categories",
+  "exported_at": "2025-09-11T04:41:42.487Z",
+  "exported_from": "firebase_settings",
+  "data": {
+    "backgroundVideo": "https://firebasestorage.googleapis.com/v0/b/spirithub-506f5.firebasestorage.app/o/videos%2Fcategories%2Fcategories-background-1755168382945.mp4?alt=media&token=5fe410f4-5cc6-48d8-8401-90b8993d6ccd",
+    "backgroundVideoBlur": 0,
+    "overlayOpacity": 0,
+    "showBackgroundVideo": true
+  }
+}
