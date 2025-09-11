@@ -1,4 +1,19 @@
-import { checkoutSettingsService } from './checkoutSettings'
+// Local fallback for checkoutSettingsService when './checkoutSettings' module is missing.
+// Replace this stub with the real import when the actual module is available.
+const checkoutSettingsService = {
+  async get() {
+    // Minimal default settings to avoid runtime errors; adjust as needed.
+    return {
+      payment_gateway: { enabled: false },
+      bankMuscat: {
+        enabled: false,
+        merchantId: '',
+        accessCode: '',
+        workingKey: ''
+      }
+    }
+  }
+}
 import * as CryptoJS from 'crypto-js'
 
 // Bank Muscat Payment Gateway Configuration
@@ -54,7 +69,22 @@ class BankMuscatPaymentService {
         }
       }
 
-      const gateway = settings.payment_gateway
+      if (!settings?.bankMuscat || !settings.bankMuscat.enabled) {
+        return {
+          success: false,
+          error: 'Bank Muscat payment gateway is not configured or disabled'
+        }
+      }
+
+      const bankMuscat = settings.bankMuscat
+      
+      // Validate Bank Muscat specific settings
+      if (!bankMuscat.merchantId || !bankMuscat.accessCode || !bankMuscat.workingKey) {
+        return {
+          success: false,
+          error: 'Bank Muscat payment gateway is not properly configured'
+        }
+      }
       
       // Generate unique transaction reference
       const transactionId = `TXN-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -62,7 +92,7 @@ class BankMuscatPaymentService {
       // Prepare payment data
       const baseUrl = window.location.origin
       const paymentData = {
-        merchant_id: gateway.merchant_id,
+        merchant_id: bankMuscat.merchantId,
         order_id: paymentRequest.order_id,
         currency: this.getCurrencyCode(paymentRequest.currency),
         amount: paymentRequest.amount.toFixed(2),
@@ -83,12 +113,12 @@ class BankMuscatPaymentService {
         .join('&')
 
       // Generate hash
-      const hash = this.generateHash(queryString, gateway.working_key)
+      const hash = this.generateHash(queryString, bankMuscat.workingKey)
 
       // Create payment form data
       const formData = {
         ...paymentData,
-        access_code: gateway.access_code,
+        access_code: bankMuscat.accessCode,
         enc_val: hash
       }
 

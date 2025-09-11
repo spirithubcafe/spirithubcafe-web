@@ -1,33 +1,6 @@
 import { useState, useEffect } from 'react'
 import { seoService } from '@/services/seo'
-
-interface SEOSettings {
-  siteName: string
-  siteNameAr: string
-  siteUrl: string
-  defaultTitle: string
-  defaultTitleAr: string
-  defaultDescription: string
-  defaultDescriptionAr: string
-  defaultKeywords: string[]
-  ogImage: string
-  twitterHandle: string
-  organizationName: string
-  organizationNameAr: string
-  organizationLogo: string
-  organizationDescription: string
-  organizationDescriptionAr: string
-  contactPhone: string
-  facebookPageId: string
-  openingHours: string[]
-  address: {
-    street: string
-    city: string
-    region: string
-    postalCode: string
-    country: string
-  }
-}
+import type { SEOSettings } from '@/types/seo'
 
 export function useSEO() {
   const [settings, setSettings] = useState<SEOSettings | null>(null)

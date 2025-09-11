@@ -1,32 +1,5 @@
 // SEO service - JSON-based implementation
-
-interface SEOSettings {
-  siteName: string
-  siteNameAr: string
-  siteUrl: string
-  defaultTitle: string
-  defaultTitleAr: string
-  defaultDescription: string
-  defaultDescriptionAr: string
-  defaultKeywords: string[]
-  ogImage: string
-  twitterHandle: string
-  organizationName: string
-  organizationNameAr: string
-  organizationLogo: string
-  organizationDescription: string
-  organizationDescriptionAr: string
-  contactPhone: string
-  facebookPageId: string
-  openingHours: string[]
-  address: {
-    street: string
-    city: string
-    region: string
-    postalCode: string
-    country: string
-  }
-}
+import type { SEOSettings } from '@/types/seo'
 
 export class SEOService {
   private settings: SEOSettings | null = null
@@ -51,31 +24,63 @@ export class SEOService {
 
   private getDefaultSettings(): SEOSettings {
     return {
+      // Global settings
       siteName: 'SpiritHub Cafe',
       siteNameAr: 'سبيريت هاب كافيه',
+      siteDescription: 'Premium coffee roastery and cafe in Muscat, Oman',
+      siteDescriptionAr: 'محمصة ومقهى القهوة المميزة في مسقط، عُمان',
       siteUrl: 'https://spirithubcafe.com',
-      defaultTitle: 'Premium Coffee Roastery in Oman',
-      defaultTitleAr: 'محمصة القهوة المميزة في عُمان',
-      defaultDescription: 'Discover premium specialty coffee at SpiritHub Cafe in Muscat, Oman',
-      defaultDescriptionAr: 'اكتشف القهوة المميزة في سبيريت هاب كافيه في مسقط، عُمان',
-      defaultKeywords: ['coffee', 'cafe', 'roastery', 'Oman', 'Muscat', 'premium coffee', 'espresso'],
-      ogImage: '/images/spirithub-coffee.webp',
+      defaultImage: '/images/spirithub-coffee.webp',
+      favicon: '/favicon.ico',
+      robotsTxt: 'User-agent: *\nAllow: /',
+      
+      // Social media
       twitterHandle: '@spirithubcafe',
+      facebookAppId: '',
+      facebookPageId: 'spirithubcafe',
+      
+      // Analytics
+      googleAnalyticsId: '',
+      googleTagManagerId: '',
+      googleSearchConsoleId: '',
+      facebookPixelId: '',
+      
+      // Organization info
       organizationName: 'SpiritHub Cafe',
       organizationNameAr: 'سبيريت هاب كافيه',
       organizationLogo: '/images/logo.png',
       organizationDescription: 'Premium coffee roastery and cafe in Muscat, Oman',
       organizationDescriptionAr: 'محمصة ومقهى القهوة المميزة في مسقط، عُمان',
+      
+      // Contact info
       contactPhone: '+968 9999 9999',
-      facebookPageId: 'spirithubcafe',
-      openingHours: ['Mo-Su 07:00-23:00'],
+      contactEmail: 'info@spirithubcafe.com',
       address: {
         street: 'Al Khuwair Street',
         city: 'Muscat',
         region: 'Muscat Governorate',
         postalCode: '100',
         country: 'Oman'
-      }
+      },
+      
+      // Business hours
+      openingHours: ['Mo-Su 07:00-23:00'],
+      
+      // Default meta
+      defaultTitle: 'Premium Coffee Roastery in Oman',
+      defaultTitleAr: 'محمصة القهوة المميزة في عُمان',
+      defaultDescription: 'Discover premium specialty coffee at SpiritHub Cafe in Muscat, Oman',
+      defaultDescriptionAr: 'اكتشف القهوة المميزة في سبيريت هاب كافيه في مسقط، عُمان',
+      defaultKeywords: 'coffee,cafe,roastery,Oman,Muscat,premium coffee,espresso',
+      defaultKeywordsAr: 'قهوة,مقهى,محمصة,عُمان,مسقط,قهوة مميزة,اسبريسو',
+      
+      // SEO features
+      enableAutoSitemap: true,
+      enableBreadcrumbs: true,
+      enableOpenGraph: true,
+      enableTwitterCards: true,
+      enableSchema: true,
+      enableRichSnippets: true
     }
   }
 
@@ -125,8 +130,8 @@ export class SEOService {
       ? (options.descriptionAr || options.description || settings.defaultDescriptionAr)
       : (options.description || settings.defaultDescription)
 
-    const keywords = options.keywords || settings.defaultKeywords
-    const image = options.image || settings.ogImage
+    const keywords = options.keywords || (typeof settings.defaultKeywords === 'string' ? settings.defaultKeywords.split(',') : [])
+    const image = options.image || settings.defaultImage
     const url = options.url || settings.siteUrl
     const type = options.type || 'website'
 
