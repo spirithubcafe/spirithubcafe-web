@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { firestoreService } from '@/lib/firebase'
 import toast from 'react-hot-toast'
+import { newsletterStorage } from '@/utils/localStorage'
 
 export function NewsletterForm() {
   const { i18n } = useTranslation()

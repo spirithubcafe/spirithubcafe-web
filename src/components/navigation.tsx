@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { usePendingOrders } from '@/hooks/usePendingOrders'
-import { firestoreService, type Category } from '@/lib/firebase'
+import type { Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
@@ -58,13 +58,16 @@ const NavigationComponent = memo(() => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [isHomePage])
 
-  // Load categories from Firestore
+  // Load categories from JSON
   useEffect(() => {
     const loadCategories = async () => {
       try {
         setLoadingCategories(true)
-        const result = await firestoreService.categories.list()
-        setCategories(result.items)
+        const response = await fetch('/data/categories.json')
+        if (response.ok) {
+          const categories = await response.json()
+          setCategories(categories.filter((cat: Category) => cat.is_active))
+        }
       } catch (error) {
         console.error('Error loading categories:', error)
       } finally {

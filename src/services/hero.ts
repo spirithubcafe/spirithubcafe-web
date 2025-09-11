@@ -1,24 +1,18 @@
-import { firestoreService } from '@/lib/firebase'
+import { jsonHeroService } from '@/services/jsonSettingsService'
 import type { HeroSettings, HeroSlide } from '@/types'
 
 class HeroService {
-  private collection = 'settings'
-  private heroDocId = 'hero'
-
   async getHeroSettings(): Promise<HeroSettings> {
     try {
-      const doc = await firestoreService.getDocument(this.collection, this.heroDocId)
-      if (doc.exists()) {
-        const data = doc.data() as HeroSettings
+      const settings = await jsonHeroService.getHeroSettings()
+      if (settings) {
         // Ensure all advanced settings exist, merge with defaults if missing
         const defaultSettings = this.getDefaultHeroSettings()
-        return this.mergeWithDefaults(data, defaultSettings)
+        return this.mergeWithDefaults(settings, defaultSettings)
       }
       
-      // Create and save default settings if not found
-      const defaultSettings = this.getDefaultHeroSettings()
-      await this.updateHeroSettings(defaultSettings)
-      return defaultSettings
+      // Return default settings if not found
+      return this.getDefaultHeroSettings()
     } catch (error) {
       console.error('Error getting hero settings:', error)
       return this.getDefaultHeroSettings()
@@ -79,10 +73,7 @@ class HeroService {
 
   async updateHeroSettings(settings: HeroSettings): Promise<void> {
     try {
-      await firestoreService.setDocument(this.collection, this.heroDocId, {
-        ...settings,
-        updated_at: new Date().toISOString()
-      })
+      await jsonHeroService.saveHeroSettings(settings)
     } catch (error) {
       console.error('Error updating hero settings:', error)
       throw error
@@ -91,7 +82,7 @@ class HeroService {
 
   async addSlide(slide: Omit<HeroSlide, 'id' | 'created_at' | 'updated_at'>): Promise<HeroSlide> {
     try {
-      const settings = await this.getHeroSettings()
+      const slides = await jsonHeroService.getHeroSlides()
       const newSlide: HeroSlide = {
         ...slide,
         id: this.generateSlideId(),
@@ -99,10 +90,10 @@ class HeroService {
         updated_at: new Date().toISOString()
       }
       
-      settings.slides.push(newSlide)
-      settings.slides.sort((a, b) => a.sort_order - b.sort_order)
+      slides.push(newSlide)
+      slides.sort((a, b) => a.sort_order - b.sort_order)
       
-      await this.updateHeroSettings(settings)
+      await jsonHeroService.saveHeroSlides(slides)
       return newSlide
     } catch (error) {
       console.error('Error adding slide:', error)
@@ -112,21 +103,21 @@ class HeroService {
 
   async updateSlide(slideId: string, updates: Partial<HeroSlide>): Promise<void> {
     try {
-      const settings = await this.getHeroSettings()
-      const slideIndex = settings.slides.findIndex(slide => slide.id === slideId)
+      const slides = await jsonHeroService.getHeroSlides()
+      const slideIndex = slides.findIndex(slide => slide.id === slideId)
       
       if (slideIndex === -1) {
         throw new Error('Slide not found')
       }
       
-      settings.slides[slideIndex] = {
-        ...settings.slides[slideIndex],
+      slides[slideIndex] = {
+        ...slides[slideIndex],
         ...updates,
         updated_at: new Date().toISOString()
       }
       
-      settings.slides.sort((a, b) => a.sort_order - b.sort_order)
-      await this.updateHeroSettings(settings)
+      slides.sort((a, b) => a.sort_order - b.sort_order)
+      await jsonHeroService.saveHeroSlides(slides)
     } catch (error) {
       console.error('Error updating slide:', error)
       throw error
@@ -135,10 +126,10 @@ class HeroService {
 
   async deleteSlide(slideId: string): Promise<void> {
     try {
-      const settings = await this.getHeroSettings()
-      settings.slides = settings.slides.filter(slide => slide.id !== slideId)
+      const slides = await jsonHeroService.getHeroSlides()
+      const filteredSlides = slides.filter(slide => slide.id !== slideId)
       
-      await this.updateHeroSettings(settings)
+      await jsonHeroService.saveHeroSlides(filteredSlides)
     } catch (error) {
       console.error('Error deleting slide:', error)
       throw error
@@ -147,10 +138,10 @@ class HeroService {
 
   async reorderSlides(slideIds: string[]): Promise<void> {
     try {
-      const settings = await this.getHeroSettings()
+      const slides = await jsonHeroService.getHeroSlides()
       
       // Update sort_order based on the new order
-      settings.slides = settings.slides.map(slide => {
+      const reorderedSlides = slides.map(slide => {
         const newIndex = slideIds.indexOf(slide.id)
         return {
           ...slide,
@@ -159,7 +150,7 @@ class HeroService {
         }
       }).sort((a, b) => a.sort_order - b.sort_order)
       
-      await this.updateHeroSettings(settings)
+      await jsonHeroService.saveHeroSlides(reorderedSlides)
     } catch (error) {
       console.error('Error reordering slides:', error)
       throw error
@@ -170,7 +161,7 @@ class HeroService {
     try {
       const settings = await this.getHeroSettings()
       // This will trigger the merge with defaults and save updated settings
-      await this.updateHeroSettings(settings)
+      await jsonHeroService.saveHeroSettings(settings)
     } catch (error) {
       console.error('Error initializing advanced settings:', error)
       throw error
@@ -179,17 +170,17 @@ class HeroService {
 
   async toggleSlideStatus(slideId: string): Promise<void> {
     try {
-      const settings = await this.getHeroSettings()
-      const slideIndex = settings.slides.findIndex(slide => slide.id === slideId)
+      const slides = await jsonHeroService.getHeroSlides()
+      const slideIndex = slides.findIndex(slide => slide.id === slideId)
       
       if (slideIndex === -1) {
         throw new Error('Slide not found')
       }
       
-      settings.slides[slideIndex].is_active = !settings.slides[slideIndex].is_active
-      settings.slides[slideIndex].updated_at = new Date().toISOString()
+      slides[slideIndex].is_active = !slides[slideIndex].is_active
+      slides[slideIndex].updated_at = new Date().toISOString()
       
-      await this.updateHeroSettings(settings)
+      await jsonHeroService.saveHeroSlides(slides)
     } catch (error) {
       console.error('Error toggling slide status:', error)
       throw error

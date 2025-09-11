@@ -191,3 +191,66 @@ export const wishlistStorage = {
     this.setItems([])
   }
 }
+
+// Newsletter subscription storage
+export const newsletterStorage = {
+  // Store newsletter subscription
+  addSubscription(email: string): boolean {
+    try {
+      const subscriptions = this.getSubscriptions()
+      
+      // Check if email already exists
+      if (subscriptions.includes(email)) {
+        return false // Already subscribed
+      }
+      
+      subscriptions.push(email)
+      localStorage.setItem('newsletter-subscriptions', JSON.stringify(subscriptions))
+      return true // Successfully added
+    } catch (error) {
+      console.error('Error adding newsletter subscription:', error)
+      return false
+    }
+  },
+
+  // Get all newsletter subscriptions
+  getSubscriptions(): string[] {
+    try {
+      const subscriptions = localStorage.getItem('newsletter-subscriptions')
+      return subscriptions ? JSON.parse(subscriptions) : []
+    } catch (error) {
+      console.error('Error getting newsletter subscriptions:', error)
+      return []
+    }
+  },
+
+  // Check if email is already subscribed
+  isSubscribed(email: string): boolean {
+    const subscriptions = this.getSubscriptions()
+    return subscriptions.includes(email)
+  },
+
+  // Remove subscription
+  removeSubscription(email: string): boolean {
+    try {
+      const subscriptions = this.getSubscriptions()
+      const index = subscriptions.indexOf(email)
+      
+      if (index > -1) {
+        subscriptions.splice(index, 1)
+        localStorage.setItem('newsletter-subscriptions', JSON.stringify(subscriptions))
+        return true // Successfully removed
+      }
+      
+      return false // Email not found
+    } catch (error) {
+      console.error('Error removing newsletter subscription:', error)
+      return false
+    }
+  },
+
+  // Clear all subscriptions
+  clearSubscriptions(): void {
+    localStorage.removeItem('newsletter-subscriptions')
+  }
+}

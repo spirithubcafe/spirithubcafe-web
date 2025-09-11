@@ -42,17 +42,16 @@ export class ShippingService {
         throw new Error('Aramex API settings not configured')
       }
 
-      // Get Aramex settings from Firestore
-      const { firestoreService } = await import('@/lib/firebase')
+      // Get Aramex settings from JSON
+      const { jsonAramexService } = await import('@/services/jsonSettingsService')
       let aramexSettings: any = null
       let useRealAPI = false
       
       try {
-        const settingsDoc = await firestoreService.getDocument('settings', 'aramex')
-        aramexSettings = settingsDoc
+        aramexSettings = await jsonAramexService.getAramexSettings()
         useRealAPI = aramexSettings?.credentials && aramexSettings.enabled
       } catch (settingsError) {
-        console.warn('Could not load Aramex settings from Firestore, using weight-based calculation')
+        console.warn('Could not load Aramex settings from JSON, using weight-based calculation')
         useRealAPI = false
       }
 
