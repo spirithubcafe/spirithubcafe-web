@@ -141,12 +141,12 @@ const NavigationComponent = memo(() => {
               isArabic ? "order-3" : "order-1"
             )}>
               <Link to="/" className={cn(
-                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
+                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto rounded-lg px-2 py-1",
                 isHomePage && !isScrolled 
-                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30"
+                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-sm"
                   : resolvedTheme === 'dark'
-                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30"
-                    : "hover:opacity-80 bg-white/80 hover:bg-white/95 border border-gray-300/40"
+                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30 backdrop-blur-sm"
+                    : "hover:opacity-80 bg-background hover:bg-muted border border-border"
               )}>
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
@@ -167,14 +167,14 @@ const NavigationComponent = memo(() => {
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
+                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto",
                   isActive('/')
                     ? isHomePage && !isScrolled
                       ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
+                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
                     : isHomePage && !isScrolled
                       ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                      : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
+                      : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -189,14 +189,14 @@ const NavigationComponent = memo(() => {
                   variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto",
                     location.pathname.startsWith('/shop')
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
                       : isHomePage && !isScrolled
                         ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
+                        : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -281,14 +281,14 @@ const NavigationComponent = memo(() => {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto",
                     isActive(item.href)
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
                       : isHomePage && !isScrolled
                         ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
+                        : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -312,7 +312,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
                       : ""
                   )}
                 />
@@ -322,7 +322,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
                       : ""
                   )}
                 />
@@ -332,7 +332,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
                       : ""
                   )}
                 />
@@ -342,7 +342,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
                       : ""
                   )}
                 />
@@ -359,7 +359,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
                       : ""
                   )}
                 >
@@ -393,7 +393,7 @@ const NavigationComponent = memo(() => {
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
                           ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                          : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
+                          : "border-black/30 text-black hover:bg-background hover:border-black/50"
                         : ""
                     )}
                   >
@@ -435,16 +435,16 @@ const NavigationComponent = memo(() => {
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button 
-                    variant="ghost" 
+                    variant="outline" 
                     size="sm" 
                     asChild 
                     className={cn(
-                      "transition-all duration-200 backdrop-blur-sm",
+                      "transition-all duration-200 pointer-events-auto",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "text-green-400 hover:text-green-300 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-400/15"
-                          : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
-                        : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
+                          ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
+                          : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "hover:bg-muted"
                     )}
                   >
                     <Link to="/login">{t('navigation.login')}</Link>
@@ -456,9 +456,9 @@ const NavigationComponent = memo(() => {
                       "transition-all duration-200",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "bg-green-600/80 text-white border-green-500/50 hover:bg-green-600 hover:border-green-500"
-                          : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
-                        : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
+                          ? "bg-primary/90 text-primary-foreground border-primary/50 hover:bg-primary hover:border-primary"
+                          : "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:border-primary/90"
+                        : "bg-primary text-primary-foreground hover:bg-primary/90"
                     )}
                   >
                     <Link to="/register">{t('navigation.register')}</Link>
@@ -824,12 +824,12 @@ const NavigationComponent = memo(() => {
                     "grid grid-cols-2 gap-2",
                     isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                   )}>
-                    <Button variant="outline" asChild className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/20">
+                    <Button variant="outline" asChild className="text-foreground border-border hover:bg-muted dark:text-foreground dark:border-border dark:hover:bg-muted">
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.login')}
                       </Link>
                     </Button>
-                    <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700 dark:bg-green-600 dark:hover:bg-green-700">
+                    <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground border-primary hover:border-primary/90 dark:bg-primary dark:hover:bg-primary/90">
                       <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.register')}
                       </Link>
