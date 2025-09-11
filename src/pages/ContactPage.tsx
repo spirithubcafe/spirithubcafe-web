@@ -182,7 +182,7 @@ export function ContactPage() {
   }
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev: any) => ({ ...prev, [field]: value }))
   }
 
   // Show loading if contact settings are not loaded yet

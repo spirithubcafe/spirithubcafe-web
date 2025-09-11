@@ -1,5 +1,5 @@
-// Contact form service using Google Sheets and localStorage
-import { contactSheetsService } from '@/services/googleSheetsService'
+// Contact form service using localStorage
+// TODO: Integrate with Google Sheets later
 
 export interface ContactMessage {
   name: string
@@ -8,6 +8,9 @@ export interface ContactMessage {
   message: string
   phone?: string
 }
+
+// Alias for compatibility
+export type ContactFormData = ContactMessage
 
 export interface ContactInfo {
   business_name: string
@@ -26,13 +29,28 @@ export interface ContactInfo {
   }
 }
 
-class ContactService {
-  private collectionName = 'contact_messages'
+// Contact settings interface for admin panel
+export interface ContactSettings {
+  phone1: string
+  phone2: string
+  whatsapp: string
+  email: string
+  instagram: string
+  address: string
+  address_ar: string
+  hours: string
+  hours_ar: string
+  coordinates: {
+    lat: number
+    lng: number
+  }
+}
 
+class ContactService {
   async create(messageData: ContactMessage): Promise<{ id: string }> {
     try {
       // TODO: Save to Google Sheets
-      const result = await contactSheetsService.submitMessage(messageData)
+      // await contactSheetsService.submitMessage(messageData)
       
       // For now, also save to localStorage as backup
       const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
@@ -155,6 +173,48 @@ class ContactService {
       console.error('Error updating contact info:', error)
       throw error
     }
+  }
+
+  // Additional methods for ContactManagement component
+  async getMessages(): Promise<{ items: any[] }> {
+    return this.list()
+  }
+
+  async getContactSettings(): Promise<ContactSettings | Record<string, any>> {
+    try {
+      const settings = JSON.parse(localStorage.getItem('contact_settings') || 'null') || {
+        phone1: '+968 9123 4567',
+        phone2: '+968 9876 5432',
+        whatsapp: '+968 9123 4567',
+        email: 'info@spirithubcafe.com',
+        instagram: '@spirithubcafe',
+        address: 'Al Mouj Street, Muscat, Oman',
+        address_ar: 'شارع الموج، مسقط، عمان',
+        hours: 'Daily: 7:00 AM - 11:00 PM',
+        hours_ar: 'يوميا: 7:00 ص - 11:00 م',
+        coordinates: {
+          lat: 23.5880,
+          lng: 58.3829
+        }
+      }
+      return settings
+    } catch (error) {
+      console.error('Error fetching contact settings:', error)
+      return {}
+    }
+  }
+
+  async saveContactSettings(settings: ContactSettings): Promise<void> {
+    try {
+      localStorage.setItem('contact_settings', JSON.stringify(settings))
+    } catch (error) {
+      console.error('Error saving contact settings:', error)
+      throw error
+    }
+  }
+
+  async createMessage(messageData: ContactMessage): Promise<{ id: string }> {
+    return this.create(messageData)
   }
 }
 

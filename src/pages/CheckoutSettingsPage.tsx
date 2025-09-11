@@ -7,7 +7,57 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useCheckoutSettings, type ShippingMethod, type CheckoutSettings, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
+import { useCheckoutSettings, type ShippingMethod, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
+
+// Define CheckoutSettings type locally
+interface CheckoutSettings {
+  currency: string
+  paymentMethods: string[]
+  shippingMethods: string[]
+  shipping_methods: any[] // For legacy compatibility
+  taxRate: number
+  tax_rate: number // For legacy compatibility
+  category_tax_rates: CategoryTaxRate[] // Category-based tax rates
+  enabled_countries: string[] // Enabled countries
+  freeShippingThreshold: number
+  allowGuestCheckout: boolean
+  requirePhoneNumber: boolean
+  requireAddress: boolean
+  allowCouponCodes: boolean
+  autoApplyCoupons: boolean
+  emailNotifications: boolean
+  smsNotifications: boolean
+  orderConfirmationMessage: string
+  orderConfirmationMessageAr: string
+  defaultCountry: string
+  supportedCountries: string[]
+  minimumOrderAmount: number
+  maximumOrderAmount: number
+  orderProcessingTime: string
+  returnPolicy: string
+  privacyPolicy: string
+  termsOfService: string
+  payment_gateway: {
+    enabled: boolean
+    provider: string
+    sandbox: boolean
+    test_mode?: boolean
+    merchant_id?: string
+    access_code?: string
+    working_key?: string
+    supported_currencies?: string[]
+  }
+  bankMuscat: {
+    merchantId: string
+    accessCode: string
+    workingKey: string
+    currency: string
+    language: string
+    redirectUrl: string
+    cancelUrl: string
+    enabled: boolean
+  }
+}
 import { useTranslation } from 'react-i18next'
 import { Loader2, Save, Plus, Trash2, Settings } from 'lucide-react'
 import { jsonDataService } from '@/services/jsonDataService'
@@ -57,7 +107,25 @@ export default function CheckoutSettingsPage() {
 
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings)
+      // Convert settings to local interface format
+      const convertedSettings: CheckoutSettings = {
+        ...settings,
+        shipping_methods: [],
+        tax_rate: settings.taxRate || 0,
+        category_tax_rates: [],
+        enabled_countries: settings.supportedCountries || [],
+        payment_gateway: {
+          enabled: false,
+          provider: 'bank_muscat',
+          sandbox: true,
+          test_mode: false,
+          merchant_id: '',
+          access_code: '',
+          working_key: '',
+          supported_currencies: ['OMR', 'USD', 'SAR']
+        }
+      }
+      setLocalSettings(convertedSettings)
     }
   }, [settings])
 
@@ -804,11 +872,12 @@ export default function CheckoutSettingsPage() {
                         <div key={curr} className="flex items-center space-x-2 rtl:space-x-reverse">
                           <Switch
                             id={`currency-${curr}`}
-                            checked={localSettings.payment_gateway.supported_currencies.includes(curr)}
+                            checked={localSettings.payment_gateway.supported_currencies?.includes(curr) || false}
                             onCheckedChange={(checked) => {
+                              const currentCurrencies = localSettings.payment_gateway.supported_currencies || []
                               const newCurrencies = checked
-                                ? [...localSettings.payment_gateway.supported_currencies, curr]
-                                : localSettings.payment_gateway.supported_currencies.filter(c => c !== curr)
+                                ? [...currentCurrencies, curr]
+                                : currentCurrencies.filter((c: string) => c !== curr)
                               updatePaymentGateway({ supported_currencies: newCurrencies })
                             }}
                           />

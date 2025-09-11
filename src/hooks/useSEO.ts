@@ -134,3 +134,14 @@ export function useSEO() {
     reload: loadSettings
   }
 }
+
+// Additional exports for backward compatibility
+export function useSEOSettings() {
+  const { settings, loading, error, updateSettings, reload } = useSEO()
+  return { settings, loading, error, updateSettings, reload }
+}
+
+export function useSEOAnalysis() {
+  const { analyzeSEO } = useSEO()
+  return { analyzeSEO }
+}

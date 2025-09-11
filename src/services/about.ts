@@ -122,7 +122,7 @@ class AboutService {
   }
 
   // Main method for AboutPage component
-  async getAboutPageData(language: string = 'en'): Promise<{ header: AboutHeader | null; sections: AboutSection[] }> {
+  async getAboutPageData(): Promise<{ header: AboutHeader | null; sections: AboutSection[] }> {
     try {
       const [header, sections] = await Promise.all([
         this.getAboutHeader(),

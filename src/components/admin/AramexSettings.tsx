@@ -72,10 +72,10 @@ export function AramexSettings() {
       }
 
       await aramexService.calculateShippingRate(testRequest, settings.credentials)
-      toast.success(isArabic ? 'اتصال با آرامکس موفقیت‌آمیز بود' : 'Aramex connection successful')
+      toast.success(isArabic ? 'تم الاتصال بآرامكس بنجاح' : 'Aramex connection successful')
     } catch (error) {
       console.error('Test connection failed:', error)
-      toast.error(isArabic ? 'خطا در اتصال با آرامکس' : 'Aramex connection failed')
+      toast.error(isArabic ? 'فشل في الاتصال بآرامكس' : 'Aramex connection failed')
     } finally {
       setTesting(false)
     }
@@ -102,10 +102,10 @@ export function AramexSettings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            {isArabic ? 'تنظیمات آرامکس' : 'Aramex Settings'}
+            {isArabic ? 'إعدادات آرامكس' : 'Aramex Settings'}
           </h1>
           <p className="text-muted-foreground">
-            {isArabic ? 'مدیریت تنظیمات ارسال آرامکس' : 'Manage Aramex shipping configuration'}
+            {isArabic ? 'إدارة تكوين شحن آرامكس' : 'Manage Aramex shipping configuration'}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -119,10 +119,10 @@ export function AramexSettings() {
             ) : (
               <TestTube className="h-4 w-4 mr-2" />
             )}
-            {isArabic ? 'تست اتصال' : 'Test Connection'}
+            {isArabic ? 'اختبار الاتصال' : 'Test Connection'}
           </Button>
           <div className="flex items-center gap-2">
-            <Label>{isArabic ? 'فعال' : 'Enabled'}</Label>
+            <Label>{isArabic ? 'مفعل' : 'Enabled'}</Label>
             <Switch
               checked={settings.enabled}
               onCheckedChange={toggleEnabled}
@@ -135,19 +135,19 @@ export function AramexSettings() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="credentials" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            {isArabic ? 'احراز هویت' : 'Credentials'}
+            {isArabic ? 'أوراق الاعتماد' : 'Credentials'}
           </TabsTrigger>
           <TabsTrigger value="shipper" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            {isArabic ? 'اطلاعات فرستنده' : 'Shipper Info'}
+            {isArabic ? 'معلومات المرسل' : 'Shipper Info'}
           </TabsTrigger>
           <TabsTrigger value="services" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            {isArabic ? 'سرویس‌ها' : 'Services'}
+            {isArabic ? 'الخدمات' : 'Services'}
           </TabsTrigger>
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            {isArabic ? 'عمومی' : 'General'}
+            {isArabic ? 'عام' : 'General'}
           </TabsTrigger>
         </TabsList>
 
@@ -155,13 +155,13 @@ export function AramexSettings() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isArabic ? 'اطلاعات احراز هویت API' : 'API Credentials'}
+                {isArabic ? 'أوراق اعتماد واجهة برمجة التطبيقات' : 'API Credentials'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'نام کاربری' : 'Username'}</Label>
+                  <Label>{isArabic ? 'اسم المستخدم' : 'Username'}</Label>
                   <Input
                     value={settings.credentials.username}
                     onChange={(e) => updateCredentials({ username: e.target.value })}
@@ -169,7 +169,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'رمز عبور' : 'Password'}</Label>
+                  <Label>{isArabic ? 'كلمة المرور' : 'Password'}</Label>
                   <Input
                     type="password"
                     value={settings.credentials.password}
@@ -178,7 +178,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'شماره حساب' : 'Account Number'}</Label>
+                  <Label>{isArabic ? 'رقم الحساب' : 'Account Number'}</Label>
                   <Input
                     value={settings.credentials.accountNumber}
                     onChange={(e) => updateCredentials({ accountNumber: e.target.value })}
@@ -186,7 +186,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'پین حساب' : 'Account PIN'}</Label>
+                  <Label>{isArabic ? 'رقم PIN للحساب' : 'Account PIN'}</Label>
                   <Input
                     value={settings.credentials.accountPin}
                     onChange={(e) => updateCredentials({ accountPin: e.target.value })}
@@ -194,7 +194,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'نهاد حساب' : 'Account Entity'}</Label>
+                  <Label>{isArabic ? 'كيان الحساب' : 'Account Entity'}</Label>
                   <Input
                     value={settings.credentials.accountEntity}
                     onChange={(e) => updateCredentials({ accountEntity: e.target.value })}
@@ -202,7 +202,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'کد کشور حساب' : 'Account Country Code'}</Label>
+                  <Label>{isArabic ? 'كود دولة الحساب' : 'Account Country Code'}</Label>
                   <Input
                     value={settings.credentials.accountCountryCode}
                     onChange={(e) => updateCredentials({ accountCountryCode: e.target.value })}
@@ -210,7 +210,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'نسخه API' : 'API Version'}</Label>
+                  <Label>{isArabic ? 'إصدار واجهة برمجة التطبيقات' : 'API Version'}</Label>
                   <Input
                     value={settings.credentials.apiVersion}
                     onChange={(e) => updateCredentials({ apiVersion: e.target.value })}
@@ -218,7 +218,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'منبع' : 'Source'}</Label>
+                  <Label>{isArabic ? 'المصدر' : 'Source'}</Label>
                   <Input
                     value={settings.credentials.source}
                     onChange={(e) => updateCredentials({ source: e.target.value })}
@@ -234,13 +234,13 @@ export function AramexSettings() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isArabic ? 'اطلاعات فرستنده' : 'Shipper Information'}
+                {isArabic ? 'معلومات المرسل' : 'Shipper Information'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'نام شرکت' : 'Company Name'}</Label>
+                  <Label>{isArabic ? 'اسم الشركة' : 'Company Name'}</Label>
                   <Input
                     value={settings.shipperInfo.companyName}
                     onChange={(e) => updateShipperInfo({ companyName: e.target.value })}
@@ -248,7 +248,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'نام تماس' : 'Contact Name'}</Label>
+                  <Label>{isArabic ? 'اسم جهة الاتصال' : 'Contact Name'}</Label>
                   <Input
                     value={settings.shipperInfo.contactName}
                     onChange={(e) => updateShipperInfo({ contactName: e.target.value })}
@@ -256,7 +256,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'شماره تلفن' : 'Phone Number'}</Label>
+                  <Label>{isArabic ? 'رقم الهاتف' : 'Phone Number'}</Label>
                   <Input
                     value={settings.shipperInfo.phoneNumber}
                     onChange={(e) => updateShipperInfo({ phoneNumber: e.target.value })}
@@ -264,7 +264,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'آدرس خط ۱' : 'Address Line 1'}</Label>
+                  <Label>{isArabic ? 'العنوان الأول' : 'Address Line 1'}</Label>
                   <Input
                     value={settings.shipperInfo.addressLine1}
                     onChange={(e) => updateShipperInfo({ addressLine1: e.target.value })}
@@ -272,15 +272,15 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'آدرس خط ۲' : 'Address Line 2'}</Label>
+                  <Label>{isArabic ? 'العنوان الثاني' : 'Address Line 2'}</Label>
                   <Input
                     value={settings.shipperInfo.addressLine2 || ''}
                     onChange={(e) => updateShipperInfo({ addressLine2: e.target.value })}
-                    placeholder={isArabic ? 'اختیاری' : 'Optional'}
+                    placeholder={isArabic ? 'اختياري' : 'Optional'}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'شهر' : 'City'}</Label>
+                  <Label>{isArabic ? 'المدينة' : 'City'}</Label>
                   <Input
                     value={settings.shipperInfo.city}
                     onChange={(e) => updateShipperInfo({ city: e.target.value })}
@@ -288,7 +288,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'استان/محافظه' : 'State/Province'}</Label>
+                  <Label>{isArabic ? 'الولاية/المحافظة' : 'State/Province'}</Label>
                   <Input
                     value={settings.shipperInfo.stateProvince}
                     onChange={(e) => updateShipperInfo({ stateProvince: e.target.value })}
@@ -296,7 +296,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'کد پستی' : 'Postal Code'}</Label>
+                  <Label>{isArabic ? 'الرمز البريدي' : 'Postal Code'}</Label>
                   <Input
                     value={settings.shipperInfo.postalCode}
                     onChange={(e) => updateShipperInfo({ postalCode: e.target.value })}
@@ -304,7 +304,7 @@ export function AramexSettings() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>{isArabic ? 'کد کشور' : 'Country Code'}</Label>
+                  <Label>{isArabic ? 'كود الدولة' : 'Country Code'}</Label>
                   <Input
                     value={settings.shipperInfo.countryCode}
                     onChange={(e) => updateShipperInfo({ countryCode: e.target.value })}
@@ -320,7 +320,7 @@ export function AramexSettings() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isArabic ? 'تنظیمات سرویس‌ها' : 'Services Configuration'}
+                {isArabic ? 'تكوين الخدمات' : 'Services Configuration'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -351,7 +351,7 @@ export function AramexSettings() {
                       <Input
                         value={service.customLabel}
                         onChange={(e) => updateServiceLabel(service.id, e.target.value)}
-                        placeholder={isArabic ? 'برچسب سفارشی' : 'Custom Label'}
+                        placeholder={isArabic ? 'تسمية مخصصة' : 'Custom Label'}
                         className="w-64"
                       />
                     </div>
@@ -366,18 +366,18 @@ export function AramexSettings() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isArabic ? 'تنظیمات عمومی' : 'General Settings'}
+                {isArabic ? 'الإعدادات العامة' : 'General Settings'}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <h3 className="font-medium">
-                    {isArabic ? 'ایجاد خودکار مرسوله' : 'Auto Create Shipment'}
+                    {isArabic ? 'إنشاء الشحنة تلقائياً' : 'Auto Create Shipment'}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {isArabic ? 
-                      'به صورت خودکار پس از پردازش سفارش، مرسوله آرامکس ایجاد می‌شود' :
+                      'إنشاء شحنة آرامكس تلقائياً بعد معالجة الطلب' :
                       'Automatically create Aramex shipment after order processing'
                     }
                   </p>

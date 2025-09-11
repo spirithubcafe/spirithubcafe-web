@@ -13,8 +13,6 @@ export interface SaveDataResponse {
 }
 
 class BackendAPIService {
-  private baseUrl = '/api' // This would be your actual backend URL
-
   // Save JSON data through API
   async saveJSONData(filename: string, data: any): Promise<SaveDataResponse> {
     try {
