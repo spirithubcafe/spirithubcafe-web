@@ -42,17 +42,17 @@ import DashboardProfile from '@/components/dashboard/DashboardProfile'
 import DashboardSettings from '@/components/dashboard/DashboardSettings'
 import DashboardUsers from '@/components/dashboard/DashboardUsers'
 import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
-import SimpleCategoryManagement from '@/components/admin/SimpleCategoryManagement'
-import SimpleProductManagement from '@/components/admin/SimpleProductManagement'
+import CategoryManagement from '@/components/admin/CategoryManagement'
+import ProductManagement from '@/components/admin/ProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
-import { OrderManagementProfessional } from '@/components/admin/OrderManagementProfessional'
+import OrderManagementProfessional from '@/components/admin/OrderManagementProfessional'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
-import { AboutManagement } from '@/components/admin/AboutManagement'
+import AboutManagement from '@/components/admin/AboutManagement'
 import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 import CacheManagementPage from '@/pages/CacheManagementPage'
@@ -359,11 +359,11 @@ export default function DashboardPage() {
       case 'hero-slider':
         return user?.role === 'admin' && <HeroSlideManagement />
       case 'categories':
-        return user?.role === 'admin' && <SimpleCategoryManagement />
+        return user?.role === 'admin' && <CategoryManagement />
       case 'homepage-settings':
         return user?.role === 'admin' && <HomepageManagement />
       case 'products':
-        return user?.role === 'admin' && <SimpleProductManagement />
+        return user?.role === 'admin' && <ProductManagement />
       case 'admin-orders':
         return user?.role === 'admin' && <OrderManagementProfessional />
       case 'analytics':

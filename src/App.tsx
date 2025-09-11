@@ -13,7 +13,6 @@ import { Suspense, lazy, memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
 // import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
 import { AdvancedLoading } from '@/components/ui/advanced-loading'
-import { RouteLoader } from '@/components/ui/page-loader'
 import './App.css'
 
 // Debug utilities (development only - disabled to reduce console noise)

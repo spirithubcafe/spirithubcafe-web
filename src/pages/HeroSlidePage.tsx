@@ -10,7 +10,6 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
 import { heroService } from '@/services/hero'
-import { storageService, authService } from '@/lib/firebase'
 import type { HeroSlide } from '@/types'
 import toast from 'react-hot-toast'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
@@ -153,52 +152,34 @@ export function HeroSlidePage() {
       const preview = URL.createObjectURL(file)
       setPreviewUrl(preview)
       
-      // Check if user is authenticated
-      const currentUser = authService.getCurrentUser()
-      if (!currentUser) {
-        toast.error(isRTL ? 'يجب تسجيل الدخول أولاً' : 'Please login first to upload files')
-        return
-      }
-      
-      // Generate unique filename
-      const timestamp = Date.now()
-      const extension = file.name.split('.').pop()
-      const fileName = `hero-slides/${timestamp}.${extension}`
+      // Note: Authentication check removed - using simplified file handling
       
       try {
-        // Try to upload to Firebase Storage
-        const uploadedUrl = await storageService.upload(fileName, file)
+        // Convert file to data URL for local storage
+        const reader = new FileReader()
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
         
-        // Update form data with permanent URL
-        handleInputChange('media_url', uploadedUrl)
+        // Update form data with data URL
+        handleInputChange('media_url', dataUrl)
         handleInputChange('media_type', isVideo ? 'video' : 'image')
         
-        // Update preview to use the permanent URL
-        setPreviewUrl(uploadedUrl)
+        // Update preview to use the data URL
+        setPreviewUrl(dataUrl)
         
         toast.success(isRTL ? 'تم رفع الملف بنجاح' : 'File uploaded successfully')
       } catch (uploadError) {
-        console.error('Firebase Storage upload failed:', uploadError)
+        console.error('File upload failed:', uploadError)
+        toast.error(isRTL ? 'خطأ في رفع الملف' : 'Error uploading file')
         
-        // Fallback: Use data URL for preview (local only)
-        try {
-          const dataUrl = await storageService.uploadAsDataURL(file)
-          
-          handleInputChange('media_url', dataUrl)
-          handleInputChange('media_type', isVideo ? 'video' : 'image')
-          setPreviewUrl(dataUrl)
-          
-          toast.error(isRTL ? 'تم حفظ الملف محلياً فقط. يرجى التحقق من إعدادات Firebase' : 'File saved locally only. Please check Firebase settings')
-        } catch (fallbackError) {
-          console.error('Fallback upload failed:', fallbackError)
-          toast.error(isRTL ? 'خطأ في رفع الملف' : 'Error uploading file')
-          
-          // Clear the preview on error
-          if (previewUrl && previewUrl.startsWith('blob:')) {
-            URL.revokeObjectURL(previewUrl)
-          }
-          setPreviewUrl(null)
+        // Clear the preview on error
+        if (previewUrl && previewUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl)
         }
+        setPreviewUrl(null)
       }
     } catch (error) {
       console.error('Error uploading file:', error)
@@ -232,15 +213,15 @@ export function HeroSlidePage() {
     if (field === 'media_url') {
       // Only set preview if it's a valid URL and different from current preview
       if (value && typeof value === 'string' && value !== previewUrl) {
-        // Check if it's a valid URL (http/https or blob or Firebase Storage)
+        // Check if it's a valid URL (http/https, blob, or data URL)
         try {
           const url = new URL(value)
-          if (url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'blob:' || value.includes('firebasestorage.googleapis.com')) {
+          if (url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'blob:' || url.protocol === 'data:') {
             setPreviewUrl(value)
           }
         } catch {
-          // If URL parsing fails, still try to set it for relative paths or other formats
-          if (value.startsWith('/') || value.includes('firebasestorage') || value.includes('appspot.com')) {
+          // If URL parsing fails, still try to set it for relative paths or data URLs
+          if (value.startsWith('/') || value.startsWith('data:')) {
             setPreviewUrl(value)
           }
         }

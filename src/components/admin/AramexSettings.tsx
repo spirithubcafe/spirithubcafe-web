@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { useAramexSettings } from '@/hooks/useAramexSettings'
+import { useAramexSettingsJSON } from '@/hooks/useAramexSettingsJSON'
 import { useTranslation } from 'react-i18next'
 import { Loader2, TestTube, Package, Settings, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -25,7 +25,7 @@ export function AramexSettings() {
     updateServiceLabel,
     toggleAutoCreateShipment,
     toggleEnabled
-  } = useAramexSettings()
+  } = useAramexSettingsJSON()
 
   const [testing, setTesting] = useState(false)
 

@@ -434,6 +434,7 @@ export interface OrderItem {
   total_price_sar?: number
   product?: Product
   variant?: ProductVariant
+  selected_properties?: Record<string, any>
 }
 
 // Order Status History Interface

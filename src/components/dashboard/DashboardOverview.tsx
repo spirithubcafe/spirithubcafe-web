@@ -4,8 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import DashboardWishlist from './DashboardWishlist'
-import type { Order } from '@/types'
-import type { Product } from '@/lib/firebase'
+import type { Order, Product } from '@/types'
 
 interface DashboardOverviewProps {
   orders: Order[]

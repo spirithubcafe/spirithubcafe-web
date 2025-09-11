@@ -7,8 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
-import { firestoreService, type OrderItem } from '@/lib/firebase'
-import type { Order } from '@/types'
+import type { Order, OrderItem } from '@/types'
 
 interface DashboardOrdersProps {
   orders: Order[]
@@ -26,8 +25,9 @@ export default function DashboardOrders({ orders }: DashboardOrdersProps) {
   const loadOrderItems = async (orderId: string) => {
     try {
       setLoadingItems(true)
-      const result = await firestoreService.orderItems.getByOrder(orderId)
-      setOrderItems(result.items || [])
+      // Use items from the order itself - orders already contain their items
+      const order = orders.find(o => o.id?.toString() === orderId)
+      setOrderItems(order?.items || [])
     } catch (error) {
       console.error('Error loading order items:', error)
       setOrderItems([])

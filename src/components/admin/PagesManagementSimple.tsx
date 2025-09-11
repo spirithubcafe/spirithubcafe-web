@@ -3,14 +3,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { 
   FileText, 
   Plus, 
   Edit, 
   Trash2, 
+  Eye,
+  Search,
+  Filter,
   Save,
   X
 } from 'lucide-react'
@@ -471,8 +475,6 @@ export default function PagesManagement() {
                   className="w-full px-3 py-2 border rounded-md"
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  aria-label={isArabic ? 'الحالة' : 'Status'}
-                  title={isArabic ? 'الحالة' : 'Status'}
                 >
                   <option value="draft">{isArabic ? 'مسودة' : 'Draft'}</option>
                   <option value="published">{isArabic ? 'منشور' : 'Published'}</option>

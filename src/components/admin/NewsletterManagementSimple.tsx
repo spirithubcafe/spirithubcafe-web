@@ -232,7 +232,6 @@ export default function NewsletterManagement() {
               className="px-3 py-2 border rounded-md"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              title={isArabic ? 'تصفية حسب الحالة' : 'Filter by status'}
             >
               <option value="all">{isArabic ? 'جميع الحالات' : 'All Status'}</option>
               <option value="active">{isArabic ? 'نشط' : 'Active'}</option>

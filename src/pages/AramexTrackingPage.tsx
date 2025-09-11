@@ -8,7 +8,7 @@ import { Separator } from '@/components/ui/separator'
 import { useTranslation } from 'react-i18next'
 import { Search, Package, MapPin, Clock, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { aramexService } from '@/services/aramexService'
-import { useAramexSettings } from '@/hooks/useAramexSettings'
+import { useAramexSettingsJSON } from '@/hooks/useAramexSettingsJSON'
 import type { AramexTrackingResponse } from '@/types/aramex'
 
 export default function AramexTrackingPage() {
@@ -16,7 +16,7 @@ export default function AramexTrackingPage() {
   const [searchParams] = useSearchParams()
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
-  const { settings } = useAramexSettings()
+  const { settings } = useAramexSettingsJSON()
 
   const [inputTrackingNumber, setInputTrackingNumber] = useState(trackingNumber || searchParams.get('tracking') || '')
   const [trackingData, setTrackingData] = useState<AramexTrackingResponse | null>(null)

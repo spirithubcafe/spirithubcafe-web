@@ -1,11 +1,12 @@
 import type { Product, Category, UserProfile, SettingsData, JSONDataService } from '@/types/dashboard'
+import type { AramexSettings } from '@/types/aramex'
 import { backendAPI } from './backendAPI'
 
 class JSONDataServiceImpl implements JSONDataService {
   private baseUrl = '/data'
 
   // Helper method to fetch JSON data
-  private async fetchJSON<T>(filename: string): Promise<T> {
+  async fetchJSON<T>(filename: string): Promise<T> {
     try {
       const response = await fetch(`${this.baseUrl}/${filename}`)
       if (!response.ok) {
@@ -19,7 +20,7 @@ class JSONDataServiceImpl implements JSONDataService {
   }
 
   // Helper method to save JSON data through backend API
-  private async saveJSON<T>(filename: string, data: T): Promise<void> {
+  async saveJSON<T>(filename: string, data: T): Promise<void> {
     try {
       const result = await backendAPI.saveJSONData(filename, data)
       
@@ -123,6 +124,20 @@ class JSONDataServiceImpl implements JSONDataService {
 
   async updateUsers(users: UserProfile[]): Promise<void> {
     return this.saveJSON('users.json', users)
+  }
+
+  // Aramex Settings
+  async getAramexSettings(): Promise<AramexSettings | null> {
+    try {
+      return await this.fetchJSON<AramexSettings>('aramex-settings.json')
+    } catch (error) {
+      console.warn('Aramex settings file not found')
+      return null
+    }
+  }
+
+  async updateAramexSettings(settings: AramexSettings): Promise<void> {
+    return this.saveJSON('aramex-settings.json', settings)
   }
 }
 

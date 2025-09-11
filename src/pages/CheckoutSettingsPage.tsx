@@ -10,8 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useCheckoutSettings, type ShippingMethod, type CheckoutSettings, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
 import { useTranslation } from 'react-i18next'
 import { Loader2, Save, Plus, Trash2, Settings } from 'lucide-react'
-import { firestoreService, type Category } from '@/lib/firebase'
+import { jsonDataService } from '@/services/jsonDataService'
 import toast from 'react-hot-toast'
+
+interface Category {
+  id: string
+  name: string
+  name_ar?: string
+  description?: string
+  image?: string
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
 
 export default function CheckoutSettingsPage() {
   const { i18n } = useTranslation()
@@ -25,13 +37,13 @@ export default function CheckoutSettingsPage() {
 
   const isArabic = i18n.language === 'ar'
 
-  // Load categories from Firebase
+  // Load categories from JSON
   useEffect(() => {
     const loadCategories = async () => {
       try {
         setLoadingCategories(true)
-        const categoriesData = await firestoreService.categories.list()
-        setCategories(categoriesData.items)
+        const categoriesData = await jsonDataService.fetchJSON('categories.json') as Category[]
+        setCategories(categoriesData || [])
       } catch (error) {
         console.error('Error loading categories:', error)
         toast.error(isArabic ? 'فشل في تحميل الفئات' : 'Failed to load categories')
@@ -120,7 +132,7 @@ export default function CheckoutSettingsPage() {
         updatedRates[existingIndex] = {
           category_id: categoryId,
           category_name: category.name,
-          category_name_ar: category.name_ar,
+          category_name_ar: category.name_ar || category.name,
           tax_rate: taxRate / 100, // Convert percentage to decimal
           enabled
         }
@@ -133,7 +145,7 @@ export default function CheckoutSettingsPage() {
         const newRate: CategoryTaxRate = {
           category_id: categoryId,
           category_name: category.name,
-          category_name_ar: category.name_ar,
+          category_name_ar: category.name_ar || category.name,
           tax_rate: taxRate / 100,
           enabled
         }
@@ -387,10 +399,10 @@ export default function CheckoutSettingsPage() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <h4 className="font-medium">
-                                  {isArabic ? category.name_ar : category.name}
+                                  {isArabic ? (category.name_ar || category.name) : category.name}
                                 </h4>
                                 <p className="text-sm text-muted-foreground">
-                                  {isArabic ? category.name : category.name_ar}
+                                  {isArabic ? category.name : (category.name_ar || category.name)}
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -443,7 +455,7 @@ export default function CheckoutSettingsPage() {
                               <div className="bg-muted p-3 rounded text-sm">
                                 <strong>{isArabic ? 'المعاينة:' : 'Preview:'}</strong>{' '}
                                 {isArabic 
-                                  ? `سيتم تطبيق ضريبة ${rate.toFixed(1)}% على جميع منتجات فئة "${category.name_ar}"`
+                                  ? `سيتم تطبيق ضريبة ${rate.toFixed(1)}% على جميع منتجات فئة "${category.name_ar || category.name}"`
                                   : `${rate.toFixed(1)}% tax will be applied to all "${category.name}" category products`
                                 }
                               </div>

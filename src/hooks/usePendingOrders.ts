@@ -1,7 +1,4 @@
-import { useState, useEffect } from 'react';
-// Orders service - will be connected to Google Sheets later
-// import { firestoreService } from '@/lib/firebase';port { useState, useEffect } from 'react'
-import { firestoreService } from '@/lib/firebase'
+import { useState, useEffect } from 'react'
 
 export function usePendingOrders() {
   const [pendingCount, setPendingCount] = useState(0)

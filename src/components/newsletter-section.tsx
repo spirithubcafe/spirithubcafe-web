@@ -6,8 +6,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
-// Newsletter service - will be connected to Google Sheets later
-// import { firestoreService } from '@/lib/firebase'
 import { useGlobalNewsletterSettings } from '@/contexts/enhanced-data-provider'
 import toast from 'react-hot-toast'
 

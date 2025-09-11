@@ -113,6 +113,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
   
   const [formData, setFormData] = useState<Product>(product || defaultProduct)
   const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
 
@@ -122,6 +123,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
 
   const loadCategories = async () => {
     try {
+      setLoading(true)
       const data = await jsonDataService.fetchJSON('/data/categories.json')
       if (data && Array.isArray(data)) {
         setCategories(data)
@@ -129,6 +131,8 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
     } catch (error) {
       console.error('Error loading categories:', error)
       setCategories([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -463,12 +467,7 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                   {formData.tags?.map((tag, index) => (
                     <div key={index} className="bg-secondary px-2 py-1 rounded-md flex items-center gap-2">
                       <span className="text-sm">{tag}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        aria-label={isArabic ? 'إزالة' : 'Remove'}
-                        title={isArabic ? 'إزالة' : 'Remove'}
-                      >
+                      <button onClick={() => removeTag(tag)}>
                         <X className="h-3 w-3" />
                       </button>
                     </div>

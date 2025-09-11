@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -22,10 +23,14 @@ import {
   CheckCircle, 
   XCircle, 
   Clock, 
+  Search,
   RefreshCw,
+  MapPin,
+  Phone,
   Mail,
   Calendar,
   DollarSign,
+  CreditCard,
   ShoppingBag,
   User
 } from 'lucide-react'
