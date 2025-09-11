@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
+import toast from 'react-hot-toast'
 
 export function RegisterPage() {
   useScrollToTopOnRouteChange()
@@ -68,7 +69,7 @@ export function RegisterPage() {
       if (result.success) {
         console.log('Registration successful, navigating to login')
         // Show success message
-        alert(isArabic 
+        toast.success(isArabic 
           ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.'
           : 'Account created successfully! You can now log in.'
         )

@@ -70,7 +70,7 @@ export function useAramexSettingsJSON() {
       const data = await jsonDataService.getAramexSettings()
       setSettings(data || defaultAramexSettings)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطا در بارگیری تنظیمات آرامکس')
+      setError(err instanceof Error ? err.message : 'خطأ في تحميل إعدادات آرامكس')
       setSettings(defaultAramexSettings)
     } finally {
       setLoading(false)
@@ -84,7 +84,7 @@ export function useAramexSettingsJSON() {
       setSettings(newSettings)
       return true
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'خطا در ذخیره تنظیمات آرامکس')
+      setError(err instanceof Error ? err.message : 'خطأ في حفظ إعدادات آرامكس')
       return false
     }
   }

@@ -149,13 +149,13 @@ export default function CheckoutSettingsPage() {
       
       const success = await updateSettings(localSettings)
       if (success) {
-        toast.success(isArabic ? 'تم حفظ التنظیمات بنجاح' : 'Settings saved successfully')
+        toast.success(isArabic ? 'تم حفظ التنظيمات بنجاح' : 'Settings saved successfully')
       } else {
-        toast.error(isArabic ? 'فشل حفظ التنظیمات' : 'Failed to save settings')
+        toast.error(isArabic ? 'فشل حفظ التنظيمات' : 'Failed to save settings')
       }
     } catch (error) {
       console.error('Error in handleSave:', error)
-      toast.error(isArabic ? 'خطأ في حفظ التنظیمات' : 'Error saving settings')
+      toast.error(isArabic ? 'خطأ في حفظ التنظيمات' : 'Error saving settings')
     } finally {
       setSaving(false)
     }
@@ -166,10 +166,10 @@ export default function CheckoutSettingsPage() {
       setSaving(true)
       const success = await initializeSettings()
       if (success) {
-        toast.success(isArabic ? 'تم تهیئة التنظیمات الافتراضیة' : 'Default settings initialized')
+        toast.success(isArabic ? 'تم تهيئة التنظيمات الافتراضية' : 'Default settings initialized')
       }
     } catch (error) {
-      toast.error(isArabic ? 'فشل في تهیئة التنظیمات' : 'Failed to initialize settings')
+      toast.error(isArabic ? 'فشل في تهيئة التنظيمات' : 'Failed to initialize settings')
     } finally {
       setSaving(false)
     }
@@ -321,7 +321,7 @@ export default function CheckoutSettingsPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{isArabic ? 'جاري تحميل التنظیمات...' : 'Loading settings...'}</span>
+          <span>{isArabic ? 'جاري تحميل التنظيمات...' : 'Loading settings...'}</span>
         </div>
       </div>
     )
@@ -337,7 +337,7 @@ export default function CheckoutSettingsPage() {
                 {isArabic ? 'إعدادات الدفع والشحن' : 'Checkout Settings'}
               </h1>
               <p className="text-muted-foreground">
-                {isArabic ? 'لم يتم العثور على التنظیمات. قم بتهیئة التنظیمات الافتراضیة.' : 'No settings found. Initialize default settings.'}
+                {isArabic ? 'لم يتم العثور على التنظيمات. قم بتهيئة التنظيمات الافتراضية.' : 'No settings found. Initialize default settings.'}
               </p>
               <Button onClick={handleInitialize} disabled={saving}>
                 {saving ? (
@@ -348,7 +348,7 @@ export default function CheckoutSettingsPage() {
                 ) : (
                   <>
                     <Settings className="h-4 w-4 mr-2" />
-                    {isArabic ? 'تهیئة التنظیمات الافتراضیة' : 'Initialize Default Settings'}
+                    {isArabic ? 'تهيئة التنظيمات الافتراضية' : 'Initialize Default Settings'}
                   </>
                 )}
               </Button>
@@ -395,7 +395,7 @@ export default function CheckoutSettingsPage() {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  {isArabic ? 'حفظ التنظیمات' : 'Save Settings'}
+                  {isArabic ? 'حفظ التنظيمات' : 'Save Settings'}
                 </>
               )}
             </Button>

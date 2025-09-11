@@ -1,6 +1,7 @@
 import type { Product, Category, UserProfile, SettingsData, JSONDataService } from '@/types/dashboard'
 import type { AramexSettings } from '@/types/aramex'
 import { backendAPI } from './backendAPI'
+import toast from 'react-hot-toast'
 
 class JSONDataServiceImpl implements JSONDataService {
   private baseUrl = '/data'
@@ -25,14 +26,14 @@ class JSONDataServiceImpl implements JSONDataService {
       const result = await backendAPI.saveJSONData(filename, data)
       
       if (result.success) {
-        alert(result.message)
+        toast.success(result.message)
       } else {
-        alert(result.message)
+        toast.error(result.message)
         console.error('Save failed:', result.error)
       }
     } catch (error) {
       console.error(`Error saving ${filename}:`, error)
-      alert(`❌ خطا در ذخیره فایل ${filename}\n❌ Error saving file ${filename}`)
+      toast.error(`❌ خطأ في حفظ الملف ${filename}\n❌ Error saving file ${filename}`)
       throw error
     }
   }

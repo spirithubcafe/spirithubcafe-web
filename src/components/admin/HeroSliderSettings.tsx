@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import type { HeroSettings, HeroSlide } from '@/types'
 import { heroService } from '@/services/hero'
+import toast from 'react-hot-toast'
 
 interface HeroSliderSettingsProps {
   onClose?: () => void
@@ -61,12 +62,12 @@ export function HeroSliderSettings({ onClose }: HeroSliderSettingsProps) {
       localStorage.setItem('hero-settings-updated', Date.now().toString())
       window.dispatchEvent(new CustomEvent('hero-settings-updated'))
       
-      alert('Settings saved successfully! / تم حفظ الإعدادات بنجاح!')
+      toast.success('Settings saved successfully! / تم حفظ الإعدادات بنجاح!')
       // Reload settings to ensure consistency
       await loadSettings()
     } catch (error) {
       console.error('Error saving hero settings:', error)
-      alert('Error saving settings. Please try again. / خطأ في حفظ الإعدادات. يرجى المحاولة مرة أخرى.')
+      toast.error('Error saving settings. Please try again. / خطأ في حفظ الإعدادات. يرجى المحاولة مرة أخرى.')
     } finally {
       setSaving(false)
     }

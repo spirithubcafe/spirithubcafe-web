@@ -44,13 +44,13 @@ class BackendAPIService {
       
       return {
         success: true,
-        message: `✅ فایل ${filename} با موفقیت ذخیره شد!\n✅ File ${filename} saved successfully!`
+        message: `✅ تم حفظ الملف ${filename} بنجاح!\n✅ File ${filename} saved successfully!`
       }
     } catch (error) {
       console.error(`Error saving ${filename}:`, error)
       return {
         success: false,
-        message: `❌ خطا در ذخیره فایل ${filename}\n❌ Error saving file ${filename}`,
+        message: `❌ خطأ في حفظ الملف ${filename}\n❌ Error saving file ${filename}`,
         error: error instanceof Error ? error.message : 'Unknown error'
       }
     }
