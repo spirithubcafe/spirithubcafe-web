@@ -1,0 +1,226 @@
+{
+  "exported_at": "2025-09-11T04:41:42.500Z",
+  "total_settings": 10,
+  "files": [
+    "aboutUs-settings.json",
+    "aramex-settings.json",
+    "categories-settings.json",
+    "checkout-settings.json",
+    "contact-settings.json",
+    "contact_info-settings.json",
+    "footer-settings.json",
+    "hero-settings.json",
+    "homepage-settings.json",
+    "newsletter-settings.json"
+  ],
+  "settings": [
+    {
+      "id": "aboutUs",
+      "file": "aboutUs-settings.json",
+      "keys": [
+        "seoDescriptionAr",
+        "seoTitleAr",
+        "modules",
+        "seoDescription",
+        "published",
+        "seoTitle"
+      ]
+    },
+    {
+      "id": "aramex",
+      "file": "aramex-settings.json",
+      "keys": [
+        "shipperInfo",
+        "enableLogging",
+        "services",
+        "enabled",
+        "autoCreateShipment",
+        "testMode",
+        "credentials"
+      ]
+    },
+    {
+      "id": "categories",
+      "file": "categories-settings.json",
+      "keys": [
+        "backgroundVideo",
+        "backgroundVideoBlur",
+        "overlayOpacity",
+        "showBackgroundVideo"
+      ]
+    },
+    {
+      "id": "checkout",
+      "file": "checkout-settings.json",
+      "keys": [
+        "category_tax_rates",
+        "enabled_countries",
+        "updated_at",
+        "payment_gateway",
+        "shipping_methods",
+        "created_at",
+        "tax_rate",
+        "id"
+      ]
+    },
+    {
+      "id": "contact",
+      "file": "contact-settings.json",
+      "keys": [
+        "autoReplyMessage",
+        "longitude",
+        "notificationEmail",
+        "companyName",
+        "address",
+        "companyNameAr",
+        "autoReplyMessageAr",
+        "mapZoom",
+        "whatsapp",
+        "autoReplyEnabled",
+        "instagram",
+        "phone",
+        "email",
+        "phone2",
+        "latitude",
+        "workingHoursAr",
+        "twitter",
+        "workingHours",
+        "addressAr",
+        "facebook"
+      ]
+    },
+    {
+      "id": "contact_info",
+      "file": "contact_info-settings.json",
+      "keys": [
+        "value"
+      ]
+    },
+    {
+      "id": "footer",
+      "file": "footer-settings.json",
+      "keys": [
+        "companyName",
+        "enableVideoOverlay",
+        "enableVideoBlur",
+        "enableGradientOverlay",
+        "email",
+        "description",
+        "phone2",
+        "workingHoursAr",
+        "descriptionAr",
+        "address",
+        "colorTheme",
+        "workingHours",
+        "backgroundVideoBlur",
+        "addressAr",
+        "facebook",
+        "whatsapp",
+        "companyNameAr",
+        "gradientOverlayOpacity",
+        "phone",
+        "instagram",
+        "twitter",
+        "videoOverlayOpacity"
+      ]
+    },
+    {
+      "id": "hero",
+      "file": "hero-settings.json",
+      "keys": [
+        "updated_at",
+        "pause_on_hover",
+        "show_arrows",
+        "show_progress",
+        "infinite_loop",
+        "transition_duration",
+        "autoplay",
+        "slides",
+        "show_dots",
+        "autoplay_delay",
+        "enable_swipe",
+        "global_effects",
+        "global_animation",
+        "global_layout",
+        "global_button_settings",
+        "transition_effect",
+        "global_typography"
+      ]
+    },
+    {
+      "id": "homepage",
+      "file": "homepage-settings.json",
+      "keys": [
+        "homepageCategoryIds",
+        "featureSectionButtonTextAr",
+        "coffeeSelectionDescription",
+        "instagramUrl",
+        "latestReleaseDescription",
+        "featureSectionTitle",
+        "backgroundVideo",
+        "latestReleaseBackgroundColorLight",
+        "featureSectionTitleAr",
+        "missionTitle",
+        "showMissionSection",
+        "backgroundVideoBlur",
+        "facebookUrl",
+        "featureSectionDescription",
+        "featureSectionImage",
+        "missionBackgroundImage",
+        "coffeeSelectionButtonTextAr",
+        "featureSectionBackgroundImage",
+        "missionButtonText",
+        "showCommunitySection",
+        "latestReleaseTitle",
+        "latestReleaseTitleAr",
+        "latestReleaseBackgroundColor",
+        "overlayOpacity",
+        "coffeeSelectionTitle",
+        "featureSectionBackgroundColor",
+        "coffeeSelectionDescriptionAr",
+        "featureSectionBackgroundColorDark",
+        "coffeeSelectionButtonText",
+        "communityText",
+        "missionDescriptionAr",
+        "latestReleaseDescriptionAr",
+        "missionDescription",
+        "communityImage4",
+        "featureSectionBackgroundType",
+        "featureSectionBackgroundColorLight",
+        "latestReleaseBackgroundColorDark",
+        "latestReleaseBackgroundType",
+        "showFeatureSection",
+        "coffeeSelectionTitleAr",
+        "communityImage1",
+        "featureSectionButtonText",
+        "latestReleaseBackgroundImage",
+        "communityTextAr",
+        "missionButtonTextAr",
+        "showBackgroundVideo",
+        "communityImage2",
+        "communityBackgroundImage",
+        "missionTitleAr",
+        "featureSectionDescriptionAr",
+        "showLatestReleaseSection",
+        "communityImage3"
+      ]
+    },
+    {
+      "id": "newsletter",
+      "file": "newsletter-settings.json",
+      "keys": [
+        "newsletterBackgroundColor",
+        "newsletterTitle",
+        "newsletterBackgroundColorDark",
+        "newsletterTitleAr",
+        "newsletterDescriptionAr",
+        "showNewsletterSection",
+        "newsletterDescription",
+        "newsletterBackgroundImage",
+        "newsletterBackgroundType",
+        "newsletterBackgroundColorLight",
+        "newsletterImage"
+      ]
+    }
+  ]
+}
