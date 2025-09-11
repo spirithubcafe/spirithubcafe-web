@@ -402,8 +402,8 @@ const NavigationComponent = memo(() => {
                       <span className="hidden lg:block">
                         {t('navigation.dashboard')}
                       </span>
-                      {/* Show pending orders count for admin/staff */}
-                      {(currentUser?.role === 'admin' || currentUser?.role === 'shop_owner' || currentUser?.role === 'employee') && pendingCount > 0 && (
+                      {/* Show pending orders count for admin */}
+                      {(currentUser?.role === 'admin') && pendingCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
@@ -754,7 +754,7 @@ const NavigationComponent = memo(() => {
                         "flex-1",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="font-medium text-sm">{currentUser?.full_name}</p>
+                        <p className="font-medium text-sm">{currentUser?.name}</p>
                         <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
                       </div>
                     </div>
@@ -769,8 +769,8 @@ const NavigationComponent = memo(() => {
                         )}>
                           <User className="h-4 w-4" />
                           {t('navigation.dashboard')}
-                          {/* Show pending orders count for admin/staff */}
-                          {(currentUser?.role === 'admin' || currentUser?.role === 'shop_owner' || currentUser?.role === 'employee') && pendingCount > 0 && (
+                          {/* Show pending orders count for admin */}
+                          {(currentUser?.role === 'admin') && pendingCount > 0 && (
                             <Badge 
                               variant="destructive" 
                               className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"

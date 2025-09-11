@@ -42,6 +42,12 @@ export function ShopPage() {
         ])
         setProducts(productsData)
         setCategories(categoriesData)
+        
+        // Check for category parameter in URL after data is loaded
+        const categoryParam = searchParams.get('category')
+        if (categoryParam) {
+          setSelectedCategory(categoryParam)
+        }
       } catch (error) {
         console.error('Error loading shop data:', error)
       } finally {
@@ -50,7 +56,7 @@ export function ShopPage() {
     }
 
     loadData()
-  }, [])
+  }, [searchParams])
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
@@ -98,14 +104,6 @@ export function ShopPage() {
       openImageModal(src)
     }
   }
-
-  // Check for category parameter in URL
-  useEffect(() => {
-    const categoryParam = searchParams.get('category')
-    if (categoryParam) {
-      setSelectedCategory(categoryParam)
-    }
-  }, [searchParams])
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
@@ -250,8 +248,8 @@ export function ShopPage() {
         </div>
         
         {/* Products Grid Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
-          {[...Array(9)].map((_, i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+          {[...Array(8)].map((_, i) => (
             <Card key={i} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
               {/* Image Skeleton */}
               <div className="relative aspect-square bg-muted animate-pulse">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { aboutService, type AboutSectionData, type AboutHeaderData } from '@/services/about';
+import { aboutService, type AboutSection, type AboutHeader } from '@/services/about';
 import { HTMLContent } from '@/components/ui/html-content';
 import { Loader } from '@/components/ui/loader';
 import { AlertCircle } from 'lucide-react';
@@ -9,8 +9,8 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 export function AboutPage() {
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
-  const [header, setHeader] = useState<AboutHeaderData | null>(null);
-  const [sections, setSections] = useState<AboutSectionData[]>([]);
+  const [header, setHeader] = useState<AboutHeader | null>(null);
+  const [sections, setSections] = useState<AboutSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,34 +23,25 @@ export function AboutPage() {
 
   const initializePage = async () => {
     try {
-      // First try to load existing header and sections
-      console.log('Loading about header and sections...');
+      setLoading(true);
+      console.log('Loading about page data...');
       
-      const [headerData, sectionsData] = await Promise.all([
-        aboutService.getHeader(),
-        aboutService.getSections()
-      ]);
-
-      if (!headerData) {
-        console.log('No header found, initializing defaults...');
-        await aboutService.initializeDefaultHeader();
-        const newHeaderData = await aboutService.getHeader();
-        setHeader(newHeaderData);
-      } else {
-        setHeader(headerData);
-      }
+      const { header: headerData, sections: sectionsData } = await aboutService.getAboutPageData(i18n.language);
       
-      if (sectionsData.length === 0) {
-        console.log('No sections found, initializing default sections...');
-        await aboutService.initializeDefaultSections();
-        const newSectionsData = await aboutService.getSections();
-        setSections(newSectionsData);
-      } else {
-        setSections(sectionsData);
-      }
+      setHeader(headerData);
+      setSections(sectionsData);
       
       console.log('Loaded header:', headerData);
       console.log('Loaded sections:', sectionsData);
+      
+      if (!headerData) {
+        console.warn('No header data found');
+      }
+      
+      if (sectionsData.length === 0) {
+        console.warn('No sections data found');
+      }
+      
     } catch (err) {
       console.error('Error loading about page data:', err);
       setError(err instanceof Error ? err.message : 'Failed to load about page data');
@@ -61,124 +52,108 @@ export function AboutPage() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Loader size="md" />
-            <span>Loading...</span>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-6 w-6" />
-            <span>{error}</span>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading About Page</h2>
+          <p className="text-gray-600">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full min-h-screen bg-gradient-to-b from-background via-muted/5 to-accent/10 bg-coffee-pattern">
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-12">
-        <div className="max-w-6xl mx-auto space-y-16">
-          
-          {/* Header */}
-          <div className="space-y-6 text-center">
-            <div className="text-5xl font-bold tracking-tight text-shadow-coffee bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              {header ? (
-                <HTMLContent 
-                  content={isRTL ? header.title_ar : header.title_en}
-                  className="inline-block"
-                />
-              ) : (
-                isRTL ? 'من نحن' : 'About Us'
-              )}
-            </div>
-            <div className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {header ? (
-                <HTMLContent 
-                  content={isRTL ? header.subtitle_ar : header.subtitle_en}
-                />
-              ) : (
-                isRTL ? 'من نحن' : 'Who We Are'
-              )}
-            </div>
+    <div className={`min-h-screen ${isRTL ? 'rtl' : 'ltr'}`}>
+      {/* Header Section */}
+      {header && (
+        <section className="relative bg-gray-900 text-white py-20">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src={header.background_image} 
+              alt={isRTL ? header.title_ar : header.title}
+              className="w-full h-full object-cover opacity-50"
+            />
           </div>
+          <div className="relative z-10 container mx-auto px-4 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              {isRTL ? header.title_ar : header.title}
+            </h1>
+            <p className="text-xl md:text-2xl mb-6">
+              {isRTL ? header.subtitle_ar : header.subtitle}
+            </p>
+            <p className="text-lg opacity-90 max-w-2xl mx-auto">
+              {isRTL ? header.description_ar : header.description}
+            </p>
+            {header.cta_text && header.cta_link && (
+              <a 
+                href={header.cta_link}
+                className="inline-block mt-8 px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white font-semibold rounded-lg transition-colors"
+              >
+                {isRTL ? header.cta_text_ar : header.cta_text}
+              </a>
+            )}
+          </div>
+        </section>
+      )}
 
-          {/* Dynamic Sections */}
-          {sections.map((section) => (
-            <section
-              key={section.id}
-              className={
-                section.layout === 'full-width' 
-                  ? 'card-clean rounded-xl p-8 space-y-8' 
-                  : 'grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'
-              }
-            >
-              {section.layout === 'full-width' ? (
-                // Full Width Layout
-                <div className="text-center space-y-4">
-                  <div className="text-3xl font-bold text-foreground">
-                    <HTMLContent 
-                      content={isRTL ? section.title_ar : section.title_en}
-                    />
-                  </div>
-                  <div className="prose prose-lg dark:prose-invert max-w-none">
-                    <HTMLContent 
-                      content={isRTL ? section.content_ar : section.content_en}
-                      className="space-y-4 text-lg text-foreground/90 leading-relaxed"
-                    />
-                  </div>
-                </div>
-              ) : (
-                // Side by Side Layout
-                <>
-                  {/* Image */}
-                  {section.image_url && (
-                    <div className={section.layout === 'text-right' ? 'order-2 lg:order-1' : (section.layout === 'text-left' ? 'order-1 lg:order-2' : 'order-1')}>
+      {/* Sections */}
+      <div className="container mx-auto px-4 py-16">
+        {sections.length > 0 ? (
+          sections.map((section) => (
+            <div key={section.id} className="mb-16 last:mb-0">
+              <div className="max-w-4xl mx-auto">
+                <h2 className="text-3xl font-bold mb-8 text-center">
+                  {isRTL ? section.title_ar : section.title}
+                </h2>
+                
+                {section.type === 'image_text' && section.image ? (
+                  <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div className={section.order % 2 === 0 ? 'md:order-1' : 'md:order-2'}>
                       <img 
-                        src={section.image_url} 
-                        alt={isRTL ? section.title_ar : section.title_en}
-                        className="w-full h-auto object-contain rounded-xl shadow-lg"
+                        src={section.image} 
+                        alt={isRTL ? section.title_ar : section.title}
+                        className="w-full h-64 md:h-80 object-cover rounded-lg shadow-lg"
                       />
                     </div>
-                  )}
-                  
-                  {/* Text Content */}
-                  <div className={section.layout === 'text-right' ? 'order-1 lg:order-2 space-y-6' : (section.layout === 'text-left' ? 'order-2 lg:order-1 space-y-6' : 'space-y-6')}>
-                    <div className="text-3xl font-bold text-foreground">
+                    <div className={section.order % 2 === 0 ? 'md:order-2' : 'md:order-1'}>
                       <HTMLContent 
-                        content={isRTL ? section.title_ar : section.title_en}
+                        content={isRTL ? section.content_ar : section.content}
+                        className="prose prose-lg max-w-none text-gray-700"
                       />
                     </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    {section.image && (
+                      <img 
+                        src={section.image} 
+                        alt={isRTL ? section.title_ar : section.title}
+                        className="w-full max-w-2xl mx-auto h-64 object-cover rounded-lg shadow-lg mb-8"
+                      />
+                    )}
                     <HTMLContent 
-                      content={isRTL ? section.content_ar : section.content_en}
-                      className="space-y-4 text-lg text-foreground/90 leading-relaxed"
+                      content={isRTL ? section.content_ar : section.content}
+                      className="prose prose-lg max-w-none text-gray-700 mx-auto"
                     />
                   </div>
-                </>
-              )}
-            </section>
-          ))}
-
-          {/* No Sections Fallback */}
-          {sections.length === 0 && (
-            <div className="text-center py-16">
-              <p className="text-muted-foreground text-lg">
-                No sections available
-              </p>
+                )}
+              </div>
             </div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-xl text-gray-600">No content available</p>
+          </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

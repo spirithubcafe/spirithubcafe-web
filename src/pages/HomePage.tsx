@@ -25,13 +25,13 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [homepageSettings, setHomepageSettings] = useState<any>({})
-  const [loadingProducts, setLoadingProducts] = useState(true)
-  const [loadingCategories, setLoadingCategories] = useState(true)
+  const [loading, setLoading] = useState(true)
   
   // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
+        setLoading(true)
         const [productsData, categoriesData, settingsData] = await Promise.all([
           jsonProductsService.getProducts(),
           jsonCategoriesDataService.getCategories(),
@@ -43,8 +43,7 @@ export function HomePage() {
       } catch (error) {
         console.error('Error loading homepage data:', error)
       } finally {
-        setLoadingProducts(false)
-        setLoadingCategories(false)
+        setLoading(false)
       }
     }
 
@@ -241,7 +240,7 @@ export function HomePage() {
                 <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
               </div>
               
-            {loadingProducts ? (
+            {loading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="flex flex-col items-center space-y-3">
@@ -396,7 +395,7 @@ export function HomePage() {
               <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
             </div>
             
-            {loadingCategories ? (
+            {loading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
                   <div key={i} className="flex flex-col items-center space-y-3">
