@@ -1,7 +1,7 @@
 import { DollarSign, Users, Package, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
-import type { UserProfile, Product } from '@/lib/firebase'
+import type { UserProfile, Product } from '@/types/dashboard'
 
 interface DashboardAnalyticsProps {
   users: UserProfile[]

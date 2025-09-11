@@ -42,8 +42,8 @@ const CURRENT_USER_KEY = 'spirithub_current_user'
 const DEMO_USERS: User[] = [
   {
     id: '1',
-    email: 'admin@spirithubcafe.com',
-    name: 'Admin User',
+    email: 'miladsoft@yahoo.com',
+    name: 'Milad',
     phone: '+96812345678',
     isEmailVerified: true,
     role: 'admin',
@@ -97,7 +97,7 @@ const findUserByEmail = (email: string): User | null => {
 // Simple password validation (in production, passwords would be hashed)
 const validatePassword = (email: string, password: string): boolean => {
   // Demo passwords
-  if (email === 'admin@spirithubcafe.com') return password === 'admin123'
+  if (email === 'miladsoft@yahoo.com') return password === '12332120'
   if (email === 'user@example.com') return password === 'user123'
   
   // For other users, accept any password with minimum 6 characters

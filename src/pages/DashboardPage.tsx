@@ -33,8 +33,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { usePendingOrders } from '@/hooks/usePendingOrders'
 import type { Order } from '@/types'
-import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
-import { productsService } from '@/services/products'
+import { jsonDataService, type UserProfile, type Product } from '@/services/jsonDataService'
 
 // Dashboard Components
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
@@ -43,8 +42,8 @@ import DashboardProfile from '@/components/dashboard/DashboardProfile'
 import DashboardSettings from '@/components/dashboard/DashboardSettings'
 import DashboardUsers from '@/components/dashboard/DashboardUsers'
 import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
-import CategoryManagement from '@/components/admin/CategoryManagement'
-import ProductManagement from '@/components/admin/ProductManagement'
+import SimpleCategoryManagement from '@/components/admin/SimpleCategoryManagement'
+import SimpleProductManagement from '@/components/admin/SimpleProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
 import { OrderManagementProfessional } from '@/components/admin/OrderManagementProfessional'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
@@ -106,33 +105,20 @@ export default function DashboardPage() {
       try {
         setLoading(true)
 
-        // Fetch user orders
-        if (user?.id) {
-          const userOrders = await firestoreService.orders.list(user.id)
-          setOrders(userOrders.items as unknown as Order[])
-        }
+        // Fetch user orders (mock data for now)
+        setOrders([])
 
-        // Fetch featured products
-        const featuredProducts = await productsService.getFeaturedProducts(10)
-        setProducts(featuredProducts.map((p: any) => ({
-          ...p,
-          stock: p.stock ?? 0,
-          low_stock_threshold: p.low_stock_threshold ?? 0,
-          featured: p.featured ?? false,
-          bestseller: p.bestseller ?? false,
-          price_omr: p.price_omr ?? 0,
-          price_usd: p.price_usd ?? 0,
-          price_sar: p.price_sar ?? 0,
-          name_ar: p.name_ar ?? '',
-        })))
+        // Fetch products from JSON
+        const allProducts = await jsonDataService.getProducts()
+        setProducts(allProducts)
 
-        // Fetch users (admin only)
+        // Fetch users (from JSON service)
         if (user?.role === 'admin') {
-          const allUsers = await firestoreService.users.list()
-          setUsers(allUsers.items)
+          const allUsers = await jsonDataService.getUsers()
+          setUsers(allUsers)
 
-          // Fetch pending reviews count
-          await loadPendingReviewsCount()
+          // Set mock pending reviews count
+          setPendingReviewsCount(0)
         }
 
       } catch (error) {
@@ -146,17 +132,6 @@ export default function DashboardPage() {
       fetchDashboardData()
     }
   }, [user])
-
-  // Load pending reviews count
-  const loadPendingReviewsCount = async () => {
-    try {
-      const result = await firestoreService.reviews.list()
-      const pendingCount = result.items.filter(review => !review.is_approved).length
-      setPendingReviewsCount(pendingCount)
-    } catch (error) {
-      console.error('Error loading pending reviews count:', error)
-    }
-  }
 
   const handleLogout = () => {
     logout()
@@ -361,7 +336,16 @@ export default function DashboardPage() {
       case 'orders':
         return <DashboardOrders orders={orders} />
       case 'profile':
-        return user && <DashboardProfile user={user} />
+        return user && <DashboardProfile user={{
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          phone: user.phone,
+          role: user.role === 'admin' ? 'admin' : 'user',
+          is_active: true,
+          email_verified: user.isEmailVerified,
+          created: user.createdAt
+        }} />
       case 'settings':
         return <DashboardSettings />
       case 'users':
@@ -375,11 +359,11 @@ export default function DashboardPage() {
       case 'hero-slider':
         return user?.role === 'admin' && <HeroSlideManagement />
       case 'categories':
-        return user?.role === 'admin' && <CategoryManagement />
+        return user?.role === 'admin' && <SimpleCategoryManagement />
       case 'homepage-settings':
         return user?.role === 'admin' && <HomepageManagement />
       case 'products':
-        return user?.role === 'admin' && <ProductManagement />
+        return user?.role === 'admin' && <SimpleProductManagement />
       case 'admin-orders':
         return user?.role === 'admin' && <OrderManagementProfessional />
       case 'analytics':
@@ -577,21 +561,19 @@ export default function DashboardPage() {
                   </Button>
 
                   <Avatar className="h-12 w-12 lg:h-16 lg:w-16 flex-shrink-0">
-                    <AvatarImage src={user.avatar} alt={user.full_name} />
+                    <AvatarImage src="" alt={user.name || user.email} />
                     <AvatarFallback>
-                      {user.full_name.split(' ').map((n: string) => n[0]).join('')}
+                      {(user.name || user.email).split(' ').map((n: string) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <h1 className="text-xl lg:text-3xl font-bold truncate">
-                      {isArabic ? `مرحباً ${user.full_name}` : `Welcome ${user.full_name}`}
+                      {isArabic ? `مرحباً ${user.name || user.email}` : `Welcome ${user.name || user.email}`}
                     </h1>
                     <p className="text-sm lg:text-base text-muted-foreground">
                       {user.role === 'admin'
                         ? (isArabic ? 'مدير النظام' : 'System Administrator')
-                        : user.role === 'employee'
-                          ? (isArabic ? 'موظف' : 'Employee')
-                          : (isArabic ? 'عضو' : 'Member')
+                        : (isArabic ? 'عضو' : 'Member')
                       }
                     </p>
                   </div>
