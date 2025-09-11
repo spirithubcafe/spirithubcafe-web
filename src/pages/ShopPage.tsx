@@ -29,13 +29,11 @@ export function ShopPage() {
   const [sortBy, setSortBy] = useState<string>('name')
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
 
   // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true)
         const [productsData, categoriesData] = await Promise.all([
           jsonProductsService.getProducts(),
           jsonCategoriesDataService.getActiveCategories()
@@ -50,8 +48,6 @@ export function ShopPage() {
         }
       } catch (error) {
         console.error('Error loading shop data:', error)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -233,69 +229,6 @@ export function ShopPage() {
       return `SpiritHub Roastery, operated by an all-OMANI TEAM, is deeply committed to honoring the hard work of coffee farmers and preserving the authenticity of each origin. Our approach blends precision roasting, seasonal sourcing, and scientific understanding of coffee to deliver a cup that reflects its terroir and story. At SpiritHub, every cup is more than a drink, it’s a connection to heritage, craftsmanship, and the spirit of coffee.`
     }
   })()
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header Skeleton */}
-        <div className="mb-8 space-y-4">
-          <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
-            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
-            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
-          </div>
-        </div>
-        
-        {/* Products Grid Skeleton */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
-              {/* Image Skeleton */}
-              <div className="relative aspect-square bg-muted animate-pulse">
-                <div className="absolute top-2 left-2 space-y-1">
-                  <div className="h-5 w-12 bg-background/80 rounded animate-pulse"></div>
-                  <div className="h-5 w-10 bg-background/80 rounded animate-pulse"></div>
-                </div>
-                <div className="absolute top-2 right-2 space-y-2">
-                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
-                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
-                </div>
-              </div>
-              
-              <CardContent className="p-4 space-y-3 flex flex-col h-40">
-                {/* Category Badge */}
-                <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
-                
-                {/* Product Name */}
-                <div className="space-y-2">
-                  <div className="h-4 bg-muted rounded animate-pulse"></div>
-                  <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                </div>
-                
-                {/* Notes */}
-                <div className="space-y-1">
-                  <div className="h-3 bg-muted rounded w-full animate-pulse"></div>
-                  <div className="h-3 bg-muted rounded w-2/3 animate-pulse"></div>
-                </div>
-                
-                {/* Price & Stock */}
-                <div className="mt-auto space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="h-5 bg-muted rounded w-20 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
-                  </div>
-                  
-                  {/* Add to Cart Button */}
-                  <div className="h-9 bg-muted rounded animate-pulse"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">

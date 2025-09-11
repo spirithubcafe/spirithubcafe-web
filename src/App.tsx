@@ -100,7 +100,7 @@ function AppContent() {
                     <Suspense fallback={<PageLoader />}>
                       <Routes>
                         <Route path="/" element={<HomePage />} />
-                        <Route path="/shop" element={<RouteLoader><ShopPage /></RouteLoader>} />
+                        <Route path="/shop" element={<ShopPage />} />
                       <Route path="/product/:slug" element={<ProductPage />} />
                       <Route path="/about" element={<AboutPage />} />
                       <Route path="/contact" element={<ContactPage />} />
