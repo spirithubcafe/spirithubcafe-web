@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RichTextDisplay } from '@/components/ui/rich-text-display'
 import { ArrowLeft, FileText, Calendar, AlertCircle } from 'lucide-react'
-import { firestoreService, type Page } from '@/lib/firebase'
+import { jsonPagesService } from '@/services/jsonSettingsService'
+import type { Page } from '@/types'
 import toast from 'react-hot-toast'
 
 export default function PageDisplayPage() {
@@ -43,7 +44,7 @@ export default function PageDisplayPage() {
         setLoading(true)
         setError(null)
         
-        const pageData = await firestoreService.pages.getBySlug(pageSlug)
+        const pageData = await jsonPagesService.getPageBySlug(pageSlug)
         
         if (!pageData) {
           setError(isArabic ? 'لم يتم العثور على الصفحة' : 'Page not found')
@@ -162,7 +163,7 @@ export default function PageDisplayPage() {
                   <Calendar className="h-4 w-4" />
                   <span>
                     {isArabic ? 'آخر تحديث: ' : 'Last updated: '}
-                    {page.updated.toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
+                    {new Date(page.updated).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -178,7 +179,7 @@ export default function PageDisplayPage() {
         <Card className="max-w-6xl mx-auto">
           <CardContent className="p-8 md:p-12">
             <RichTextDisplay 
-              content={content}
+              content={content || ''}
               dir={isArabic ? 'rtl' : 'ltr'}
               className="max-w-none"
             />

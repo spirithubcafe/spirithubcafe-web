@@ -13,7 +13,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { usePendingOrders } from '@/hooks/usePendingOrders'
-import type { Category } from '@/lib/firebase'
+import { jsonCategoriesDataService } from '@/services/jsonSettingsService'
+import type { Category } from '@/types'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
@@ -63,11 +64,8 @@ const NavigationComponent = memo(() => {
     const loadCategories = async () => {
       try {
         setLoadingCategories(true)
-        const response = await fetch('/data/categories.json')
-        if (response.ok) {
-          const categories = await response.json()
-          setCategories(categories.filter((cat: Category) => cat.is_active))
-        }
+        const categories = await jsonCategoriesDataService.getActiveCategories()
+        setCategories(categories)
       } catch (error) {
         console.error('Error loading categories:', error)
       } finally {

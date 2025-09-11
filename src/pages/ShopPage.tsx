@@ -11,10 +11,10 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import type { Product } from '@/lib/firebase'
+import type { Product } from '@/types'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
-import { useProducts, useCategories } from '@/contexts/enhanced-data-provider'
+import { jsonProductsService, jsonCategoriesDataService } from '@/services/jsonSettingsService'
 import { ProductQuickView } from '@/components/product-quick-view'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 
@@ -27,9 +27,30 @@ export function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
-  
-  const { products, loading } = useProducts()
-  const { categories } = useCategories()
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Load data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true)
+        const [productsData, categoriesData] = await Promise.all([
+          jsonProductsService.getProducts(),
+          jsonCategoriesDataService.getActiveCategories()
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Error loading shop data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadData()
+  }, [])
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
@@ -108,7 +129,7 @@ export function ShopPage() {
 
   // Get sale price if on sale
   const getSalePrice = (product: Product) => {
-    if (!product.is_on_sale) return null
+    if (!product.on_sale) return null
     
     switch (currency) {
       case 'OMR':
@@ -130,7 +151,7 @@ export function ShopPage() {
       (product.name_ar && product.name_ar.includes(searchQuery))
     
     const matchesCategory = selectedCategory === 'all' || 
-      product.category_id === selectedCategory
+      product.category_id === parseInt(selectedCategory)
 
     return matchesSearch && matchesCategory
   }).sort((a, b) => {
@@ -140,11 +161,11 @@ export function ShopPage() {
       case 'price-high':
         return (getProductPrice(b) ?? 0) - (getProductPrice(a) ?? 0)
       case 'featured':
-        return Number(b.is_featured) - Number(a.is_featured)
+        return Number(b.featured) - Number(a.featured)
       case 'bestseller':
-        return Number(b.is_bestseller) - Number(a.is_bestseller)
+        return Number(b.bestseller) - Number(a.bestseller)
       case 'new':
-        return Number(b.is_new_arrival) - Number(a.is_new_arrival)
+        return Number(b.new_arrival) - Number(a.new_arrival)
       case 'name':
       default: {
         const nameA = isArabic ? (a.name_ar || a.name) : a.name
@@ -164,14 +185,14 @@ export function ShopPage() {
 
   const getProductBadges = (product: Product) => {
     const badges = []
-    if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
-    if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
-    if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
+    if (product.featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
+    if (product.bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
+    if (product.new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
     
     // Only show sale badge if product is on sale AND has a valid sale price that's less than regular price
     const salePrice = getSalePrice(product)
     const regularPrice = getProductPrice(product)
-    if (product.is_on_sale && salePrice && salePrice < regularPrice) {
+    if (product.on_sale && salePrice && salePrice < regularPrice) {
       badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
     }
     
@@ -452,7 +473,7 @@ export function ShopPage() {
             const salePrice = getSalePrice(product)
             const badges = getProductBadges(product)
             const productName = isArabic ? (product.name_ar || product.name) : product.name
-            const categoryName = getCategoryName(product.category_id)
+            const categoryName = getCategoryName(product.category_id?.toString() || '')
 
             return (
               <div key={product.id} className="group">
@@ -461,13 +482,10 @@ export function ShopPage() {
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
-                        {(product.image_url || product.image || product.images?.[0] || product.gallery?.[0] || product.gallery_images?.[0]) ? (
+                        {(product.image_url || product.gallery_images?.[0]) ? (
                           <img
                             src={
                               product.image_url || 
-                              product.image || 
-                              product.images?.[0] || 
-                              product.gallery?.[0] || 
                               product.gallery_images?.[0] || 
                               '/images/logo.png'
                             }
@@ -501,7 +519,7 @@ export function ShopPage() {
                       </div>
 
                       {/* Out of Stock Overlay */}
-                      {product.stock_quantity <= 0 && (
+                      {product.stock <= 0 && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                           <Badge variant="destructive" className="text-sm py-2 px-4">
                             {isArabic ? 'نفذت الكمية' : 'Out of Stock'}
@@ -564,7 +582,7 @@ export function ShopPage() {
                             )}
                           </div>
                           <StockIndicator 
-                            stock={product.stock_quantity || product.stock || 0} 
+                            stock={product.stock || 0} 
                             variant="compact"
                             lowStockThreshold={5}
                           />
@@ -577,11 +595,11 @@ export function ShopPage() {
                     <div className="flex gap-1">
                       <Button
                         onClick={() => {
-                          if (product.stock_quantity > 0) {
-                            addToCart(product, 1)
+                          if (product.stock > 0) {
+                            addToCart(product as any, 1)
                           }
                         }}
-                        disabled={product.stock_quantity <= 0}
+                        disabled={product.stock <= 0}
                         className="flex-1 btn-coffee text-xs h-7 lg:h-8"
                         size="sm"
                       >
@@ -589,7 +607,7 @@ export function ShopPage() {
                         <span className="hidden sm:inline">{isArabic ? 'أضف للسلة' : 'Add to Cart'}</span>
                         <span className="sm:hidden">{isArabic ? 'أضف' : 'Add'}</span>
                       </Button>
-                      <ProductQuickView product={product}>
+                      <ProductQuickView product={product as any}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -602,11 +620,11 @@ export function ShopPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toggleWishlist(product.id)}
-                        className={`px-2 h-7 lg:h-8 ${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
+                        onClick={() => toggleWishlist(product.id.toString())}
+                        className={`px-2 h-7 lg:h-8 ${isInWishlist(product.id.toString()) ? 'text-red-500 border-red-500' : ''}`}
                         title={isArabic ? 'إضافة إلى المفضلة' : 'Add to Wishlist'}
                       >
-                        <Heart className={`h-3 w-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                        <Heart className={`h-3 w-3 ${isInWishlist(product.id.toString()) ? 'fill-current' : ''}`} />
                       </Button>
                     </div>
                   </div>

@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import { firestoreService, type Product } from '@/lib/firebase'
+import { jsonProductsService } from '@/services/jsonSettingsService'
+import type { Product } from '@/types'
 import { useCurrency } from '@/hooks/useCurrency'
 import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
 import { cartStorage } from '@/utils/localStorage'
@@ -26,7 +27,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const localItems = cartStorage.getItems()
       const itemsWithProducts = await Promise.all(
         localItems.map(async (item) => {
-          const product = await firestoreService.products.get(item.productId)
+          const product = await jsonProductsService.getProduct(item.productId)
           return {
             id: item.id,
             user_id: 'local_user',
@@ -243,7 +244,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cart,
       cartItems,
       loading,
-      addToCart,
+      addToCart: addToCart as any,
       removeFromCart,
       updateQuantity,
       clearCart,

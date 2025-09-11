@@ -999,6 +999,38 @@ export interface AddressForm {
   is_default: boolean
 }
 
+// Page Interface
+export interface Page {
+  id: string
+  title: string
+  title_ar?: string
+  slug: string
+  content: string
+  content_ar?: string
+  is_active: boolean
+  show_in_footer: boolean
+  sort_order: number
+  canonical_url?: string
+  meta_title?: string
+  meta_title_ar?: string
+  meta_description?: string
+  meta_description_ar?: string
+  meta_keywords?: string
+  meta_keywords_ar?: string
+  og_title?: string
+  og_title_ar?: string
+  og_description?: string
+  og_description_ar?: string
+  twitter_title?: string
+  twitter_title_ar?: string
+  twitter_description?: string
+  twitter_description_ar?: string
+  seo_auto_generated?: boolean
+  seo_generated_at?: string
+  created: string
+  updated: string
+}
+
 export interface OrderForm {
   shipping_address_id: number
   billing_address_id?: number

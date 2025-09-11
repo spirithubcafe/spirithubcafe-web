@@ -6,11 +6,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
-import type { Product, Category } from '@/lib/firebase'
+import type { Product, Category } from '@/types'
+import { jsonProductsService, jsonCategoriesDataService, jsonHomepageService } from '@/services/jsonSettingsService'
 import { useCurrency } from '@/hooks/useCurrency'
-import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/enhanced-data-provider'
 import { conversionRates } from '@/lib/currency'
 import { NewsletterSection } from '@/components/newsletter-section'
 import DOMPurify from 'dompurify'
@@ -22,15 +22,40 @@ export function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
   
-  const { products, loading: loadingProducts } = useProducts()
-  const { categories, loading: loadingCategories } = useCategories()
-  const { settings: homepageSettings } = useGlobalHomepageSettings()
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [homepageSettings, setHomepageSettings] = useState<any>({})
+  const [loadingProducts, setLoadingProducts] = useState(true)
+  const [loadingCategories, setLoadingCategories] = useState(true)
+  
+  // Load data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [productsData, categoriesData, settingsData] = await Promise.all([
+          jsonProductsService.getProducts(),
+          jsonCategoriesDataService.getCategories(),
+          jsonHomepageService.getHomepageSettings()
+        ])
+        setProducts(productsData)
+        setCategories(categoriesData)
+        setHomepageSettings(settingsData)
+      } catch (error) {
+        console.error('Error loading homepage data:', error)
+      } finally {
+        setLoadingProducts(false)
+        setLoadingCategories(false)
+      }
+    }
+
+    loadData()
+  }, [])
   
   const isArabic = i18n.language === 'ar'
   
   const latestProducts = useMemo(() => {
     return products
-      .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
+      .sort((a: Product, b: Product) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 6)
   }, [products])
   
@@ -59,7 +84,7 @@ export function HomePage() {
     
     if (currency !== 'OMR') {
       const rate = conversionRates[currency] || 1
-      return (basePrice * rate)
+      return (basePrice || 0) * rate
     }
     return basePrice
   }
@@ -243,9 +268,6 @@ export function HomePage() {
                         <img
                           src={
                             product.image_url || 
-                            product.image || 
-                            product.images?.[0] || 
-                            product.gallery?.[0] || 
                             product.gallery_images?.[0] || 
                             '/images/logo.png'
                           }
@@ -282,18 +304,18 @@ export function HomePage() {
                         
                         <div className="mt-auto">
                           <div className="product-price-container">
-                            {salePrice && salePrice < productPrice ? (
+                            {salePrice && salePrice < (productPrice || 0) ? (
                               <>
                                 <span className="text-sm font-bold text-red-500">
                                   {formatPrice(salePrice)}
                                 </span>
                                 <span className="text-xs text-muted-foreground line-through">
-                                  {formatPrice(productPrice)}
+                                  {formatPrice(productPrice || 0)}
                                 </span>
                               </>
                             ) : (
                               <span className="text-sm font-bold text-primary">
-                                {formatPrice(productPrice)}
+                                {formatPrice(productPrice || 0)}
                               </span>
                             )}
                           </div>
@@ -391,7 +413,7 @@ export function HomePage() {
                   if (explicitIds && explicitIds.length > 0) {
                     // Map ids to category objects, filter out missing ones
                     return explicitIds
-                      .map(id => categories.find(c => c.id === id))
+                      .map((id: any) => categories.find((c: any) => c.id === id))
                       .filter(Boolean)
                       .map((category: Category | undefined) => {
                         if (!category) return null
@@ -406,7 +428,7 @@ export function HomePage() {
                           >
                             <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                               <img
-                                src={category.image || '/images/logo.png'}
+                                src={(category as any).image_url || '/images/logo.png'}
                                 alt={categoryName}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -425,7 +447,7 @@ export function HomePage() {
 
                   // Fallback: show categories where showOnHome !== false
                   return categories
-                    .filter((c: Category) => c.showOnHome !== false)
+                    .filter((c: any) => c.is_active !== false)
                     .map((category: Category) => {
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'
                   const categoryName = isArabic ? (category.name_ar || category.name) : category.name
@@ -438,7 +460,7 @@ export function HomePage() {
                       >
                         <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                           <img
-                            src={category.image || '/images/logo.png'}
+                            src={(category as any).image_url || '/images/logo.png'}
                             alt={categoryName}
                             className="w-full h-full object-cover"
                             loading="lazy"

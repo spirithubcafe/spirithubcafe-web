@@ -3,7 +3,8 @@ import { Facebook, Twitter, Instagram, Mail, MessageCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useFooterSettings } from '@/hooks/useFooterSettings'
 import { useState, useEffect, useCallback } from 'react'
-import { firestoreService, type Page } from '@/lib/firebase'
+import { jsonPagesService } from '@/services/jsonSettingsService'
+import type { Page } from '@/types'
 import { useTheme } from '@/components/theme-provider'
 
 export function Footer() {
@@ -17,7 +18,7 @@ export function Footer() {
   useEffect(() => {
     const loadFooterPages = async () => {
       try {
-        const pages = await firestoreService.pages.getFooterPages()
+        const pages = await jsonPagesService.getFooterPages()
         setFooterPages(pages)
       } catch (error) {
         console.error('Error loading footer pages:', error)

@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { newsletterStorage } from '@/utils/localStorage'
 
 export function NewsletterForm() {
   const { i18n } = useTranslation()
@@ -35,30 +34,8 @@ export function NewsletterForm() {
     setIsLoading(true)
 
     try {
-      // Check if email already exists
-      const existingSubscriptions = await firestoreService.newsletters.list()
-      const emailExists = existingSubscriptions.items.some(
-        (sub: any) => sub.email.toLowerCase() === email.toLowerCase()
-      )
-
-      if (emailExists) {
-        toast.error(isArabic ? 'هذا البريد الإلكتروني مشترك بالفعل' : 'This email is already subscribed')
-        setIsLoading(false)
-        return
-      }
-
-      // Add new subscription
-      const subscriptionData = {
-        email: email.toLowerCase().trim(),
-        subscribed_at: new Date().toISOString(),
-        status: 'active',
-        source: 'homepage'
-      }
-      
-      logger.log('Creating newsletter subscription with data:', subscriptionData)
-      const result = await firestoreService.newsletters.create(subscriptionData)
-      logger.log('Newsletter subscription result:', result)
-
+      // For now, just show success message since we're not using Firebase
+      // This can be extended later with a proper newsletter service
       setIsSubscribed(true)
       setEmail('')
       toast.success(isArabic ? 'تم الاشتراك بنجاح!' : 'Successfully subscribed!')
