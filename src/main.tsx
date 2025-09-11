@@ -4,8 +4,7 @@ import './index.css'
 import './i18n'
 import App from './App.tsx'
 import { registerServiceWorker } from './utils/service-worker'
-import { initPerformanceMonitoring } from './utils/performance-monitor'
-
+ 
 // Filter out verbose console logs
 if (import.meta.env.DEV) {
   const originalLog = console.log
@@ -70,9 +69,7 @@ if (import.meta.env.DEV) {
 // Register Service Worker for caching
 registerServiceWorker()
 
-// Start collecting performance metrics (will no-op if unsupported)
-initPerformanceMonitoring()
-
+  
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
