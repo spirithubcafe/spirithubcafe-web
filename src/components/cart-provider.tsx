@@ -2,85 +2,61 @@ import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import { firestoreService, subscriptions, type Product } from '@/lib/firebase'
-import { useAuth } from '@/hooks/useAuth'
+import { firestoreService, type Product } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
 import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
-import { conversionRates } from '@/lib/currency'
+import { cartStorage } from '@/utils/localStorage'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
-  const { currentUser } = useAuth()
   const { currency } = useCurrency()
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([])
   const [loading, setLoading] = useState(false)
 
   // Create cart object for compatibility
-  const cart: Cart | null = currentUser ? {
-    id: `cart_${currentUser.id}`,
-    user_id: currentUser.id,
+  const cart: Cart | null = {
+    id: 'local_cart',
+    user_id: 'local_user',
     items: cartItems
-  } : null
+  }
 
   const loadCart = useCallback(async () => {
-    if (!currentUser) return
-
     try {
       setLoading(true)
-      const result = await firestoreService.cart.getUserCart(currentUser.id)
-      setCartItems(result.items)
+      const localItems = cartStorage.getItems()
+      const itemsWithProducts = await Promise.all(
+        localItems.map(async (item) => {
+          const product = await firestoreService.products.get(item.productId)
+          return {
+            id: item.id,
+            user_id: 'local_user',
+            product_id: item.productId,
+            quantity: item.quantity,
+            selectedProperties: item.selectedProperties,
+            created: new Date(item.addedAt),
+            updated: new Date(item.updatedAt),
+            product
+          } as CartItemWithProduct
+        })
+      )
+      setCartItems(itemsWithProducts)
     } catch (error) {
       console.error('Error loading cart:', error)
     } finally {
       setLoading(false)
     }
-  }, [currentUser])
+  }, [])
 
-  // Load cart when user changes
+  // Load cart when component mounts
   useEffect(() => {
-    if (currentUser) {
-      loadCart()
-      
-      // Set up real-time subscription
-      const unsubscribe = subscriptions.onCartChange(currentUser.id, (items) => {
-        loadCartWithProducts(items)
-      })
-      
-      return unsubscribe
-    } else {
-      setCartItems([])
-    }
-  }, [currentUser, loadCart])
-
-  const loadCartWithProducts = async (items: any[]) => {
-    try {
-      const itemsWithProducts = await Promise.all(
-        items.map(async (item) => {
-          // Ensure product_id is a string
-          const productId = String(item.product_id);
-          const product = await firestoreService.products.get(productId)
-          return {
-            ...item,
-            product
-          }
-        })
-      )
-      setCartItems(itemsWithProducts)
-    } catch (error) {
-      console.error('Error loading cart with products:', error)
-    }
-  }
+    loadCart()
+  }, [loadCart])
 
   const refreshCart = async () => {
     await loadCart()
   }
 
   const addToCart = async (product: Product, quantity = 1, selectedProperties?: Record<string, string>) => {
-    if (!currentUser) {
-      toast.error(i18n.language === 'ar' ? 'يرجى تسجيل الدخول أولاً' : 'Please log in first')
-      return
-    }
-
     try {
       // Auto-select lowest-priced option when product has pricing properties and none were provided
       let effectiveSelectedProps = selectedProperties
@@ -106,9 +82,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Ensure product ID is a string
-      const productId = String(product.id);
-      await firestoreService.cart.addItem(currentUser.id, productId, quantity, effectiveSelectedProps)
+      // Add item to localStorage
+      const productId = String(product.id)
+      cartStorage.addItem(productId, quantity, effectiveSelectedProps)
+      
       // Reload cart to reflect changes
       await loadCart()
 
@@ -142,10 +119,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const removeFromCart = async (itemId: string) => {
-    if (!currentUser) return
-
     try {
-      await firestoreService.cart.removeItem(itemId)
+      cartStorage.removeItem(itemId)
       // Reload cart to reflect changes
       await loadCart()
       toast.success(i18n.language === 'ar' ? 'تم حذف المنتج من السلة' : 'Product removed from cart')
@@ -156,39 +131,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const updateQuantity = async (itemId: string, quantity: number) => {
-    if (!currentUser) return
-
     if (quantity <= 0) {
       await removeFromCart(itemId)
       return
     }
 
     try {
-      // First check if the item exists
-      const existingItem = cartItems.find(item => item.id === itemId)
-      if (!existingItem) {
-        console.warn('Cart item not found:', itemId)
-        // Reload cart to sync with Firebase
-        await loadCart()
-        return
-      }
-
-      await firestoreService.cart.updateQuantity(itemId, quantity)
+      cartStorage.updateItemQuantity(itemId, quantity)
       // Reload cart to reflect changes
       await loadCart()
     } catch (error) {
       console.error('Error updating cart:', error)
-      // Reload cart to sync with Firebase on error
+      // Reload cart on error
       await loadCart()
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
     }
   }
 
   const clearCart = async () => {
-    if (!currentUser) return
-
     try {
-      await firestoreService.cart.clearCart(currentUser.id)
+      cartStorage.clearItems()
       // Reload cart to reflect changes
       await loadCart()
       toast.success(i18n.language === 'ar' ? 'تم مسح السلة' : 'Cart cleared')
@@ -199,6 +161,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalPrice = () => {
+    // Simple conversion rates - you may want to import this from your currency module
+    const conversionRates = { 'OMR': 1, 'USD': 2.6, 'SAR': 9.75 }
+    
     return cartItems.reduce((total, item) => {
       if (!item.product) return total
       
@@ -264,7 +229,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      const price = finalPrice * conversionRates[currency]
+      const price = finalPrice * conversionRates[currency as keyof typeof conversionRates]
       return total + (price * item.quantity)
     }, 0)
   }

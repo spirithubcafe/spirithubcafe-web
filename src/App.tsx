@@ -109,14 +109,7 @@ function AppContent() {
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
                       <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
-                      <Route 
-                        path="/wishlist" 
-                        element={
-                          <ProtectedRoute>
-                            <WishlistPage />
-                          </ProtectedRoute>
-                        } 
-                      />
+                      <Route path="/wishlist" element={<WishlistPage />} />
                       <Route 
                         path="/dashboard" 
                         element={

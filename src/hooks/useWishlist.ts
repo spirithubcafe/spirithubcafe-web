@@ -1,47 +1,34 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from './useAuth'
 import { wishlistService } from '@/services/wishlist'
 import type { Wishlist } from '@/types'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 
 export const useWishlist = () => {
-  const { firebaseUser } = useAuth()
   const { t } = useTranslation()
   const [wishlist, setWishlist] = useState<Wishlist[]>([])
   const [loading, setLoading] = useState(false)
   const [wishlistItems, setWishlistItems] = useState<Set<string>>(new Set())
 
-  // Load user's wishlist
+  // Load wishlist from localStorage
   useEffect(() => {
-    if (!firebaseUser) {
-      setWishlist([])
-      setWishlistItems(new Set())
-      return
-    }
-
     setLoading(true)
     
-    // Subscribe to real-time wishlist updates
-    const unsubscribe = wishlistService.subscribeToWishlist(firebaseUser.uid, (updatedWishlist) => {
+    // Subscribe to wishlist updates
+    const unsubscribe = wishlistService.subscribeToWishlist('local_user', (updatedWishlist) => {
       setWishlist(updatedWishlist)
       setWishlistItems(new Set(updatedWishlist.map(item => item.product_id)))
       setLoading(false)
     })
 
     return unsubscribe
-  }, [firebaseUser])
+  }, [])
 
   // Add to wishlist
   const addToWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      await wishlistService.addToWishlist(firebaseUser.uid, productId)
+      await wishlistService.addToWishlist('local_user', productId)
       toast.success(t('wishlist.addedToWishlist'))
       return true
     } catch (error) {
@@ -55,14 +42,9 @@ export const useWishlist = () => {
 
   // Remove from wishlist
   const removeFromWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      await wishlistService.removeFromWishlist(firebaseUser.uid, productId)
+      await wishlistService.removeFromWishlist('local_user', productId)
       toast.success(t('wishlist.removedFromWishlist'))
       return true
     } catch (error) {
@@ -76,14 +58,9 @@ export const useWishlist = () => {
 
   // Toggle wishlist
   const toggleWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      const isAdded = await wishlistService.toggleWishlist(firebaseUser.uid, productId)
+      const isAdded = await wishlistService.toggleWishlist('local_user', productId)
       
       if (isAdded) {
         toast.success(t('wishlist.addedToWishlist'))
