@@ -99,7 +99,7 @@ function AppContent() {
                   <main className="flex-1 relative">
                     <Suspense fallback={<PageLoader />}>
                       <Routes>
-                        <Route path="/" element={<RouteLoader><HomePage /></RouteLoader>} />
+                        <Route path="/" element={<HomePage />} />
                         <Route path="/shop" element={<RouteLoader><ShopPage /></RouteLoader>} />
                       <Route path="/product/:slug" element={<ProductPage />} />
                       <Route path="/about" element={<AboutPage />} />

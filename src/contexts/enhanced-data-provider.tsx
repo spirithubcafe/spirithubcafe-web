@@ -314,18 +314,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // preloadCriticalData removed to avoid API calls
   }
 
-  // Show loading screen for initial critical data
-  if (isInitialLoading) {
-    return (
-      <AdvancedLoading
-        size="lg"
-        fullScreen
-        overlay
-        message="Loading SpiritHub Cafe..."
-        animated
-      />
-    )
-  }
+ 
 
   return (
     <DataContext.Provider value={value}>

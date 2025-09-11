@@ -25,13 +25,11 @@ export function HomePage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [homepageSettings, setHomepageSettings] = useState<any>({})
-  const [loading, setLoading] = useState(true)
   
   // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
-        setLoading(true)
         const [productsData, categoriesData, settingsData] = await Promise.all([
           jsonProductsService.getProducts(),
           jsonCategoriesDataService.getCategories(),
@@ -42,8 +40,6 @@ export function HomePage() {
         setHomepageSettings(settingsData)
       } catch (error) {
         console.error('Error loading homepage data:', error)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -240,17 +236,7 @@ export function HomePage() {
                 <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
               </div>
               
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="flex flex-col items-center space-y-3">
-                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
-                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
-                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : latestProducts.length > 0 ? (
+            {latestProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {latestProducts.slice(0, 6).map((product: Product) => {
                   const productPrice = getProductPrice(product)
@@ -395,17 +381,7 @@ export function HomePage() {
               <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
             </div>
             
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                  <div key={i} className="flex flex-col items-center space-y-3">
-                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
-                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
-                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : categories.length > 0 ? (
+            {categories.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {(() => {
                   // If homepage settings contains an explicit list of category IDs, use that order.
