@@ -8,12 +8,17 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
-import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
+import { JSONCategoriesDataService } from '@/services/jsonSettingsService'
+import { type Category, type Product } from '@/types'
 import { conversionRates } from '@/lib/currency'
 import { useTheme } from '@/components/theme-provider'
 
 // Define local interface for cart items with products
-interface CartItemWithProduct extends CartItem {
+interface CartItemWithProduct {
+  id: string
+  product_id: string
+  quantity: number
+  selectedProperties?: Record<string, string>
   product: Product | null
 }
 
@@ -99,8 +104,9 @@ export function CartSidebar() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoriesData = await firestoreService.categories.list()
-        setCategories(categoriesData.items)
+        const categoriesService = new JSONCategoriesDataService()
+        const categoriesData = await categoriesService.getCategories()
+        setCategories(categoriesData)
       } catch (error) {
         console.error('Error loading categories:', error)
       }
@@ -109,8 +115,8 @@ export function CartSidebar() {
   }, [])
 
   // Get category name by ID
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId)
+  const getCategoryName = (categoryId: string | number) => {
+    const category = categories.find(c => String(c.id) === String(categoryId))
     if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
     return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
   }
@@ -273,7 +279,7 @@ export function CartSidebar() {
                               })()}
                             </p>
                             <StockIndicator 
-                              stock={item.product?.stock_quantity || item.product?.stock || 0} 
+                              stock={item.product?.stock || 0} 
                               variant="compact"
                               lowStockThreshold={5}
                             />

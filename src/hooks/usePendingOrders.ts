@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+// Orders service - will be connected to Google Sheets later
+// import { firestoreService } from '@/lib/firebase';port { useState, useEffect } from 'react'
 import { firestoreService } from '@/lib/firebase'
 
 export function usePendingOrders() {
@@ -11,11 +13,12 @@ export function usePendingOrders() {
       setLoading(true)
       setError(null)
       
-      // Get orders that are paid but not yet shipped
-      const orders = await firestoreService.orders.list()
+      // TODO: Get orders from Google Sheets API
+      // For now, get from localStorage
+      const orders = JSON.parse(localStorage.getItem('orders') || '[]')
       
       // Count orders that are paid but not yet shipped (ready for processing)
-      const pendingOrders = orders.items.filter(order => 
+      const pendingOrders = orders.filter((order: any) => 
         (order.payment_status === 'paid' || order.payment_status === 'partially_paid') &&
         (order.status === 'confirmed' || order.status === 'preparing')
       )

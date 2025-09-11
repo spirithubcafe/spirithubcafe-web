@@ -4,7 +4,8 @@ import { CheckCircle, XCircle, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
-import { firestoreService } from '@/lib/firebase'
+// Order storage service - will be connected to Google Sheets later
+// import { firestoreService } from '@/lib/firebase'
 import { bankMuscatPaymentService } from '@/services/bankMuscatPayment'
 
 export default function CheckoutSuccessPage() {
@@ -26,7 +27,10 @@ export default function CheckoutSuccessPage() {
 
       try {
         // Get order details
-        const order = await firestoreService.orders.get(orderId)
+        // TODO: Connect to Google Sheets API for order management
+        // For now, get from localStorage
+        const orders = JSON.parse(localStorage.getItem('orders') || '[]')
+        const order = orders.find((o: any) => o.id === orderId)
         setOrderDetails(order)
 
         if (transactionId) {
@@ -34,11 +38,18 @@ export default function CheckoutSuccessPage() {
           const verification = await bankMuscatPaymentService.verifyPayment(transactionId, orderId)
           
           if (verification.success) {
-            // Update order status to paid
-            await firestoreService.orders.update(orderId, {
-              payment_status: 'paid',
-              status: 'confirmed'
-            })
+            // Update order status to paid (placeholder for Google Sheets)
+            console.log('Updating order status to paid:', orderId)
+            
+            // Update localStorage for now
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]')
+            const updatedOrders = orders.map((o: any) => 
+              o.id === orderId 
+                ? { ...o, payment_status: 'paid', status: 'confirmed' }
+                : o
+            )
+            localStorage.setItem('orders', JSON.stringify(updatedOrders))
+            
             setVerificationStatus('success')
           } else {
             setVerificationStatus('failed')

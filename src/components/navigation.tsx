@@ -23,7 +23,8 @@ const NavigationComponent = memo(() => {
   const { t, i18n } = useTranslation()
   const { resolvedTheme } = useTheme()
   const auth = useAuth()
-  const { logout } = auth
+  const currentUser = auth?.currentUser
+  const logout = auth?.logout
   const { getTotalItems, getTotalPrice } = useCart()
   const { wishlistCount } = useWishlist()
   const { pendingCount } = usePendingOrders()
@@ -348,7 +349,7 @@ const NavigationComponent = memo(() => {
               </div>
 
               {/* Wishlist Button */}
-              {auth.currentUser && (
+              {currentUser && (
                 <Button 
                   variant="outline" 
                   size="icon" 
@@ -381,7 +382,7 @@ const NavigationComponent = memo(() => {
               </div>
 
               {/* Auth Buttons */}
-              {auth.currentUser ? (
+              {currentUser ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button 
                     variant="outline" 
@@ -402,7 +403,7 @@ const NavigationComponent = memo(() => {
                         {t('navigation.dashboard')}
                       </span>
                       {/* Show pending orders count for admin/staff */}
-                      {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
+                      {(currentUser?.role === 'admin' || currentUser?.role === 'shop_owner' || currentUser?.role === 'employee') && pendingCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
@@ -740,7 +741,7 @@ const NavigationComponent = memo(() => {
 
               {/* Auth Section */}
               <div className="border-t p-6 bg-muted/20">
-                {auth.currentUser ? (
+                {currentUser ? (
                   <div className="space-y-3">
                     <div className={cn(
                       "flex items-center gap-3 p-3 rounded-lg bg-background border",
@@ -753,8 +754,8 @@ const NavigationComponent = memo(() => {
                         "flex-1",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="font-medium text-sm">{auth.currentUser?.full_name}</p>
-                        <p className="text-xs text-muted-foreground">{auth.currentUser?.email}</p>
+                        <p className="font-medium text-sm">{currentUser?.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
                       </div>
                     </div>
                     <div className={cn(
@@ -769,7 +770,7 @@ const NavigationComponent = memo(() => {
                           <User className="h-4 w-4" />
                           {t('navigation.dashboard')}
                           {/* Show pending orders count for admin/staff */}
-                          {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
+                          {(currentUser?.role === 'admin' || currentUser?.role === 'shop_owner' || currentUser?.role === 'employee') && pendingCount > 0 && (
                             <Badge 
                               variant="destructive" 
                               className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
@@ -779,7 +780,7 @@ const NavigationComponent = memo(() => {
                           )}
                         </Link>
                       </Button>
-                      {auth.currentUser?.role === 'admin' && (
+                      {currentUser?.role === 'admin' && (
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
                             "flex items-center gap-2 justify-center",

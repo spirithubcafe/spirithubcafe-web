@@ -22,50 +22,26 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize services
+// Initialize services - only auth and storage for now
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Initialize Firestore with error handling and offline persistence
+// Lazy initialize Firestore only for admin/dashboard usage
 let db: any = null;
-try {
-  db = getFirestore(app);
+
+// Function to initialize Firestore when needed (for admin functions only)
+const initializeFirestore = () => {
+  if (db) return db;
   
-  // Enable offline persistence for better performance
-  if (typeof window !== 'undefined') {
-    import('firebase/firestore').then(({ enableNetwork, connectFirestoreEmulator }) => {
-      // Add global error handling for Firestore
-      window.addEventListener('unhandledrejection', (event) => {
-        if (event.reason?.code?.includes('firestore') || 
-            event.reason?.message?.includes('Missing or insufficient permissions') ||
-            event.reason?.message?.includes('400')) {
-          logger.warn('⚠️ Firestore issue detected, continuing with limited functionality:', event.reason?.message);
-          event.preventDefault();
-        }
-      });
-      
-      // Only connect to emulator if explicitly enabled
-      if (import.meta.env.DEV && import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
-        try {
-          connectFirestoreEmulator(db, 'localhost', 8080);
-          logger.log('🔧 Connected to Firestore emulator');
-        } catch (error) {
-          logger.log('📡 Using production Firestore (emulator connection failed)');
-        }
-      }
-      
-      // Enable network connection with better error handling
-      enableNetwork(db).catch((error) => {
-        logger.warn('⚠️ Firestore network issue (continuing with offline mode):', error.message);
-      });
-    }).catch((error) => {
-      logger.warn('⚠️ Firestore module loading failed:', error.message);
-    });
+  try {
+    db = getFirestore(app);
+    console.log('� Firestore initialized for admin usage');
+    return db;
+  } catch (error) {
+    console.error('❌ Failed to initialize Firestore:', error);
+    return null;
   }
-} catch (error) {
-  logger.error('❌ Firestore initialization failed:', error);
-  db = null;
-}
+};
 
 // Initialize analytics only in production
 let analytics: any = null;
@@ -3098,5 +3074,6 @@ export const subscriptions = {
   }
 };
 
-export { auth, db, storage, analytics };
+// Export services - db is null by default and will be initialized only when needed for admin
+export { auth, db, storage, analytics, initializeFirestore };
 export default app;

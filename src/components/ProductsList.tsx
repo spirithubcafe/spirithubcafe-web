@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { firestoreService, type Product } from '@/lib/firebase'
+import { jsonProductsService } from '@/services/jsonSettingsService'
+import type { Product } from '@/types'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
@@ -21,7 +22,8 @@ export default function ProductsList() {
         setError(null)
 
         // Fetch all products from Firestore
-        const result = await firestoreService.products.list()
+        const products = await jsonProductsService.getProducts()
+        const result = { items: products, totalItems: products.length }
         setProducts(result.items)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
@@ -49,7 +51,7 @@ export default function ProductsList() {
 
   // Get sale price if on sale
   const getSalePrice = (product: Product) => {
-    if (!product.is_on_sale) return null
+    if (!product.on_sale) return null
     
     switch (currency) {
       case 'OMR':
@@ -100,7 +102,7 @@ export default function ProductsList() {
               <div key={product.id} className="border rounded-lg p-4 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-lg font-semibold">{productName}</h3>
-                  {product.is_on_sale && salePrice && salePrice < productPrice && (
+                  {product.on_sale && salePrice && salePrice < productPrice && (
                     <Badge variant="destructive" className="text-xs">
                       {isArabic ? 'تخفيض' : 'Sale'}
                     </Badge>
@@ -138,7 +140,7 @@ export default function ProductsList() {
                 </div>
 
                 <p className="text-sm text-gray-500">
-                  {isArabic ? 'تم الإضافة:' : 'Added:'} {product.created.toLocaleDateString()}
+                  {isArabic ? 'تم الإضافة:' : 'Added:'} {new Date().toLocaleDateString()}
                 </p>
               </div>
             )

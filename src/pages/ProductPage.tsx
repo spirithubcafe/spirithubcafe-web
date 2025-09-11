@@ -23,7 +23,8 @@ export default function ProductPage() {
   const { t, i18n } = useTranslation()
   const { currency, formatPrice } = useCurrency()
   const { addToCart } = useCart()
-  const { currentUser } = useAuth()
+  const auth = useAuth() as any
+  const currentUser = auth?.currentUser
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)

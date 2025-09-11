@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { firestoreService, type Product, type Category } from '@/lib/firebase'
+import { jsonProductsService, jsonCategoriesDataService } from '@/services/jsonSettingsService'
+import { type Product, type Category } from '@/types'
 import type { HeroSettings } from '@/types'
 import { 
   type HomepageSettings, 
@@ -121,8 +122,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     updateLoadingState('loadingProducts', true)
     try {
-      const result = await firestoreService.products.list()
-      const products = result.items
+      const products = await jsonProductsService.getProducts()
       updateCache('products', products)
     } catch (error) {
       console.error('Error loading products:', error)
@@ -140,9 +140,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     
     updateLoadingState('loadingCategories', true)
     try {
-      const result = await firestoreService.categories.list()
-      const categories = result.items.filter(cat => cat.is_active)
-      updateCache('categories', categories)
+      const categories = await jsonCategoriesDataService.getCategories()
+      const activeCategories = categories.filter((cat: Category) => cat.is_active)
+      updateCache('categories', activeCategories)
     } catch (error) {
       console.error('Error loading categories:', error)
       updateCache('categories', [])
@@ -281,7 +281,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Helper functions
   const getProduct = (id: string): Product | undefined => {
-    return cache.products?.data.find(p => p.id === id)
+    return cache.products?.data.find(p => String(p.id) === String(id))
   }
 
   const getProductBySlug = (slug: string): Product | undefined => {
@@ -289,7 +289,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }
 
   const getCategory = (id: string): Category | undefined => {
-    return cache.categories?.data.find(c => c.id === id)
+    return cache.categories?.data.find(c => String(c.id) === String(id))
   }
 
   const value: DataContextType = {

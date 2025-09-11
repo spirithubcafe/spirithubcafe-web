@@ -14,7 +14,6 @@ import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
-import { firestoreService, type Order, type OrderItem, type Product } from '@/lib/firebase'
 import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
 import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
 import { ShippingService, type ShippingCalculationRequest } from '@/services/shipping'
@@ -26,7 +25,8 @@ export default function CheckoutPage() {
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
-  const { currentUser } = useAuth()
+  const auth = useAuth() as any
+  const currentUser = auth?.currentUser
   const { settings: checkoutSettings } = useCheckoutSettings()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -285,11 +285,11 @@ export default function CheckoutPage() {
   }
 
   // Helper function to determine tax rate for a product
-  const getProductTaxRate = (product: Product): number => {
+  const getProductTaxRate = (product: any): number => {
     // Use category-based tax rates from settings
     if (checkoutSettings?.category_tax_rates && product.category_id) {
       const categoryTaxRate = checkoutSettings.category_tax_rates.find(
-        rate => rate.category_id === product.category_id && rate.enabled
+        rate => rate.category_id === String(product.category_id) && rate.enabled
       )
       if (categoryTaxRate) {
         return categoryTaxRate.tax_rate
@@ -488,6 +488,8 @@ export default function CheckoutPage() {
       
       // Generate order number
       const orderNumber = `ORD-${Date.now()}`
+      const orderId = `order_${Date.now()}`
+      
       // Helper to format phone with selected country dial code
       const formatPhone = (dialCode: string | undefined, localNumber: string | undefined) => {
         const num = (localNumber || '').toString().trim()
@@ -498,15 +500,16 @@ export default function CheckoutPage() {
 
       const formattedPhone = formatPhone(formData.phoneCountry, formData.phone)
       
-      // Create order data
-      const orderData: Omit<Order, 'id' | 'created' | 'updated'> = {
+      // Store order data in localStorage (for local development)
+      const orderData = {
+        id: orderId,
         order_number: orderNumber,
         user_id: currentUser?.id,
-  customer_email: formData.email,
-  customer_phone: formattedPhone,
+        customer_email: formData.email,
+        customer_phone: formattedPhone,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         
-        // Address data (we'll create proper address records later)
+        // Address data
         shipping_address: {
           recipient_name: `${formData.firstName} ${formData.lastName}`,
           phone: formattedPhone,
@@ -540,82 +543,62 @@ export default function CheckoutPage() {
         
         currency: currency as 'USD' | 'OMR' | 'SAR',
         status: 'pending',
-        payment_status: 'unpaid', // Will be handled by payment gateway
-        payment_method: 'card' as 'card' | 'cash' | 'paypal' | 'bank_transfer', // Using payment gateway
+        payment_status: 'unpaid',
+        payment_method: 'card',
         notes: formData.notes,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-
-      // Create the order
-      const order = await firestoreService.orders.create(orderData)
-      
-      // Create order items
-      for (const cartItem of cart.items) {
-        if (!cartItem.product) continue
-        
-        const itemPrice = getProductPrice(cartItem.product, cartItem.selectedProperties)
-        const itemTotal = itemPrice * cartItem.quantity
-        
-        const orderItemData: Omit<OrderItem, 'id' | 'created' | 'updated'> = {
-          order_id: order.id,
-          product_id: cartItem.product.id,
-          product_name: cartItem.product.name,
-          product_name_ar: cartItem.product.name_ar || '',
-          product_image: cartItem.product.image || '',
+        updated_at: new Date().toISOString(),
+        items: cart.items.map(cartItem => ({
+          product_id: String(cartItem.product?.id),
+          product_name: cartItem.product?.name || '',
+          product_name_ar: cartItem.product?.name_ar || '',
+          product_image: cartItem.product?.image || '',
           quantity: cartItem.quantity,
-          unit_price_omr: currency === 'OMR' ? itemPrice : itemPrice / conversionRates.OMR,
-          unit_price_usd: currency === 'USD' ? itemPrice : itemPrice / conversionRates.USD,
-          unit_price_sar: currency === 'SAR' ? itemPrice : itemPrice / conversionRates.SAR,
-          total_price_omr: currency === 'OMR' ? itemTotal : itemTotal / conversionRates.OMR,
-          total_price_usd: currency === 'USD' ? itemTotal : itemTotal / conversionRates.USD,
-          total_price_sar: currency === 'SAR' ? itemTotal : itemTotal / conversionRates.SAR,
+          unit_price_omr: currency === 'OMR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.OMR,
+          unit_price_usd: currency === 'USD' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.USD,
+          unit_price_sar: currency === 'SAR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.SAR,
+          total_price_omr: currency === 'OMR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.OMR,
+          total_price_usd: currency === 'USD' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.USD,
+          total_price_sar: currency === 'SAR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.SAR,
           selected_properties: cartItem.selectedProperties || {},
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }
-        
-        await firestoreService.orderItems.create(orderItemData)
+        }))
       }
+      
+      // Store in localStorage for development (in production this would go to a backend)
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+      existingOrders.push(orderData)
+      localStorage.setItem('orders', JSON.stringify(existingOrders))
       
       // Create payment request
       const paymentRequest: PaymentRequest = {
-        order_id: order.id,
+        order_id: orderId,
         amount: totals.total,
         currency: currency as 'OMR' | 'USD' | 'SAR',
         customer_email: formData.email,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         customer_phone: formattedPhone,
-        return_url: `${window.location.origin}/checkout-success?order_id=${order.id}`,
-        cancel_url: `${window.location.origin}/checkout-success?order_id=${order.id}`
+        return_url: `${window.location.origin}/checkout-success?order_id=${orderId}`,
+        cancel_url: `${window.location.origin}/checkout-success?order_id=${orderId}`
       }
 
       // Process payment
       const paymentResponse = await bankMuscatPaymentService.createPayment(paymentRequest)
       
       if (paymentResponse.success && paymentResponse.payment_url) {
-        // Update order with payment info
-        await firestoreService.orders.update(order.id, {
-          payment_status: 'unpaid', // Will be updated when payment is confirmed
-          transaction_id: paymentResponse.transaction_id
-        })
-        
         // Clear cart before redirecting to payment
         clearCart()
         
         // Show processing message
         toast.success(isArabic ? 'جاري تحويلك إلى بوابة الدفع...' : 'Redirecting to payment gateway...')
         
-        // Redirect to payment gateway will happen automatically in the service
-        // The form submission will redirect the user
-        
       } else {
-        // Payment initiation failed
+        // Payment initiation failed - still show success for order creation
         toast.error(isArabic ? 'فشل في بدء عملية الدفع' : 'Failed to initiate payment')
         console.error('Payment error:', paymentResponse.error)
         
-        // Still show success for order creation but inform about payment issue
-        setCreatedOrderId(order.id)
+        setCreatedOrderId(orderId)
         setOrderSuccess(true)
         clearCart()
       }
