@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { heroService } from '@/services/hero'
 import type { HeroSettings } from '@/types'
 import { HeroSliderSettings } from './HeroSliderSettings'
-import toast from 'react-hot-toast'
 
 export function HeroSlideManagement() {
     const { i18n } = useTranslation()
@@ -42,11 +41,11 @@ export function HeroSlideManagement() {
 
     try {
       await heroService.deleteSlide(slideId)
-      toast.success(isRTL ? 'تم حذف الشريحة بنجاح' : 'Slide deleted successfully')
+      alert(isRTL ? 'تم حذف الشريحة بنجاح' : 'Slide deleted successfully')
       loadSettings()
     } catch (error) {
       console.error('Error deleting slide:', error)
-      toast.error(isRTL ? 'خطأ في حذف الشريحة' : 'Error deleting slide')
+      alert(isRTL ? 'خطأ في حذف الشريحة' : 'Error deleting slide')
     }
   }
 
@@ -56,7 +55,7 @@ export function HeroSlideManagement() {
       loadSettings()
     } catch (error) {
       console.error('Error toggling slide:', error)
-      toast.error(isRTL ? 'خطأ في تغيير حالة الشريحة' : 'Error toggling slide status')
+      alert(isRTL ? 'خطأ في تغيير حالة الشريحة' : 'Error toggling slide status')
     }
   }
 
@@ -91,7 +90,7 @@ export function HeroSlideManagement() {
       loadSettings()
     } catch (error) {
       console.error('Error reordering slides:', error)
-      toast.error(isRTL ? 'خطأ في إعادة ترتيب الشرائح' : 'Error reordering slides')
+      alert(isRTL ? 'خطأ في إعادة ترتيب الشرائح' : 'Error reordering slides')
     } finally {
       setDraggedSlide(null)
     }
@@ -122,12 +121,12 @@ export function HeroSlideManagement() {
             {isRTL ? 'إدارة الشريط الرئيسي' : 'Hero Slider Management'}
           </h1>
           <p className="text-muted-foreground">
-            {isRTL ? 'إدارة شرائح العرض والتنظيمات المتقدمة' : 'Manage slides and advanced settings'}
+            {isRTL ? 'إدارة شرائح العرض والتنظیمات المتقدمة' : 'Manage slides and advanced settings'}
           </p>
         </div>
         <Button onClick={() => setShowSettings(true)} variant="outline">
           <Settings className="h-4 w-4 mr-2" />
-          {isRTL ? 'التنظيمات المتقدمة' : 'Advanced Settings'}
+          {isRTL ? 'التنظیمات المتقدمة' : 'Advanced Settings'}
         </Button>
       </div>
 

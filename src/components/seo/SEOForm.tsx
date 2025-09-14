@@ -77,21 +77,7 @@ export function SEOForm({
     }))
   }, [initialData])
 
-  const analysis = useSEOAnalysis()
-  const seoAnalysisResult = analysis.analyzeSEO(seoData)
-
-  // Helper function to get score
-  const getScore = () => seoAnalysisResult.score || 0
-  
-  // Helper function to get issues
-  const getIssues = () => {
-    const errors = seoAnalysisResult.errors || []
-    const warnings = seoAnalysisResult.warnings || []
-    return [...errors, ...warnings]
-  }
-  
-  // Helper function to get suggestions
-  const getSuggestions = () => seoAnalysisResult.recommendations || []
+  const analysis = useSEOAnalysis(seoData)
 
   const updateSEOData = <K extends keyof SEOMeta>(key: K, value: SEOMeta[K]) => {
     const newData = { ...seoData, [key]: value }
@@ -141,9 +127,9 @@ export function SEOForm({
             <Search className="h-5 w-5" />
             <CardTitle>SEO Settings</CardTitle>
           </div>
-          {seoAnalysisResult && (
-            <Badge variant={getScoreBadgeVariant(getScore())}>
-              SEO Score: {getScore()}%
+          {analysis && (
+            <Badge variant={getScoreBadgeVariant(analysis.score)}>
+              SEO Score: {analysis.score}%
             </Badge>
           )}
         </div>
@@ -153,36 +139,36 @@ export function SEOForm({
       </CardHeader>
       <CardContent>
         {/* SEO Analysis */}
-        {seoAnalysisResult && (
+        {analysis && (
           <div className="mb-6 space-y-4">
             <div className="flex items-center space-x-2">
               <h4 className="text-sm font-medium">SEO Analysis</h4>
-              <span className={`text-2xl font-bold ${getScoreColor(getScore())}`}>
-                {getScore()}%
+              <span className={`text-2xl font-bold ${getScoreColor(analysis.score)}`}>
+                {analysis.score}%
               </span>
             </div>
             
-            {getIssues().length > 0 && (
+            {analysis.issues.length > 0 && (
               <div className="space-y-2">
-                {getIssues().map((issue: any, index: number) => (
+                {analysis.issues.map((issue, index) => (
                   <Alert key={index} variant={issue.type === 'error' ? 'destructive' : 'default'}>
                     {issue.type === 'error' ? (
                       <AlertTriangle className="h-4 w-4" />
                     ) : (
                       <Info className="h-4 w-4" />
                     )}
-                    <AlertDescription>{issue.message || issue}</AlertDescription>
+                    <AlertDescription>{issue.message}</AlertDescription>
                   </Alert>
                 ))}
               </div>
             )}
 
-            {getSuggestions().length > 0 && (
+            {analysis.suggestions.length > 0 && (
               <div className="space-y-2">
-                {getSuggestions().map((suggestion: any, index: number) => (
+                {analysis.suggestions.map((suggestion, index) => (
                   <Alert key={index}>
                     <CheckCircle className="h-4 w-4" />
-                    <AlertDescription>{suggestion.message || suggestion}</AlertDescription>
+                    <AlertDescription>{suggestion.message}</AlertDescription>
                   </Alert>
                 ))}
               </div>

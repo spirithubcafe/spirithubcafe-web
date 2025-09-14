@@ -1,0 +1,239 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Categories - read for all, write for admin only
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Products - read for all, write for admin/employee only
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Settings - read for all, write for admin/employee only
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Pages - read for all, write for admin/employee only
+    match /pages/{pageId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Static pages - read for all, write for admin/employee only
+    match /static_pages/{pageId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // About sections - read for all, write for admin/employee only
+    match /about_sections/{sectionId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // About header - read for all, write for admin/employee only
+    match /about_header/{headerId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Blog posts - read for all, write for admin/employee only
+    match /blog_posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Contact messages - read/write for admin/employee only, create for authenticated users
+    match /contact_messages/{messageId} {
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+      allow create: if request.auth != null || true; // Allow anonymous contact form submissions
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // SEO settings - read for all, write for admin/employee only
+    match /seo/{seoId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Wishlists - users can only access their own
+    match /wishlists/{wishlistId} {
+      allow read, write: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Product Reviews - read for all, write for authenticated users
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+    }
+    
+    // Product reviews (alternative collection name)
+    match /product_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+    }
+    
+    // Cart items - users can only access their own
+    match /cart_items/{cartItemId} {
+      allow read, write: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Carts - users can only access their own
+    match /carts/{cartId} {
+      allow read, write: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Orders - users can read their own, admin can read all
+    match /orders/{orderId} {
+      allow read: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+    }
+    
+    // Order items - similar to orders
+    match /order_items/{orderItemId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // Order status history - read for order owner and admin, write for admin only
+    match /order_status_history/{historyId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Addresses - users can only access their own
+    match /addresses/{addressId} {
+      allow read, write: if request.auth != null && resource.data.user_id == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+    }
+    
+    // Profiles - users can read/write their own, admin can read all
+    match /profiles/{profileId} {
+      allow read, write: if request.auth != null && request.auth.uid == profileId;
+      allow read: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin'];
+    }
+    
+    // Coffee origins - read for all, write for admin/employee only
+    match /coffee_origins/{originId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Roast levels - read for all, write for admin/employee only
+    match /roast_levels/{levelId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Product tags - read for all, write for admin/employee only
+    match /product_tags/{tagId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Product tag relations - read for all, write for admin/employee only
+    match /product_tag_relations/{relationId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Product variants - read for all, write for admin/employee only
+    match /product_variants/{variantId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Coupons - read for all, write for admin/employee only
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Shipping methods - read for all, write for admin/employee only
+    match /shipping_methods/{methodId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Shipping zones - read for all, write for admin/employee only
+    match /shipping_zones/{zoneId} {
+      allow read: if true;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Payments - users can read their own, admin can read all
+    match /payments/{paymentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Inventory movements - admin/employee only
+    match /inventory_movements/{movementId} {
+      allow read, write: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Newsletter subscribers - create for all, read/write for admin/employee only
+    match /newsletter_subscribers/{subscriberId} {
+      allow create: if true; // Allow anonymous newsletter subscriptions
+      allow read, update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Newsletters - create for all, read for authenticated users, write for admin/employee only
+    match /newsletters/{subscriptionId} {
+      allow create: if true; // Allow anonymous newsletter subscriptions
+      allow read: if request.auth != null; // Allow authenticated users to read newsletters
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee'];
+    }
+    
+    // Tickets - users can read their own, admin can read all
+    match /tickets/{ticketId} {
+      allow read: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+    }
+    
+    // Ticket messages - read for ticket participants, write for authenticated users
+    match /ticket_messages/{messageId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && 
+        (resource.data.user_id == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'employee']);
+    }
+    
+    // Admin can read all users
+    match /users/{userId} {
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin'];
+    }
+  }
+}

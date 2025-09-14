@@ -1,263 +1,166 @@
 import { useState, useEffect } from 'react'
+import { TrendingUp, DollarSign, Package, ShoppingBag, Users, AlertTriangle, BarChart } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { 
-  Package,
-  ShoppingCart,
-  Users,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  Activity,
-  RefreshCw,
-  Download
-} from 'lucide-react'
+import { Progress } from '@/components/ui/progress'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useTranslation } from 'react-i18next'
-import { jsonDataService } from '@/services/jsonDataService'
-
-interface InventoryItem {
-  id: string
-  name: string
-  stock: number
-  sold: number
-  revenue: number
-  category: string
-  status: 'in_stock' | 'low_stock' | 'out_of_stock'
-}
+import { useCurrency } from '@/hooks/useCurrency'
+import { firestoreService, type Order, type Product } from '@/lib/firebase'
+import toast from 'react-hot-toast'
 
 interface AnalyticsData {
-  totalProducts: number
-  totalOrders: number
-  totalUsers: number
   totalRevenue: number
-  lowStockItems: InventoryItem[]
-  topSellingProducts: InventoryItem[]
-  recentActivity: Array<{
-    id: string
-    type: 'order' | 'product' | 'user'
-    message: string
-    timestamp: string
-  }>
+  totalOrders: number
+  totalProducts: number
+  totalUsers: number
+  lowStockProducts: Product[]
+  topSellingProducts: { product: Product; salesCount: number }[]
+  recentOrders: Order[]
+  monthlyRevenue: number[]
+  ordersByStatus: Record<string, number>
 }
 
 export default function InventoryAnalytics() {
   const { i18n } = useTranslation()
+  const { formatPrice } = useCurrency()
   const isArabic = i18n.language === 'ar'
-  
-  const [data, setData] = useState<AnalyticsData>({
-    totalProducts: 0,
-    totalOrders: 0,
-    totalUsers: 0,
+
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
     totalRevenue: 0,
-    lowStockItems: [],
+    totalOrders: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    lowStockProducts: [],
     topSellingProducts: [],
-    recentActivity: []
+    recentOrders: [],
+    monthlyRevenue: [],
+    ordersByStatus: {}
   })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadAnalyticsData()
-  }, [])
-
-  const loadAnalyticsData = async () => {
-    try {
-      setLoading(true)
-      
-      // Load products
-      const products = await jsonDataService.fetchJSON('/data/products.json')
-      const productsArray = Array.isArray(products) ? products : []
-      
-      // Load orders (simulated data since orders are complex)
-      const orders = await jsonDataService.fetchJSON('/data/orders.json').catch(() => [])
-      const ordersArray = Array.isArray(orders) ? orders : []
-      
-      // Load users
-      const users = await jsonDataService.fetchJSON('/data/users.json').catch(() => [])
-      const usersArray = Array.isArray(users) ? users : []
-
-      // Calculate analytics
-      const totalProducts = productsArray.length
-      const totalOrders = ordersArray.length
-      const totalUsers = usersArray.length
-      
-      // Calculate revenue from orders
-      const totalRevenue = ordersArray.reduce((sum: number, order: any) => {
-        return sum + (order.total || 0)
-      }, 0)
-
-      // Create inventory items from products
-      const inventoryItems: InventoryItem[] = productsArray.map((product: any) => {
-        const stock = product.stock || Math.floor(Math.random() * 100) + 1
-        const sold = Math.floor(Math.random() * 50)
-        const price = product.price || Math.floor(Math.random() * 100) + 10
+    const loadAnalyticsDataAsync = async () => {
+      try {
+        setLoading(true)
         
-        return {
-          id: product.id,
-          name: isArabic ? product.name_ar || product.name : product.name,
-          stock,
-          sold,
-          revenue: sold * price,
-          category: isArabic ? product.category_ar || product.category : product.category,
-          status: stock === 0 ? 'out_of_stock' : 
-                   stock < 10 ? 'low_stock' : 'in_stock'
-        }
-      })
+        // Load all orders
+        const ordersResult = await firestoreService.orders.list()
+        const orders = ordersResult.items
 
-      // Get low stock items
-      const lowStockItems = inventoryItems
-        .filter(item => item.status === 'low_stock' || item.status === 'out_of_stock')
-        .slice(0, 5)
+        // Load all products
+        const productsResult = await firestoreService.products.list()
+        const allProducts = productsResult.items
 
-      // Get top selling products
-      const topSellingProducts = inventoryItems
-        .sort((a, b) => b.sold - a.sold)
-        .slice(0, 5)
+        // Load all users
+        const usersResult = await firestoreService.users.list()
+        const allUsers = usersResult.items
 
-      // Generate recent activity (simulated)
-      const recentActivity = [
-        {
-          id: '1',
-          type: 'order' as const,
-          message: isArabic ? 'طلب جديد تم إنشاؤه' : 'New order created',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-        },
-        {
-          id: '2',
-          type: 'product' as const,
-          message: isArabic ? 'منتج جديد تمت إضافته' : 'New product added',
-          timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString()
-        },
-        {
-          id: '3',
-          type: 'user' as const,
-          message: isArabic ? 'مستخدم جديد سجل' : 'New user registered',
-          timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString()
-        },
-        {
-          id: '4',
-          type: 'order' as const,
-          message: isArabic ? 'طلب تم شحنه' : 'Order shipped',
-          timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString()
-        },
-        {
-          id: '5',
-          type: 'product' as const,
-          message: isArabic ? 'مخزون منتج منخفض' : 'Product stock low',
-          timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString()
-        }
-      ]
+        // Calculate analytics
+        const totalRevenue = orders.reduce((sum, order) => {
+          return sum + (order.total_price_omr || order.total_price_usd || order.total_price_sar || 0)
+        }, 0)
 
-      setData({
-        totalProducts,
-        totalOrders,
-        totalUsers,
-        totalRevenue,
-        lowStockItems,
-        topSellingProducts,
-        recentActivity
-      })
-    } catch (error) {
-      console.error('Error loading analytics data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+        const totalOrders = orders.length
+        const totalProducts = allProducts.length
+        const totalUsers = allUsers.length
 
-  const getStockBadge = (status: string) => {
-    const statusConfig = {
-      in_stock: { 
-        variant: 'default' as const, 
-        text: isArabic ? 'متوفر' : 'In Stock' 
-      },
-      low_stock: { 
-        variant: 'destructive' as const, 
-        text: isArabic ? 'مخزون منخفض' : 'Low Stock' 
-      },
-      out_of_stock: { 
-        variant: 'secondary' as const, 
-        text: isArabic ? 'نفد المخزون' : 'Out of Stock' 
+        // Low stock products (stock < 10)
+        const lowStockProducts = allProducts.filter((product: Product) => 
+          (product.stock_quantity || product.stock || 0) < 10
+        )
+
+        // Orders by status
+        const ordersByStatus = orders.reduce((acc, order) => {
+          acc[order.status] = (acc[order.status] || 0) + 1
+          return acc
+        }, {} as Record<string, number>)
+
+        // Recent orders (last 10)
+        const recentOrders = orders
+          .sort((a, b) => new Date(b.created_at || b.created || '').getTime() - new Date(a.created_at || a.created || '').getTime())
+          .slice(0, 10)
+
+        // Mock monthly revenue (in real app, this would be calculated from actual order dates)
+        const monthlyRevenue = Array.from({ length: 12 }, (_, i) => {
+          const monthOrders = orders.filter(order => {
+            const orderDate = new Date(order.created_at || order.created || '')
+            return orderDate.getMonth() === i
+          })
+          return monthOrders.reduce((sum, order) => {
+            return sum + (order.total_price_omr || order.total_price_usd || order.total_price_sar || 0)
+          }, 0)
+        })
+
+        // Top selling products (mock calculation - would need order items data)
+        const topSellingProducts = allProducts
+          .slice(0, 5)
+          .map((product: Product) => ({
+            product,
+            salesCount: Math.floor(Math.random() * 100) + 1 // Mock data
+          }))
+          .sort((a: any, b: any) => b.salesCount - a.salesCount)
+
+        setAnalyticsData({
+          totalRevenue,
+          totalOrders,
+          totalProducts,
+          totalUsers,
+          lowStockProducts,
+          topSellingProducts,
+          recentOrders,
+          monthlyRevenue,
+          ordersByStatus
+        })
+
+      } catch (error) {
+        console.error('Error loading analytics data:', error)
+        toast.error(isArabic ? 'خطأ في تحميل البيانات التحليلية' : 'Error loading analytics data')
+      } finally {
+        setLoading(false)
       }
     }
 
-    const config = statusConfig[status as keyof typeof statusConfig]
-    return config ? (
-      <Badge variant={config.variant}>{config.text}</Badge>
-    ) : (
-      <Badge variant="secondary">{status}</Badge>
-    )
-  }
-
-  const exportReport = () => {
-    const reportData = {
-      generated_at: new Date().toISOString(),
-      summary: {
-        total_products: data.totalProducts,
-        total_orders: data.totalOrders,
-        total_users: data.totalUsers,
-        total_revenue: data.totalRevenue
-      },
-      low_stock_items: data.lowStockItems,
-      top_selling_products: data.topSellingProducts
-    }
-
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.style.display = 'none'
-    a.href = url
-    a.download = `inventory-analytics-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    window.URL.revokeObjectURL(url)
-    document.body.removeChild(a)
-  }
+    loadAnalyticsDataAsync()
+  }, [isArabic])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="ml-2">{isArabic ? 'جارٍ التحميل...' : 'Loading analytics...'}</span>
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted rounded w-24 animate-pulse"></div>
+                <div className="h-4 w-4 bg-muted rounded animate-pulse"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-16 mb-2 animate-pulse"></div>
+                <div className="h-3 bg-muted rounded w-20 animate-pulse"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">
-            {isArabic ? 'تحليلات المخزون' : 'Inventory Analytics'}
-          </h2>
-          <p className="text-muted-foreground">
-            {isArabic ? 'نظرة شاملة على المخزون والمبيعات' : 'Comprehensive overview of inventory and sales'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={loadAnalyticsData} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            {isArabic ? 'تحديث' : 'Refresh'}
-          </Button>
-          <Button onClick={exportReport}>
-            <Download className="h-4 w-4 mr-2" />
-            {isArabic ? 'تصدير التقرير' : 'Export Report'}
-          </Button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Key Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'إجمالي المنتجات' : 'Total Products'}
+              {isArabic ? 'إجمالي الإيرادات' : 'Total Revenue'}
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.totalProducts}</div>
+            <div className="text-2xl font-bold">{formatPrice(analyticsData.totalRevenue)}</div>
             <p className="text-xs text-muted-foreground">
-              {isArabic ? 'منتج في المتجر' : 'products in store'}
+              <TrendingUp className="h-3 w-3 inline mr-1 text-green-500" />
+              {isArabic ? 'نمو هذا الشهر' : 'Growth this month'}
             </p>
           </CardContent>
         </Card>
@@ -267,12 +170,12 @@ export default function InventoryAnalytics() {
             <CardTitle className="text-sm font-medium">
               {isArabic ? 'إجمالي الطلبات' : 'Total Orders'}
             </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.totalOrders}</div>
+            <div className="text-2xl font-bold">{analyticsData.totalOrders}</div>
             <p className="text-xs text-muted-foreground">
-              {isArabic ? 'طلب تم تسجيله' : 'orders placed'}
+              {isArabic ? 'طلبات جديدة' : 'New orders'}
             </p>
           </CardContent>
         </Card>
@@ -280,132 +183,191 @@ export default function InventoryAnalytics() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              {isArabic ? 'إجمالي العملاء' : 'Total Customers'}
+              {isArabic ? 'المنتجات' : 'Products'}
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{analyticsData.totalProducts}</div>
+            <p className="text-xs text-muted-foreground">
+              {analyticsData.lowStockProducts.length > 0 && (
+                <>
+                  <AlertTriangle className="h-3 w-3 inline mr-1 text-orange-500" />
+                  {analyticsData.lowStockProducts.length} {isArabic ? 'مخزون منخفض' : 'low stock'}
+                </>
+              )}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {isArabic ? 'المستخدمون' : 'Users'}
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.totalUsers}</div>
+            <div className="text-2xl font-bold">{analyticsData.totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              {isArabic ? 'عميل مسجل' : 'registered customers'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {isArabic ? 'إجمالي الإيرادات' : 'Total Revenue'}
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${data.totalRevenue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              {isArabic ? 'إجمالي المبيعات' : 'total sales'}
+              {isArabic ? 'مستخدمون نشطون' : 'Active users'}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Low Stock Items */}
+      {/* Charts and Tables */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Order Status Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingDown className="h-5 w-5 mr-2 text-red-500" />
-              {isArabic ? 'منتجات بمخزون منخفض' : 'Low Stock Items'}
+            <CardTitle className="flex items-center gap-2">
+              <BarChart className="h-5 w-5" />
+              {isArabic ? 'توزيع حالة الطلبات' : 'Order Status Distribution'}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {data.lowStockItems.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  {isArabic ? 'جميع المنتجات متوفرة بكمية كافية' : 'All products are well stocked'}
-                </p>
-              ) : (
-                data.lowStockItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between">
+              {Object.entries(analyticsData.ordersByStatus).map(([status, count]) => (
+                <div key={status}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium capitalize">{status}</span>
+                    <span className="text-sm text-muted-foreground">{count}</span>
+                  </div>
+                  <Progress 
+                    value={(count / analyticsData.totalOrders) * 100} 
+                    className="h-2"
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Low Stock Alert */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              {isArabic ? 'تنبيه المخزون المنخفض' : 'Low Stock Alert'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analyticsData.lowStockProducts.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                {isArabic ? 'جميع المنتجات في المخزون' : 'All products are in stock'}
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {analyticsData.lowStockProducts.slice(0, 5).map((product) => (
+                  <div key={product.id} className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.category}</p>
+                      <p className="font-medium text-sm">
+                        {isArabic ? (product.name_ar || product.name) : product.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isArabic ? 'المتبقي:' : 'Remaining:'} {product.stock_quantity || product.stock || 0}
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium">{item.stock} {isArabic ? 'قطعة' : 'units'}</p>
-                      {getStockBadge(item.status)}
-                    </div>
+                    <Badge variant="destructive" className="text-xs">
+                      {isArabic ? 'مخزون منخفض' : 'Low Stock'}
+                    </Badge>
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Selling Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2 text-green-500" />
-              {isArabic ? 'أكثر المنتجات مبيعاً' : 'Top Selling Products'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {data.topSellingProducts.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  {isArabic ? 'لا توجد بيانات مبيعات' : 'No sales data available'}
-                </p>
-              ) : (
-                data.topSellingProducts.map((item, index) => (
-                  <div key={item.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-bold">{index + 1}</span>
-                      </div>
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">{item.category}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">{item.sold} {isArabic ? 'مبيع' : 'sold'}</p>
-                      <p className="text-sm text-muted-foreground">${item.revenue.toFixed(2)}</p>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
+      {/* Top Selling Products */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Activity className="h-5 w-5 mr-2" />
-            {isArabic ? 'النشاط الأخير' : 'Recent Activity'}
-          </CardTitle>
+          <CardTitle>{isArabic ? 'المنتجات الأكثر مبيعاً' : 'Top Selling Products'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {data.recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary"></div>
-                <div className="flex-1">
-                  <p className="text-sm">{activity.message}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(activity.timestamp).toLocaleString()}
-                  </p>
-                </div>
-                <Badge variant="outline">
-                  {activity.type === 'order' ? (isArabic ? 'طلب' : 'Order') :
-                   activity.type === 'product' ? (isArabic ? 'منتج' : 'Product') :
-                   (isArabic ? 'مستخدم' : 'User')}
-                </Badge>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{isArabic ? 'المنتج' : 'Product'}</TableHead>
+                <TableHead>{isArabic ? 'المبيعات' : 'Sales'}</TableHead>
+                <TableHead>{isArabic ? 'المخزون' : 'Stock'}</TableHead>
+                <TableHead>{isArabic ? 'السعر' : 'Price'}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {analyticsData.topSellingProducts.map(({ product, salesCount }) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">
+                        {isArabic ? (product.name_ar || product.name) : product.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        SKU: {product.sku || product.id}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{salesCount}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`${(product.stock_quantity || product.stock || 0) < 10 ? 'text-orange-500' : ''}`}>
+                      {product.stock_quantity || product.stock || 0}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {formatPrice(product.price_omr || product.price_usd || product.price_sar || 0)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Recent Orders */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{isArabic ? 'الطلبات الأخيرة' : 'Recent Orders'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{isArabic ? 'رقم الطلب' : 'Order #'}</TableHead>
+                <TableHead>{isArabic ? 'العميل' : 'Customer'}</TableHead>
+                <TableHead>{isArabic ? 'الحالة' : 'Status'}</TableHead>
+                <TableHead>{isArabic ? 'الإجمالي' : 'Total'}</TableHead>
+                <TableHead>{isArabic ? 'التاريخ' : 'Date'}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {analyticsData.recentOrders.map((order) => (
+                <TableRow key={order.id}>
+                  <TableCell className="font-mono text-sm">{order.order_number}</TableCell>
+                  <TableCell>{order.customer_name}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      variant={
+                        order.status === 'delivered' ? 'default' :
+                        order.status === 'shipped' ? 'secondary' :
+                        order.status === 'cancelled' ? 'destructive' : 'outline'
+                      }
+                    >
+                      {order.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {formatPrice(order.total_price_omr || order.total_price_usd || order.total_price_sar || 0)}
+                  </TableCell>
+                  <TableCell>
+                    {new Date(order.created_at || order.created || '').toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

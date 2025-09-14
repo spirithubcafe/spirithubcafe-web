@@ -8,8 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { getProductPriceDetails } from '../utils/productUtils'
-import { type Product } from '@/types'
+import { getProductPriceDetails, type Product } from '@/lib/firebase'
 import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
 import toast from 'react-hot-toast'
 
@@ -125,20 +124,20 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   }
 
   // Get detailed pricing information including sale status
-  const priceDetails = getProductPriceDetails(product, selectedProperties, currency.toUpperCase() as 'USD' | 'SAR' | 'OMR')
+  const priceDetails = getProductPriceDetails(product, selectedProperties, currency.toLowerCase() as 'omr' | 'usd' | 'sar')
   
   // Get product badges
   const getProductBadges = () => {
     const badges = []
     
-    if (priceDetails.onSale) {
+    if (priceDetails.isOnSale) {
       badges.push({
-        text: isArabic ? `خصم ${Math.round(((priceDetails.originalPrice || priceDetails.basePrice) - priceDetails.finalPrice) / (priceDetails.originalPrice || priceDetails.basePrice) * 100)}%` : `${Math.round(((priceDetails.originalPrice || priceDetails.basePrice) - priceDetails.finalPrice) / (priceDetails.originalPrice || priceDetails.basePrice) * 100)}% OFF`,
+        text: isArabic ? `خصم ${priceDetails.discountPercentage}%` : `${priceDetails.discountPercentage}% OFF`,
         color: 'bg-red-500'
       })
     }
     
-        if (product.stock <= 5 && product.stock > 0) {
+    if (product.stock_quantity <= 5 && product.stock_quantity > 0) {
       badges.push({
         text: isArabic ? 'كمية محدودة' : 'Limited Stock',
         color: 'bg-orange-500'
@@ -156,10 +155,12 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
     const availableImages = []
     
     // Add main image first (highest priority)
-    if (product.image) availableImages.push(product.image)
     if (product.image_url) availableImages.push(product.image_url)
+    if (product.image) availableImages.push(product.image)
     
     // Then add gallery images
+    if (product.images) availableImages.push(...product.images)
+    if (product.gallery) availableImages.push(...product.gallery)
     if (product.gallery_images) availableImages.push(...product.gallery_images)
     
     // Remove duplicates and empty strings
@@ -169,7 +170,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
   const productImages = getProductImages()
 
   const incrementQuantity = () => {
-        if (quantity < (product.stock || 0)) {
+    if (quantity < (product.stock_quantity || 0)) {
       setQuantity(prev => prev + 1)
     }
   }
@@ -182,7 +183,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
   const handleWishlistToggle = async () => {
     try {
-      await toggleWishlist(String(product.id))
+      await toggleWishlist(product.id)
     } catch (error) {
       console.error('Error toggling wishlist:', error)
       toast.error(isArabic ? 'حدث خطأ أثناء إضافة/إزالة المفضلة' : 'Error updating wishlist')
@@ -272,7 +273,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
 
             {/* Coffee Information */}
             <CoffeeInfoDisplay
-              roastLevel={product.roast_level ? String(product.roast_level) : undefined}
+              roastLevel={product.roast_level}
               roastLevel_ar={product.roast_level_ar}
               process={product.processing_method}
               process_ar={product.processing_method_ar}
@@ -388,7 +389,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
             {/* Price and Quantity Section */}
             <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-2">
-                {priceDetails.onSale && priceDetails.originalPrice ? (
+                {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
                   <>
                     <span className="text-lg font-bold text-primary">
                       {formatPrice(priceDetails.finalPrice)}
@@ -397,7 +398,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                       {formatPrice(priceDetails.originalPrice)}
                     </span>
                     <Badge variant="destructive" className="text-xs">
-                      -{Math.round(((priceDetails.originalPrice - priceDetails.finalPrice) / priceDetails.originalPrice) * 100)}%
+                      -{priceDetails.discountPercentage}%
                     </Badge>
                   </>
                 ) : (
@@ -409,7 +410,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               
               {/* Quantity Controls and Stock */}
               <div className="flex items-center gap-2">
-                {product.stock > 0 && (
+                {product.stock_quantity > 0 && (
                   <div className="flex items-center ltr">
                     <Button
                       variant="outline"
@@ -428,14 +429,14 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                       size="icon"
                       className="h-7 w-7 rounded-l-none"
                       onClick={incrementQuantity}
-                      disabled={quantity >= product.stock}
+                      disabled={quantity >= product.stock_quantity}
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
                   </div>
                 )}
                 <StockIndicator 
-                  stock={product.stock || 0} 
+                  stock={product.stock_quantity || product.stock || 0} 
                   variant="compact"
                   lowStockThreshold={10}
                   className="text-green-400"
@@ -449,7 +450,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
               <Button 
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-2 text-sm" 
                 onClick={handleAddToCart} 
-                disabled={product.stock <= 0 || isLoading}
+                disabled={product.stock_quantity <= 0 || isLoading}
               >
                 {isLoading 
                   ? (isArabic ? 'جاري الإضافة...' : 'Adding...') 
@@ -465,7 +466,7 @@ export function ProductQuickView({ product, children }: ProductQuickViewProps) {
                 disabled={wishlistLoading}
                 className="h-10 w-10"
               >
-                <Heart className={`h-4 w-4 ${isInWishlist(String(product.id)) ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`h-4 w-4 ${isInWishlist(product.id) ? 'fill-current text-red-500' : ''}`} />
               </Button>
             </div>
           </div>

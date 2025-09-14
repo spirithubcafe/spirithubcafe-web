@@ -33,7 +33,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { usePendingOrders } from '@/hooks/usePendingOrders'
 import type { Order } from '@/types'
-import { jsonDataService, type UserProfile, type Product } from '@/services/jsonDataService'
+import { firestoreService, type UserProfile, type Product } from '@/lib/firebase'
+import { productsService } from '@/services/products'
 
 // Dashboard Components
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
@@ -45,14 +46,14 @@ import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
 import CategoryManagement from '@/components/admin/CategoryManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
 import ReviewManagement from '@/components/admin/ReviewManagement'
-import OrderManagementProfessional from '@/components/admin/OrderManagementProfessional'
+import { OrderManagementProfessional } from '@/components/admin/OrderManagementProfessional'
 import InventoryAnalytics from '@/components/admin/InventoryAnalytics'
 import { FooterManagement } from '@/components/admin/FooterManagement'
 import { HeroSlideManagement } from '@/components/admin/HeroSlideManagement'
 import PagesManagement from '@/components/admin/PagesManagement'
 import HomepageManagement from '@/components/admin/HomepageManagement'
 import { ContactManagement } from '@/components/admin/ContactManagement'
-import AboutManagement from '@/components/admin/AboutManagement'
+import { AboutManagement } from '@/components/admin/AboutManagement'
 import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsManagement'
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 import CacheManagementPage from '@/pages/CacheManagementPage'
@@ -105,20 +106,33 @@ export default function DashboardPage() {
       try {
         setLoading(true)
 
-        // Fetch user orders (mock data for now)
-        setOrders([])
+        // Fetch user orders
+        if (user?.id) {
+          const userOrders = await firestoreService.orders.list(user.id)
+          setOrders(userOrders.items as unknown as Order[])
+        }
 
-        // Fetch products from JSON
-        const allProducts = await jsonDataService.getProducts()
-        setProducts(allProducts)
+        // Fetch featured products
+        const featuredProducts = await productsService.getFeaturedProducts(10)
+        setProducts(featuredProducts.map((p: any) => ({
+          ...p,
+          stock: p.stock ?? 0,
+          low_stock_threshold: p.low_stock_threshold ?? 0,
+          featured: p.featured ?? false,
+          bestseller: p.bestseller ?? false,
+          price_omr: p.price_omr ?? 0,
+          price_usd: p.price_usd ?? 0,
+          price_sar: p.price_sar ?? 0,
+          name_ar: p.name_ar ?? '',
+        })))
 
-        // Fetch users (from JSON service)
+        // Fetch users (admin only)
         if (user?.role === 'admin') {
-          const allUsers = await jsonDataService.getUsers()
-          setUsers(allUsers)
+          const allUsers = await firestoreService.users.list()
+          setUsers(allUsers.items)
 
-          // Set mock pending reviews count
-          setPendingReviewsCount(0)
+          // Fetch pending reviews count
+          await loadPendingReviewsCount()
         }
 
       } catch (error) {
@@ -132,6 +146,17 @@ export default function DashboardPage() {
       fetchDashboardData()
     }
   }, [user])
+
+  // Load pending reviews count
+  const loadPendingReviewsCount = async () => {
+    try {
+      const result = await firestoreService.reviews.list()
+      const pendingCount = result.items.filter(review => !review.is_approved).length
+      setPendingReviewsCount(pendingCount)
+    } catch (error) {
+      console.error('Error loading pending reviews count:', error)
+    }
+  }
 
   const handleLogout = () => {
     logout()
@@ -336,16 +361,7 @@ export default function DashboardPage() {
       case 'orders':
         return <DashboardOrders orders={orders} />
       case 'profile':
-        return user && <DashboardProfile user={{
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          role: user.role === 'admin' ? 'admin' : 'user',
-          is_active: true,
-          email_verified: user.isEmailVerified,
-          created: user.createdAt
-        }} />
+        return user && <DashboardProfile user={user} />
       case 'settings':
         return <DashboardSettings />
       case 'users':
@@ -561,19 +577,21 @@ export default function DashboardPage() {
                   </Button>
 
                   <Avatar className="h-12 w-12 lg:h-16 lg:w-16 flex-shrink-0">
-                    <AvatarImage src="" alt={user.name || user.email} />
+                    <AvatarImage src={user.avatar} alt={user.full_name} />
                     <AvatarFallback>
-                      {(user.name || user.email).split(' ').map((n: string) => n[0]).join('')}
+                      {user.full_name.split(' ').map((n: string) => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <h1 className="text-xl lg:text-3xl font-bold truncate">
-                      {isArabic ? `مرحباً ${user.name || user.email}` : `Welcome ${user.name || user.email}`}
+                      {isArabic ? `مرحباً ${user.full_name}` : `Welcome ${user.full_name}`}
                     </h1>
                     <p className="text-sm lg:text-base text-muted-foreground">
                       {user.role === 'admin'
                         ? (isArabic ? 'مدير النظام' : 'System Administrator')
-                        : (isArabic ? 'عضو' : 'Member')
+                        : user.role === 'employee'
+                          ? (isArabic ? 'موظف' : 'Employee')
+                          : (isArabic ? 'عضو' : 'Member')
                       }
                     </p>
                   </div>

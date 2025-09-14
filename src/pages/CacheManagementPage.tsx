@@ -40,15 +40,16 @@ export default function CacheManagementPage() {
     }
   }, [loadCacheStats])
 
-  useEffect(() => {
-    if (!autoRefresh) return
+  // Remove auto refresh functionality
+  // useEffect(() => {
+  //   if (!autoRefresh) return
 
-    const interval = setInterval(() => {
-      loadCacheStats()
-    }, 5000) // Refresh every 5 seconds
+  //   const interval = setInterval(() => {
+  //     loadCacheStats()
+  //   }, 5000) // Refresh every 5 seconds
 
-    return () => clearInterval(interval)
-  }, [autoRefresh, loadCacheStats])
+  //   return () => clearInterval(interval)
+  // }, [autoRefresh, loadCacheStats])
 
   const handleClearAllCaches = async () => {
     if (!confirm('This will remove all cached data including offline resources, API responses, and static assets. Are you sure you want to continue?')) {

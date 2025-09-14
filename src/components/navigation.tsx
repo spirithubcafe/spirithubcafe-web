@@ -13,8 +13,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
 import { usePendingOrders } from '@/hooks/usePendingOrders'
-import { jsonCategoriesDataService } from '@/services/jsonSettingsService'
-import type { Category } from '@/types'
+import { firestoreService, type Category } from '@/lib/firebase'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/components/theme-provider'
 import { useUpdateAvailable } from '@/hooks/useUpdateAvailable'
@@ -23,8 +22,7 @@ const NavigationComponent = memo(() => {
   const { t, i18n } = useTranslation()
   const { resolvedTheme } = useTheme()
   const auth = useAuth()
-  const currentUser = auth?.currentUser
-  const logout = auth?.logout
+  const { logout } = auth
   const { getTotalItems, getTotalPrice } = useCart()
   const { wishlistCount } = useWishlist()
   const { pendingCount } = usePendingOrders()
@@ -60,13 +58,13 @@ const NavigationComponent = memo(() => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [isHomePage])
 
-  // Load categories from JSON
+  // Load categories from Firestore
   useEffect(() => {
     const loadCategories = async () => {
       try {
         setLoadingCategories(true)
-        const categories = await jsonCategoriesDataService.getActiveCategories()
-        setCategories(categories)
+        const result = await firestoreService.categories.list()
+        setCategories(result.items)
       } catch (error) {
         console.error('Error loading categories:', error)
       } finally {
@@ -141,12 +139,12 @@ const NavigationComponent = memo(() => {
               isArabic ? "order-3" : "order-1"
             )}>
               <Link to="/" className={cn(
-                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto rounded-lg px-2 py-1",
+                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
                 isHomePage && !isScrolled 
-                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30 backdrop-blur-sm"
+                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30"
                   : resolvedTheme === 'dark'
-                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30 backdrop-blur-sm"
-                    : "hover:opacity-80 bg-background hover:bg-muted border border-border"
+                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30"
+                    : "hover:opacity-80 bg-white/80 hover:bg-white/95 border border-gray-300/40"
               )}>
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
@@ -167,14 +165,14 @@ const NavigationComponent = memo(() => {
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto",
+                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                   isActive('/')
                     ? isHomePage && !isScrolled
                       ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                     : isHomePage && !isScrolled
                       ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                      : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
+                      : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                   "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                 )}
               >
@@ -189,14 +187,14 @@ const NavigationComponent = memo(() => {
                   variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
                     location.pathname.startsWith('/shop')
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                       : isHomePage && !isScrolled
                         ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
+                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -281,14 +279,14 @@ const NavigationComponent = memo(() => {
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto",
+                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
                     isActive(item.href)
                       ? isHomePage && !isScrolled
                         ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg"
+                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
                       : isHomePage && !isScrolled
                         ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-muted hover:bg-muted/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-border dark:border-black/40",
+                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
                     "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
                   )}
                 >
@@ -312,7 +310,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -322,7 +320,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -332,7 +330,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
@@ -342,14 +340,14 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 />
               </div>
 
               {/* Wishlist Button */}
-              {currentUser && (
+              {auth.currentUser && (
                 <Button 
                   variant="outline" 
                   size="icon" 
@@ -359,7 +357,7 @@ const NavigationComponent = memo(() => {
                     isHomePage && !isScrolled
                       ? resolvedTheme === 'dark'
                         ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                       : ""
                   )}
                 >
@@ -382,7 +380,7 @@ const NavigationComponent = memo(() => {
               </div>
 
               {/* Auth Buttons */}
-              {currentUser ? (
+              {auth.currentUser ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button 
                     variant="outline" 
@@ -393,7 +391,7 @@ const NavigationComponent = memo(() => {
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
                           ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                          : "border-black/30 text-black hover:bg-background hover:border-black/50"
+                          : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
                         : ""
                     )}
                   >
@@ -402,8 +400,8 @@ const NavigationComponent = memo(() => {
                       <span className="hidden lg:block">
                         {t('navigation.dashboard')}
                       </span>
-                      {/* Show pending orders count for admin */}
-                      {(currentUser?.role === 'admin') && pendingCount > 0 && (
+                      {/* Show pending orders count for admin/staff */}
+                      {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
                         <Badge 
                           variant="destructive" 
                           className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
@@ -435,16 +433,16 @@ const NavigationComponent = memo(() => {
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     asChild 
                     className={cn(
-                      "transition-all duration-200 pointer-events-auto",
+                      "transition-all duration-200 backdrop-blur-sm",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                          : "border-black/30 text-black hover:bg-background hover:border-black/50"
-                        : "hover:bg-muted"
+                          ? "text-green-400 hover:text-green-300 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-400/15"
+                          : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
+                        : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
                     )}
                   >
                     <Link to="/login">{t('navigation.login')}</Link>
@@ -456,9 +454,9 @@ const NavigationComponent = memo(() => {
                       "transition-all duration-200",
                       isHomePage && !isScrolled
                         ? resolvedTheme === 'dark'
-                          ? "bg-primary/90 text-primary-foreground border-primary/50 hover:bg-primary hover:border-primary"
-                          : "bg-primary text-primary-foreground border-primary hover:bg-primary/90 hover:border-primary/90"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90"
+                          ? "bg-green-600/80 text-white border-green-500/50 hover:bg-green-600 hover:border-green-500"
+                          : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
+                        : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
                     )}
                   >
                     <Link to="/register">{t('navigation.register')}</Link>
@@ -741,7 +739,7 @@ const NavigationComponent = memo(() => {
 
               {/* Auth Section */}
               <div className="border-t p-6 bg-muted/20">
-                {currentUser ? (
+                {auth.currentUser ? (
                   <div className="space-y-3">
                     <div className={cn(
                       "flex items-center gap-3 p-3 rounded-lg bg-background border",
@@ -754,8 +752,8 @@ const NavigationComponent = memo(() => {
                         "flex-1",
                         isArabic ? "text-right" : "text-left"
                       )}>
-                        <p className="font-medium text-sm">{currentUser?.name}</p>
-                        <p className="text-xs text-muted-foreground">{currentUser?.email}</p>
+                        <p className="font-medium text-sm">{auth.currentUser?.full_name}</p>
+                        <p className="text-xs text-muted-foreground">{auth.currentUser?.email}</p>
                       </div>
                     </div>
                     <div className={cn(
@@ -769,8 +767,8 @@ const NavigationComponent = memo(() => {
                         )}>
                           <User className="h-4 w-4" />
                           {t('navigation.dashboard')}
-                          {/* Show pending orders count for admin */}
-                          {(currentUser?.role === 'admin') && pendingCount > 0 && (
+                          {/* Show pending orders count for admin/staff */}
+                          {(auth.currentUser?.role === 'admin' || auth.currentUser?.role === 'shop_owner' || auth.currentUser?.role === 'employee') && pendingCount > 0 && (
                             <Badge 
                               variant="destructive" 
                               className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
@@ -780,7 +778,7 @@ const NavigationComponent = memo(() => {
                           )}
                         </Link>
                       </Button>
-                      {currentUser?.role === 'admin' && (
+                      {auth.currentUser?.role === 'admin' && (
                         <Button variant="outline" size="sm" asChild>
                           <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
                             "flex items-center gap-2 justify-center",
@@ -824,12 +822,12 @@ const NavigationComponent = memo(() => {
                     "grid grid-cols-2 gap-2",
                     isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                   )}>
-                    <Button variant="outline" asChild className="text-foreground border-border hover:bg-muted dark:text-foreground dark:border-border dark:hover:bg-muted">
+                    <Button variant="outline" asChild className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/20">
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.login')}
                       </Link>
                     </Button>
-                    <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground border-primary hover:border-primary/90 dark:bg-primary dark:hover:bg-primary/90">
+                    <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700 dark:bg-green-600 dark:hover:bg-green-700">
                       <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.register')}
                       </Link>

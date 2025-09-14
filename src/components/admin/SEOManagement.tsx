@@ -24,7 +24,7 @@ import type { SEOSettings } from '@/types/seo'
 export function SEOManagement() {
   const { settings, loading, updateSettings } = useSEOSettings()
   const [saving, setSaving] = useState(false)
-  const [localSettings, setLocalSettings] = useState<SEOSettings | null>(null)
+  const [localSettings, setLocalSettings] = useState<SEOSettings | null>(settings)
 
   // Update local settings when settings change
   if (settings && !localSettings) {

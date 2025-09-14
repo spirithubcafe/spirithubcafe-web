@@ -6,11 +6,11 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { HeroSlider } from '@/components/ui/hero-slider'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
-import type { Product, Category } from '@/types'
-import { jsonProductsService, jsonCategoriesDataService, jsonHomepageService } from '@/services/jsonSettingsService'
+import type { Product, Category } from '@/lib/firebase'
 import { useCurrency } from '@/hooks/useCurrency'
+import { useProducts, useCategories, useGlobalHomepageSettings } from '@/contexts/enhanced-data-provider'
 import { conversionRates } from '@/lib/currency'
 import { NewsletterSection } from '@/components/newsletter-section'
 import DOMPurify from 'dompurify'
@@ -22,35 +22,15 @@ export function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { formatPrice, currency } = useCurrency()
   
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [homepageSettings, setHomepageSettings] = useState<any>({})
-  
-  // Load data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsData, categoriesData, settingsData] = await Promise.all([
-          jsonProductsService.getProducts(),
-          jsonCategoriesDataService.getCategories(),
-          jsonHomepageService.getHomepageSettings()
-        ])
-        setProducts(productsData)
-        setCategories(categoriesData)
-        setHomepageSettings(settingsData)
-      } catch (error) {
-        console.error('Error loading homepage data:', error)
-      }
-    }
-
-    loadData()
-  }, [])
+  const { products, loading: loadingProducts } = useProducts()
+  const { categories, loading: loadingCategories } = useCategories()
+  const { settings: homepageSettings } = useGlobalHomepageSettings()
   
   const isArabic = i18n.language === 'ar'
   
   const latestProducts = useMemo(() => {
     return products
-      .sort((a: Product, b: Product) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .sort((a: Product, b: Product) => new Date(b.created).getTime() - new Date(a.created).getTime())
       .slice(0, 6)
   }, [products])
   
@@ -79,7 +59,7 @@ export function HomePage() {
     
     if (currency !== 'OMR') {
       const rate = conversionRates[currency] || 1
-      return (basePrice || 0) * rate
+      return (basePrice * rate)
     }
     return basePrice
   }
@@ -236,7 +216,17 @@ export function HomePage() {
                 <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
               </div>
               
-            {latestProducts.length > 0 ? (
+            {loadingProducts ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : latestProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {latestProducts.slice(0, 6).map((product: Product) => {
                   const productPrice = getProductPrice(product)
@@ -252,8 +242,10 @@ export function HomePage() {
                       <div className="w-full aspect-square overflow-hidden bg-muted">
                         <img
                           src={
-                            product.image || 
                             product.image_url || 
+                            product.image || 
+                            product.images?.[0] || 
+                            product.gallery?.[0] || 
                             product.gallery_images?.[0] || 
                             '/images/logo.png'
                           }
@@ -290,18 +282,18 @@ export function HomePage() {
                         
                         <div className="mt-auto">
                           <div className="product-price-container">
-                            {salePrice && salePrice < (productPrice || 0) ? (
+                            {salePrice && salePrice < productPrice ? (
                               <>
                                 <span className="text-sm font-bold text-red-500">
                                   {formatPrice(salePrice)}
                                 </span>
                                 <span className="text-xs text-muted-foreground line-through">
-                                  {formatPrice(productPrice || 0)}
+                                  {formatPrice(productPrice)}
                                 </span>
                               </>
                             ) : (
                               <span className="text-sm font-bold text-primary">
-                                {formatPrice(productPrice || 0)}
+                                {formatPrice(productPrice)}
                               </span>
                             )}
                           </div>
@@ -381,7 +373,17 @@ export function HomePage() {
               <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
             </div>
             
-            {categories.length > 0 ? (
+            {loadingCategories ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                  <div key={i} className="flex flex-col items-center space-y-3">
+                    <div className="animate-pulse w-full aspect-square bg-muted rounded-lg"></div>
+                    <div className="animate-pulse h-4 bg-muted rounded w-3/4"></div>
+                    <div className="animate-pulse h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : categories.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 max-w-7xl mx-auto">
                 {(() => {
                   // If homepage settings contains an explicit list of category IDs, use that order.
@@ -389,7 +391,7 @@ export function HomePage() {
                   if (explicitIds && explicitIds.length > 0) {
                     // Map ids to category objects, filter out missing ones
                     return explicitIds
-                      .map((id: any) => categories.find((c: any) => c.id === id))
+                      .map(id => categories.find(c => c.id === id))
                       .filter(Boolean)
                       .map((category: Category | undefined) => {
                         if (!category) return null
@@ -404,7 +406,7 @@ export function HomePage() {
                           >
                             <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                               <img
-                                src={(category as any).image || (category as any).image_url || '/images/logo.png'}
+                                src={category.image || '/images/logo.png'}
                                 alt={categoryName}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
@@ -423,7 +425,7 @@ export function HomePage() {
 
                   // Fallback: show categories where showOnHome !== false
                   return categories
-                    .filter((c: any) => c.is_active !== false)
+                    .filter((c: Category) => c.showOnHome !== false)
                     .map((category: Category) => {
                   const isArabic = localStorage.getItem('i18nextLng') === 'ar'
                   const categoryName = isArabic ? (category.name_ar || category.name) : category.name
@@ -436,7 +438,7 @@ export function HomePage() {
                       >
                         <div className="w-full aspect-square overflow-hidden rounded-lg bg-muted border border-border">
                           <img
-                            src={(category as any).image || (category as any).image_url || '/images/logo.png'}
+                            src={category.image || '/images/logo.png'}
                             alt={categoryName}
                             className="w-full h-full object-cover"
                             loading="lazy"

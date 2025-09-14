@@ -12,7 +12,7 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function LoginPage() {
   const { t, i18n } = useTranslation()
-  const { login, sendEmailVerification } = useAuth()
+  const { login, sendEmailVerification, refreshUser } = useAuth()
   const navigate = useNavigate()
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -46,8 +46,13 @@ export function LoginPage() {
         console.log('Login successful, navigating to dashboard')
         navigate('/dashboard')
       } else {
-        console.log('Login failed:', result.error)
-        setError(result.error || t('auth.login.invalidCredentials'))
+        if (result.requiresEmailVerification) {
+          console.log('Email verification required')
+          setShowEmailVerificationDialog(true)
+        } else {
+          console.log('Login failed:', result.error)
+          setError(result.error || t('auth.login.invalidCredentials'))
+        }
       }
     } catch (error: any) {
       console.error('Login exception:', error)
@@ -74,15 +79,17 @@ export function LoginPage() {
 
   const handleCheckVerificationStatus = async () => {
     try {
+      await refreshUser()
       // Try to login again to see if verification is now complete
       const result = await login(formData.email, formData.password)
       if (result.success) {
         setShowEmailVerificationDialog(false)
         navigate('/dashboard')
-      } else {
+      } else if (!result.requiresEmailVerification) {
         setError(result.error || 'Login failed')
         setShowEmailVerificationDialog(false)
       }
+      // If still requires verification, keep dialog open
     } catch (error: any) {
       console.error('Check verification status error:', error)
       setError(error.message || 'Failed to check verification status')

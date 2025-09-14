@@ -1,185 +1,236 @@
-interface CheckoutSettings {
-  currency: string
-  paymentMethods: string[]
-  shippingMethods: string[]
-  taxRate: number
-  freeShippingThreshold: number
-  allowGuestCheckout: boolean
-  requirePhoneNumber: boolean
-  requireAddress: boolean
-  allowCouponCodes: boolean
-  autoApplyCoupons: boolean
-  emailNotifications: boolean
-  smsNotifications: boolean
-  orderConfirmationMessage: string
-  orderConfirmationMessageAr: string
-  defaultCountry: string
-  supportedCountries: string[]
-  minimumOrderAmount: number
-  maximumOrderAmount: number
-  orderProcessingTime: string
-  returnPolicy: string
-  privacyPolicy: string
-  termsOfService: string
-  payment_gateway: {
-    enabled: boolean
-    provider: string
-    sandbox: boolean
-  }
-  bankMuscat: {
-    merchantId: string
-    accessCode: string
-    workingKey: string
-    currency: string
-    language: string
-    redirectUrl: string
-    cancelUrl: string
-    enabled: boolean
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore/lite'
+import { db } from '../lib/firebase'
+
+const safeFirestoreOperation = async (operation: () => Promise<any>, defaultValue: any = null, operationName: string = 'operation') => {
+  try {
+    return await operation()
+  } catch (error) {
+    console.error(`❌ Firestore operation failed (${operationName}):`, error)
+    return defaultValue
   }
 }
 
-class CheckoutSettingsService {
-  private settings: CheckoutSettings | null = null
-
-  async getSettings(): Promise<CheckoutSettings> {
-    if (this.settings) {
-      return this.settings
-    }
-
-    try {
-      const response = await fetch('/data/checkout-settings.json')
-      if (!response.ok) {
-        throw new Error('Failed to load checkout settings')
-      }
-      this.settings = await response.json()
-      return this.settings!
-    } catch (error) {
-      console.error('Error loading checkout settings:', error)
-      // Return default settings
-      const defaultSettings: CheckoutSettings = {
-        currency: 'OMR',
-        paymentMethods: ['cash_on_delivery', 'bank_transfer'],
-        shippingMethods: ['standard', 'express'],
-        taxRate: 0,
-        freeShippingThreshold: 25,
-        allowGuestCheckout: true,
-        requirePhoneNumber: true,
-        requireAddress: true,
-        allowCouponCodes: true,
-        autoApplyCoupons: false,
-        emailNotifications: true,
-        smsNotifications: false,
-        orderConfirmationMessage: 'Thank you for your order! We will contact you soon.',
-        orderConfirmationMessageAr: 'شكراً لطلبك! سنتواصل معك قريباً.',
-        defaultCountry: 'OM',
-        supportedCountries: ['OM', 'AE', 'SA', 'KW', 'BH', 'QA'],
-        minimumOrderAmount: 5,
-        maximumOrderAmount: 1000,
-        orderProcessingTime: '1-2 business days',
-        returnPolicy: 'No returns on coffee products',
-        privacyPolicy: '/pages/privacy-policy',
-        termsOfService: '/pages/terms-of-service',
-        payment_gateway: {
-          enabled: false,
-          provider: 'bank_muscat',
-          sandbox: true
-        },
-        bankMuscat: {
-          merchantId: '',
-          accessCode: '',
-          workingKey: '',
-          currency: 'OMR',
-          language: 'en',
-          redirectUrl: '/checkout/success',
-          cancelUrl: '/checkout/cancel',
-          enabled: false
+export const checkoutSettingsService = {
+  // Get checkout settings
+  get: async () => {
+    return await safeFirestoreOperation(
+      async () => {
+        const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'))
+        if (settingsDoc.exists()) {
+          return {
+            id: settingsDoc.id,
+            ...settingsDoc.data(),
+            created_at: settingsDoc.data().created_at?.toDate() || new Date(),
+            updated_at: settingsDoc.data().updated_at?.toDate() || new Date()
+          }
         }
-      }
-      this.settings = defaultSettings
-      return defaultSettings
-    }
-  }
+        
+        // Return default settings if none exist
+        return {
+          tax_rate: 0.1, // 10% tax
+          enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+          shipping_methods: [
+            {
+              id: 'pickup',
+              name: 'Pickup from our Cafe',
+              name_ar: 'الاستلام من المقهى',
+              enabled: true,
+              is_free: true,
+              pricing_type: 'flat',
+              base_cost_omr: 0,
+              base_cost_usd: 0,
+              base_cost_sar: 0,
+              estimated_delivery_days: 'Same day',
+              description: 'Free pickup from our cafe',
+              description_ar: 'استلام مجاني من المقهى'
+            },
+            {
+              id: 'nool_oman',
+              name: 'NOOL OMAN',
+              name_ar: 'نول عمان',
+              enabled: true,
+              is_free: false,
+              pricing_type: 'flat',
+              base_cost_omr: 2,
+              base_cost_usd: 5.2,
+              base_cost_sar: 19.5,
+              estimated_delivery_days: '1-2 days',
+              description: 'Fast delivery within Oman',
+              description_ar: 'توصيل سريع داخل عمان',
+              api_settings: {
+                provider: 'nool_oman',
+                api_url: 'https://api.nool.om',
+                account_number: '71925275'
+              }
+            },
+            {
+              id: 'aramex',
+              name: 'Aramex',
+              name_ar: 'أرامكس',
+              enabled: true,
+              is_free: false,
+              pricing_type: 'api_calculated',
+              base_cost_omr: 1.73,
+              base_cost_usd: 4.5,
+              base_cost_sar: 16.86,
+              estimated_delivery_days: '2-3 days',
+              description: 'International shipping via Aramex',
+              description_ar: 'شحن دولي عبر أرامكس',
+              api_settings: {
+                provider: 'aramex',
+                api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                username: 'aramex_username',
+                password: 'aramex_password',
+                account_number: 'aramex_account'
+              }
+            }
+          ],
+          payment_gateway: {
+            provider: 'bank_muscat',
+            enabled: true,
+            test_mode: false,
+            merchant_id: '224',
+            access_code: 'AVDP00LA16BE47PDEB',
+            working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+            supported_currencies: ['OMR', 'USD', 'SAR'],
+            additional_settings: {
+              return_url: 'https://spirithubcafe.com/checkout/success',
+              cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+              webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+            }
+          },
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+      },
+      null,
+      'getCheckoutSettings'
+    )
+  },
 
-  // Alias for backward compatibility
-  async get(): Promise<CheckoutSettings> {
-    return this.getSettings()
-  }
+  // Update checkout settings
+  update: async (settingsData: any) => {
+    return await safeFirestoreOperation(
+      async () => {
+        const settingsRef = doc(db, 'settings', 'checkout')
+        
+        // Check if document exists first
+        const docSnapshot = await getDoc(settingsRef)
+        
+        if (docSnapshot.exists()) {
+          // Document exists, update it
+          await updateDoc(settingsRef, {
+            ...settingsData,
+            updated_at: serverTimestamp()
+          })
+        } else {
+          // Document doesn't exist, create it
+          await setDoc(settingsRef, {
+            ...settingsData,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp()
+          })
+        }
+        
+        console.log('✅ Checkout settings updated successfully')
+        return true
+      },
+      false,
+      'updateCheckoutSettings'
+    )
+  },
 
-  async initialize(): Promise<boolean> {
-    try {
-      await this.getSettings()
-      return true
-    } catch (error) {
-      console.error('Failed to initialize checkout settings:', error)
-      return false
-    }
-  }
-
-  async updateSettings(newSettings: Partial<CheckoutSettings>): Promise<void> {
-    const currentSettings = await this.getSettings()
-    this.settings = { ...currentSettings, ...newSettings }
-    
-    // In a real implementation, this would save to a backend
-    localStorage.setItem('checkout-settings', JSON.stringify(this.settings))
-  }
-
-  // Alias for backward compatibility
-  async update(newSettings: Partial<CheckoutSettings>): Promise<boolean> {
-    try {
-      await this.updateSettings(newSettings)
-      return true
-    } catch (error) {
-      console.error('Failed to update checkout settings:', error)
-      return false
-    }
-  }
-
-  async getSupportedCountries(): Promise<string[]> {
-    const settings = await this.getSettings()
-    return settings.supportedCountries
-  }
-
-  async getPaymentMethods(): Promise<string[]> {
-    const settings = await this.getSettings()
-    return settings.paymentMethods
-  }
-
-  async getShippingMethods(): Promise<string[]> {
-    const settings = await this.getSettings()
-    return settings.shippingMethods
-  }
-
-  async calculateTax(amount: number): Promise<number> {
-    const settings = await this.getSettings()
-    return amount * settings.taxRate
-  }
-
-  async isFreeShippingEligible(orderTotal: number): Promise<boolean> {
-    const settings = await this.getSettings()
-    return orderTotal >= settings.freeShippingThreshold
-  }
-
-  async validateOrderAmount(amount: number): Promise<{ valid: boolean; message?: string }> {
-    const settings = await this.getSettings()
-    
-    if (amount < settings.minimumOrderAmount) {
-      return {
-        valid: false,
-        message: `Minimum order amount is ${settings.minimumOrderAmount} ${settings.currency}`
-      }
-    }
-    
-    if (amount > settings.maximumOrderAmount) {
-      return {
-        valid: false,
-        message: `Maximum order amount is ${settings.maximumOrderAmount} ${settings.currency}`
-      }
-    }
-    
-    return { valid: true }
+  // Initialize default checkout settings
+  initialize: async () => {
+    return await safeFirestoreOperation(
+      async () => {
+        const settingsDoc = await getDoc(doc(db, 'settings', 'checkout'))
+        
+        if (!settingsDoc.exists()) {
+          const defaultSettings = {
+            tax_rate: 0.1, // 10% tax
+            enabled_countries: ['OM', 'AE', 'SA', 'KW', 'IQ'],
+            shipping_methods: [
+              {
+                id: 'pickup',
+                name: 'Pickup from our Cafe',
+                name_ar: 'الاستلام من المقهى',
+                enabled: true,
+                is_free: true,
+                pricing_type: 'flat',
+                base_cost_omr: 0,
+                base_cost_usd: 0,
+                base_cost_sar: 0,
+                estimated_delivery_days: 'Same day',
+                description: 'Free pickup from our cafe',
+                description_ar: 'استلام مجاني من المقهى'
+              },
+              {
+                id: 'nool_oman',
+                name: 'NOOL OMAN',
+                name_ar: 'نول عمان',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'flat',
+                base_cost_omr: 2,
+                base_cost_usd: 5.2,
+                base_cost_sar: 19.5,
+                estimated_delivery_days: '1-2 days',
+                description: 'Fast delivery within Oman',
+                description_ar: 'توصيل سريع داخل عمان',
+                api_settings: {
+                  provider: 'nool_oman',
+                  api_url: 'https://api.nool.om',
+                  account_number: '71925275'
+                }
+              },
+              {
+                id: 'aramex',
+                name: 'Aramex',
+                name_ar: 'أرامكس',
+                enabled: true,
+                is_free: false,
+                pricing_type: 'api_calculated',
+                base_cost_omr: 1.73,
+                base_cost_usd: 4.5,
+                base_cost_sar: 16.86,
+                estimated_delivery_days: '2-3 days',
+                description: 'International shipping via Aramex',
+                description_ar: 'شحن دولي عبر أرامكس',
+                api_settings: {
+                  provider: 'aramex',
+                  api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
+                  username: 'aramex_username',
+                  password: 'aramex_password',
+                  account_number: 'aramex_account'
+                }
+              }
+            ],
+            payment_gateway: {
+              provider: 'bank_muscat',
+              enabled: true,
+              test_mode: false,
+              merchant_id: '224',
+              access_code: 'AVDP00LA16BE47PDEB',
+              working_key: '841FEAE32609C3E892C4D0B1393A7ACC',
+              supported_currencies: ['OMR', 'USD', 'SAR'],
+              additional_settings: {
+                return_url: 'https://spirithubcafe.com/checkout/success',
+                cancel_url: 'https://spirithubcafe.com/checkout/cancel',
+                webhook_url: 'https://spirithubcafe.com/api/payment/webhook'
+              }
+            },
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp()
+          }
+          
+          await setDoc(doc(db, 'settings', 'checkout'), defaultSettings)
+          console.log('✅ Default checkout settings initialized')
+        }
+        return true
+      },
+      false,
+      'initializeCheckoutSettings'
+    )
   }
 }
-
-export const checkoutSettingsService = new CheckoutSettingsService()
-export default checkoutSettingsService
-export type { CheckoutSettings }

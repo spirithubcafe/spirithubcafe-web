@@ -8,8 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { jsonProductsService } from '@/services/jsonSettingsService'
-import { type Product } from '@/types'
+import { firestoreService, type Product } from '@/lib/firebase'
 
 export default function DashboardWishlist() {
   const { i18n } = useTranslation()
@@ -32,11 +31,11 @@ export default function DashboardWishlist() {
       try {
         setLoading(true)
         const productPromises = wishlist.map(item => 
-          jsonProductsService.getProduct(item.product_id)
+          firestoreService.products.get(item.product_id)
         )
         
         const productResults = await Promise.all(productPromises)
-        const validProducts = productResults.filter((product: Product | null) => product !== null) as Product[]
+        const validProducts = productResults.filter(product => product !== null) as Product[]
         setProducts(validProducts)
       } catch (error) {
         console.error('Error loading wishlist products:', error)
@@ -111,16 +110,16 @@ export default function DashboardWishlist() {
         ) : (
           <div className="space-y-4">
             {products.slice(0, 6).map((product) => {
-              const displayPrice = product.on_sale && product.sale_price_omr 
+              const displayPrice = product.is_on_sale && product.sale_price_omr 
                 ? product.sale_price_omr 
-                : product.price_omr || 0
+                : product.price_omr
 
               return (
                 <div key={product.id} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
                   <Link to={`/product/${product.slug || product.id}`} className="flex-shrink-0">
                     <div className="w-16 h-16 aspect-square overflow-hidden rounded">
                       <img
-                        src={product.image || '/api/placeholder/64/64'}
+                        src={product.image || product.image_url || '/api/placeholder/64/64'}
                         alt={isArabic ? (product.name_ar || product.name) : product.name}
                         className="w-full h-full object-cover"
                       />
@@ -137,15 +136,15 @@ export default function DashboardWishlist() {
                       <span className="text-sm font-semibold text-primary">
                         {formatPrice(displayPrice)}
                       </span>
-                      {product.on_sale && product.sale_price_omr && product.price_omr && product.sale_price_omr < product.price_omr && (
+                      {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
                         <span className="text-xs text-muted-foreground line-through">
                           {formatPrice(product.price_omr)}
                         </span>
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {(product.stock || 0) > 0 
-                        ? (isArabic ? `متوفر (${product.stock || 0})` : `In stock (${product.stock || 0})`)
+                      {product.stock_quantity > 0 
+                        ? (isArabic ? `متوفر (${product.stock_quantity})` : `In stock (${product.stock_quantity})`)
                         : (isArabic ? 'نفدت الكمية' : 'Out of stock')
                       }
                     </div>
@@ -156,13 +155,13 @@ export default function DashboardWishlist() {
                       onClick={() => handleAddToCart(product)}
                       size="sm"
                       variant="outline"
-                      disabled={(product.stock || 0) <= 0}
+                      disabled={product.stock_quantity <= 0}
                     >
                       <ShoppingCart className="h-3 w-3" />
                     </Button>
                     
                     <Button
-                      onClick={() => handleRemoveFromWishlist(String(product.id))}
+                      onClick={() => handleRemoveFromWishlist(product.id)}
                       size="sm"
                       variant="outline"
                       className="text-red-500 hover:text-red-600"

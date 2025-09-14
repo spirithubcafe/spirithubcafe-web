@@ -8,17 +8,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useTranslation } from 'react-i18next'
-import { JSONCategoriesDataService } from '@/services/jsonSettingsService'
-import { type Category, type Product } from '@/types'
+import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
 import { conversionRates } from '@/lib/currency'
 import { useTheme } from '@/components/theme-provider'
 
 // Define local interface for cart items with products
-interface CartItemWithProduct {
-  id: string
-  product_id: string
-  quantity: number
-  selectedProperties?: Record<string, string>
+interface CartItemWithProduct extends CartItem {
   product: Product | null
 }
 
@@ -104,9 +99,8 @@ export function CartSidebar() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoriesService = new JSONCategoriesDataService()
-        const categoriesData = await categoriesService.getCategories()
-        setCategories(categoriesData)
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
       } catch (error) {
         console.error('Error loading categories:', error)
       }
@@ -115,8 +109,8 @@ export function CartSidebar() {
   }, [])
 
   // Get category name by ID
-  const getCategoryName = (categoryId: string | number) => {
-    const category = categories.find(c => String(c.id) === String(categoryId))
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
     if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
     return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
   }
@@ -188,12 +182,13 @@ export function CartSidebar() {
                   {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {item.product?.image || item.product?.image_url || item.product?.gallery_images?.[0] ? (
+                        {item.product?.image || item.product?.image_url || item.product?.images?.[0] || item.product?.gallery?.[0] ? (
                           <img 
                             src={
                               item.product.image || 
                               item.product.image_url || 
-                              item.product.gallery_images?.[0] || 
+                              item.product.images?.[0] || 
+                              item.product.gallery?.[0] || 
                               '/images/logo-s.png'
                             }
                             alt={i18n.language === 'ar' ? (item.product.name_ar || item.product.name) : item.product.name}
@@ -279,7 +274,7 @@ export function CartSidebar() {
                               })()}
                             </p>
                             <StockIndicator 
-                              stock={item.product?.stock || 0} 
+                              stock={item.product?.stock_quantity || item.product?.stock || 0} 
                               variant="compact"
                               lowStockThreshold={5}
                             />

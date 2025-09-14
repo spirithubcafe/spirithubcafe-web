@@ -1,5 +1,4 @@
-import { jsonProductsService, jsonCategoriesDataService, jsonPagesService } from '@/services/jsonSettingsService'
-import type { Product, Category } from '@/types'
+import { firestoreService, type Product } from '@/lib/firebase'
 
 export interface SitemapUrl {
   loc: string
@@ -52,14 +51,14 @@ class SitemapService {
 
     // Add category pages
     try {
-      const categories = await jsonCategoriesDataService.getCategories()
-      categories.forEach((category: Category) => {
-        if (category.is_active !== false) {
+      const categories = await firestoreService.categories.list()
+      categories.items.forEach(category => {
+        if (category.is_active) {
           urls.push({
             loc: `${this.baseUrl}/category/${category.id}`,
             changefreq: 'weekly',
             priority: 0.8,
-            lastmod: new Date().toISOString()
+            lastmod: category.updated?.toISOString() || new Date().toISOString()
           })
         }
       })
@@ -69,14 +68,14 @@ class SitemapService {
 
     // Add product pages
     try {
-      const products = await jsonProductsService.getProducts()
-      products.forEach((product: Product) => {
+      const products = await firestoreService.products.list()
+      products.items.forEach((product: Product) => {
         if (product.is_active !== false) { // Include products that are active or undefined
           urls.push({
             loc: `${this.baseUrl}/product/${product.slug || product.id}`,
             changefreq: 'weekly',
             priority: 0.7,
-            lastmod: new Date().toISOString()
+            lastmod: product.updated?.toISOString() || new Date().toISOString()
           })
         }
       })
@@ -86,14 +85,14 @@ class SitemapService {
 
     // Add dynamic pages
     try {
-      const pages = await jsonPagesService.getPages()
-      pages.forEach((page: any) => {
-        if (page.is_active !== false) {
+      const pagesResult = await firestoreService.pages.list()
+      pagesResult.items.forEach(page => {
+        if (page.is_active) {
           urls.push({
             loc: `${this.baseUrl}/page/${page.slug}`,
             changefreq: 'monthly',
             priority: 0.5,
-            lastmod: new Date().toISOString()
+            lastmod: page.updated?.toISOString() || new Date().toISOString()
           })
         }
       })

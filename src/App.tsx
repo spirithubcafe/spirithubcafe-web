@@ -11,7 +11,6 @@ import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Suspense, lazy, memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-// import { usePerformanceMonitor } from '@/hooks/useEnhancedPerformanceMonitoring'
 import { AdvancedLoading } from '@/components/ui/advanced-loading'
 import './App.css'
 
@@ -25,7 +24,6 @@ import './App.css'
 const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
 const ShopPage = lazy(() => import('@/pages/ShopPage').then(module => ({ default: module.ShopPage })))
 const ProductPage = lazy(() => import('@/pages/ProductPage'))
-const PerformanceDashboard = lazy(() => import('@/pages/PerformanceDashboard'))
 const EnhancedCacheManagementPage = lazy(() => import('@/pages/EnhancedCacheManagementPage'))
 const AboutPage = lazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
 const ContactPage = lazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
@@ -79,13 +77,6 @@ const ConditionalFooter = memo(() => {
 })
 
 function AppContent() {
-  // Performance monitoring disabled to reduce console noise
-  // usePerformanceMonitor({
-  //   enableCoreWebVitals: true,
-  //   enableResourceTiming: true,
-  //   enableCacheMetrics: true,
-  // })
-
   return (
     <ThemeProvider defaultTheme="system" storageKey="spirithub-ui-theme">
       <CurrencyProvider defaultCurrency="OMR" storageKey="spirithub-currency">
@@ -108,20 +99,19 @@ function AppContent() {
                       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
                       <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
-                      <Route path="/wishlist" element={<WishlistPage />} />
+                      <Route 
+                        path="/wishlist" 
+                        element={
+                          <ProtectedRoute>
+                            <WishlistPage />
+                          </ProtectedRoute>
+                        } 
+                      />
                       <Route 
                         path="/dashboard" 
                         element={
                           <ProtectedRoute>
                             <DashboardPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/performance" 
-                        element={
-                          <ProtectedRoute>
-                            <PerformanceDashboard />
                           </ProtectedRoute>
                         } 
                       />
@@ -218,9 +208,6 @@ function AppContent() {
                     },
                   }}
                 />
-                
-                {/* Performance Monitor for Development - Disabled */}
-                {/* <PerformanceMonitor /> */}
               </div>
             </Router>
           </DataProvider>

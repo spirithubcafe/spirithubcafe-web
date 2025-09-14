@@ -7,73 +7,11 @@ import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useCheckoutSettings, type ShippingMethod, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
-
-// Define CheckoutSettings type locally
-interface CheckoutSettings {
-  currency: string
-  paymentMethods: string[]
-  shippingMethods: string[]
-  shipping_methods: any[] // For legacy compatibility
-  taxRate: number
-  tax_rate: number // For legacy compatibility
-  category_tax_rates: CategoryTaxRate[] // Category-based tax rates
-  enabled_countries: string[] // Enabled countries
-  freeShippingThreshold: number
-  allowGuestCheckout: boolean
-  requirePhoneNumber: boolean
-  requireAddress: boolean
-  allowCouponCodes: boolean
-  autoApplyCoupons: boolean
-  emailNotifications: boolean
-  smsNotifications: boolean
-  orderConfirmationMessage: string
-  orderConfirmationMessageAr: string
-  defaultCountry: string
-  supportedCountries: string[]
-  minimumOrderAmount: number
-  maximumOrderAmount: number
-  orderProcessingTime: string
-  returnPolicy: string
-  privacyPolicy: string
-  termsOfService: string
-  payment_gateway: {
-    enabled: boolean
-    provider: string
-    sandbox: boolean
-    test_mode?: boolean
-    merchant_id?: string
-    access_code?: string
-    working_key?: string
-    supported_currencies?: string[]
-  }
-  bankMuscat: {
-    merchantId: string
-    accessCode: string
-    workingKey: string
-    currency: string
-    language: string
-    redirectUrl: string
-    cancelUrl: string
-    enabled: boolean
-  }
-}
+import { useCheckoutSettings, type ShippingMethod, type CheckoutSettings, type CategoryTaxRate } from '@/hooks/useCheckoutSettings'
 import { useTranslation } from 'react-i18next'
 import { Loader2, Save, Plus, Trash2, Settings } from 'lucide-react'
-import { jsonDataService } from '@/services/jsonDataService'
+import { firestoreService, type Category } from '@/lib/firebase'
 import toast from 'react-hot-toast'
-
-interface Category {
-  id: string
-  name: string
-  name_ar?: string
-  description?: string
-  image?: string
-  sort_order: number
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
 
 export default function CheckoutSettingsPage() {
   const { i18n } = useTranslation()
@@ -87,13 +25,13 @@ export default function CheckoutSettingsPage() {
 
   const isArabic = i18n.language === 'ar'
 
-  // Load categories from JSON
+  // Load categories from Firebase
   useEffect(() => {
     const loadCategories = async () => {
       try {
         setLoadingCategories(true)
-        const categoriesData = await jsonDataService.fetchJSON('categories.json') as Category[]
-        setCategories(categoriesData || [])
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
       } catch (error) {
         console.error('Error loading categories:', error)
         toast.error(isArabic ? 'فشل في تحميل الفئات' : 'Failed to load categories')
@@ -107,25 +45,7 @@ export default function CheckoutSettingsPage() {
 
   useEffect(() => {
     if (settings) {
-      // Convert settings to local interface format
-      const convertedSettings: CheckoutSettings = {
-        ...settings,
-        shipping_methods: [],
-        tax_rate: settings.taxRate || 0,
-        category_tax_rates: [],
-        enabled_countries: settings.supportedCountries || [],
-        payment_gateway: {
-          enabled: false,
-          provider: 'bank_muscat',
-          sandbox: true,
-          test_mode: false,
-          merchant_id: '',
-          access_code: '',
-          working_key: '',
-          supported_currencies: ['OMR', 'USD', 'SAR']
-        }
-      }
-      setLocalSettings(convertedSettings)
+      setLocalSettings(settings)
     }
   }, [settings])
 
@@ -149,13 +69,13 @@ export default function CheckoutSettingsPage() {
       
       const success = await updateSettings(localSettings)
       if (success) {
-        toast.success(isArabic ? 'تم حفظ التنظيمات بنجاح' : 'Settings saved successfully')
+        toast.success(isArabic ? 'تم حفظ التنظیمات بنجاح' : 'Settings saved successfully')
       } else {
-        toast.error(isArabic ? 'فشل حفظ التنظيمات' : 'Failed to save settings')
+        toast.error(isArabic ? 'فشل حفظ التنظیمات' : 'Failed to save settings')
       }
     } catch (error) {
       console.error('Error in handleSave:', error)
-      toast.error(isArabic ? 'خطأ في حفظ التنظيمات' : 'Error saving settings')
+      toast.error(isArabic ? 'خطأ في حفظ التنظیمات' : 'Error saving settings')
     } finally {
       setSaving(false)
     }
@@ -166,10 +86,10 @@ export default function CheckoutSettingsPage() {
       setSaving(true)
       const success = await initializeSettings()
       if (success) {
-        toast.success(isArabic ? 'تم تهيئة التنظيمات الافتراضية' : 'Default settings initialized')
+        toast.success(isArabic ? 'تم تهیئة التنظیمات الافتراضیة' : 'Default settings initialized')
       }
     } catch (error) {
-      toast.error(isArabic ? 'فشل في تهيئة التنظيمات' : 'Failed to initialize settings')
+      toast.error(isArabic ? 'فشل في تهیئة التنظیمات' : 'Failed to initialize settings')
     } finally {
       setSaving(false)
     }
@@ -200,7 +120,7 @@ export default function CheckoutSettingsPage() {
         updatedRates[existingIndex] = {
           category_id: categoryId,
           category_name: category.name,
-          category_name_ar: category.name_ar || category.name,
+          category_name_ar: category.name_ar,
           tax_rate: taxRate / 100, // Convert percentage to decimal
           enabled
         }
@@ -213,7 +133,7 @@ export default function CheckoutSettingsPage() {
         const newRate: CategoryTaxRate = {
           category_id: categoryId,
           category_name: category.name,
-          category_name_ar: category.name_ar || category.name,
+          category_name_ar: category.name_ar,
           tax_rate: taxRate / 100,
           enabled
         }
@@ -321,7 +241,7 @@ export default function CheckoutSettingsPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>{isArabic ? 'جاري تحميل التنظيمات...' : 'Loading settings...'}</span>
+          <span>{isArabic ? 'جاري تحميل التنظیمات...' : 'Loading settings...'}</span>
         </div>
       </div>
     )
@@ -337,7 +257,7 @@ export default function CheckoutSettingsPage() {
                 {isArabic ? 'إعدادات الدفع والشحن' : 'Checkout Settings'}
               </h1>
               <p className="text-muted-foreground">
-                {isArabic ? 'لم يتم العثور على التنظيمات. قم بتهيئة التنظيمات الافتراضية.' : 'No settings found. Initialize default settings.'}
+                {isArabic ? 'لم يتم العثور على التنظیمات. قم بتهیئة التنظیمات الافتراضیة.' : 'No settings found. Initialize default settings.'}
               </p>
               <Button onClick={handleInitialize} disabled={saving}>
                 {saving ? (
@@ -348,7 +268,7 @@ export default function CheckoutSettingsPage() {
                 ) : (
                   <>
                     <Settings className="h-4 w-4 mr-2" />
-                    {isArabic ? 'تهيئة التنظيمات الافتراضية' : 'Initialize Default Settings'}
+                    {isArabic ? 'تهیئة التنظیمات الافتراضیة' : 'Initialize Default Settings'}
                   </>
                 )}
               </Button>
@@ -395,7 +315,7 @@ export default function CheckoutSettingsPage() {
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  {isArabic ? 'حفظ التنظيمات' : 'Save Settings'}
+                  {isArabic ? 'حفظ التنظیمات' : 'Save Settings'}
                 </>
               )}
             </Button>
@@ -467,10 +387,10 @@ export default function CheckoutSettingsPage() {
                             <div className="flex items-center justify-between">
                               <div>
                                 <h4 className="font-medium">
-                                  {isArabic ? (category.name_ar || category.name) : category.name}
+                                  {isArabic ? category.name_ar : category.name}
                                 </h4>
                                 <p className="text-sm text-muted-foreground">
-                                  {isArabic ? category.name : (category.name_ar || category.name)}
+                                  {isArabic ? category.name : category.name_ar}
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2 rtl:space-x-reverse">
@@ -523,7 +443,7 @@ export default function CheckoutSettingsPage() {
                               <div className="bg-muted p-3 rounded text-sm">
                                 <strong>{isArabic ? 'المعاينة:' : 'Preview:'}</strong>{' '}
                                 {isArabic 
-                                  ? `سيتم تطبيق ضريبة ${rate.toFixed(1)}% على جميع منتجات فئة "${category.name_ar || category.name}"`
+                                  ? `سيتم تطبيق ضريبة ${rate.toFixed(1)}% على جميع منتجات فئة "${category.name_ar}"`
                                   : `${rate.toFixed(1)}% tax will be applied to all "${category.name}" category products`
                                 }
                               </div>
@@ -872,12 +792,11 @@ export default function CheckoutSettingsPage() {
                         <div key={curr} className="flex items-center space-x-2 rtl:space-x-reverse">
                           <Switch
                             id={`currency-${curr}`}
-                            checked={localSettings.payment_gateway.supported_currencies?.includes(curr) || false}
+                            checked={localSettings.payment_gateway.supported_currencies.includes(curr)}
                             onCheckedChange={(checked) => {
-                              const currentCurrencies = localSettings.payment_gateway.supported_currencies || []
                               const newCurrencies = checked
-                                ? [...currentCurrencies, curr]
-                                : currentCurrencies.filter((c: string) => c !== curr)
+                                ? [...localSettings.payment_gateway.supported_currencies, curr]
+                                : localSettings.payment_gateway.supported_currencies.filter(c => c !== curr)
                               updatePaymentGateway({ supported_currencies: newCurrencies })
                             }}
                           />

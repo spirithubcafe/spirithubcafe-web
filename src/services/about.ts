@@ -1,150 +1,387 @@
-// About service - JSON-based implementation
-interface AboutHeader {
-  id: string
-  title: string
+import { collection, addDoc, getDocs, query, orderBy, where, doc, updateDoc, deleteDoc } from 'firebase/firestore/lite'
+import { db } from '@/lib/firebase'
+import type { Database } from '@/types/database'
+
+type AboutSection = Database['public']['Tables']['about_sections']['Row']
+type AboutSectionInsert = Database['public']['Tables']['about_sections']['Insert']
+type AboutSectionUpdate = Database['public']['Tables']['about_sections']['Update']
+
+type AboutHeader = Database['public']['Tables']['about_header']['Row']
+type AboutHeaderInsert = Database['public']['Tables']['about_header']['Insert']
+type AboutHeaderUpdate = Database['public']['Tables']['about_header']['Update']
+
+export interface AboutHeaderData {
+  id?: string
+  title_en: string
   title_ar: string
-  subtitle: string
+  subtitle_en: string
   subtitle_ar: string
-  description: string
-  description_ar: string
-  background_image: string
-  cta_text?: string
-  cta_text_ar?: string
-  cta_link?: string
+  is_active?: boolean
 }
 
-interface AboutSection {
-  id: string
-  title: string
+export interface AboutSectionData {
+  id?: string
+  section_key: string
+  title_en: string
   title_ar: string
-  content: string
+  content_en: string
   content_ar: string
-  image?: string
-  order: number
-  type?: 'text' | 'image_text' | 'gallery' | 'team' | 'timeline'
+  image_url?: string | null
+  layout: 'text-left' | 'text-right' | 'full-width'
+  order_index: number
   is_active?: boolean
 }
 
 class AboutService {
-  private baseUrl = '/data'
+  private sectionsCollectionName = 'about_sections'
+  private headerCollectionName = 'about_header'
 
-  async getAboutHeader(): Promise<AboutHeader | null> {
+  // Header methods
+  async getHeader(): Promise<AboutHeader | null> {
     try {
-      const response = await fetch(`${this.baseUrl}/about_header.json`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch about header')
-      }
-      const data = await response.json()
+      if (!db) throw new Error('Database not initialized')
       
-      // Handle array format and convert to single header object
-      if (Array.isArray(data) && data.length > 0) {
-        const headerData = data[0] // Take first item
-        return {
-          id: headerData.id || '1',
-          title: headerData.title_en || headerData.title || 'About Us',
-          title_ar: headerData.title_ar || 'من نحن',
-          subtitle: headerData.subtitle_en || headerData.subtitle || 'Who We Are',
-          subtitle_ar: headerData.subtitle_ar || 'من نحن',
-          description: headerData.description_en || headerData.description || 'Learn more about our story and mission',
-          description_ar: headerData.description_ar || 'تعرف على قصتنا ورسالتنا',
-          background_image: headerData.background_image || headerData.image || '/images/about/hero-bg.jpg',
-          cta_text: headerData.cta_text || 'Visit Our Cafe',
-          cta_text_ar: headerData.cta_text_ar || 'زر مقهانا',
-          cta_link: headerData.cta_link || '/contact'
-        }
-      }
+      const q = query(
+        collection(db, this.headerCollectionName),
+        where('is_active', '==', true)
+      )
       
-      // Handle single object format
-      if (data && typeof data === 'object') {
-        return {
-          id: data.id || '1',
-          title: data.title_en || data.title || 'About Us',
-          title_ar: data.title_ar || 'من نحن',
-          subtitle: data.subtitle_en || data.subtitle || 'Who We Are',
-          subtitle_ar: data.subtitle_ar || 'من نحن',
-          description: data.description_en || data.description || 'Learn more about our story and mission',
-          description_ar: data.description_ar || 'تعرف على قصتنا ورسالتنا',
-          background_image: data.background_image || data.image || '/images/about/hero-bg.jpg',
-          cta_text: data.cta_text || 'Visit Our Cafe',
-          cta_text_ar: data.cta_text_ar || 'زر مقهانا',
-          cta_link: data.cta_link || '/contact'
-        }
-      }
+      const querySnapshot = await getDocs(q)
+      if (querySnapshot.empty) return null
       
-      return null
+      const headerDoc = querySnapshot.docs[0]
+      return {
+        id: headerDoc.id,
+        ...headerDoc.data()
+      } as AboutHeader
     } catch (error) {
       console.error('Error fetching about header:', error)
-      return null
+      throw new Error('Failed to load about header')
     }
   }
 
-  async getAboutSections(): Promise<AboutSection[]> {
+  async createHeader(data: AboutHeaderData): Promise<AboutHeader> {
+    const headerData: AboutHeaderInsert = {
+      title_en: data.title_en,
+      title_ar: data.title_ar,
+      subtitle_en: data.subtitle_en,
+      subtitle_ar: data.subtitle_ar,
+      is_active: data.is_active ?? true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
     try {
-      const response = await fetch(`${this.baseUrl}/about_sections.json`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch about sections')
-      }
-      const data = await response.json()
+      if (!db) throw new Error('Database not initialized')
       
-      // Convert to our format and sort by order
-      if (Array.isArray(data)) {
-        return data
-          .filter(section => section.is_active !== false)
-          .map((section, index) => ({
-            id: section.id || `section-${index}`,
-            title: section.title_en || section.title || 'Untitled',
-            title_ar: section.title_ar || section.title || 'بدون عنوان',
-            content: section.content_en || section.content || '',
-            content_ar: section.content_ar || section.content || '',
-            image: section.image_url || section.image,
-            order: section.order_index || section.order || index,
-            type: section.type || 'text',
-            is_active: section.is_active !== false
-          }))
-          .sort((a, b) => a.order - b.order)
+      const docRef = await addDoc(collection(db, this.headerCollectionName), headerData)
+      return { id: docRef.id, ...headerData } as AboutHeader
+    } catch (error) {
+      console.error('Error creating about header:', error)
+      throw new Error('Failed to create about header')
+    }
+  }
+
+  async updateHeader(id: string, data: Partial<AboutHeaderData>): Promise<void> {
+    try {
+      if (!db) throw new Error('Database not initialized')
+      
+      const updateData: AboutHeaderUpdate = {
+        ...data,
+        updated_at: new Date().toISOString()
       }
       
-      return []
+      const headerRef = doc(db, this.headerCollectionName, id)
+      await updateDoc(headerRef, updateData)
+    } catch (error) {
+      console.error('Error updating about header:', error)
+      throw new Error('Failed to update about header')
+    }
+  }
+
+  async initializeDefaultHeader(): Promise<void> {
+    try {
+      const existingHeader = await this.getHeader()
+      if (existingHeader) {
+        console.log('About header already exists, skipping initialization')
+        return
+      }
+
+      const defaultHeader: AboutHeaderData = {
+        title_en: 'About Us',
+        title_ar: 'من نحن',
+        subtitle_en: 'Who We Are',
+        subtitle_ar: 'من نحن',
+        is_active: true
+      }
+
+      await this.createHeader(defaultHeader)
+      console.log('Default about header initialized successfully')
+    } catch (error) {
+      console.error('Error initializing default header:', error)
+      throw new Error('Failed to initialize default header')
+    }
+  }
+
+  // Section methods (existing)
+  async getSections(): Promise<AboutSection[]> {
+    try {
+      if (!db) throw new Error('Database not initialized')
+      
+      console.log('getSections: Starting to fetch sections from Firestore...')
+      
+      const q = query(
+        collection(db, this.sectionsCollectionName),
+        where('is_active', '==', true),
+        orderBy('order_index', 'asc')
+      )
+      
+      console.log('getSections: Query created, executing...')
+      
+      const querySnapshot = await getDocs(q)
+      console.log('getSections: Query executed successfully, docs count:', querySnapshot.docs.length)
+      
+      const sections = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as AboutSection[]
+
+      console.log('getSections: Sections mapped successfully:', sections)
+      return sections
     } catch (error) {
       console.error('Error fetching about sections:', error)
-      return []
+      throw new Error('Failed to load about sections')
     }
   }
 
-  async getAboutSection(id: string): Promise<AboutSection | null> {
+  // Get all sections for admin (including inactive)
+  async getAllSections(): Promise<AboutSection[]> {
     try {
-      const sections = await this.getAboutSections()
-      return sections.find(section => section.id === id) || null
+      if (!db) throw new Error('Database not initialized')
+      
+      const q = query(
+        collection(db, this.sectionsCollectionName),
+        orderBy('order_index', 'asc')
+      )
+      
+      const querySnapshot = await getDocs(q)
+      const sections = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as AboutSection[]
+
+      return sections
     } catch (error) {
-      console.error('Error fetching about section:', error)
-      return null
+      console.error('Error fetching all about sections:', error)
+      throw new Error('Failed to load about sections')
     }
   }
 
-  // Main method for AboutPage component
-  async getAboutPageData(): Promise<{ header: AboutHeader | null; sections: AboutSection[] }> {
+  // Create a new about section
+  async createSection(data: AboutSectionData): Promise<AboutSection> {
+    const sectionData: AboutSectionInsert = {
+      section_key: data.section_key,
+      title_en: data.title_en,
+      title_ar: data.title_ar,
+      content_en: data.content_en,
+      content_ar: data.content_ar,
+      image_url: data.image_url || null,
+      layout: data.layout,
+      order_index: data.order_index,
+      is_active: data.is_active ?? true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+
     try {
-      const [header, sections] = await Promise.all([
-        this.getAboutHeader(),
-        this.getAboutSections()
-      ])
-
-      return { header, sections }
+      if (!db) throw new Error('Database not initialized')
+      
+      const docRef = await addDoc(collection(db, this.sectionsCollectionName), sectionData)
+      return { id: docRef.id, ...sectionData } as AboutSection
     } catch (error) {
-      console.error('Error fetching about page data:', error)
-      return { header: null, sections: [] }
+      console.error('Error creating about section:', error)
+      throw new Error('Failed to create about section')
     }
   }
 
-  // Backward compatibility aliases  
-  async getHeader(): Promise<AboutHeader | null> {
-    return this.getAboutHeader()
+  // Update an about section
+  async updateSection(id: string, data: Partial<AboutSectionData>): Promise<void> {
+    try {
+      if (!db) throw new Error('Database not initialized')
+      
+      const updateData: AboutSectionUpdate = {
+        ...data,
+        updated_at: new Date().toISOString()
+      }
+      
+      const sectionRef = doc(db, this.sectionsCollectionName, id)
+      await updateDoc(sectionRef, updateData)
+    } catch (error) {
+      console.error('Error updating about section:', error)
+      throw new Error('Failed to update about section')
+    }
   }
 
-  async getSections(): Promise<AboutSection[]> {
-    return this.getAboutSections()
+  // Delete an about section
+  async deleteSection(id: string): Promise<void> {
+    try {
+      if (!db) throw new Error('Database not initialized')
+      
+      const sectionRef = doc(db, this.sectionsCollectionName, id)
+      await deleteDoc(sectionRef)
+    } catch (error) {
+      console.error('Error deleting about section:', error)
+      throw new Error('Failed to delete about section')
+    }
+  }
+
+  // Toggle section active status
+  async toggleSectionStatus(id: string, isActive: boolean): Promise<void> {
+    try {
+      await this.updateSection(id, { is_active: isActive })
+    } catch (error) {
+      console.error('Error toggling section status:', error)
+      throw new Error('Failed to toggle section status')
+    }
+  }
+
+  // Update sections order
+  async updateSectionsOrder(sections: { id: string; order_index: number }[]): Promise<void> {
+    try {
+      if (!db) throw new Error('Database not initialized')
+      
+      const updatePromises = sections.map(section =>
+        this.updateSection(section.id, { order_index: section.order_index })
+      )
+      
+      await Promise.all(updatePromises)
+    } catch (error) {
+      console.error('Error updating sections order:', error)
+      throw new Error('Failed to update sections order')
+    }
+  }
+
+  // Initialize default sections
+  async initializeDefaultSections(): Promise<void> {
+    try {
+      const existingSections = await this.getAllSections()
+      if (existingSections.length > 0) {
+        console.log('About sections already exist, skipping initialization')
+        return
+      }
+
+      // Initialize header first
+      await this.initializeDefaultHeader()
+
+      const defaultSections: AboutSectionData[] = [
+        {
+          section_key: 'mission',
+          title_en: 'OUR MISSION',
+          title_ar: 'مهمتنا',
+          content_en: `At SPIRIT HUB Coffee, we take great care in selecting only the finest specialty coffees to be part of our exclusive blend. Our team of experienced Q Graders and Roasters carefully manage the roast to create a unique selection of flavors and aromas that are sure to please the most discerning coffee lover.
+
+We believe that quality is of the utmost importance, which is why we strictly adhere to the highest protocols and quality controls during the cupping and testing process. This ensures that every cup of SPIRIT HUB Coffee meets our high standards and delivers a truly exceptional taste experience.
+
+Our commitment to quality extends beyond the coffee itself. We are dedicated to providing our customers with the best possible service and coffee experience. Whether you are enjoying a cup at one of our cafés or brewing a fresh pot at home, we want you to be completely satisfied with your SPIRIT HUB Coffee experience.
+
+In short, at SPIRIT HUB Coffee, we are passionate about coffee and dedicated to providing our customers with the finest quality coffee experience possible. We invite you to try our exclusive blend and taste the difference for yourself.`,
+          content_ar: `في سبيريت هاب كوفي، نولي عناية فائقة في اختيار أجود أنواع القهوة المتخصصة لتكون جزءًا من مزيجنا الحصري. يدير فريقنا من خبراء التقييم والمحمصين عملية التحميص بعناية لإنشاء مجموعة فريدة من النكهات والروائح التي ستسعد أكثر محبي القهوة تميزًا.
+
+نؤمن بأن الجودة هي الأهم، ولهذا نلتزم بصرامة بأعلى البروتوكولات ومراقبة الجودة أثناء عملية التذوق والاختبار. يضمن هذا أن كل كوب من قهوة سبيريت هاب يلبي معاييرنا العالية ويقدم تجربة طعم استثنائية حقًا.
+
+التزامنا بالجودة يتجاوز القهوة نفسها. نحن ملتزمون بتقديم أفضل خدمة وتجربة قهوة ممكنة لعملائنا. سواء كنت تستمتع بكوب في أحد مقاهينا أو تحضر إبريقًا طازجًا في المنزل، نريدك أن تكون راضيًا تمامًا عن تجربة قهوة سبيريت هاب.
+
+باختصار، في سبيريت هاب كوفي، نحن شغوفون بالقهوة ومكرسون لتقديم أجود تجربة قهوة ممكنة لعملائنا. ندعوك لتجربة مزيجنا الحصري وتذوق الفرق بنفسك.`,
+          image_url: '/images/about/1.webp',
+          layout: 'text-right',
+          order_index: 1
+        },
+        {
+          section_key: 'quality',
+          title_en: 'QUALITY',
+          title_ar: 'الجودة',
+          content_en: `Coffee, a beloved beverage globally, is enjoyed by millions daily. The flavor and aroma of coffee depend on factors like bean type, roasting, and brewing method.
+
+Many roasters ensure high standards by closely following harvesting seasons. This helps in selecting the freshest, highest quality beans, meticulously roasted to bring out unique flavors and aromas.
+
+The roasting process, considered an art, requires skilled roasters to create the perfect roast profile. They control temperature, time, and air flow to achieve the desired flavor and aroma for each batch of beans.
+
+After roasting, freshly roasted coffee beans contain a high level of CO2, which can affect their flavor and aroma. To allow the CO2 to dissipate and the flavors to fully develop, it is recommended that coffee be allowed to rest for 7 to 10 days before brewing.
+
+Following these steps, roasters produce high-quality coffee rich in flavor and aroma. When you savor your next cup, appreciate the care and attention behind that perfect brew.`,
+          content_ar: `القهوة، المشروب المحبوب عالميًا، يستمتع بها الملايين يوميًا. تعتمد النكهة والرائحة على عوامل مثل نوع الحبوب والتحميص وطريقة التحضير.
+
+يضمن العديد من المحمصين معايير عالية من خلال متابعة مواسم الحصاد عن كثب. يساعد هذا في اختيار الحبوب الأطازج والأعلى جودة، المحمصة بدقة لإبراز النكهات والروائح الفريدة.
+
+عملية التحميص، التي تعتبر فنًا، تتطلب محمصين مهرة لإنشاء ملف التحميص المثالي. يتحكمون في درجة الحرارة والوقت وتدفق الهواء لتحقيق النكهة والرائحة المرغوبة لكل دفعة من الحبوب.
+
+بعد التحميص، تحتوي حبوب القهوة المحمصة حديثًا على مستوى عالٍ من ثاني أكسيد الكربون، مما قد يؤثر على نكهتها ورائحتها. للسماح بتبدد ثاني أكسيد الكربون وتطوير النكهات بالكامل، يُنصح بترك القهوة تستريح لمدة 7 إلى 10 أيام قبل التحضير.
+
+باتباع هذه الخطوات، ينتج المحمصون قهوة عالية الجودة غنية بالنكهة والرائحة. عندما تتذوق كوبك التالي، قدر العناية والاهتمام وراء ذلك المشروب المثالي.`,
+          image_url: '/images/about/2.webp',
+          layout: 'text-left',
+          order_index: 2
+        },
+        {
+          section_key: 'accountability',
+          title_en: 'Accountability',
+          title_ar: 'المساءلة',
+          content_en: `Accountability and transparency are crucial for building trust and maintaining a positive reputation in business. At SPIRIT HUB Coffee, we take pride in sharing information and educating our community, customers, and clients about our unique coffee.
+
+By sharing this information, we aim to create openness and trust, fostering strong and lasting relationships with our audience. Excitingly, we publish details about our coffee on various media platforms, such as our website, social media, and newsletter.
+
+Moreover, our commitment extends beyond information sharing to being accountable for our actions and decisions. This entails taking responsibility for the quality of our coffee, as well as addressing our environmental and social impact.
+
+Transparent and accountable practices enable us to build a positive reputation and nurture long-term relationships with our customers and clients. Proudly presenting SPIRIT HUB Coffee to the world, we eagerly anticipate sharing our unique coffee with the community.`,
+          content_ar: `المساءلة والشفافية أمران بالغا الأهمية لبناء الثقة والحفاظ على سمعة إيجابية في الأعمال. في سبيريت هاب كوفي، نفخر بمشاركة المعلومات وتثقيف مجتمعنا وعملائنا حول قهوتنا الفريدة.
+
+من خلال مشاركة هذه المعلومات، نهدف إلى خلق الانفتاح والثقة، وتعزيز علاقات قوية ودائمة مع جمهورنا. نشر تفاصيل عن قهوتنا على منصات إعلامية مختلفة، مثل موقعنا الإلكتروني ووسائل التواصل الاجتماعي والنشرة الإخبارية.
+
+علاوة على ذلك، يمتد التزامنا إلى ما وراء مشاركة المعلومات ليشمل المساءلة عن أفعالنا وقراراتنا. يستلزم هذا تحمل المسؤولية عن جودة قهوتنا، بالإضافة إلى معالجة تأثيرنا البيئي والاجتماعي.
+
+تمكننا الممارسات الشفافة والمسؤولة من بناء سمعة إيجابية ورعاية علاقات طويلة الأمد مع عملائنا. نقدم سبيريت هاب كوفي بفخر للعالم، ونتطلع بشوق لمشاركة قهوتنا الفريدة مع المجتمع.`,
+          image_url: '/images/about/3.webp',
+          layout: 'text-right',
+          order_index: 3
+        },
+        {
+          section_key: 'values',
+          title_en: 'Values',
+          title_ar: 'القيم',
+          content_en: `Established in Oman, SPIRIT HUB Roastery & Specialty Coffee is committed to enhancing the coffee experience for its customers. By focusing on specialty coffee, the team at SPIRIT HUB skillfully highlights the unique flavors and aromas of each batch of beans.
+
+A crucial aspect of specialty coffee is the meticulous attention to detail and hard work invested by the farmers in growing and harvesting the beans. SPIRIT HUB not only recognizes but also appreciates the efforts of these farmers, actively striving to showcase their significant contributions to the coffee industry.
+
+In addition to supporting farmers, SPIRIT HUB places a strong emphasis on the scientific aspects of coffee. From the roasting process to the brewing method, the SPIRIT HUB team is dedicated to understanding the intricacies that make each cup of coffee special. This commitment enables them to craft a distinctive and satisfying experience for their customers.
+
+As a business exclusively operated by an OMANI team, SPIRIT HUB contributes significantly to the local economy and community. This support is vital for fostering the growth and sustainability of the specialty coffee industry in Oman.
+
+Overall, SPIRIT HUB Roastery & Specialty Coffee is unwavering in its dedication to delivering a high-quality coffee experience. Simultaneously, the business plays a pivotal role in supporting the local community and the farmers whose hard work makes it all possible.`,
+          content_ar: `تأسست في عُمان، تلتزم محمصة سبيريت هاب والقهوة المتخصصة بتعزيز تجربة القهوة لعملائها. من خلال التركيز على القهوة المتخصصة، يسلط فريق سبيريت هاب الضوء بمهارة على النكهات والروائح الفريدة لكل دفعة من الحبوب.
+
+جانب مهم من القهوة المتخصصة هو الاهتمام الدقيق بالتفاصيل والعمل الشاق الذي يستثمره المزارعون في زراعة وحصاد الحبوب. لا تعترف سبيريت هاب فقط بجهود هؤلاء المزارعين ولكنها تقدرها أيضًا، وتسعى بنشاط لإظهار مساهماتهم المهمة في صناعة القهوة.
+
+بالإضافة إلى دعم المزارعين، تضع سبيريت هاب تركيزًا قويًا على الجوانب العلمية للقهوة. من عملية التحميص إلى طريقة التحضير، يكرس فريق سبيريت هاب نفسه لفهم التعقيدات التي تجعل كل كوب قهوة مميزًا. يمكّن هذا الالتزام من صياغة تجربة مميزة ومرضية لعملائهم.
+
+كونها شركة تديرها بشكل حصري فريق عُماني، تساهم سبيريت هاب بشكل كبير في الاقتصاد والمجتمع المحلي. هذا الدعم حيوي لتعزيز نمو واستدامة صناعة القهوة المتخصصة في عُمان.
+
+بشكل عام، محمصة سبيريت هاب والقهوة المتخصصة ثابتة في تفانيها لتقديم تجربة قهوة عالية الجودة. في الوقت نفسه، تلعب الشركة دورًا محوريًا في دعم المجتمع المحلي والمزارعين الذين يجعلون عملهم الشاق كل هذا ممكنًا.`,
+          image_url: null,
+          layout: 'full-width',
+          order_index: 4
+        }
+      ]
+
+      for (const section of defaultSections) {
+        await this.createSection(section)
+      }
+
+      console.log('Default about sections initialized successfully')
+    } catch (error) {
+      console.error('Error initializing default sections:', error)
+      throw new Error('Failed to initialize default sections')
+    }
   }
 }
 
 export const aboutService = new AboutService()
-export type { AboutHeader, AboutSection }

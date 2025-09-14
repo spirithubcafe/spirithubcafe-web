@@ -1,25 +1,26 @@
-import { wishlistStorage } from '@/utils/localStorage'
+import { db } from '@/lib/firebase'
+import { collection, doc, addDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore/lite'
 import type { Wishlist } from '@/types'
 
 export class WishlistService {
-  private listeners: Set<(wishlist: Wishlist[]) => void> = new Set()
+  private collectionName = 'wishlists'
 
   // Add product to wishlist
-  async addToWishlist(_userId: string, productId: string): Promise<void> {
+  async addToWishlist(userId: string, productId: string): Promise<void> {
+    if (!db) throw new Error('Database not initialized')
+    
     try {
       // Check if product is already in wishlist
-      const existing = await this.isInWishlist(_userId, productId)
+      const existing = await this.isInWishlist(userId, productId)
       if (existing) {
         throw new Error('Product already in wishlist')
       }
 
-      const newItem = wishlistStorage.addItem(productId)
-      if (!newItem) {
-        throw new Error('Product already in wishlist')
-      }
-
-      // Notify listeners
-      this.notifyListeners()
+      await addDoc(collection(db, this.collectionName), {
+        user_id: userId,
+        product_id: productId,
+        created_at: new Date().toISOString()
+      })
     } catch (error) {
       console.error('Error adding to wishlist:', error)
       throw error
@@ -27,15 +28,22 @@ export class WishlistService {
   }
 
   // Remove product from wishlist
-  async removeFromWishlist(_userId: string, productId: string): Promise<void> {
+  async removeFromWishlist(userId: string, productId: string): Promise<void> {
+    if (!db) throw new Error('Database not initialized')
+    
     try {
-      const removed = wishlistStorage.removeItem(productId)
-      if (!removed) {
-        console.warn('Product not found in wishlist:', productId)
+      const q = query(
+        collection(db, this.collectionName),
+        where('user_id', '==', userId),
+        where('product_id', '==', productId)
+      )
+      
+      const querySnapshot = await getDocs(q)
+      
+      if (!querySnapshot.empty) {
+        const wishlistDoc = querySnapshot.docs[0]
+        await deleteDoc(doc(db, this.collectionName, wishlistDoc.id))
       }
-
-      // Notify listeners
-      this.notifyListeners()
     } catch (error) {
       console.error('Error removing from wishlist:', error)
       throw error
@@ -43,9 +51,18 @@ export class WishlistService {
   }
 
   // Check if product is in wishlist
-  async isInWishlist(_userId: string, productId: string): Promise<boolean> {
+  async isInWishlist(userId: string, productId: string): Promise<boolean> {
+    if (!db) throw new Error('Database not initialized')
+    
     try {
-      return wishlistStorage.isInWishlist(productId)
+      const q = query(
+        collection(db, this.collectionName),
+        where('user_id', '==', userId),
+        where('product_id', '==', productId)
+      )
+      
+      const querySnapshot = await getDocs(q)
+      return !querySnapshot.empty
     } catch (error) {
       console.error('Error checking wishlist:', error)
       return false
@@ -54,13 +71,18 @@ export class WishlistService {
 
   // Get user's wishlist
   async getUserWishlist(userId: string): Promise<Wishlist[]> {
+    if (!db) throw new Error('Database not initialized')
+    
     try {
-      const localItems = wishlistStorage.getItems()
-      return localItems.map(item => ({
-        id: item.id,
-        user_id: userId,
-        product_id: item.productId,
-        created_at: item.addedAt
+      const q = query(
+        collection(db, this.collectionName),
+        where('user_id', '==', userId)
+      )
+      
+      const querySnapshot = await getDocs(q)
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
       } as Wishlist))
     } catch (error) {
       console.error('Error getting wishlist:', error)
@@ -68,59 +90,20 @@ export class WishlistService {
     }
   }
 
-  // Subscribe to wishlist changes
-  subscribeToWishlist(userId: string, callback: (wishlist: Wishlist[]) => void): () => void {
-    try {
-      // Add listener
-      this.listeners.add(callback)
-      
-      // Initial call with current data
-      this.getUserWishlist(userId).then(callback)
-
-      // Return unsubscribe function
-      return () => {
-        this.listeners.delete(callback)
-      }
-    } catch (error) {
-      console.error('Error subscribing to wishlist:', error)
-      return () => {}
-    }
-  }
-
   // Toggle wishlist status
-  async toggleWishlist(_userId: string, productId: string): Promise<boolean> {
+  async toggleWishlist(userId: string, productId: string): Promise<boolean> {
     try {
-      const isAdded = wishlistStorage.toggleItem(productId)
+      const isInWishlist = await this.isInWishlist(userId, productId)
       
-      // Notify listeners
-      this.notifyListeners()
-      
-      return isAdded
+      if (isInWishlist) {
+        await this.removeFromWishlist(userId, productId)
+        return false
+      } else {
+        await this.addToWishlist(userId, productId)
+        return true
+      }
     } catch (error) {
       console.error('Error toggling wishlist:', error)
-      throw error
-    }
-  }
-
-  // Private method to notify all listeners
-  private notifyListeners(): void {
-    this.listeners.forEach(async (callback) => {
-      try {
-        const wishlist = await this.getUserWishlist('') // userId not needed for localStorage
-        callback(wishlist)
-      } catch (error) {
-        console.error('Error notifying wishlist listener:', error)
-      }
-    })
-  }
-
-  // Clear all wishlist items (utility method)
-  async clearWishlist(): Promise<void> {
-    try {
-      wishlistStorage.clearItems()
-      this.notifyListeners()
-    } catch (error) {
-      console.error('Error clearing wishlist:', error)
       throw error
     }
   }

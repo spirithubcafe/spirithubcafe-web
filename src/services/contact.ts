@@ -1,7 +1,21 @@
-// Contact form service using localStorage
-// TODO: Integrate with Google Sheets later
+import { firestoreService, db } from '@/lib/firebase'
+import { collection, addDoc, getDocs, query, orderBy, where, doc, updateDoc, deleteDoc } from 'firebase/firestore/lite'
+import type { Database } from '@/types/database'
 
-export interface ContactMessage {
+type ContactMessage = {
+  id: string
+  name: string
+  email: string
+  subject: string
+  message: string
+  phone?: string | null
+  is_read: boolean
+  replied_at?: string | null
+  created_at: string
+}
+type ContactMessageInsert = Database['public']['Tables']['contact_messages']['Insert']
+
+export interface ContactFormData {
   name: string
   email: string
   subject: string
@@ -9,214 +23,145 @@ export interface ContactMessage {
   phone?: string
 }
 
-// Alias for compatibility
-export type ContactFormData = ContactMessage
-
-export interface ContactInfo {
-  business_name: string
-  address: string
-  phone: string
-  email: string
-  website: string
-  working_hours: {
-    [key: string]: string
-  }
-  social_media: {
-    facebook?: string
-    instagram?: string
-    twitter?: string
-    linkedin?: string
-  }
-}
-
-// Contact settings interface for admin panel
-export interface ContactSettings {
-  phone1: string
-  phone2: string
-  whatsapp: string
-  email: string
-  instagram: string
-  address: string
-  address_ar: string
-  hours: string
-  hours_ar: string
-  coordinates: {
-    lat: number
-    lng: number
-  }
-}
-
 class ContactService {
-  async create(messageData: ContactMessage): Promise<{ id: string }> {
+  private collectionName = 'contact_messages'
+
+  // Create a new contact message
+  async createMessage(data: ContactFormData): Promise<ContactMessage> {
+    const messageData: ContactMessageInsert = {
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+      phone: data.phone,
+      is_read: false,
+      created_at: new Date().toISOString()
+    }
+
     try {
-      // TODO: Save to Google Sheets
-      // await contactSheetsService.submitMessage(messageData)
+      if (!db) throw new Error('Database not initialized')
       
-      // For now, also save to localStorage as backup
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-      const newMessage = {
-        ...messageData,
-        id: Date.now().toString(),
-        created_at: new Date().toISOString(),
-        is_read: false,
-        is_archived: false
-      }
-      messages.push(newMessage)
-      localStorage.setItem('contact_messages', JSON.stringify(messages))
-      
-      return { id: newMessage.id }
+      const docRef = await addDoc(collection(db, this.collectionName), messageData)
+      return { id: docRef.id, ...messageData } as ContactMessage
     } catch (error) {
       console.error('Error creating contact message:', error)
-      throw error
+      throw new Error('Failed to send message')
     }
   }
 
-  async list(): Promise<{ items: any[] }> {
+  // Get all contact messages
+  async getMessages(): Promise<{ items: ContactMessage[]; total: number }> {
     try {
-      // TODO: Get from Google Sheets
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-      return { items: messages }
+      if (!db) throw new Error('Database not initialized')
+      
+      const q = query(
+        collection(db, this.collectionName),
+        orderBy('created_at', 'desc')
+      )
+      
+      const querySnapshot = await getDocs(q)
+      const items = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ContactMessage[]
+
+      return {
+        items,
+        total: items.length
+      }
     } catch (error) {
       console.error('Error fetching contact messages:', error)
-      return { items: [] }
+      throw new Error('Failed to load messages')
     }
   }
 
+  // Get unread messages count
   async getUnreadCount(): Promise<number> {
     try {
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-      return messages.filter((msg: any) => !msg.is_read).length
+      if (!db) throw new Error('Database not initialized')
+      
+      const q = query(
+        collection(db, this.collectionName),
+        where('is_read', '==', false)
+      )
+      
+      const querySnapshot = await getDocs(q)
+      return querySnapshot.docs.length
     } catch (error) {
-      console.error('Error getting unread count:', error)
+      console.error('Error fetching unread count:', error)
       return 0
     }
   }
 
+  // Mark message as read
   async markAsRead(messageId: string): Promise<void> {
     try {
-      // TODO: Update in Google Sheets
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-      const messageIndex = messages.findIndex((msg: any) => msg.id === messageId)
-      if (messageIndex !== -1) {
-        messages[messageIndex].is_read = true
-        localStorage.setItem('contact_messages', JSON.stringify(messages))
-      }
+      if (!db) throw new Error('Database not initialized')
+      
+      const messageRef = doc(db, this.collectionName, messageId)
+      await updateDoc(messageRef, {
+        is_read: true
+      })
     } catch (error) {
       console.error('Error marking message as read:', error)
-      throw error
+      throw new Error('Failed to mark message as read')
     }
   }
 
-  async reply(messageId: string, replyData: { subject: string; message: string }): Promise<void> {
+  // Mark message as replied
+  async markAsReplied(messageId: string): Promise<void> {
     try {
-      // TODO: Send reply via Google Sheets integration
-      console.log(`Reply to message ${messageId}:`, replyData)
-    } catch (error) {
-      console.error('Error sending reply:', error)
-      throw error
-    }
-  }
-
-  async archive(messageId: string): Promise<void> {
-    try {
-      // TODO: Archive in Google Sheets
-      const messages = JSON.parse(localStorage.getItem('contact_messages') || '[]')
-      const messageIndex = messages.findIndex((msg: any) => msg.id === messageId)
-      if (messageIndex !== -1) {
-        messages[messageIndex].is_archived = true
-        localStorage.setItem('contact_messages', JSON.stringify(messages))
-      }
-    } catch (error) {
-      console.error('Error archiving message:', error)
-      throw error
-    }
-  }
-
-  async getContactInfo(): Promise<ContactInfo | null> {
-    try {
-      // TODO: Get from Google Sheets
-      // For now, return default contact info
-      const contactInfo = JSON.parse(localStorage.getItem('contact_info') || 'null') || {
-        business_name: 'Spirit Hub Cafe',
-        address: 'Muscat, Oman',
-        phone: '+968 1234 5678',
-        email: 'info@spirithubcafe.com',
-        website: 'https://spirithubcafe.com',
-        working_hours: {
-          sunday: '8:00 AM - 10:00 PM',
-          monday: '8:00 AM - 10:00 PM',
-          tuesday: '8:00 AM - 10:00 PM',
-          wednesday: '8:00 AM - 10:00 PM',
-          thursday: '8:00 AM - 10:00 PM',
-          friday: '8:00 AM - 10:00 PM',
-          saturday: '8:00 AM - 10:00 PM'
-        },
-        social_media: {
-          facebook: 'https://facebook.com/spirithubcafe',
-          instagram: 'https://instagram.com/spirithubcafe',
-          twitter: 'https://twitter.com/spirithubcafe'
-        }
-      }
+      if (!db) throw new Error('Database not initialized')
       
-      return contactInfo
+      const messageRef = doc(db, this.collectionName, messageId)
+      await updateDoc(messageRef, {
+        is_read: true,
+        replied_at: new Date().toISOString()
+      })
     } catch (error) {
-      console.error('Error fetching contact info:', error)
-      return null
+      console.error('Error marking message as replied:', error)
+      throw new Error('Failed to mark message as replied')
     }
   }
 
-  async updateContactInfo(settings: ContactInfo): Promise<void> {
+  // Delete a message
+  async deleteMessage(messageId: string): Promise<void> {
     try {
-      // TODO: Save to Google Sheets
-      localStorage.setItem('contact_info', JSON.stringify(settings))
+      if (!db) throw new Error('Database not initialized')
+      
+      const messageRef = doc(db, this.collectionName, messageId)
+      await deleteDoc(messageRef)
     } catch (error) {
-      console.error('Error updating contact info:', error)
-      throw error
+      console.error('Error deleting message:', error)
+      throw new Error('Failed to delete message')
     }
   }
 
-  // Additional methods for ContactManagement component
-  async getMessages(): Promise<{ items: any[] }> {
-    return this.list()
-  }
-
-  async getContactSettings(): Promise<ContactSettings | Record<string, any>> {
+  // Get contact settings
+  async getContactSettings(): Promise<any> {
     try {
-      const settings = JSON.parse(localStorage.getItem('contact_settings') || 'null') || {
-        phone1: '+968 9123 4567',
-        phone2: '+968 9876 5432',
-        whatsapp: '+968 9123 4567',
-        email: 'info@spirithubcafe.com',
-        instagram: '@spirithubcafe',
-        address: 'Al Mouj Street, Muscat, Oman',
-        address_ar: 'شارع الموج، مسقط، عمان',
-        hours: 'Daily: 7:00 AM - 11:00 PM',
-        hours_ar: 'يوميا: 7:00 ص - 11:00 م',
-        coordinates: {
-          lat: 23.5880,
-          lng: 58.3829
-        }
-      }
-      return settings
+      const result = await firestoreService.settings.get('contact_info')
+      return result?.value || {}
     } catch (error) {
       console.error('Error fetching contact settings:', error)
       return {}
     }
   }
 
-  async saveContactSettings(settings: ContactSettings): Promise<void> {
+  // Update contact settings  
+  async updateContactSettings(settings: any): Promise<void> {
     try {
-      localStorage.setItem('contact_settings', JSON.stringify(settings))
+      await firestoreService.settings.set('contact_info', { value: settings })
     } catch (error) {
-      console.error('Error saving contact settings:', error)
-      throw error
+      console.error('Error updating contact settings:', error)
+      throw new Error('Failed to update contact settings')
     }
   }
 
-  async createMessage(messageData: ContactMessage): Promise<{ id: string }> {
-    return this.create(messageData)
+  // Save contact settings (alias for updateContactSettings)
+  async saveContactSettings(settings: any): Promise<void> {
+    return this.updateContactSettings(settings)
   }
 }
 
 export const contactService = new ContactService()
-export default contactService

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Product } from '@/types'
+import type { Product, CartItem } from '@/lib/firebase'
 
 interface Cart {
   id: string
@@ -7,11 +7,7 @@ interface Cart {
   items: CartItemWithProduct[]
 }
 
-interface CartItemWithProduct {
-  id: string
-  product_id: string
-  quantity: number
-  selectedProperties?: Record<string, string>
+interface CartItemWithProduct extends CartItem {
   product: Product | null
 }
 
