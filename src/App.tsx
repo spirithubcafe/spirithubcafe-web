@@ -221,9 +221,7 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <GlobalLoadingProvider>
         <AppContent />
-      </GlobalLoadingProvider>
     </ErrorBoundary>
   )
 }
