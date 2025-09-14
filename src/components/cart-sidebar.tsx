@@ -121,7 +121,7 @@ export function CartSidebar() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="outline" size="icon" className="h-9 w-9 relative bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white transition-all duration-200">
           <ShoppingCart className="h-4 w-4" />
           {totalItems > 0 && (
             <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">

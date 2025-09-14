@@ -121,7 +121,7 @@ const NavigationComponent = memo(() => {
       {/* Navigation Bar */}
       <nav
         className={cn(
-          "sticky top-0 w-full transition-all duration-700 ease-in-out",
+          "sticky top-0 w-full nav-smooth-transition",
           "z-20", // higher than hero z-10
           mobileMenuOpen && "z-[60] shadow-2xl", // when mobile menu is open, ensure solid bg and higher z-index
           // Apply transparent background on HomePage when at top, but keep pointer events for controls
@@ -161,19 +161,14 @@ const NavigationComponent = memo(() => {
             )}>
               {/* Home Link */}
               <Button
-                variant={isActive('/') ? "secondary" : "ghost"}
+                variant="ghost"
                 size="sm"
                 asChild
                 className={cn(
-                  "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
-                  isActive('/')
-                    ? isHomePage && !isScrolled
-                      ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                      : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
-                    : isHomePage && !isScrolled
-                      ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                      : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
-                  "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
+                  "nav-link h-9 px-4 py-2 font-medium pointer-events-auto transition-all duration-200",
+                  "bg-[#1a0e0d] text-white border border-[#1a0e0d]",
+                  "hover:bg-[#0f0705] hover:text-white",
+                  isActive('/') && "bg-[#0f0705]"
                 )}
               >
                 <Link to="/">
@@ -184,18 +179,13 @@ const NavigationComponent = memo(() => {
               {/* Shop Dropdown */}
               <div className="relative group">
                 <Button
-                  variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium flex items-center gap-1 pointer-events-auto backdrop-blur-sm",
-                    location.pathname.startsWith('/shop')
-                      ? isHomePage && !isScrolled
-                        ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
-                      : isHomePage && !isScrolled
-                        ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
-                    "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
+                    "nav-link h-9 px-4 py-2 font-medium pointer-events-auto transition-all duration-200 flex items-center gap-1",
+                    "bg-[#1a0e0d] text-white border border-[#1a0e0d]",
+                    "hover:bg-[#0f0705] hover:text-white",
+                    location.pathname.startsWith('/shop') && "bg-[#0f0705]"
                   )}
                 >
                   <Link to="/shop" className="flex items-center gap-1">
@@ -216,7 +206,7 @@ const NavigationComponent = memo(() => {
                     <Link
                       to="/shop"
                       className={cn(
-                        "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white",
+                        "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-[#1a0e0d] hover:text-white transition-colors text-gray-800 dark:text-gray-200 dark:hover:bg-[#1a0e0d] dark:hover:text-white",
                         isArabic ? "text-right" : "text-left"
                       )}
                     >
@@ -241,7 +231,7 @@ const NavigationComponent = memo(() => {
                           key={category.id}
                           to={`/shop?category=${category.id}`}
                           className={cn(
-                            "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white",
+                            "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-[#1a0e0d] hover:text-white transition-colors text-gray-800 dark:text-gray-200 dark:hover:bg-[#1a0e0d] dark:hover:text-white",
                             isArabic ? "text-right" : "text-left"
                           )}
                         >
@@ -259,7 +249,7 @@ const NavigationComponent = memo(() => {
                         <Link
                           to="/shop"
                           className={cn(
-                            "block px-3 py-2 text-sm rounded-md hover:bg-accent/50 transition-colors text-primary font-medium",
+                            "block px-3 py-2 text-sm rounded-md hover:bg-[#2a1812] hover:text-white transition-colors text-[#8B4513] dark:text-[#D2691E] font-medium dark:hover:bg-[#2a1812] dark:hover:text-white",
                             isArabic ? "text-right" : "text-left"
                           )}
                         >
@@ -275,19 +265,14 @@ const NavigationComponent = memo(() => {
               {navigationItems.slice(1).map((item) => (
                 <Button
                   key={item.href}
-                  variant={isActive(item.href) ? "secondary" : "ghost"}
+                  variant="ghost"
                   size="sm"
                   asChild
                   className={cn(
-                    "nav-link transition-all duration-500 ease-out rounded-md px-4 py-2 font-medium pointer-events-auto backdrop-blur-sm",
-                    isActive(item.href)
-                      ? isHomePage && !isScrolled
-                        ? "text-white bg-black/20 shadow-sm border border-black/30 hover:bg-black/30 backdrop-blur-md"
-                        : "text-primary bg-accent/40 shadow-sm border border-primary/30 dark:bg-primary/25 dark:text-primary dark:border-primary/50 dark:shadow-lg backdrop-blur-md"
-                      : isHomePage && !isScrolled
-                        ? "text-white hover:text-white bg-black/15 hover:bg-black/25 backdrop-blur-sm border border-black/20"
-                        : "text-gray-700 hover:text-gray-900 bg-white/60 hover:bg-white/80 dark:text-gray-200 dark:hover:text-white dark:bg-black/40 dark:hover:bg-black/60 backdrop-blur-sm border border-white/40 dark:border-black/40",
-                    "hover:scale-[1.04] focus-visible:ring-2 focus-visible:ring-primary/40"
+                    "nav-link h-9 px-4 py-2 font-medium pointer-events-auto transition-all duration-200",
+                    "bg-[#1a0e0d] text-white border border-[#1a0e0d]",
+                    "hover:bg-[#0f0705] hover:text-white",
+                    isActive(item.href) && "bg-[#0f0705]"
                   )}
                 >
                   <Link to={item.href}>
@@ -305,44 +290,16 @@ const NavigationComponent = memo(() => {
               {/* Settings Controls */}
               <div className="hidden sm:flex items-center gap-2">
                 <ThemeToggle 
-                  className={cn(
-                    "transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 px-3 text-white border border-[#1a0e0d] hover:text-white transition-all duration-200 pointer-events-auto bg-[#1a0e0d] hover:bg-[#0f0705]"
                 />
                 <LanguageToggle 
-                  className={cn(
-                    "transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 px-3 text-white border border-[#1a0e0d] hover:text-white transition-all duration-200 pointer-events-auto bg-[#1a0e0d] hover:bg-[#0f0705]"
                 />
                 <CurrencyToggle 
-                  className={cn(
-                    "transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 px-3 text-white border border-[#1a0e0d] hover:text-white transition-all duration-200 pointer-events-auto bg-[#1a0e0d] hover:bg-[#0f0705]"
                 />
                 <UpdateToggle 
-                  className={cn(
-                    "transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 px-3 text-white border border-[#1a0e0d] hover:text-white transition-all duration-200 pointer-events-auto bg-[#1a0e0d] hover:bg-[#0f0705]"
                 />
               </div>
 
@@ -352,14 +309,7 @@ const NavigationComponent = memo(() => {
                   variant="outline" 
                   size="icon" 
                   asChild 
-                  className={cn(
-                    "relative transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 w-9 relative transition-all duration-200 pointer-events-auto bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white"
                 >
                   <Link to="/wishlist">
                     <Heart className="h-4 w-4" />
@@ -383,17 +333,10 @@ const NavigationComponent = memo(() => {
               {auth.currentUser ? (
                 <div className="hidden sm:flex items-center gap-2">
                   <Button 
-                    variant="outline" 
+                    variant="ghost" 
                     size="sm" 
                     asChild
-                    className={cn(
-                      "transition-all duration-200 pointer-events-auto",
-                      isHomePage && !isScrolled
-                        ? resolvedTheme === 'dark'
-                          ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                          : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                        : ""
-                    )}
+                    className="h-9 px-4 py-2 font-medium pointer-events-auto transition-all duration-200 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white"
                   >
                     <Link to="/dashboard" className="flex items-center gap-2 relative">
                       <User className="h-4 w-4" />
@@ -415,14 +358,7 @@ const NavigationComponent = memo(() => {
                     variant="ghost" 
                     size="sm" 
                     onClick={handleLogout}
-                    className={cn(
-                      "flex items-center gap-2 transition-all duration-200 pointer-events-auto backdrop-blur-sm",
-                      isHomePage && !isScrolled
-                        ? resolvedTheme === 'dark'
-                          ? "text-red-400 hover:text-red-300 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-400/15"
-                          : "text-red-600 hover:text-red-700 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-500/15"
-                        : "text-red-600 hover:text-red-700 bg-green-500/10 hover:bg-green-500/20 backdrop-blur-sm border border-green-500/15"
-                    )}
+                    className="h-9 px-4 py-2 font-medium pointer-events-auto transition-all duration-200 bg-red-800 text-white border border-red-700 hover:bg-red-700 hover:border-red-600 hover:text-white dark:bg-red-800 dark:text-white dark:border-red-700 dark:hover:bg-red-700 dark:hover:border-red-600 flex items-center gap-2"
                   >
                     <LogOut className="h-4 w-4" />
                     <span className="hidden lg:block">
@@ -436,28 +372,14 @@ const NavigationComponent = memo(() => {
                     variant="ghost" 
                     size="sm" 
                     asChild 
-                    className={cn(
-                      "transition-all duration-200 backdrop-blur-sm",
-                      isHomePage && !isScrolled
-                        ? resolvedTheme === 'dark'
-                          ? "text-green-400 hover:text-green-300 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-400/15"
-                          : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
-                        : "text-green-600 hover:text-green-700 bg-red-500/10 hover:bg-red-500/20 backdrop-blur-sm border border-red-500/15"
-                    )}
+                    className="h-9 px-4 py-2 font-medium transition-all duration-200 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white"
                   >
                     <Link to="/login">{t('navigation.login')}</Link>
                   </Button>
                   <Button 
                     size="sm" 
                     asChild 
-                    className={cn(
-                      "transition-all duration-200",
-                      isHomePage && !isScrolled
-                        ? resolvedTheme === 'dark'
-                          ? "bg-green-600/80 text-white border-green-500/50 hover:bg-green-600 hover:border-green-500"
-                          : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
-                        : "bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
-                    )}
+                    className="h-9 px-4 py-2 font-medium transition-all duration-200 bg-[#2a1812] text-white border border-[#1a0e0d] hover:bg-[#1a0e0d] hover:text-white"
                   >
                     <Link to="/register">{t('navigation.register')}</Link>
                   </Button>
@@ -467,14 +389,7 @@ const NavigationComponent = memo(() => {
               {/* Mobile Language Toggle */}
               <div className="md:hidden pointer-events-auto">
                 <LanguageToggle 
-                  className={cn(
-                    "transition-all duration-200 pointer-events-auto",
-                    isHomePage && !isScrolled
-                      ? resolvedTheme === 'dark'
-                        ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                        : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                      : ""
-                  )}
+                  className="h-9 px-3 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white transition-all duration-200 pointer-events-auto"
                 />
               </div>
 
@@ -482,14 +397,7 @@ const NavigationComponent = memo(() => {
               <Button
                 variant="outline"
                 size="icon"
-                className={cn(
-                  "md:hidden transition-all duration-200 pointer-events-auto",
-                  isHomePage && !isScrolled
-                    ? resolvedTheme === 'dark'
-                      ? "border-white/30 text-white hover:bg-white/10 hover:border-white/50"
-                      : "border-black/30 text-black hover:bg-black/10 hover:border-black/50"
-                    : ""
-                )}
+                className="md:hidden transition-all duration-200 pointer-events-auto h-9 w-9 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
               >
@@ -542,13 +450,15 @@ const NavigationComponent = memo(() => {
                     <div className="space-y-2">
                       {/* Home Link */}
                       <Button
-                        variant={isActive('/') ? "secondary" : "ghost"}
+                        variant="ghost"
                         size="sm"
                         asChild
                         className={cn(
-                          "w-full h-12 text-base font-medium mobile-nav-link",
+                          "w-full h-9 text-base font-medium mobile-nav-link",
+                          "bg-[#1a0e0d] text-white border border-[#1a0e0d]",
+                          "hover:bg-[#0f0705] hover:text-white",
                           isArabic ? "justify-end text-right" : "justify-start text-left",
-                          isActive('/') && "tab-active-light dark:super-bright-tab font-semibold"
+                          isActive('/') && "bg-[#0f0705]"
                         )}
                         style={{ animationDelay: `0ms` }}
                       >
@@ -563,13 +473,15 @@ const NavigationComponent = memo(() => {
                       {/* Shop with Categories in Mobile */}
                       <div className="space-y-1">
                         <Button
-                          variant={location.pathname.startsWith('/shop') ? "secondary" : "ghost"}
+                          variant="ghost"
                           size="sm"
                           asChild
                           className={cn(
-                            "w-full h-12 text-base font-medium mobile-nav-link",
+                            "w-full h-9 text-base font-medium mobile-nav-link",
+                            "bg-[#1a0e0d] text-white border border-[#1a0e0d]",
+                            "hover:bg-[#0f0705] hover:text-white",
                             isArabic ? "justify-end text-right" : "justify-start text-left",
-                            location.pathname.startsWith('/shop') && "tab-active-light dark:super-bright-tab font-semibold"
+                            location.pathname.startsWith('/shop') && "bg-[#0f0705]"
                           )}
                           style={{ animationDelay: `50ms` }}
                         >
@@ -594,7 +506,11 @@ const NavigationComponent = memo(() => {
                                 size="sm"
                                 asChild
                                 className={cn(
-                                  "w-full h-10 text-sm font-normal mobile-nav-link text-muted-foreground",
+                                  "w-full h-8 text-sm font-normal mobile-nav-link",
+                                  "bg-amber-800 text-amber-100 border border-amber-700",
+                                  "hover:bg-amber-700 hover:border-amber-600 hover:text-white",
+                                  "dark:bg-amber-800 dark:text-amber-100 dark:border-amber-700",
+                                  "dark:hover:bg-amber-700 dark:hover:border-amber-600",
                                   isArabic ? "justify-end text-right" : "justify-start text-left"
                                 )}
                                 style={{ animationDelay: `${(index + 2) * 50}ms` }}
@@ -620,7 +536,11 @@ const NavigationComponent = memo(() => {
                                 size="sm"
                                 asChild
                                 className={cn(
-                                  "w-full h-10 text-sm font-normal mobile-nav-link text-primary",
+                                  "w-full h-8 text-sm font-normal mobile-nav-link",
+                                  "bg-amber-600 text-white border border-amber-500",
+                                  "hover:bg-amber-700 hover:border-amber-600 hover:text-white",
+                                  "dark:bg-amber-600 dark:text-white dark:border-amber-500",
+                                  "dark:hover:bg-amber-700 dark:hover:border-amber-600",
                                   isArabic ? "justify-end text-right" : "justify-start text-left"
                                 )}
                               >
@@ -644,13 +564,17 @@ const NavigationComponent = memo(() => {
                       {navigationItems.slice(1).map((item, index) => (
                         <Button
                           key={item.href}
-                          variant={isActive(item.href) ? "secondary" : "ghost"}
+                          variant="ghost"
                           size="sm"
                           asChild
                           className={cn(
-                            "w-full h-12 text-base font-medium mobile-nav-link",
+                            "w-full h-9 text-base font-medium mobile-nav-link",
+                            "bg-amber-900 text-white border border-amber-800",
+                            "hover:bg-amber-800 hover:border-amber-700 hover:text-white",
+                            "dark:bg-amber-900 dark:text-white dark:border-amber-800",
+                            "dark:hover:bg-amber-800 dark:hover:border-amber-700",
                             isArabic ? "justify-end text-right" : "justify-start text-left",
-                            isActive(item.href) && "tab-active-light dark:super-bright-tab font-semibold"
+                            isActive(item.href) && "bg-amber-800 border-amber-700"
                           )}
                           style={{ animationDelay: `${(index + 10) * 50}ms` }}
                         >
@@ -760,7 +684,12 @@ const NavigationComponent = memo(() => {
                       "grid grid-cols-2 gap-2",
                       isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                     )}>
-                      <Button variant="outline" size="sm" asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        asChild
+                        className="h-9 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white dark:bg-[#1a0e0d] dark:text-white dark:border-[#1a0e0d] dark:hover:bg-[#0f0705] dark:hover:text-white"
+                      >
                         <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
                           "flex items-center gap-2 justify-center relative",
                           isArabic ? "flex-row-reverse" : "flex-row"
@@ -779,7 +708,12 @@ const NavigationComponent = memo(() => {
                         </Link>
                       </Button>
                       {auth.currentUser?.role === 'admin' && (
-                        <Button variant="outline" size="sm" asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          asChild
+                          className="h-9 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white dark:bg-[#1a0e0d] dark:text-white dark:border-[#1a0e0d] dark:hover:bg-[#0f0705] dark:hover:text-white"
+                        >
                           <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className={cn(
                             "flex items-center gap-2 justify-center",
                             isArabic ? "flex-row-reverse" : "flex-row"
@@ -789,7 +723,12 @@ const NavigationComponent = memo(() => {
                           </Link>
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        asChild
+                        className="h-9 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white dark:bg-[#1a0e0d] dark:text-white dark:border-[#1a0e0d] dark:hover:bg-[#0f0705] dark:hover:text-white"
+                      >
                         <Link to="/wishlist" onClick={() => setMobileMenuOpen(false)} className={cn(
                           "flex items-center gap-2 justify-center relative",
                           isArabic ? "flex-row-reverse" : "flex-row"
@@ -804,11 +743,11 @@ const NavigationComponent = memo(() => {
                         </Link>
                       </Button>
                       <Button 
-                        variant="outline" 
+                        variant="ghost" 
                         size="sm" 
                         onClick={handleLogout}
                         className={cn(
-                          "col-span-2 text-red-600 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-950/20 flex items-center gap-2 justify-center",
+                          "col-span-2 h-9 bg-red-800 text-white border border-red-700 hover:bg-red-700 hover:border-red-600 hover:text-white dark:bg-red-800 dark:text-white dark:border-red-700 dark:hover:bg-red-700 dark:hover:border-red-600 flex items-center gap-2 justify-center",
                           isArabic ? "flex-row-reverse" : "flex-row"
                         )}
                       >
@@ -822,12 +761,19 @@ const NavigationComponent = memo(() => {
                     "grid grid-cols-2 gap-2",
                     isArabic ? "grid-flow-row-dense" : "grid-flow-row"
                   )}>
-                    <Button variant="outline" asChild className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/20">
+                    <Button 
+                      variant="ghost" 
+                      asChild 
+                      className="h-9 bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white dark:bg-[#1a0e0d] dark:text-white dark:border-[#1a0e0d] dark:hover:bg-[#0f0705] dark:hover:text-white"
+                    >
                       <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.login')}
                       </Link>
                     </Button>
-                    <Button asChild className="bg-green-600 hover:bg-green-700 text-white border-green-600 hover:border-green-700 dark:bg-green-600 dark:hover:bg-green-700">
+                    <Button 
+                      asChild 
+                      className="h-9 bg-[#2a1812] text-white border border-[#1a0e0d] hover:bg-[#1a0e0d] hover:text-white dark:bg-[#2a1812] dark:text-white dark:border-[#1a0e0d] dark:hover:bg-[#1a0e0d] dark:hover:text-white"
+                    >
                       <Link to="/register" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-center">
                         {t('navigation.register')}
                       </Link>
