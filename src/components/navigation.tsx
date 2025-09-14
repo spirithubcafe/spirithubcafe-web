@@ -138,14 +138,7 @@ const NavigationComponent = memo(() => {
               "flex items-center gap-2 flex-shrink-0",
               isArabic ? "order-3" : "order-1"
             )}>
-              <Link to="/" className={cn(
-                "flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto backdrop-blur-sm rounded-lg px-2 py-1",
-                isHomePage && !isScrolled 
-                  ? "hover:opacity-90 bg-white/20 hover:bg-white/30 border border-white/30"
-                  : resolvedTheme === 'dark'
-                    ? "hover:opacity-80 bg-black/40 hover:bg-black/60 border border-gray-700/30"
-                    : "hover:opacity-80 bg-white/80 hover:bg-white/95 border border-gray-300/40"
-              )}>
+              <Link to="/" className="flex items-center gap-2 transition-all duration-500 ease-out logo-hover pointer-events-auto">
                 <img 
                   src={resolvedTheme === 'dark' ? "/images/logo/logo-light.png" : "/images/logo/logo-dark.png"}
                   alt="SPIRITHUB ROASTERY Logo" 
