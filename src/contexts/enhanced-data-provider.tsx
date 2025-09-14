@@ -10,7 +10,6 @@ import {
 } from '@/services/settings'
 import { heroService } from '@/services/hero'
 import { useAdvancedCache } from '@/hooks/useAdvancedCache'
-import { AdvancedLoading } from '@/components/ui/advanced-loading'
 
 interface DataContextType {
   // Data
