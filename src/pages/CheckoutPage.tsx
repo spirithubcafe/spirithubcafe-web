@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { CheckCircle, ShoppingCart, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -23,6 +23,7 @@ import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
   useScrollToTopOnRouteChange()
+  const navigate = useNavigate()
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
@@ -36,6 +37,17 @@ export default function CheckoutPage() {
   const [isCalculatingAramex, setIsCalculatingAramex] = useState(false)
 
   const isArabic = i18n.language === 'ar'
+
+  // Authentication check - redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      toast.error(isArabic ? 'يرجى تسجيل الدخول للوصول إلى صفحة الدفع' : 'Please log in to access checkout')
+      navigate('/login', { 
+        replace: true,
+        state: { from: '/checkout' } // Save the intended destination
+      })
+    }
+  }, [currentUser, navigate, isArabic])
 
   // Helper: get item unit price in CURRENT currency (no base+modifier sums)
   const getProductPrice = (product: any, selectedProperties?: Record<string, string>): number => {
@@ -465,6 +477,12 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async () => {
+    // Check authentication before proceeding to checkout
+    if (!currentUser) {
+      toast.error(isArabic ? 'يرجى تسجيل الدخول للمتابعة إلى الدفع' : 'Please log in to proceed to checkout')
+      return
+    }
+
     // Validate required fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
       toast.error(isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields')
@@ -501,9 +519,9 @@ export default function CheckoutPage() {
       // Create order data
       const orderData: Omit<Order, 'id' | 'created' | 'updated'> = {
         order_number: orderNumber,
-        user_id: currentUser?.id,
-  customer_email: formData.email,
-  customer_phone: formattedPhone,
+        user_id: currentUser.id, // Now guaranteed to exist due to auth check
+        customer_email: formData.email,
+        customer_phone: formattedPhone,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         
         // Address data (we'll create proper address records later)
@@ -626,6 +644,11 @@ export default function CheckoutPage() {
     } finally {
       setOrderLoading(false)
     }
+  }
+
+  // Prevent access if user is not authenticated
+  if (!currentUser) {
+    return null // Component will redirect in useEffect, so return null to prevent flash
   }
 
   if (!cart || !cart.items || cart.items.length === 0 && !orderSuccess) {

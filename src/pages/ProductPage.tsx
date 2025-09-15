@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Star, ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
-import { useAuth } from '@/hooks/useAuth'
 import { firestoreService, type Product, type ProductReview, getProductPriceDetails } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { ProductReviews } from '@/components/product-reviews'
@@ -22,7 +21,6 @@ export default function ProductPage() {
   const { t, i18n } = useTranslation()
   const { currency, formatPrice } = useCurrency()
   const { addToCart } = useCart()
-  const { currentUser } = useAuth()
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
@@ -188,12 +186,6 @@ export default function ProductPage() {
 
   const handleAddToCart = async () => {
     if (!product) return
-    
-    // Check if user is logged in
-    if (!currentUser) {
-      toast.error(t('auth.pleaseLoginToAddToCart') || 'Please log in to add items to cart')
-      return
-    }
     
     try {
       await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)

@@ -459,7 +459,7 @@ export default function ProductManagement() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-1 mt-auto pt-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 mt-auto pt-4 opacity-100">
                     <Button 
                       variant="outline" 
                       size="sm" 

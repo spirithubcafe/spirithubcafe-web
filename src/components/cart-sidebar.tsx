@@ -7,10 +7,12 @@ import { StockIndicator } from '@/components/ui/stock-indicator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
+import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
 import { conversionRates } from '@/lib/currency'
 import { useTheme } from '@/components/theme-provider'
+import toast from 'react-hot-toast'
 
 // Define local interface for cart items with products
 interface CartItemWithProduct extends CartItem {
@@ -22,6 +24,7 @@ export function CartSidebar() {
   const { theme } = useTheme()
   const { cart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
+  const { currentUser } = useAuth()
   const isRTL = i18n.language === 'ar'
 
   const [open, setOpen] = useState(false)
@@ -298,6 +301,18 @@ export function CartSidebar() {
                     <Button
                       className="w-full"
                       onClick={() => {
+                        if (!currentUser) {
+                          // Show login message if user is not authenticated
+                          const isArabic = i18n.language === 'ar'
+                          toast.error(isArabic ? 'يرجى تسجيل الدخول للمتابعة إلى الدفع' : 'Please log in to proceed to checkout')
+                          setOpen(false)
+                          setTimeout(() => navigate('/login', { 
+                            state: { from: '/checkout' } 
+                          }), 200)
+                          return
+                        }
+                        
+                        // User is authenticated, proceed to checkout
                         setOpen(false)
                         setTimeout(() => navigate('/checkout'), 200)
                       }}

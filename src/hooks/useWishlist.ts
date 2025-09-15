@@ -12,18 +12,14 @@ export const useWishlist = () => {
   const [loading, setLoading] = useState(false)
   const [wishlistItems, setWishlistItems] = useState<Set<string>>(new Set())
 
-  // Load user's wishlist
+  // Load user's wishlist - now works without authentication
   useEffect(() => {
-    if (!firebaseUser) {
-      setWishlist([])
-      setWishlistItems(new Set())
-      return
-    }
-
     const loadWishlist = async () => {
       setLoading(true)
       try {
-        const userWishlist = await wishlistService.getUserWishlist(firebaseUser.uid)
+        // Use firebaseUser.uid if available, otherwise use 'guest' as identifier
+        const userId = firebaseUser?.uid || 'guest'
+        const userWishlist = await wishlistService.getUserWishlist(userId)
         setWishlist(userWishlist)
         setWishlistItems(new Set(userWishlist.map(item => item.product_id)))
       } catch (error) {
@@ -40,10 +36,9 @@ export const useWishlist = () => {
 
   // Refresh wishlist data
   const refreshWishlist = async () => {
-    if (!firebaseUser) return
-    
     try {
-      const userWishlist = await wishlistService.getUserWishlist(firebaseUser.uid)
+      const userId = firebaseUser?.uid || 'guest'
+      const userWishlist = await wishlistService.getUserWishlist(userId)
       setWishlist(userWishlist)
       setWishlistItems(new Set(userWishlist.map(item => item.product_id)))
     } catch (error) {
@@ -51,18 +46,14 @@ export const useWishlist = () => {
     }
   }
 
-  // Add to wishlist
+  // Add to wishlist - no authentication required
   const addToWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      await wishlistService.addToWishlist(firebaseUser.uid, productId)
+      const userId = firebaseUser?.uid || 'guest'
+      await wishlistService.addToWishlist(userId, productId)
       await refreshWishlist() // Manually refresh data
-      toast.success(t('wishlist.addedToWishlist'))
+      toast.success(t('wishlist.addedToWishlist') || 'Added to wishlist')
       return true
     } catch (error) {
       console.error('Error adding to wishlist:', error)
@@ -73,18 +64,14 @@ export const useWishlist = () => {
     }
   }
 
-  // Remove from wishlist
+  // Remove from wishlist - no authentication required
   const removeFromWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      await wishlistService.removeFromWishlist(firebaseUser.uid, productId)
+      const userId = firebaseUser?.uid || 'guest'
+      await wishlistService.removeFromWishlist(userId, productId)
       await refreshWishlist() // Manually refresh data
-      toast.success(t('wishlist.removedFromWishlist'))
+      toast.success(t('wishlist.removedFromWishlist') || 'Removed from wishlist')
       return true
     } catch (error) {
       console.error('Error removing from wishlist:', error)
@@ -95,22 +82,18 @@ export const useWishlist = () => {
     }
   }
 
-  // Toggle wishlist
+  // Toggle wishlist - no authentication required
   const toggleWishlist = async (productId: string) => {
-    if (!firebaseUser) {
-      toast.error(t('wishlist.loginRequired'))
-      return false
-    }
-
     try {
       setLoading(true)
-      const isAdded = await wishlistService.toggleWishlist(firebaseUser.uid, productId)
+      const userId = firebaseUser?.uid || 'guest'
+      const isAdded = await wishlistService.toggleWishlist(userId, productId)
       await refreshWishlist() // Manually refresh data
       
       if (isAdded) {
-        toast.success(t('wishlist.addedToWishlist'))
+        toast.success(t('wishlist.addedToWishlist') || 'Added to wishlist')
       } else {
-        toast.success(t('wishlist.removedFromWishlist'))
+        toast.success(t('wishlist.removedFromWishlist') || 'Removed from wishlist')
       }
       
       return isAdded

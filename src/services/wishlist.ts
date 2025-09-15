@@ -1,14 +1,34 @@
-import { db } from '@/lib/firebase'
-import { collection, doc, addDoc, deleteDoc, getDocs, query, where } from 'firebase/firestore/lite'
 import type { Wishlist } from '@/types'
 
+// Local storage key for wishlist data
+const WISHLIST_STORAGE_KEY = 'spirithub_wishlist'
+
 export class WishlistService {
-  private collectionName = 'wishlists'
+  // Get wishlist from localStorage
+  private getLocalWishlist(): Wishlist[] {
+    try {
+      const savedWishlist = localStorage.getItem(WISHLIST_STORAGE_KEY)
+      if (!savedWishlist) return []
+      
+      const wishlistData = JSON.parse(savedWishlist)
+      return Array.isArray(wishlistData) ? wishlistData : []
+    } catch (error) {
+      console.error('Error reading wishlist from localStorage:', error)
+      return []
+    }
+  }
+
+  // Save wishlist to localStorage
+  private saveLocalWishlist(wishlist: Wishlist[]): void {
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist))
+    } catch (error) {
+      console.error('Error saving wishlist to localStorage:', error)
+    }
+  }
 
   // Add product to wishlist
   async addToWishlist(userId: string, productId: string): Promise<void> {
-    if (!db) throw new Error('Database not initialized')
-    
     try {
       // Check if product is already in wishlist
       const existing = await this.isInWishlist(userId, productId)
@@ -16,11 +36,16 @@ export class WishlistService {
         throw new Error('Product already in wishlist')
       }
 
-      await addDoc(collection(db, this.collectionName), {
+      const wishlist = this.getLocalWishlist()
+      const newWishlistItem: Wishlist = {
+        id: `${productId}_${Date.now()}_${Math.random()}`,
         user_id: userId,
         product_id: productId,
         created_at: new Date().toISOString()
-      })
+      }
+
+      wishlist.push(newWishlistItem)
+      this.saveLocalWishlist(wishlist)
     } catch (error) {
       console.error('Error adding to wishlist:', error)
       throw error
@@ -29,21 +54,13 @@ export class WishlistService {
 
   // Remove product from wishlist
   async removeFromWishlist(userId: string, productId: string): Promise<void> {
-    if (!db) throw new Error('Database not initialized')
-    
     try {
-      const q = query(
-        collection(db, this.collectionName),
-        where('user_id', '==', userId),
-        where('product_id', '==', productId)
+      const wishlist = this.getLocalWishlist()
+      const filteredWishlist = wishlist.filter(item => 
+        !(item.product_id === productId)
       )
       
-      const querySnapshot = await getDocs(q)
-      
-      if (!querySnapshot.empty) {
-        const wishlistDoc = querySnapshot.docs[0]
-        await deleteDoc(doc(db, this.collectionName, wishlistDoc.id))
-      }
+      this.saveLocalWishlist(filteredWishlist)
     } catch (error) {
       console.error('Error removing from wishlist:', error)
       throw error
@@ -52,17 +69,9 @@ export class WishlistService {
 
   // Check if product is in wishlist
   async isInWishlist(userId: string, productId: string): Promise<boolean> {
-    if (!db) throw new Error('Database not initialized')
-    
     try {
-      const q = query(
-        collection(db, this.collectionName),
-        where('user_id', '==', userId),
-        where('product_id', '==', productId)
-      )
-      
-      const querySnapshot = await getDocs(q)
-      return !querySnapshot.empty
+      const wishlist = this.getLocalWishlist()
+      return wishlist.some(item => item.product_id === productId)
     } catch (error) {
       console.error('Error checking wishlist:', error)
       return false
@@ -71,19 +80,8 @@ export class WishlistService {
 
   // Get user's wishlist
   async getUserWishlist(userId: string): Promise<Wishlist[]> {
-    if (!db) throw new Error('Database not initialized')
-    
     try {
-      const q = query(
-        collection(db, this.collectionName),
-        where('user_id', '==', userId)
-      )
-      
-      const querySnapshot = await getDocs(q)
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Wishlist))
+      return this.getLocalWishlist()
     } catch (error) {
       console.error('Error getting wishlist:', error)
       return []
