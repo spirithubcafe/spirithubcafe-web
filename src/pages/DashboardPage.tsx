@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import {
   User,
   ShoppingBag,
-  Settings,
   LogOut,
   Users,
   Package,
@@ -23,7 +22,8 @@ import {
   Home,
   Shield,
   Palette,
-  Truck
+  Truck,
+  Cog
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -40,7 +40,6 @@ import { productsService } from '@/services/products'
 import DashboardOverview from '@/components/dashboard/DashboardOverview'
 import DashboardOrders from '@/components/dashboard/DashboardOrders'
 import DashboardProfile from '@/components/dashboard/DashboardProfile'
-import DashboardSettings from '@/components/dashboard/DashboardSettings'
 import DashboardUsers from '@/components/dashboard/DashboardUsers'
 import DashboardAnalytics from '@/components/dashboard/DashboardAnalytics'
 import CategoryManagement from '@/components/admin/CategoryManagement'
@@ -191,12 +190,6 @@ export default function DashboardPage() {
           label: isArabic ? 'طلباتي' : 'My Orders',
           icon: ShoppingBag,
           show: true
-        },
-        {
-          id: 'settings',
-          label: isArabic ? 'الإعدادات' : 'Settings',
-          icon: Settings,
-          show: true
         }
       ]
     },
@@ -309,7 +302,7 @@ export default function DashboardPage() {
       // Configuration & Settings
       {
         category: isArabic ? 'التكوين والإعدادات' : 'Configuration & Settings',
-        icon: Settings,
+        icon: Cog,
         items: [
           {
             id: 'users',
@@ -362,8 +355,6 @@ export default function DashboardPage() {
         return <DashboardOrders orders={orders} />
       case 'profile':
         return user && <DashboardProfile user={user} />
-      case 'settings':
-        return <DashboardSettings />
       case 'users':
         return user?.role === 'admin' && (
           <DashboardUsers
