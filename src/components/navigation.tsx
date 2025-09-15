@@ -132,7 +132,7 @@ const NavigationComponent = memo(() => {
         )}
       >
         <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between max-w-7xl mx-auto">
+          <div className="flex h-16 items-center justify-between nav-justify-between max-w-7xl mx-auto">
             
             {/* Logo - Always right for Arabic, left for English */}
             <div className={cn(
