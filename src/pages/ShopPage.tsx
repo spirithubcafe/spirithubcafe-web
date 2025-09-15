@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShoppingCart, Heart, Eye, ZoomIn } from 'lucide-react'
+import { ShoppingCart, Heart, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,8 +16,6 @@ import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
 import { useProducts, useCategories } from '@/contexts/enhanced-data-provider'
 import { ProductQuickView } from '@/components/product-quick-view'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-
 export function ShopPage() {
   const { i18n } = useTranslation()
   const { formatPrice, currency } = useCurrency()
@@ -35,48 +33,7 @@ export function ShopPage() {
   useScrollToTopOnRouteChange()
   
   const isArabic = i18n.language === 'ar'
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Sanitize image URLs: allow internal relative paths (starting with '/') or external https URLs only.
-  const sanitizeImageUrl = (raw: string | undefined): string | null => {
-    if (!raw) return null
-    try {
-      if (raw.startsWith('/')) return raw // internal asset
-      const url = new URL(raw)
-      if (url.protocol === 'https:') return url.toString()
-      return null
-    } catch (err) {
-      return null
-    }
-  }
-
-  const openImageModal = (imageSrc: string) => {
-    const safe = sanitizeImageUrl(imageSrc)
-    if (safe) {
-      setSelectedImage(safe)
-      setIsModalOpen(true)
-    }
-  }
-
-  const closeImageModal = () => {
-    setSelectedImage(null)
-    setIsModalOpen(false)
-  }
-
-  // Shared handlers to avoid inline arrow handlers in JSX
-  const handleGalleryClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const src = e.currentTarget.getAttribute('data-src') || ''
-    openImageModal(src)
-  }
-
-  const handleGalleryKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      const src = (e.currentTarget as HTMLDivElement).getAttribute('data-src') || ''
-      openImageModal(src)
-    }
-  }
 
   // Check for category parameter in URL
   useEffect(() => {

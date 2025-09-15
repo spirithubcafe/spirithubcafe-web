@@ -53,7 +53,7 @@ export class WishlistService {
   }
 
   // Remove product from wishlist
-  async removeFromWishlist(userId: string, productId: string): Promise<void> {
+  async removeFromWishlist(_userId: string, productId: string): Promise<void> {
     try {
       const wishlist = this.getLocalWishlist()
       const filteredWishlist = wishlist.filter(item => 
@@ -68,7 +68,7 @@ export class WishlistService {
   }
 
   // Check if product is in wishlist
-  async isInWishlist(userId: string, productId: string): Promise<boolean> {
+  async isInWishlist(_userId: string, productId: string): Promise<boolean> {
     try {
       const wishlist = this.getLocalWishlist()
       return wishlist.some(item => item.product_id === productId)
@@ -79,7 +79,7 @@ export class WishlistService {
   }
 
   // Get user's wishlist
-  async getUserWishlist(userId: string): Promise<Wishlist[]> {
+  async getUserWishlist(_userId: string): Promise<Wishlist[]> {
     try {
       return this.getLocalWishlist()
     } catch (error) {
