@@ -540,7 +540,7 @@ export function HomePage() {
                 
                 {/* Community Images Gallery */}
                 {(homepageSettings?.communityImage1 || homepageSettings?.communityImage2 || homepageSettings?.communityImage3 || homepageSettings?.communityImage4) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto px-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-8 max-w-7xl mx-auto px-4">
                     {homepageSettings?.communityImage1 && (
                       <div 
                         className="aspect-[3/2] md:aspect-[4/3] lg:aspect-[16/10] overflow-hidden rounded-lg shadow-2xl border border-white/20 cursor-pointer hover:opacity-90 transition-all duration-300 relative group"
