@@ -144,8 +144,8 @@ export default function CheckoutPage() {
     lastName: '',
     email: '',
   phone: '',
-  // Selected phone country dial code (e.g. +968)
-  phoneCountry: '+968',
+  // Selected phone country dial code (e.g. 968)
+  phoneCountry: '968',
     
     // Address
     address: '',
@@ -238,23 +238,16 @@ export default function CheckoutPage() {
 
   // Dial codes for supported countries
   const countryDialCodes: Record<string, string> = {
-    'OM': '+968',
-    'AE': '+971',
-    'SA': '+966',
-    'KW': '+965',
-  'IQ': '+964',
-  'QA': '+974',
-  'BH': '+973'
+    'OM': '968',
+    'AE': '971',
+    'SA': '966',
+    'KW': '965',
+    'IQ': '964',
+    'QA': '974',
+    'BH': '973'
   }
 
-  // Example local number formats per dial code (used for placeholder/hint)
-  const phonePlaceholders: Record<string, string> = {
-    '+968': '91234567', // Oman (8 digits)
-    '+971': '501234567', // UAE (9 digits)
-    '+966': '501234567', // Saudi Arabia (9 digits)
-    '+965': '65123456',  // Kuwait (8 digits)
-    '+964': '7701234567' // Iraq (10 digits)
-  }
+ 
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => {
@@ -810,7 +803,7 @@ export default function CheckoutPage() {
                             type="tel"
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                            placeholder={phonePlaceholders[formData.phoneCountry] || (isArabic ? 'أدخل رقم الهاتف' : 'Enter phone number')}
+                            placeholder={ (isArabic ? 'أدخل رقم الهاتف' : 'Enter phone number')}
                           />
                           {/* example hint removed as requested */}
                         </div>
