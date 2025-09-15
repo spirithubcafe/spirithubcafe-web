@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import DashboardWishlist from './DashboardWishlist'
 import type { Order } from '@/types'
-import type { Product } from '@/types/dashboard'
+import type { Product } from '@/lib/firebase'
 
 interface DashboardOverviewProps {
   orders: Order[]
@@ -30,18 +30,16 @@ export default function DashboardOverview({ orders, products }: DashboardOvervie
     }
   }
 
-  // Helper function to get product price - dashboard products use simple price field
-  const getProductPrice = (product: Product) => {
-    // Dashboard products have a simple price field, convert to current currency
-    const basePrice = product.price || 0
+  // Helper function to get product price based on current currency
+  const getProductPrice = (product: any) => {
     switch (currency) {
       case 'OMR':
-        return basePrice // Assume base price is in OMR
+        return product.price_omr || 0
       case 'SAR':
-        return basePrice * 3.75 // Convert OMR to SAR
+        return product.price_sar || (product.price_omr || 0) * 3.75
       case 'USD':
       default:
-        return basePrice * 2.6 // Convert OMR to USD
+        return product.price_usd || (product.price_omr || 0) * 2.6
     }
   }
 

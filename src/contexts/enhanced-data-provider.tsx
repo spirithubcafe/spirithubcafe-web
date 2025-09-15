@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
-import { jsonProductsService, jsonCategoriesDataService } from '@/services/jsonSettingsService'
-import { type Product, type Category } from '@/types'
+import { firestoreService, type Product, type Category } from '@/lib/firebase'
 import type { HeroSettings } from '@/types'
 import { 
   type HomepageSettings, 
@@ -70,8 +69,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   } = useAdvancedCache(
     'products',
     async () => {
-      const products = await jsonProductsService.getProducts()
-      return products
+      const result = await firestoreService.products.list()
+      return result.items
     },
     {
       ttl: 10 * 60 * 1000, // 10 minutes
@@ -91,8 +90,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   } = useAdvancedCache(
     'categories',
     async () => {
-      const categories = await jsonCategoriesDataService.getCategories()
-      return categories
+      const result = await firestoreService.categories.list()
+      return result.items
     },
     {
       ttl: 15 * 60 * 1000, // 15 minutes
@@ -228,7 +227,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Get specific product
   const getProduct = (id: string): Product | undefined => {
-    return products.find(product => String(product.id) === String(id))
+    return products.find(product => product.id === id)
   }
 
   // Get product by slug
@@ -238,7 +237,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   // Get specific category
   const getCategory = (id: string): Category | undefined => {
-    return categories.find(category => String(category.id) === String(id))
+    return categories.find(category => category.id === id)
   }
 
   // Clear all data cache

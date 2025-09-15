@@ -1091,6 +1091,16 @@
   border-bottom: 1px solid oklch(0.3 0.03 28 / 0.5);
 }
 
+/* Smooth navigation transition */
+.nav-smooth-transition {
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+              backdrop-filter 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateZ(0); /* هک برای GPU acceleration */
+  will-change: background-color, border-color, backdrop-filter, box-shadow;
+}
+
 /* Coffee shop ambiance animations */
 @keyframes coffeeGlow {
   0%, 100% { 

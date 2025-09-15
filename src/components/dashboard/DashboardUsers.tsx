@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Crown, User, KeyRound, Mail, MailCheck, Edit } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Crown, Briefcase, User, KeyRound, Mail, MailCheck } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -10,8 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTranslation } from 'react-i18next'
-import type { UserProfile } from '@/types/dashboard'
-import { jsonDataService } from '@/services/jsonDataService'
+import type { UserProfile } from '@/lib/firebase'
+import { firestoreService, authService } from '@/lib/firebase'
 
 interface DashboardUsersProps {
   users: UserProfile[]
@@ -52,15 +52,15 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
     try {
       setPasswordResetLoading(true)
       
-      // TODO: Implement password reset functionality
-      console.log('Password reset would be sent to:', selectedUser.email)
+      const result = await authService.resetUserPassword(selectedUser.email)
       
-      // Simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      console.log('Password reset email sent successfully')
-      setPasswordResetDialogOpen(false)
-      setSelectedUser(null)
+      if (result.success) {
+        console.log('Password reset email sent successfully')
+        setPasswordResetDialogOpen(false)
+        setSelectedUser(null)
+      } else {
+        console.error('Password reset failed:', result.error)
+      }
     } catch (error) {
       console.error('Error sending password reset:', error)
     } finally {
@@ -84,18 +84,14 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
     try {
       setEditLoading(true)
       
-      // Update user in the users array
-      const updatedUsers = users.map(user => 
-        user.id === selectedUser.id 
-          ? { ...selectedUser, updated: new Date().toISOString() }
-          : user
-      )
-      
-      // Save to JSON file
-      await jsonDataService.updateUsers(updatedUsers)
-      
-      // Update parent component
-      onUsersUpdate(updatedUsers)
+      await firestoreService.users.update(selectedUser.id, {
+        full_name: selectedUser.full_name,
+        email: selectedUser.email,
+        role: selectedUser.role
+      })
+
+      const allUsers = await firestoreService.users.list()
+      onUsersUpdate(allUsers.items)
       
       setEditDialogOpen(false)
       setSelectedUser(null)
@@ -106,119 +102,110 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
     }
   }
 
-  const getRoleIcon = (role: UserProfile['role']) => {
-    switch (role) {
-      case 'admin':
-        return <Crown className="h-3 w-3" />
-      case 'manager':
-        return <User className="h-3 w-3" />
-      default:
-        return <User className="h-3 w-3" />
-    }
-  }
-
-  const getRoleLabel = (role: UserProfile['role']) => {
-    switch (role) {
-      case 'admin':
-        return isArabic ? 'مدير' : 'Admin'
-      case 'manager':
-        return isArabic ? 'مدير' : 'Manager'
-      default:
-        return isArabic ? 'عضو' : 'User'
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p>{isArabic ? 'جارٍ التحميل...' : 'Loading...'}</p>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">
-            {isArabic ? 'إدارة المستخدمين' : 'User Management'}
-          </h2>
-          <p className="text-muted-foreground">
-            {isArabic ? 'إدارة حسابات المستخدمين والأذونات' : 'Manage user accounts and permissions'}
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {users.map((user) => (
-          <Card key={user.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src="" alt={user.name} />
-                  <AvatarFallback>
-                    {user.name.split(' ').map((n: string) => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h3 className="font-semibold">{user.name}</h3>
-                  <p className="text-sm text-muted-foreground">{user.email}</p>
-                  <div className="flex items-center gap-1 mt-1">
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      {getRoleIcon(user.role)}
-                      {getRoleLabel(user.role)}
-                    </Badge>
-                    {user.is_active && (
-                      <Badge variant="default" className="text-xs">
-                        {isArabic ? 'نشط' : 'Active'}
-                      </Badge>
-                    )}
-                  </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>{isArabic ? 'إدارة المستخدمين' : 'User Management'}</CardTitle>
+          <CardDescription>
+            {isArabic ? 'عرض وإدارة جميع المستخدمين' : 'View and manage all users'}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUserView(user)}
-                  className="flex items-center gap-1"
-                >
-                  <Mail className="h-3 w-3" />
-                  {isArabic ? 'عرض' : 'View'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleUserEdit(user)}
-                  className="flex items-center gap-1"
-                >
-                  <Edit className="h-3 w-3" />
-                  {isArabic ? 'تعديل' : 'Edit'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePasswordReset(user)}
-                  className="flex items-center gap-1"
-                >
-                  <KeyRound className="h-3 w-3" />
-                  {isArabic ? 'إعادة تعيين' : 'Reset'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {users.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
-            {isArabic ? 'لا يوجد مستخدمون' : 'No users found'}
-          </p>
-        </div>
-      )}
+              ))}
+            </div>
+          ) : users.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              {isArabic ? 'لا يوجد مستخدمين' : 'No users found'}
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {users.map((user) => (
+                <Card key={user.id}>
+                  <CardContent>
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex items-center space-x-4">
+                        <Avatar>
+                          <AvatarImage src={user.avatar} alt={user.full_name} />
+                          <AvatarFallback>
+                            {user.full_name.split(' ').map((n: string) => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold">{user.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                          <Badge variant="outline" className="mt-1">
+                            <div className="flex items-center gap-1">
+                              {user.role === 'admin' && <Crown className="h-3 w-3" />}
+                              {user.role === 'employee' && <Briefcase className="h-3 w-3" />}
+                              {user.role === 'user' && <User className="h-3 w-3" />}
+                              {user.role === 'admin' 
+                                ? (isArabic ? 'مدير' : 'Admin')
+                                : user.role === 'employee'
+                                ? (isArabic ? 'موظف' : 'Employee')
+                                : (isArabic ? 'عضو' : 'Member')
+                              }
+                            </div>
+                          </Badge>
+                          {/* Email verification status */}
+                          <Badge 
+                            variant={user.email_verified ? "default" : "destructive"} 
+                            className="mt-1 ml-2"
+                          >
+                            <div className="flex items-center gap-1">
+                              {user.email_verified ? <MailCheck className="h-3 w-3" /> : <Mail className="h-3 w-3" />}
+                              {user.email_verified 
+                                ? (isArabic ? 'البريد مؤكد' : 'Email Verified')
+                                : (isArabic ? 'البريد غير مؤكد' : 'Email Not Verified')
+                              }
+                            </div>
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 lg:flex-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUserView(user)}
+                          className="flex-1 sm:flex-none"
+                        >
+                          {isArabic ? 'عرض' : 'View'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUserEdit(user)}
+                          className="flex-1 sm:flex-none"
+                        >
+                          {isArabic ? 'تعديل' : 'Edit'}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePasswordReset(user)}
+                          className="flex items-center gap-1 flex-1 sm:flex-none min-w-0"
+                        >
+                          <KeyRound className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {isArabic ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+                          </span>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Edit User Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
@@ -228,60 +215,45 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
               {isArabic ? 'تعديل المستخدم' : 'Edit User'}
             </DialogTitle>
             <DialogDescription>
-              {isArabic ? 'تعديل معلومات المستخدم والأذونات' : 'Update user information and permissions'}
+              {isArabic ? 'تعديل معلومات المستخدم ودوره' : 'Edit user information and role'}
             </DialogDescription>
           </DialogHeader>
-
           {selectedUser && (
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">
-                  {isArabic ? 'الاسم' : 'Name'}
+                <Label htmlFor="edit-name">
+                  {isArabic ? 'الاسم الكامل' : 'Full Name'}
                 </Label>
                 <Input
-                  id="name"
-                  value={selectedUser.name}
+                  id="edit-name"
+                  value={selectedUser.full_name}
                   onChange={(e) => setSelectedUser({
                     ...selectedUser,
-                    name: e.target.value
+                    full_name: e.target.value
                   })}
+                  required
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="email">
+                <Label htmlFor="edit-email">
                   {isArabic ? 'البريد الإلكتروني' : 'Email'}
                 </Label>
                 <Input
-                  id="email"
+                  id="edit-email"
                   type="email"
                   value={selectedUser.email}
                   onChange={(e) => setSelectedUser({
                     ...selectedUser,
                     email: e.target.value
                   })}
+                  required
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="phone">
-                  {isArabic ? 'رقم الهاتف' : 'Phone'}
-                </Label>
-                <Input
-                  id="phone"
-                  value={selectedUser.phone || ''}
-                  onChange={(e) => setSelectedUser({
-                    ...selectedUser,
-                    phone: e.target.value
-                  })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">
+                <Label htmlFor="edit-role">
                   {isArabic ? 'الدور' : 'Role'}
                 </Label>
-                <Select value={selectedUser.role} onValueChange={handleRoleChange}>
+                <Select onValueChange={handleRoleChange} value={selectedUser.role}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -289,37 +261,35 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
                     <SelectItem value="user">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        {isArabic ? 'عضو' : 'User'}
+                        {isArabic ? 'عضو' : 'Member'}
                       </div>
                     </SelectItem>
-                    <SelectItem value="manager">
+                    <SelectItem value="employee">
                       <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {isArabic ? 'مدير' : 'Manager'}
+                        <Briefcase className="h-4 w-4" />
+                        {isArabic ? 'موظف' : 'Employee'}
                       </div>
                     </SelectItem>
                     <SelectItem value="admin">
                       <div className="flex items-center gap-2">
                         <Crown className="h-4 w-4" />
-                        {isArabic ? 'مدير النظام' : 'Admin'}
+                        {isArabic ? 'مدير' : 'Admin'}
                       </div>
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
               <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setEditDialogOpen(false)}
-                  disabled={editLoading}
                 >
                   {isArabic ? 'إلغاء' : 'Cancel'}
                 </Button>
                 <Button type="submit" disabled={editLoading}>
                   {editLoading 
-                    ? (isArabic ? 'جارٍ الحفظ...' : 'Saving...')
+                    ? (isArabic ? 'جاري الحفظ...' : 'Saving...')
                     : (isArabic ? 'حفظ' : 'Save')
                   }
                 </Button>
@@ -334,102 +304,102 @@ export default function DashboardUsers({ users, onUsersUpdate, loading }: Dashbo
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isArabic ? 'عرض المستخدم' : 'View User'}
+              {isArabic ? 'تفاصيل المستخدم' : 'User Details'}
             </DialogTitle>
           </DialogHeader>
-
           {selectedUser && (
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src="" alt={selectedUser.name} />
+                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.full_name} />
                   <AvatarFallback>
-                    {selectedUser.name.split(' ').map((n: string) => n[0]).join('')}
+                    {selectedUser.full_name.split(' ').map((n: string) => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-xl font-semibold">{selectedUser.name}</h3>
+                  <h3 className="text-xl font-semibold">{selectedUser.full_name}</h3>
                   <p className="text-muted-foreground">{selectedUser.email}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      {getRoleIcon(selectedUser.role)}
-                      {getRoleLabel(selectedUser.role)}
-                    </Badge>
-                    {selectedUser.email_verified && (
-                      <Badge variant="default" className="flex items-center gap-1">
-                        <MailCheck className="h-3 w-3" />
-                        {isArabic ? 'تم التحقق' : 'Verified'}
-                      </Badge>
-                    )}
-                  </div>
+                  <Badge variant="outline" className="mt-1">
+                    <div className="flex items-center gap-1">
+                      {selectedUser.role === 'admin' && <Crown className="h-3 w-3" />}
+                      {selectedUser.role === 'employee' && <Briefcase className="h-3 w-3" />}
+                      {selectedUser.role === 'user' && <User className="h-3 w-3" />}
+                      {selectedUser.role === 'admin' 
+                        ? (isArabic ? 'مدير' : 'Admin')
+                        : selectedUser.role === 'employee'
+                        ? (isArabic ? 'موظف' : 'Employee')
+                        : (isArabic ? 'عضو' : 'Member')
+                      }
+                    </div>
+                  </Badge>
                 </div>
               </div>
-
-              <div className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label>{isArabic ? 'تاريخ الإنشاء' : 'Created Date'}</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {new Date(selectedUser.created).toLocaleDateString(isArabic ? 'ar-AE' : 'en-US')}
+                  <Label>{isArabic ? 'تاريخ التسجيل' : 'Registration Date'}</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedUser.created 
+                      ? new Date(selectedUser.created).toLocaleDateString()
+                      : 'N/A'
+                    }
                   </p>
                 </div>
-                
-                {selectedUser.phone && (
-                  <div>
-                    <Label>{isArabic ? 'رقم الهاتف' : 'Phone'}</Label>
-                    <p className="text-sm text-muted-foreground">{selectedUser.phone}</p>
-                  </div>
-                )}
-
-                {selectedUser.updated && (
-                  <div>
-                    <Label>{isArabic ? 'آخر تحديث' : 'Last Updated'}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(selectedUser.updated).toLocaleDateString(isArabic ? 'ar-AE' : 'en-US')}
-                    </p>
-                  </div>
-                )}
+                <div>
+                  <Label>{isArabic ? 'آخر تسجيل دخول' : 'Last Login'}</Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    N/A
+                  </p>
+                </div>
               </div>
             </div>
           )}
-
           <DialogFooter>
-            <Button onClick={() => setViewDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setViewDialogOpen(false)}
+            >
               {isArabic ? 'إغلاق' : 'Close'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Password Reset Dialog */}
+      {/* Password Reset Confirmation Dialog */}
       <Dialog open={passwordResetDialogOpen} onOpenChange={setPasswordResetDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {isArabic ? 'إعادة تعيين كلمة المرور' : 'Reset Password'}
+              {isArabic ? 'نسيت كلمة المرور' : 'Forgot Password'}
             </DialogTitle>
             <DialogDescription>
-              {selectedUser && (
-                isArabic 
-                  ? `إعادة تعيين كلمة المرور للمستخدم: ${selectedUser.name}`
-                  : `Reset password for user: ${selectedUser.name}`
-              )}
+              {isArabic 
+                ? 'هل أنت متأكد من أنك تريد إرسال رابط استرداد كلمة المرور لهذا المستخدم؟'
+                : 'Are you sure you want to send a password recovery link to this user?'
+              }
             </DialogDescription>
           </DialogHeader>
-
           {selectedUser && (
             <div className="py-4">
-              <p className="text-sm text-muted-foreground">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={selectedUser.avatar} alt={selectedUser.full_name} />
+                  <AvatarFallback>
+                    {selectedUser.full_name.split(' ').map((n: string) => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold">{selectedUser.full_name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">
                 {isArabic 
                   ? 'سيتم إرسال رابط استرداد كلمة المرور إلى عنوان البريد الإلكتروني للمستخدم.'
                   : 'A password recovery link will be sent to the user\'s email address.'
                 }
               </p>
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <code className="text-sm">{selectedUser.email}</code>
-              </div>
             </div>
           )}
-
           <DialogFooter>
             <Button
               variant="outline"

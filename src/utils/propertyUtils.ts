@@ -1,4 +1,4 @@
-import type { ProductPropertyOption } from '@/types'
+import type { ProductPropertyOption } from '@/lib/firebase'
 
 // Helper function for backward compatibility
 export function getPropertyPrice(option: ProductPropertyOption | any): number {

@@ -9,8 +9,7 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import { jsonProductsService } from '@/services/jsonSettingsService'
-import { type Product } from '@/types'
+import { firestoreService, type Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function WishlistPage() {
@@ -37,11 +36,11 @@ export function WishlistPage() {
       try {
         setLoading(true)
         const productPromises = wishlist.map(item => 
-          jsonProductsService.getProduct(item.product_id)
+          firestoreService.products.get(item.product_id)
         )
         
         const productResults = await Promise.all(productPromises)
-        const validProducts = productResults.filter((product): product is Product => product !== null)
+        const validProducts = productResults.filter(product => product !== null) as Product[]
         setProducts(validProducts)
       } catch (error) {
         console.error('Error loading wishlist products:', error)
@@ -125,15 +124,15 @@ export function WishlistPage() {
           /* Products Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map((product) => {
-              const displayPrice = product.on_sale && product.sale_price_omr 
+              const displayPrice = product.is_on_sale && product.sale_price_omr 
                 ? product.sale_price_omr 
-                : product.price_omr || product.price_usd * 0.38
+                : product.price_omr
 
               const badges = []
-              if (product.featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
-              if (product.bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
-              if (product.new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
-              if (product.on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
+              if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
+              if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
+              if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
+              if (product.is_on_sale) badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
 
               return (
                 <Card key={product.id} className="group hover:shadow-lg transition-shadow h-full flex flex-col">
@@ -154,7 +153,7 @@ export function WishlistPage() {
                           onClick={(e) => {
                             e.preventDefault()
                             e.stopPropagation()
-                            handleRemoveFromWishlist(String(product.id))
+                            handleRemoveFromWishlist(product.id)
                           }}
                           size="icon"
                           variant="destructive"
@@ -185,14 +184,14 @@ export function WishlistPage() {
                             <span className="text-lg font-bold text-amber-600">
                               {formatPrice(displayPrice)}
                             </span>
-                            {product.on_sale && product.sale_price_omr && product.price_omr && product.sale_price_omr < product.price_omr && (
+                            {product.is_on_sale && product.sale_price_omr && product.sale_price_omr < product.price_omr && (
                               <span className="text-sm text-muted-foreground line-through">
                                 {formatPrice(product.price_omr)}
                               </span>
                             )}
                           </div>
                           <StockIndicator 
-                            stock={product.stock || 0} 
+                            stock={product.stock_quantity || product.stock || 0} 
                             variant="compact"
                             lowStockThreshold={5}
                           />
@@ -206,7 +205,7 @@ export function WishlistPage() {
                         onClick={() => handleAddToCart(product)}
                         className="flex-1 btn-coffee"
                         size="sm"
-                        disabled={product.stock <= 0}
+                        disabled={product.stock_quantity <= 0}
                       >
                         <ShoppingCart className="h-4 w-4 mr-2" />
                         {isArabic ? 'أضف للسلة' : 'Add to Cart'}

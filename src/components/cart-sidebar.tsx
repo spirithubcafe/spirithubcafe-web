@@ -7,18 +7,15 @@ import { StockIndicator } from '@/components/ui/stock-indicator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useCart } from '@/hooks/useCart'
 import { useCurrency } from '@/hooks/useCurrency'
+import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
-import { JSONCategoriesDataService } from '@/services/jsonSettingsService'
-import { type Category, type Product } from '@/types'
+import { firestoreService, type Category, type CartItem, type Product } from '@/lib/firebase'
 import { conversionRates } from '@/lib/currency'
 import { useTheme } from '@/components/theme-provider'
+import toast from 'react-hot-toast'
 
 // Define local interface for cart items with products
-interface CartItemWithProduct {
-  id: string
-  product_id: string
-  quantity: number
-  selectedProperties?: Record<string, string>
+interface CartItemWithProduct extends CartItem {
   product: Product | null
 }
 
@@ -27,6 +24,7 @@ export function CartSidebar() {
   const { theme } = useTheme()
   const { cart, updateQuantity, removeFromCart, getTotalItems, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
+  const { currentUser } = useAuth()
   const isRTL = i18n.language === 'ar'
 
   const [open, setOpen] = useState(false)
@@ -104,9 +102,8 @@ export function CartSidebar() {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categoriesService = new JSONCategoriesDataService()
-        const categoriesData = await categoriesService.getCategories()
-        setCategories(categoriesData)
+        const categoriesData = await firestoreService.categories.list()
+        setCategories(categoriesData.items)
       } catch (error) {
         console.error('Error loading categories:', error)
       }
@@ -115,8 +112,8 @@ export function CartSidebar() {
   }, [])
 
   // Get category name by ID
-  const getCategoryName = (categoryId: string | number) => {
-    const category = categories.find(c => String(c.id) === String(categoryId))
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId)
     if (!category) return i18n.language === 'ar' ? 'عام' : 'General'
     return i18n.language === 'ar' ? (category.name_ar || category.name) : category.name
   }
@@ -127,7 +124,7 @@ export function CartSidebar() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="outline" size="icon" className="h-9 w-9 relative bg-[#1a0e0d] text-white border border-[#1a0e0d] hover:bg-[#0f0705] hover:text-white transition-all duration-200">
           <ShoppingCart className="h-4 w-4" />
           {totalItems > 0 && (
             <Badge variant="destructive" className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
@@ -188,12 +185,13 @@ export function CartSidebar() {
                   {cart.items?.map((item: CartItemWithProduct) => (
                     <div key={item.id} className="flex gap-4 p-4 border rounded-lg bg-card">
                       <div className="w-16 h-16 bg-amber-100 dark:bg-amber-950 rounded-md flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {item.product?.image || item.product?.image_url || item.product?.gallery_images?.[0] ? (
+                        {item.product?.image || item.product?.image_url || item.product?.images?.[0] || item.product?.gallery?.[0] ? (
                           <img 
                             src={
                               item.product.image || 
                               item.product.image_url || 
-                              item.product.gallery_images?.[0] || 
+                              item.product.images?.[0] || 
+                              item.product.gallery?.[0] || 
                               '/images/logo-s.png'
                             }
                             alt={i18n.language === 'ar' ? (item.product.name_ar || item.product.name) : item.product.name}
@@ -279,7 +277,7 @@ export function CartSidebar() {
                               })()}
                             </p>
                             <StockIndicator 
-                              stock={item.product?.stock || 0} 
+                              stock={item.product?.stock_quantity || item.product?.stock || 0} 
                               variant="compact"
                               lowStockThreshold={5}
                             />
@@ -303,6 +301,18 @@ export function CartSidebar() {
                     <Button
                       className="w-full"
                       onClick={() => {
+                        if (!currentUser) {
+                          // Show login message if user is not authenticated
+                          const isArabic = i18n.language === 'ar'
+                          toast.error(isArabic ? 'يرجى تسجيل الدخول للمتابعة إلى الدفع' : 'Please log in to proceed to checkout')
+                          setOpen(false)
+                          setTimeout(() => navigate('/login', { 
+                            state: { from: '/checkout' } 
+                          }), 200)
+                          return
+                        }
+                        
+                        // User is authenticated, proceed to checkout
                         setOpen(false)
                         setTimeout(() => navigate('/checkout'), 200)
                       }}

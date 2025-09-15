@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Loader } from '@/components/ui/loader'
 import { Textarea } from '@/components/ui/textarea'
 import { useTranslation } from 'react-i18next'
-import toast from 'react-hot-toast'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { contactService, type ContactFormData } from '@/services/contact'
 
@@ -111,18 +110,18 @@ export function ContactPage() {
         (error) => {
           console.error('Error getting location:', error)
           setIsLocationLoading(false)
-          toast.error(t('contact.map.locationError'))
+          alert(t('contact.map.locationError'))
         }
       )
     } else {
       setIsLocationLoading(false)
-      toast.error(t('contact.map.locationError'))
+      alert(t('contact.map.locationError'))
     }
   }
 
   const handleGetDirections = () => {
     if (!userLocation) {
-      toast.error(t('contact.map.locationError'))
+      alert(t('contact.map.locationError'))
       return
     }
 
@@ -183,7 +182,7 @@ export function ContactPage() {
   }
 
   const handleInputChange = (field: keyof ContactFormData, value: string) => {
-    setFormData((prev: any) => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ ...prev, [field]: value }))
   }
 
   // Show loading if contact settings are not loaded yet

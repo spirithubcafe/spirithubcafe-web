@@ -7,13 +7,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAramexSettingsJSON } from '@/hooks/useAramexSettingsJSON'
+import { useAramexSettings } from '@/hooks/useAramexSettings'
 import { aramexService } from '@/services/aramexService'
 import { useTranslation } from 'react-i18next'
 import type { AramexSettings, AramexCredentials } from '@/types/aramex'
 
 const AramexSettingsPage: React.FC = () => {
-  const { settings, saveSettings, loading, error } = useAramexSettingsJSON()
+  const { settings, saveSettings, loading, error } = useAramexSettings()
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   const [isSaving, setIsSaving] = useState(false)

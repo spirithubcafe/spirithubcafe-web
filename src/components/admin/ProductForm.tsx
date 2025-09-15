@@ -1,380 +1,611 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { RichTextEditor } from '@/components/ui/rich-text-editor'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { X, Save, ArrowLeft, Image, Grid, Settings } from 'lucide-react'
-import { jsonDataService } from '@/services/jsonDataService'
+import { Progress } from '@/components/ui/progress'
+import { X, Upload, Save, ArrowLeft, Image, Grid, Settings, Coffee, Search } from 'lucide-react'
+import { firestoreService, storageService, auth, type Category, type ProductProperty } from '@/lib/firebase'
 import ProductPropertyForm from './ProductPropertyForm'
+import SEOForm from '@/components/seo/SEOForm'
+import type { SEOMeta } from '@/types/seo'
+import toast from 'react-hot-toast'
 
-interface Category {
-  id: string
-  name: string
-  name_ar: string
-  description?: string
-  description_ar?: string
-}
-
-interface ProductProperty {
-  id: string
-  name: string
-  name_ar: string
-  type: 'single' | 'multiple' | 'variant'
-  required: boolean
-  display_order: number
-  options: Array<{
-    id: string
-    property_id: string
-    name: string
-    name_ar: string
-    price_adjustment: number
-    available: boolean
-    display_order: number
-  }>
-}
-
-interface Product {
-  id?: string
+interface ProductForm {
   name: string
   name_ar: string
   description: string
   description_ar: string
-  price: number
-  sale_price?: number
-  sku?: string
-  stock: number
+  price_omr: number
+  sale_price_omr?: number
   category_id: string
-  category?: string
-  category_ar?: string
-  images: string[]
-  featured_image?: string
-  status: 'active' | 'inactive' | 'draft'
-  properties?: ProductProperty[]
-  tags?: string[]
-  weight?: number
-  dimensions?: {
-    length: number
-    width: number
-    height: number
-  }
-  seo?: {
-    title?: string
-    title_ar?: string
-    description?: string
-    description_ar?: string
-    keywords?: string
-    keywords_ar?: string
-  }
-  created_at?: string
-  updated_at?: string
+  image?: string
+  gallery?: string[]
+  is_featured: boolean
+  is_bestseller: boolean
+  properties: ProductProperty[]
+  stock_quantity: number
+  slug: string
+  // Coffee information fields
+  roast_level: string
+  roast_level_ar: string
+  process: string
+  process_ar: string
+  variety: string
+  variety_ar: string
+  altitude: string
+  altitude_ar: string
+  notes: string
+  notes_ar: string
+  uses: string
+  uses_ar: string
+  farm: string
+  farm_ar: string
+  aromatic_profile: string
+  aromatic_profile_ar: string
+  intensity: string
+  intensity_ar: string
+  compatibility: string
+  compatibility_ar: string
+  // SEO fields
+  seo?: SEOMeta
 }
 
 interface ProductFormProps {
-  product?: Product
-  onSave: (product: Product) => void
+  editingProduct?: any
+  onSave: () => void
   onCancel: () => void
 }
 
-const defaultProduct: Product = {
-  name: '',
-  name_ar: '',
-  description: '',
-  description_ar: '',
-  price: 0,
-  stock: 0,
-  category_id: '',
-  images: [],
-  status: 'draft',
-  properties: [],
-  tags: [],
-  weight: 0,
-  dimensions: {
-    length: 0,
-    width: 0,
-    height: 0
-  },
-  seo: {
-    title: '',
-    title_ar: '',
-    description: '',
-    description_ar: '',
-    keywords: '',
-    keywords_ar: ''
-  }
-}
-
-export default function ProductForm({ product, onSave, onCancel }: ProductFormProps) {
+export default function ProductForm({ editingProduct, onSave, onCancel }: ProductFormProps) {
   const { i18n } = useTranslation()
-  const isArabic = i18n.language === 'ar'
-  
-  const [formData, setFormData] = useState<Product>(product || defaultProduct)
   const [categories, setCategories] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
-  const [imageUrl, setImageUrl] = useState('')
+  const [mainImageUploadProgress, setMainImageUploadProgress] = useState(0)
+  const [galleryUploadProgress, setGalleryUploadProgress] = useState(0)
+  const [activeTab, setActiveTab] = useState('basic')
+
+  const isArabic = i18n.language === 'ar'
+  const isEdit = !!editingProduct
+
+  const [form, setForm] = useState<ProductForm>({
+    name: '',
+    name_ar: '',
+    description: '',
+    description_ar: '',
+    price_omr: 0,
+    sale_price_omr: undefined,
+    category_id: '',
+    image: '',
+    gallery: [],
+    is_featured: false,
+    is_bestseller: false,
+    properties: [],
+    stock_quantity: 0,
+    slug: '',
+    // Coffee information fields
+    roast_level: '',
+    roast_level_ar: '',
+    process: '',
+    process_ar: '',
+    variety: '',
+    variety_ar: '',
+    altitude: '',
+    altitude_ar: '',
+    notes: '',
+    notes_ar: '',
+    uses: '',
+    uses_ar: '',
+    farm: '',
+    farm_ar: '',
+    aromatic_profile: '',
+    aromatic_profile_ar: '',
+    intensity: '',
+    intensity_ar: '',
+    compatibility: '',
+    compatibility_ar: ''
+  })
+
+  const handlePropertiesChange = (properties: ProductProperty[]) => {
+    setForm(prev => ({ ...prev, properties }))
+  }
 
   useEffect(() => {
-    loadCategories()
-  }, [])
-
-  const loadCategories = async () => {
-    try {
-      const data = await jsonDataService.fetchJSON('/data/categories.json')
-      if (data && Array.isArray(data)) {
-        setCategories(data)
+    const loadCategories = async () => {
+      try {
+        const data = await firestoreService.categories.list()
+        setCategories(data.items)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+        toast.error(isArabic ? 'خطأ في تحميل الفئات' : 'Error loading categories')
       }
-    } catch (error) {
-      console.error('Error loading categories:', error)
-      setCategories([])
     }
+    
+    loadCategories()
+    
+    if (editingProduct) {
+      console.log('Loading SEO data for product:', editingProduct.id, {
+        meta_title: editingProduct.meta_title,
+        meta_description: editingProduct.meta_description,
+        meta_keywords: editingProduct.meta_keywords,
+        seo_auto_generated: editingProduct.seo_auto_generated
+      })
+      
+      setForm({
+        name: editingProduct.name || '',
+        name_ar: editingProduct.name_ar || '',
+        description: editingProduct.description || '',
+        description_ar: editingProduct.description_ar || '',
+        price_omr: editingProduct.price_omr || 0,
+        sale_price_omr: editingProduct.sale_price_omr,
+        category_id: editingProduct.category_id || '',
+        image: editingProduct.image || '',
+        gallery: editingProduct.gallery || [],
+        is_featured: editingProduct.is_featured || false,
+        is_bestseller: editingProduct.is_bestseller || false,
+        properties: editingProduct.properties || [],
+        stock_quantity: editingProduct.stock_quantity || 0,
+        slug: editingProduct.slug || '',
+        // Coffee information fields
+        roast_level: editingProduct.roast_level || '',
+        roast_level_ar: editingProduct.roast_level_ar || '',
+        process: editingProduct.processing_method || '',
+        process_ar: editingProduct.processing_method_ar || '',
+        variety: editingProduct.variety || '',
+        variety_ar: editingProduct.variety_ar || '',
+        altitude: editingProduct.altitude || '',
+        altitude_ar: editingProduct.altitude_ar || '',
+        notes: editingProduct.notes || '',
+        notes_ar: editingProduct.notes_ar || '',
+        uses: editingProduct.uses || '',
+        uses_ar: editingProduct.uses_ar || '',
+        farm: editingProduct.farm || '',
+        farm_ar: editingProduct.farm_ar || '',
+        aromatic_profile: editingProduct.aromatic_profile || '',
+        aromatic_profile_ar: editingProduct.aromatic_profile_ar || '',
+        intensity: editingProduct.intensity || '',
+        intensity_ar: editingProduct.intensity_ar || '',
+        compatibility: editingProduct.compatibility || '',
+        compatibility_ar: editingProduct.compatibility_ar || '',
+        // SEO fields - convert from Firebase format to SEOMeta format
+        seo: {
+          title: editingProduct.meta_title || '',
+          titleAr: editingProduct.meta_title_ar || '',
+          description: editingProduct.meta_description || '',
+          descriptionAr: editingProduct.meta_description_ar || '',
+          keywords: editingProduct.meta_keywords || '',
+          keywordsAr: editingProduct.meta_keywords_ar || '',
+          canonicalUrl: editingProduct.canonical_url || '',
+          ogTitle: editingProduct.og_title || '',
+          ogTitleAr: editingProduct.og_title_ar || '',
+          ogDescription: editingProduct.og_description || '',
+          ogDescriptionAr: editingProduct.og_description_ar || '',
+          ogImage: editingProduct.og_image || '',
+          twitterTitle: editingProduct.twitter_title || '',
+          twitterTitleAr: editingProduct.twitter_title_ar || '',
+          twitterDescription: editingProduct.twitter_description || '',
+          twitterDescriptionAr: editingProduct.twitter_description_ar || '',
+          twitterImage: editingProduct.twitter_image || ''
+        }
+      })
+    }
+  }, [editingProduct, isArabic])
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim()
   }
 
   const handleSave = async () => {
+    if (!form.name || !form.name_ar || !form.category_id || form.price_omr <= 0) {
+      toast.error(isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields')
+      return
+    }
+
+    setSaving(true)
     try {
-      setSaving(true)
-      
-      // Validation
-      if (!formData.name || !formData.name_ar || !formData.category_id) {
-        console.log(isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields')
+      // Find category
+      const category = categories.find(c => c.id === form.category_id)
+      if (!category) {
+        toast.error(isArabic ? 'لم يتم العثور على الفئة' : 'Category not found')
         return
       }
 
-      // Find category name
-      const category = categories.find(c => c.id === formData.category_id)
-      if (category) {
-        formData.category = category.name
-        formData.category_ar = category.name_ar
+      const productData = {
+        name: form.name,
+        name_ar: form.name_ar,
+        description: form.description,
+        description_ar: form.description_ar,
+        price_omr: form.price_omr,
+        sale_price_omr: form.sale_price_omr && form.sale_price_omr > 0 ? form.sale_price_omr : undefined,
+        category_id: form.category_id,
+        category: category,
+        image: form.image,
+        gallery: form.gallery || [],
+        is_featured: form.is_featured,
+        is_bestseller: form.is_bestseller,
+        is_active: true,
+        stock_quantity: form.stock_quantity,
+        slug: form.slug || generateSlug(form.name),
+        properties: form.properties,
+        sort_order: 0,
+        is_new_arrival: false,
+        is_on_sale: (form.sale_price_omr || 0) > 0,
+        stock: form.stock_quantity,
+        // Coffee information fields
+        roast_level: form.roast_level,
+        roast_level_ar: form.roast_level_ar,
+        processing_method: form.process,
+        processing_method_ar: form.process_ar,
+        variety: form.variety,
+        variety_ar: form.variety_ar,
+        altitude: form.altitude,
+        altitude_ar: form.altitude_ar,
+        notes: form.notes,
+        notes_ar: form.notes_ar,
+        uses: form.uses,
+        uses_ar: form.uses_ar,
+        farm: form.farm,
+        farm_ar: form.farm_ar,
+        aromatic_profile: form.aromatic_profile,
+        aromatic_profile_ar: form.aromatic_profile_ar,
+        intensity: form.intensity,
+        intensity_ar: form.intensity_ar,
+        compatibility: form.compatibility,
+        compatibility_ar: form.compatibility_ar,
+        // SEO fields - convert from SEOMeta format to Firebase format
+        meta_title: form.seo?.title || '',
+        meta_title_ar: form.seo?.titleAr || '',
+        meta_description: form.seo?.description || '',
+        meta_description_ar: form.seo?.descriptionAr || '',
+        meta_keywords: form.seo?.keywords || '',
+        meta_keywords_ar: form.seo?.keywordsAr || '',
+        canonical_url: form.seo?.canonicalUrl || '',
+        og_title: form.seo?.ogTitle || '',
+        og_title_ar: form.seo?.ogTitleAr || '',
+        og_description: form.seo?.ogDescription || '',
+        og_description_ar: form.seo?.ogDescriptionAr || '',
+        og_image: form.seo?.ogImage || '',
+        twitter_title: form.seo?.twitterTitle || '',
+        twitter_title_ar: form.seo?.twitterTitleAr || '',
+        twitter_description: form.seo?.twitterDescription || '',
+        twitter_description_ar: form.seo?.twitterDescriptionAr || '',
+        twitter_image: form.seo?.twitterImage || '',
+        updated_at: new Date()
       }
 
-      const now = new Date().toISOString()
-      const productData: Product = {
-        ...formData,
-        updated_at: now,
-        ...(product ? {} : { id: Date.now().toString(), created_at: now })
+      if (isEdit) {
+        await firestoreService.products.update(editingProduct.id, productData)
+        toast.success(isArabic ? 'تم تحديث المنتج بنجاح' : 'Product updated successfully')
+      } else {
+        await firestoreService.products.create(productData)
+        toast.success(isArabic ? 'تم إضافة المنتج بنجاح' : 'Product added successfully')
       }
 
-      await onSave(productData)
-      console.log(product 
-        ? (isArabic ? 'تم تحديث المنتج بنجاح' : 'Product updated successfully')
-        : (isArabic ? 'تم إضافة المنتج بنجاح' : 'Product added successfully')
-      )
+      onSave()
     } catch (error) {
       console.error('Error saving product:', error)
+      toast.error(isArabic ? 'خطأ في حفظ المنتج' : 'Error saving product')
     } finally {
       setSaving(false)
     }
   }
 
-  const updateField = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
+  const handleImageUpload = async (file: File, isGallery = false) => {
+    if (!file) return
 
-  const updateDimensions = (field: string, value: number) => {
-    setFormData(prev => ({
-      ...prev,
-      dimensions: {
-        ...prev.dimensions!,
-        [field]: value
+    const isArabic = i18n.language === 'ar'
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(isArabic ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(isArabic ? 'حجم الصورة كبير جداً (الحد الأقصى 5 ميجابايت)' : 'Image size too large (max 5MB)')
+      return
+    }
+
+    // Choose the appropriate progress setter
+    const setProgress = isGallery ? setGalleryUploadProgress : setMainImageUploadProgress
+    setProgress(0)
+    
+    try {
+      // Check authentication first
+      const currentUser = auth.currentUser
+      if (!currentUser) {
+        toast.error(isArabic ? 'يجب تسجيل الدخول أولاً' : 'Please login first')
+        return
       }
-    }))
-  }
 
-  const updateSEO = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      seo: {
-        ...prev.seo!,
-        [field]: value
+      // Show progress
+      const progressInterval = setInterval(() => {
+        setProgress((prev: number) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval)
+            return 90
+          }
+          return prev + 10
+        })
+      }, 200)
+
+      let url: string
+      
+      try {
+        // Generate safe filename
+        const timestamp = Date.now()
+        const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+        const fileName = `${timestamp}_${safeFileName}`
+        const filePath = isGallery ? `products/gallery/${fileName}` : `products/${fileName}`
+        
+        // Try Firebase Storage upload
+        console.log('Attempting Firebase Storage upload...')
+        url = await storageService.upload(filePath, file)
+        console.log('Firebase Storage upload successful:', url)
+        
+      } catch (storageError) {
+        console.warn('Firebase Storage failed, using fallback:', storageError)
+        clearInterval(progressInterval)
+        setProgress(50)
+        
+        // Use fallback method (base64)
+        console.log('Using fallback upload method...')
+        url = await storageService.uploadAsDataURL(file)
+        
+        toast.success(isArabic ? 'تم استخدام طريقة بديلة للرفع' : 'Used fallback upload method')
       }
-    }))
-  }
+      
+      clearInterval(progressInterval)
+      setProgress(100)
 
-  const addImage = () => {
-    if (imageUrl.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, imageUrl.trim()],
-        ...(prev.images.length === 0 ? { featured_image: imageUrl.trim() } : {})
-      }))
-      setImageUrl('')
+      // Update form data
+      if (isGallery) {
+        setForm(prev => ({
+          ...prev,
+          gallery: [...(prev.gallery || []), url]
+        }))
+      } else {
+        setForm(prev => ({ ...prev, image: url }))
+      }
+
+      setTimeout(() => setProgress(0), 1000)
+      toast.success(isArabic ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully')
+      
+    } catch (error) {
+      console.error('Upload error:', error)
+      setProgress(0)
+      
+      let errorMessage = isArabic ? 'خطأ في رفع الصورة' : 'Error uploading image'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('authentication') || error.message.includes('Unauthorized')) {
+          errorMessage = isArabic ? 'يجب تسجيل الدخول لرفع الصور' : 'Login required to upload images'
+        } else if (error.message.includes('quota')) {
+          errorMessage = isArabic ? 'تم تجاوز حصة التخزين' : 'Storage quota exceeded'
+        } else if (error.message.includes('CORS')) {
+          errorMessage = isArabic ? 'خطأ CORS: يرجى التحقق من إعدادات Firebase' : 'CORS error: Please check Firebase configuration'
+        } else if (error.message.includes('permission')) {
+          errorMessage = isArabic ? 'ليس لديك صلاحية لرفع الصور' : 'No permission to upload images'
+        }
+      }
+      
+      toast.error(errorMessage)
     }
   }
 
-  const removeImage = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-      ...(prev.featured_image === prev.images[index] ? { featured_image: prev.images[0] || '' } : {})
-    }))
-  }
-
-  const setFeaturedImage = (imageUrl: string) => {
-    setFormData(prev => ({
-      ...prev,
-      featured_image: imageUrl
-    }))
-  }
-
-  const addTag = (tag: string) => {
-    if (tag.trim() && !formData.tags?.includes(tag.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), tag.trim()]
-      }))
+  const validateImageUrl = (url: string): boolean => {
+    try {
+      new URL(url)
+      return /\.(jpg|jpeg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(url)
+    } catch {
+      return false
     }
   }
 
-  const removeTag = (tag: string) => {
-    setFormData(prev => ({
+  const addImageByUrl = (url: string, isGallery = false) => {
+    if (!url.trim()) {
+      toast.error(isArabic ? 'يرجى إدخال رابط الصورة' : 'Please enter image URL')
+      return
+    }
+
+    if (!validateImageUrl(url)) {
+      toast.error(isArabic ? 'رابط الصورة غير صالح' : 'Invalid image URL')
+      return
+    }
+
+    if (isGallery) {
+      if (form.gallery?.includes(url)) {
+        toast.error(isArabic ? 'هذه الصورة موجودة مسبقاً' : 'This image already exists')
+        return
+      }
+      setForm(prev => ({
+        ...prev,
+        gallery: [...(prev.gallery || []), url]
+      }))
+    } else {
+      setForm(prev => ({ ...prev, image: url }))
+    }
+
+    toast.success(isArabic ? 'تمت إضافة الصورة بنجاح' : 'Image added successfully')
+  }
+
+  const removeGalleryImage = (index: number) => {
+    setForm(prev => ({
       ...prev,
-      tags: prev.tags?.filter(t => t !== tag) || []
+      gallery: prev.gallery?.filter((_, i) => i !== index) || []
     }))
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">
-            {product 
-              ? (isArabic ? 'تحرير المنتج' : 'Edit Product')
+          <h3 className="text-lg font-semibold">
+            {isEdit 
+              ? (isArabic ? 'تعديل المنتج' : 'Edit Product')
               : (isArabic ? 'إضافة منتج جديد' : 'Add New Product')
             }
-          </h2>
-          <p className="text-muted-foreground">
-            {isArabic ? 'قم بتعديل معلومات المنتج' : 'Fill in the product information'}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {isEdit 
+              ? (isArabic ? 'تعديل تفاصيل المنتج' : 'Edit product details')
+              : (isArabic ? 'إضافة منتج جديد إلى المتجر' : 'Add a new product to the store')
+            }
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {isArabic ? 'إلغاء' : 'Cancel'}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving 
-              ? (isArabic ? 'جارٍ الحفظ...' : 'Saving...')
-              : (isArabic ? 'حفظ المنتج' : 'Save Product')
-            }
-          </Button>
-        </div>
+        <Button variant="outline" onClick={onCancel}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {isArabic ? 'رجوع' : 'Back'}
+        </Button>
       </div>
 
-      <Tabs defaultValue="basic" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="basic">
-            <Grid className="h-4 w-4 mr-2" />
-            {isArabic ? 'معلومات أساسية' : 'Basic Info'}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="basic" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            {isArabic ? 'المعلومات الأساسية' : 'Basic Info'}
           </TabsTrigger>
-          <TabsTrigger value="images">
-            <Image className="h-4 w-4 mr-2" />
-            {isArabic ? 'الصور' : 'Images'}
+          <TabsTrigger value="coffee" className="flex items-center gap-2">
+            <Coffee className="h-4 w-4" />
+            {isArabic ? 'معلومات القهوة' : 'Coffee Info'}
           </TabsTrigger>
-          <TabsTrigger value="properties">
-            <Settings className="h-4 w-4 mr-2" />
-            {isArabic ? 'الخصائص' : 'Properties'}
+          <TabsTrigger value="gallery" className="flex items-center gap-2">
+            <Grid className="h-4 w-4" />
+            {isArabic ? 'الصور' : 'Gallery'}
           </TabsTrigger>
-          <TabsTrigger value="seo">
-            {isArabic ? 'SEO' : 'SEO'}
+          <TabsTrigger value="seo" className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            {isArabic ? 'تحسين محركات البحث' : 'SEO'}
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Image className="h-4 w-4" />
+            {isArabic ? 'الإعدادات' : 'Settings'}
           </TabsTrigger>
         </TabsList>
 
-        {/* Basic Information */}
-        <TabsContent value="basic">
+        <TabsContent value="basic" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>{isArabic ? 'المعلومات الأساسية' : 'Basic Information'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'أدخل المعلومات الأساسية للمنتج' : 'Enter the basic product information'}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'اسم المنتج (انجليزي)' : 'Product Name (English)'} *</Label>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name-en">{isArabic ? 'الاسم (إنجليزي)' : 'Name (English)'}</Label>
                   <Input
-                    value={formData.name}
-                    onChange={(e) => updateField('name', e.target.value)}
-                    placeholder="Product name"
+                    id="name-en"
+                    value={form.name}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      name: e.target.value,
+                      slug: generateSlug(e.target.value)
+                    }))}
+                    placeholder={isArabic ? 'أدخل اسم المنتج بالإنجليزية' : 'Enter product name in English'}
                   />
                 </div>
-                <div>
-                  <Label>{isArabic ? 'اسم المنتج (عربي)' : 'Product Name (Arabic)'} *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="name-ar">{isArabic ? 'الاسم (عربي)' : 'Name (Arabic)'}</Label>
                   <Input
-                    value={formData.name_ar}
-                    onChange={(e) => updateField('name_ar', e.target.value)}
-                    placeholder="اسم المنتج"
+                    id="name-ar"
+                    value={form.name_ar}
+                    onChange={(e) => setForm(prev => ({
+                      ...prev,
+                      name_ar: e.target.value
+                    }))}
+                    placeholder={isArabic ? 'أدخل اسم المنتج بالعربية' : 'Enter product name in Arabic'}
+                    dir="rtl"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'وصف المنتج (انجليزي)' : 'Product Description (English)'}</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => updateField('description', e.target.value)}
-                    rows={4}
-                    placeholder="Product description"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="description-en">{isArabic ? 'الوصف (إنجليزي)' : 'Description (English)'}</Label>
+                  <RichTextEditor
+                    value={form.description}
+                    onChange={(value) => setForm(prev => ({
+                      ...prev,
+                      description: value
+                    }))}
+                    placeholder={isArabic ? 'أدخل وصف المنتج بالإنجليزية' : 'Enter product description in English'}
+                    direction="ltr"
                   />
                 </div>
-                <div>
-                  <Label>{isArabic ? 'وصف المنتج (عربي)' : 'Product Description (Arabic)'}</Label>
-                  <Textarea
-                    value={formData.description_ar}
-                    onChange={(e) => updateField('description_ar', e.target.value)}
-                    rows={4}
-                    placeholder="وصف المنتج"
+                <div className="space-y-2">
+                  <Label htmlFor="description-ar">{isArabic ? 'الوصف (عربي)' : 'Description (Arabic)'}</Label>
+                  <RichTextEditor
+                    value={form.description_ar}
+                    onChange={(value) => setForm(prev => ({
+                      ...prev,
+                      description_ar: value
+                    }))}
+                    placeholder={isArabic ? 'أدخل وصف المنتج بالعربية' : 'Enter product description in Arabic'}
+                    direction="rtl"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <Label>{isArabic ? 'السعر ($)' : 'Price ($)'} *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">{isArabic ? 'السعر' : 'Price'} (OMR)</Label>
                   <Input
+                    id="price"
                     type="number"
                     step="0.01"
-                    value={formData.price}
-                    onChange={(e) => updateField('price', parseFloat(e.target.value) || 0)}
+                    min="0"
+                    value={form.price_omr}
+                    onChange={(e) => setForm(prev => ({ ...prev, price_omr: parseFloat(e.target.value) || 0 }))}
+                    placeholder="0.00"
                   />
                 </div>
-                <div>
-                  <Label>{isArabic ? 'سعر التخفيض ($)' : 'Sale Price ($)'}</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="sale-price">{isArabic ? 'سعر التخفيض' : 'Sale Price'} (OMR)</Label>
                   <Input
+                    id="sale-price"
                     type="number"
                     step="0.01"
-                    value={formData.sale_price || ''}
-                    onChange={(e) => updateField('sale_price', parseFloat(e.target.value) || undefined)}
+                    min="0"
+                    value={form.sale_price_omr || ''}
+                    onChange={(e) => setForm(prev => ({ 
+                      ...prev, 
+                      sale_price_omr: e.target.value ? parseFloat(e.target.value) : undefined 
+                    }))}
+                    placeholder="0.00"
                   />
                 </div>
-                <div>
-                  <Label>{isArabic ? 'الكمية' : 'Stock Quantity'}</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="stock">{isArabic ? 'المخزون' : 'Stock'}</Label>
                   <Input
+                    id="stock"
                     type="number"
-                    value={formData.stock}
-                    onChange={(e) => updateField('stock', parseInt(e.target.value) || 0)}
-                  />
-                </div>
-                <div>
-                  <Label>{isArabic ? 'رمز المنتج' : 'SKU'}</Label>
-                  <Input
-                    value={formData.sku || ''}
-                    onChange={(e) => updateField('sku', e.target.value)}
-                    placeholder="PROD-001"
+                    min="0"
+                    value={form.stock_quantity}
+                    onChange={(e) => setForm(prev => ({ ...prev, stock_quantity: parseInt(e.target.value) || 0 }))}
+                    placeholder="0"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'الفئة' : 'Category'} *</Label>
-                  <Select 
-                    value={formData.category_id} 
-                    onValueChange={(value) => updateField('category_id', value)}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category">{isArabic ? 'الفئة' : 'Category'}</Label>
+                  <Select
+                    value={form.category_id}
+                    onValueChange={(value) => setForm(prev => ({ ...prev, category_id: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={isArabic ? 'اختر الفئة' : 'Select category'} />
@@ -382,253 +613,603 @@ export default function ProductForm({ product, onSave, onCancel }: ProductFormPr
                     <SelectContent>
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {isArabic ? category.name_ar || category.name : category.name}
+                          {isArabic ? category.name_ar : category.name} / {isArabic ? category.name : category.name_ar}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>{isArabic ? 'الحالة' : 'Status'}</Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value: any) => updateField('status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">{isArabic ? 'نشط' : 'Active'}</SelectItem>
-                      <SelectItem value="inactive">{isArabic ? 'غير نشط' : 'Inactive'}</SelectItem>
-                      <SelectItem value="draft">{isArabic ? 'مسودة' : 'Draft'}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Dimensions */}
-              <div>
-                <Label className="text-lg font-medium">{isArabic ? 'الأبعاد (سم)' : 'Dimensions (cm)'}</Label>
-                <div className="grid grid-cols-4 gap-4 mt-2">
-                  <div>
-                    <Label>{isArabic ? 'الوزن (جم)' : 'Weight (g)'}</Label>
-                    <Input
-                      type="number"
-                      value={formData.weight || ''}
-                      onChange={(e) => updateField('weight', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>{isArabic ? 'الطول' : 'Length'}</Label>
-                    <Input
-                      type="number"
-                      value={formData.dimensions?.length || ''}
-                      onChange={(e) => updateDimensions('length', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>{isArabic ? 'العرض' : 'Width'}</Label>
-                    <Input
-                      type="number"
-                      value={formData.dimensions?.width || ''}
-                      onChange={(e) => updateDimensions('width', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                  <div>
-                    <Label>{isArabic ? 'الارتفاع' : 'Height'}</Label>
-                    <Input
-                      type="number"
-                      value={formData.dimensions?.height || ''}
-                      onChange={(e) => updateDimensions('height', parseFloat(e.target.value) || 0)}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <Label className="text-lg font-medium">{isArabic ? 'العلامات' : 'Tags'}</Label>
-                <div className="flex gap-2 mt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="slug">{isArabic ? 'الرابط المختصر' : 'Slug'}</Label>
                   <Input
-                    placeholder={isArabic ? 'أضف علامة' : 'Add tag'}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addTag(e.currentTarget.value)
-                        e.currentTarget.value = ''
-                      }
-                    }}
+                    id="slug"
+                    value={form.slug}
+                    onChange={(e) => setForm(prev => ({ ...prev, slug: e.target.value }))}
+                    placeholder="product-slug"
                   />
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {formData.tags?.map((tag, index) => (
-                    <div key={index} className="bg-secondary px-2 py-1 rounded-md flex items-center gap-2">
-                      <span className="text-sm">{tag}</span>
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        aria-label={isArabic ? 'إزالة' : 'Remove'}
-                        title={isArabic ? 'إزالة' : 'Remove'}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{isArabic ? 'الخصائص المتقدمة' : 'Advanced Properties'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'أضف خصائص متقدمة للمنتج مع خيارات متعددة وأسعار مختلفة' : 'Add advanced product properties with multiple options and different pricing'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProductPropertyForm
+                properties={form.properties}
+                onPropertiesChange={handlePropertiesChange}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="coffee" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Coffee className="h-5 w-5 text-amber-600" />
+                {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+              </CardTitle>
+              <CardDescription>
+                {isArabic ? 'أدخل معلومات القهوة التي ستظهر للعملاء' : 'Enter coffee information that will be displayed to customers'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="roast-level">{isArabic ? 'درجة التحميص' : 'Roast Level'}</Label>
+                  <Input
+                    id="roast-level"
+                    value={form.roast_level}
+                    onChange={(e) => setForm(prev => ({ ...prev, roast_level: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: تحميص خفيف' : 'e.g., Light'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="roast-level-ar">{isArabic ? 'درجة التحميص (عربي)' : 'Roast Level (Arabic)'}</Label>
+                  <Input
+                    id="roast-level-ar"
+                    value={form.roast_level_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, roast_level_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: تحميص خفيف' : 'e.g., تحميص خفيف'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="process">{isArabic ? 'المعالجة' : 'Process'}</Label>
+                  <Input
+                    id="process"
+                    value={form.process}
+                    onChange={(e) => setForm(prev => ({ ...prev, process: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: طبيعي' : 'e.g., Natural'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="process-ar">{isArabic ? 'المعالجة (عربي)' : 'Process (Arabic)'}</Label>
+                  <Input
+                    id="process-ar"
+                    value={form.process_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, process_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: طبيعي' : 'e.g., طبيعي'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="variety">{isArabic ? 'النوع' : 'Variety'}</Label>
+                  <Input
+                    id="variety"
+                    value={form.variety}
+                    onChange={(e) => setForm(prev => ({ ...prev, variety: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: موكا' : 'e.g., Mokka'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="variety-ar">{isArabic ? 'النوع (عربي)' : 'Variety (Arabic)'}</Label>
+                  <Input
+                    id="variety-ar"
+                    value={form.variety_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, variety_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: موكا' : 'e.g., موكا'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="altitude">{isArabic ? 'الارتفاع' : 'Altitude'}</Label>
+                  <Input
+                    id="altitude"
+                    value={form.altitude}
+                    onChange={(e) => setForm(prev => ({ ...prev, altitude: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: 1,450-1,530 متر' : 'e.g., 1,450-1,530 masl'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="altitude-ar">{isArabic ? 'الارتفاع (عربي)' : 'Altitude (Arabic)'}</Label>
+                  <Input
+                    id="altitude-ar"
+                    value={form.altitude_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, altitude_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: 1,450-1,530 متر' : 'e.g., ١٤٥٠-١٥٣٠ متر'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="notes">{isArabic ? 'الملاحظات' : 'Notes'}</Label>
+                  <Textarea
+                    id="notes"
+                    value={form.notes}
+                    onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: جريب فروت، خوخ، كاكاو' : 'e.g., Grapefruit, Plum, Cacao'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes-ar">{isArabic ? 'الملاحظات (عربي)' : 'Notes (Arabic)'}</Label>
+                  <Textarea
+                    id="notes-ar"
+                    value={form.notes_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, notes_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: جريب فروت، خوخ، كاكاو' : 'e.g., جريب فروت، خوخ، كاكاو'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="uses">{isArabic ? 'الاستخدامات' : 'Uses'}</Label>
+                  <Textarea
+                    id="uses"
+                    value={form.uses}
+                    onChange={(e) => setForm(prev => ({ ...prev, uses: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: إسبريسو، قهوة مقطرة، فرنش برس' : 'e.g., Espresso, Drip Coffee, French Press'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="uses-ar">{isArabic ? 'الاستخدامات (عربي)' : 'Uses (Arabic)'}</Label>
+                  <Textarea
+                    id="uses-ar"
+                    value={form.uses_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, uses_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: إسبريسو، قهوة مقطرة، فرنش برس' : 'e.g., إسبريسو، قهوة مقطرة، فرنش برس'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="farm">{isArabic ? 'المزرعة' : 'Farm'}</Label>
+                  <Input
+                    id="farm"
+                    value={form.farm}
+                    onChange={(e) => setForm(prev => ({ ...prev, farm: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: هاواي' : 'e.g., Hawaii'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="farm-ar">{isArabic ? 'المزرعة (عربي)' : 'Farm (Arabic)'}</Label>
+                  <Input
+                    id="farm-ar"
+                    value={form.farm_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, farm_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: هاواي' : 'e.g., هاواي'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              {/* New Coffee Properties */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="aromatic-profile">{isArabic ? 'الملف العطري' : 'Aromatic Profile'}</Label>
+                  <Textarea
+                    id="aromatic-profile"
+                    value={form.aromatic_profile}
+                    onChange={(e) => setForm(prev => ({ ...prev, aromatic_profile: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: عطري، زهري، حمضي' : 'e.g., Fruity, Floral, Citrusy'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="aromatic-profile-ar">{isArabic ? 'الملف العطري (عربي)' : 'Aromatic Profile (Arabic)'}</Label>
+                  <Textarea
+                    id="aromatic-profile-ar"
+                    value={form.aromatic_profile_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, aromatic_profile_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: عطري، زهري، حمضي' : 'e.g., عطري، زهري، حمضي'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="intensity">{isArabic ? 'الكثافة' : 'Intensity'}</Label>
+                  <Input
+                    id="intensity"
+                    value={form.intensity}
+                    onChange={(e) => setForm(prev => ({ ...prev, intensity: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: متوسط، قوي، خفيف' : 'e.g., Medium, Strong, Light'}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="intensity-ar">{isArabic ? 'الكثافة (عربي)' : 'Intensity (Arabic)'}</Label>
+                  <Input
+                    id="intensity-ar"
+                    value={form.intensity_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, intensity_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: متوسط، قوي، خفيف' : 'e.g., متوسط، قوي، خفيف'}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="compatibility">{isArabic ? 'التوافق' : 'Compatibility'}</Label>
+                  <Textarea
+                    id="compatibility"
+                    value={form.compatibility}
+                    onChange={(e) => setForm(prev => ({ ...prev, compatibility: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: يتناسب مع الحليب، السكر، العسل' : 'e.g., Pairs well with milk, sugar, honey'}
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="compatibility-ar">{isArabic ? 'التوافق (عربي)' : 'Compatibility (Arabic)'}</Label>
+                  <Textarea
+                    id="compatibility-ar"
+                    value={form.compatibility_ar}
+                    onChange={(e) => setForm(prev => ({ ...prev, compatibility_ar: e.target.value }))}
+                    placeholder={isArabic ? 'مثال: يتناسب مع الحليب، السكر، العسل' : 'e.g., يتناسب مع الحليب، السكر، العسل'}
+                    rows={3}
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{isArabic ? 'معاينة المعلومات' : 'Information Preview'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'كيف ستظهر معلومات القهوة للعملاء' : 'How the coffee information will appear to customers'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Coffee className="h-4 w-4 text-amber-600" />
+                  <h3 className="font-medium text-sm">
+                    {isArabic ? 'معلومات القهوة' : 'Coffee Information'}
+                  </h3>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: isArabic ? 'درجة التحميص' : 'Roast Level', value: form.roast_level },
+                    { label: isArabic ? 'المعالجة' : 'Process', value: form.process },
+                    { label: isArabic ? 'النوع' : 'Variety', value: form.variety },
+                    { label: isArabic ? 'الارتفاع' : 'Altitude', value: form.altitude },
+                    { label: isArabic ? 'الملاحظات' : 'Notes', value: form.notes },
+                    { label: isArabic ? 'الاستخدامات' : 'Uses', value: form.uses },
+                    { label: isArabic ? 'المزرعة' : 'Farm', value: form.farm },
+                    { label: isArabic ? 'الملف العطري' : 'Aromatic Profile', value: form.aromatic_profile },
+                    { label: isArabic ? 'الكثافة' : 'Intensity', value: form.intensity },
+                    { label: isArabic ? 'التوافق' : 'Compatibility', value: form.compatibility }
+                  ].filter(item => item.value && item.value.trim()).map((item, index) => (
+                    <div key={index} className="flex justify-between items-start text-sm">
+                      <span className="text-muted-foreground font-medium">
+                        {item.label}:
+                      </span>
+                      <span className="text-right flex-1 ml-2" dir={isArabic ? 'rtl' : 'ltr'}>
+                        {item.value}
+                      </span>
                     </div>
                   ))}
+                  {![form.roast_level, form.process, form.variety, form.altitude, form.notes, form.uses, form.farm, form.aromatic_profile, form.intensity, form.compatibility].some(v => v && v.trim()) && (
+                    <p className="text-muted-foreground text-sm text-center py-4">
+                      {isArabic ? 'لا توجد معلومات قهوة مضافة بعد' : 'No coffee information added yet'}
+                    </p>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Images */}
-        <TabsContent value="images">
+        <TabsContent value="gallery" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>{isArabic ? 'صور المنتج' : 'Product Images'}</CardTitle>
+              <CardTitle>{isArabic ? 'الصورة الرئيسية' : 'Main Image'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'ارفع الصورة الرئيسية للمنتج أو أدخل رابط الصورة' : 'Upload the main product image or enter image URL'}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>{isArabic ? 'رابط الصورة' : 'Image URL'}</Label>
-                <div className="flex gap-2">
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="main-image-url">{isArabic ? 'رابط الصورة الرئيسية' : 'Main Image URL'}</Label>
+                <Input
+                  id="main-image-url"
+                  type="url"
+                  value={form.image || ''}
+                  onChange={(e) => setForm(prev => ({ ...prev, image: e.target.value }))}
+                  onBlur={(e) => {
+                    const url = e.target.value.trim()
+                    if (url && !validateImageUrl(url)) {
+                      toast.error(isArabic ? 'رابط الصورة غير صالح' : 'Invalid image URL')
+                    }
+                  }}
+                  placeholder={isArabic ? 'أدخل رابط الصورة الرئيسية' : 'Enter main image URL'}
+                />
+              </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {isArabic ? 'أو' : 'Or'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="main-image">{isArabic ? 'رفع الصورة الرئيسية' : 'Upload Main Image'}</Label>
+                <div className="flex items-center gap-4">
                   <Input
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
+                    id="main-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file, false)
+                    }}
                   />
-                  <Button onClick={addImage} disabled={!imageUrl.trim()}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('main-image')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isArabic ? 'رفع' : 'Upload'}
+                  </Button>
+                </div>
+                {mainImageUploadProgress > 0 && (
+                  <Progress value={mainImageUploadProgress} className="w-full" />
+                )}
+              </div>
+
+              {form.image && (
+                <div className="space-y-2">
+                  <Label>{isArabic ? 'الصورة الرئيسية الحالية' : 'Current Main Image'}</Label>
+                  <div className="relative inline-block">
+                    <div className="w-32 h-32 aspect-square overflow-hidden rounded-lg border">
+                      <img
+                        src={form.image}
+                        alt={`${isArabic ? 'صورة المنتج الرئيسية' : 'Main product image'}: ${form.name || form.name_ar || ''}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement
+                          target.src = '/images/placeholder-product.png'
+                        }}
+                      />
+                    </div>
+                    <button
+                      onClick={() => setForm(prev => ({ ...prev, image: '' }))}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                      title={isArabic ? 'حذف الصورة' : 'Remove image'}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{isArabic ? 'معرض الصور' : 'Image Gallery'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'أضف صور إضافية للمنتج عبر الرفع أو الروابط' : 'Add additional product images via upload or URLs'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="gallery-url">{isArabic ? 'إضافة صورة بالرابط' : 'Add Image by URL'}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="gallery-url"
+                    type="url"
+                    placeholder={isArabic ? 'أدخل رابط الصورة' : 'Enter image URL'}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const input = e.target as HTMLInputElement
+                        const url = input.value.trim()
+                        if (url) {
+                          addImageByUrl(url, true)
+                          input.value = ''
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.getElementById('gallery-url') as HTMLInputElement
+                      const url = input.value.trim()
+                      if (url) {
+                        addImageByUrl(url, true)
+                        input.value = ''
+                      }
+                    }}
+                  >
                     {isArabic ? 'إضافة' : 'Add'}
                   </Button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {formData.images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg border"
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/placeholder.jpg'
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setFeaturedImage(image)}
-                        disabled={formData.featured_image === image}
-                      >
-                        {formData.featured_image === image 
-                          ? (isArabic ? 'رئيسية' : 'Featured')
-                          : (isArabic ? 'جعل رئيسية' : 'Set Featured')
-                        }
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    {isArabic ? 'أو' : 'Or'}
+                  </span>
+                </div>
               </div>
 
-              {formData.images.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Image className="h-12 w-12 mx-auto mb-4" />
-                  <p>{isArabic ? 'لا توجد صور للمنتج' : 'No product images'}</p>
+              <div className="space-y-2">
+                <Label htmlFor="gallery-image">{isArabic ? 'رفع صورة للمعرض' : 'Upload Gallery Image'}</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="gallery-image"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) handleImageUpload(file, true)
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => document.getElementById('gallery-image')?.click()}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isArabic ? 'رفع' : 'Upload'}
+                  </Button>
+                </div>
+                {galleryUploadProgress > 0 && (
+                  <Progress value={galleryUploadProgress} className="w-full" />
+                )}
+              </div>
+
+              {form.gallery && form.gallery.length > 0 && (
+                <div className="space-y-2">
+                  <Label>{isArabic ? 'صور المعرض الحالية' : 'Current Gallery Images'}</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {form.gallery.map((image, index) => (
+                      <div key={index} className="relative">
+                        <div className="aspect-square overflow-hidden rounded-lg border">
+                          <img
+                            src={image}
+                            alt={`${form.name || form.name_ar || (isArabic ? 'منتج' : 'Product')} - ${isArabic ? 'صورة' : 'Image'} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement
+                              target.src = '/images/placeholder-product.png'
+                            }}
+                          />
+                        </div>
+                        <button
+                          onClick={() => removeGalleryImage(index)}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
+                          title={isArabic ? 'حذف الصورة' : 'Remove image'}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Properties */}
-        <TabsContent value="properties">
-          <Card>
-            <CardHeader>
-              <CardTitle>{isArabic ? 'خصائص المنتج' : 'Product Properties'}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProductPropertyForm
-                properties={formData.properties || []}
-                onPropertiesChange={(properties) => updateField('properties', properties)}
-              />
-            </CardContent>
-          </Card>
+        <TabsContent value="seo" className="space-y-6">
+          <SEOForm
+            initialData={form.seo || {}}
+            onChange={(seoData) => setForm(prev => ({ ...prev, seo: seoData }))}
+            entityType="product"
+          />
         </TabsContent>
 
-        {/* SEO */}
-        <TabsContent value="seo">
+        <TabsContent value="settings" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>{isArabic ? 'إعدادات SEO' : 'SEO Settings'}</CardTitle>
+              <CardTitle>{isArabic ? 'إعدادات المنتج' : 'Product Settings'}</CardTitle>
+              <CardDescription>
+                {isArabic ? 'تحديد حالة المنتج وخصائصه الخاصة' : 'Configure product status and special features'}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'عنوان SEO (انجليزي)' : 'SEO Title (English)'}</Label>
-                  <Input
-                    value={formData.seo?.title || ''}
-                    onChange={(e) => updateSEO('title', e.target.value)}
-                    placeholder={formData.name}
-                  />
-                </div>
-                <div>
-                  <Label>{isArabic ? 'عنوان SEO (عربي)' : 'SEO Title (Arabic)'}</Label>
-                  <Input
-                    value={formData.seo?.title_ar || ''}
-                    onChange={(e) => updateSEO('title_ar', e.target.value)}
-                    placeholder={formData.name_ar}
-                  />
-                </div>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={form.is_featured}
+                  onChange={(e) => setForm(prev => ({ ...prev, is_featured: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                  title={isArabic ? 'منتج مميز' : 'Featured product'}
+                />
+                <Label htmlFor="featured">{isArabic ? 'منتج مميز' : 'Featured Product'}</Label>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'وصف SEO (انجليزي)' : 'SEO Description (English)'}</Label>
-                  <Textarea
-                    value={formData.seo?.description || ''}
-                    onChange={(e) => updateSEO('description', e.target.value)}
-                    rows={3}
-                    placeholder={formData.description}
-                  />
-                </div>
-                <div>
-                  <Label>{isArabic ? 'وصف SEO (عربي)' : 'SEO Description (Arabic)'}</Label>
-                  <Textarea
-                    value={formData.seo?.description_ar || ''}
-                    onChange={(e) => updateSEO('description_ar', e.target.value)}
-                    rows={3}
-                    placeholder={formData.description_ar}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{isArabic ? 'الكلمات المفتاحية (انجليزي)' : 'Keywords (English)'}</Label>
-                  <Input
-                    value={formData.seo?.keywords || ''}
-                    onChange={(e) => updateSEO('keywords', e.target.value)}
-                    placeholder="keyword1, keyword2, keyword3"
-                  />
-                </div>
-                <div>
-                  <Label>{isArabic ? 'الكلمات المفتاحية (عربي)' : 'Keywords (Arabic)'}</Label>
-                  <Input
-                    value={formData.seo?.keywords_ar || ''}
-                    onChange={(e) => updateSEO('keywords_ar', e.target.value)}
-                    placeholder="كلمة1, كلمة2, كلمة3"
-                  />
-                </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="bestseller"
+                  checked={form.is_bestseller}
+                  onChange={(e) => setForm(prev => ({ ...prev, is_bestseller: e.target.checked }))}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                  title={isArabic ? 'الأكثر مبيعاً' : 'Best seller'}
+                />
+                <Label htmlFor="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Best Seller'}</Label>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <div className="flex justify-end gap-4 pt-6 border-t">
+        <Button variant="outline" onClick={onCancel}>
+          {isArabic ? 'إلغاء' : 'Cancel'}
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2"
+        >
+          {saving ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              {isArabic ? 'جاري الحفظ...' : 'Saving...'}
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4" />
+              {isArabic ? 'حفظ' : 'Save'}
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }

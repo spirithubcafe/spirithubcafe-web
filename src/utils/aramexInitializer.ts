@@ -1,4 +1,4 @@
-import { jsonAramexService } from '@/services/jsonSettingsService'
+import { firestoreService } from '@/lib/firebase'
 import type { AramexSettings } from '@/types/aramex'
 
 // Default Aramex settings with provided credentials
@@ -68,22 +68,22 @@ const defaultAramexSettings: AramexSettings = {
 }
 
 /**
- * Initialize Aramex settings in JSON storage
+ * Initialize Aramex settings in Firestore database
  * This function should be called once to set up default settings
  */
 export async function initializeAramexSettings(): Promise<boolean> {
   try {
     // Check if settings already exist
-    const existingSettings = await jsonAramexService.getAramexSettings()
+    const existingSettings = await firestoreService.getDocument('settings', 'aramex')
     
-    if (existingSettings) {
-      console.log('Aramex settings already exist')
+    if (existingSettings.exists()) {
+      console.log('Aramex settings already exist in database')
       return true
     }
 
     // Insert default settings
-    await jsonAramexService.saveAramexSettings(defaultAramexSettings)
-    console.log('Default Aramex settings have been successfully saved to JSON')
+    await firestoreService.setDocument('settings', 'aramex', defaultAramexSettings)
+    console.log('Default Aramex settings have been successfully inserted into database')
     return true
   } catch (error) {
     console.error('Error initializing Aramex settings:', error)
@@ -92,11 +92,11 @@ export async function initializeAramexSettings(): Promise<boolean> {
 }
 
 /**
- * Update Aramex settings in JSON storage
+ * Update Aramex settings in database
  */
 export async function updateAramexSettings(settings: AramexSettings): Promise<boolean> {
   try {
-    await jsonAramexService.saveAramexSettings(settings)
+    await firestoreService.setDocument('settings', 'aramex', settings)
     console.log('Aramex settings updated successfully')
     return true
   } catch (error) {
@@ -106,12 +106,17 @@ export async function updateAramexSettings(settings: AramexSettings): Promise<bo
 }
 
 /**
- * Get current Aramex settings from JSON storage
+ * Get current Aramex settings from database
  */
 export async function getAramexSettings(): Promise<AramexSettings | null> {
   try {
-    const settings = await jsonAramexService.getAramexSettings()
-    return settings as AramexSettings | null
+    const settingsDoc = await firestoreService.getDocument('settings', 'aramex')
+    
+    if (settingsDoc.exists()) {
+      return settingsDoc.data() as AramexSettings
+    }
+    
+    return null
   } catch (error) {
     console.error('Error fetching Aramex settings:', error)
     return null

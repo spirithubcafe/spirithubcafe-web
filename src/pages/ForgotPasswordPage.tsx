@@ -6,13 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/components/auth-provider'
+import { authService } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 
 export function ForgotPasswordPage() {
   useScrollToTopOnRouteChange()
   
-  const { resetPassword } = useAuth()
   const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
   const [email, setEmail] = useState('')
@@ -26,7 +25,7 @@ export function ForgotPasswordPage() {
     setLoading(true)
 
     try {
-      const result = await resetPassword(email)
+      const result = await authService.forgotPassword(email)
       
       if (result.success) {
         setSuccess(true)

@@ -2,49 +2,96 @@ import { useState, useEffect, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import type { ReactNode } from 'react'
-import { jsonProductsService } from '@/services/jsonSettingsService'
-import type { Product } from '@/types'
+import { firestoreService, type Product } from '@/lib/firebase'
+import { useAuth } from '@/hooks/useAuth'
 import { useCurrency } from '@/hooks/useCurrency'
 import { CartContext, type Cart, type CartItemWithProduct } from '@/hooks/useCart'
-import { cartStorage } from '@/utils/localStorage'
+import { conversionRates } from '@/lib/currency'
+
+// Local storage key for cart data
+const CART_STORAGE_KEY = 'spirithub_cart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { i18n } = useTranslation()
+  const { currentUser } = useAuth()
   const { currency } = useCurrency()
   const [cartItems, setCartItems] = useState<CartItemWithProduct[]>([])
   const [loading, setLoading] = useState(false)
 
-  // Create cart object for compatibility
+  // Create cart object for compatibility - now works without user
   const cart: Cart | null = {
     id: 'local_cart',
-    user_id: 'local_user',
+    user_id: currentUser?.id || 'guest',
     items: cartItems
   }
 
+  // Load cart from localStorage and fetch product details
   const loadCart = useCallback(async () => {
     try {
       setLoading(true)
-      const localItems = cartStorage.getItems()
+      
+      // Get cart data from localStorage
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY)
+      if (!savedCart) {
+        setCartItems([])
+        return
+      }
+
+      const cartData = JSON.parse(savedCart)
+      if (!Array.isArray(cartData)) {
+        setCartItems([])
+        return
+      }
+
+      // Fetch product details for each cart item
       const itemsWithProducts = await Promise.all(
-        localItems.map(async (item) => {
-          const product = await jsonProductsService.getProduct(item.productId)
-          return {
-            id: item.id,
-            user_id: 'local_user',
-            product_id: item.productId,
-            quantity: item.quantity,
-            selectedProperties: item.selectedProperties,
-            created: new Date(item.addedAt),
-            updated: new Date(item.updatedAt),
-            product
-          } as CartItemWithProduct
+        cartData.map(async (item: any) => {
+          try {
+            const product = await firestoreService.products.get(String(item.product_id))
+            return {
+              ...item,
+              product
+            }
+          } catch (error) {
+            console.error('Error loading product for cart item:', error)
+            return null
+          }
         })
       )
-      setCartItems(itemsWithProducts)
+
+      // Filter out items where product couldn't be loaded
+      const validItems = itemsWithProducts.filter(item => item !== null && item.product !== null)
+      setCartItems(validItems)
     } catch (error) {
       console.error('Error loading cart:', error)
+      setCartItems([])
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  // Save cart to localStorage
+  const saveCart = useCallback((items: CartItemWithProduct[]) => {
+    try {
+      // Save only the essential data (without product details)
+      const cartData = items.map(item => ({
+        id: item.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        selectedProperties: item.selectedProperties,
+        selectedPropertyOptions: item.selectedPropertyOptions,
+        base_price_omr: item.base_price_omr,
+        base_price_usd: item.base_price_usd,
+        base_price_sar: item.base_price_sar,
+        total_price_omr: item.total_price_omr,
+        total_price_usd: item.total_price_usd,
+        total_price_sar: item.total_price_sar,
+        created: item.created,
+        updated: item.updated || new Date()
+      }))
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData))
+    } catch (error) {
+      console.error('Error saving cart to localStorage:', error)
     }
   }, [])
 
@@ -83,12 +130,69 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Add item to localStorage
-      const productId = String(product.id)
-      cartStorage.addItem(productId, quantity, effectiveSelectedProps)
+      // Generate unique ID for cart item
+      const itemId = `${product.id}_${Date.now()}_${Math.random()}`
       
-      // Reload cart to reflect changes
-      await loadCart()
+      // Calculate prices
+      const basePrice = {
+        omr: product.price_omr || 0,
+        usd: product.price_usd || 0,
+        sar: product.price_sar || 0
+      }
+
+      // For now, use base price for total (can be enhanced later for property modifiers)
+      const totalPrice = {
+        omr: basePrice.omr * quantity,
+        usd: basePrice.usd * quantity, 
+        sar: basePrice.sar * quantity
+      }
+
+      // Check if item with same product and properties already exists
+      const existingItemIndex = cartItems.findIndex(item => 
+        item.product_id === product.id && 
+        JSON.stringify(item.selectedProperties || {}) === JSON.stringify(effectiveSelectedProps || {})
+      )
+
+      let newCartItems: CartItemWithProduct[]
+
+      if (existingItemIndex >= 0) {
+        // Update existing item quantity
+        newCartItems = [...cartItems]
+        const existingItem = newCartItems[existingItemIndex]
+        const newQuantity = existingItem.quantity + quantity
+        
+        newCartItems[existingItemIndex] = {
+          ...existingItem,
+          quantity: newQuantity,
+          total_price_omr: basePrice.omr * newQuantity,
+          total_price_usd: basePrice.usd * newQuantity,
+          total_price_sar: basePrice.sar * newQuantity,
+          updated: new Date()
+        }
+      } else {
+        // Add new item
+        const newItem: CartItemWithProduct = {
+          id: itemId,
+          user_id: currentUser?.id || 'guest',
+          product_id: product.id,
+          quantity,
+          selectedProperties: effectiveSelectedProps,
+          base_price_omr: basePrice.omr,
+          base_price_usd: basePrice.usd,
+          base_price_sar: basePrice.sar,
+          total_price_omr: totalPrice.omr,
+          total_price_usd: totalPrice.usd,
+          total_price_sar: totalPrice.sar,
+          created: new Date(),
+          updated: new Date(),
+          product
+        }
+        newCartItems = [...cartItems, newItem]
+      }
+
+      // Update state and save to localStorage
+      setCartItems(newCartItems)
+      saveCart(newCartItems)
 
       const productName = i18n.language === 'ar' ? product.name_ar || product.name : product.name
       // Build selected property summary for toast (e.g., Weight: 250g)
@@ -121,9 +225,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const removeFromCart = async (itemId: string) => {
     try {
-      cartStorage.removeItem(itemId)
-      // Reload cart to reflect changes
-      await loadCart()
+      const newCartItems = cartItems.filter(item => item.id !== itemId)
+      setCartItems(newCartItems)
+      saveCart(newCartItems)
       toast.success(i18n.language === 'ar' ? 'تم حذف المنتج من السلة' : 'Product removed from cart')
     } catch (error) {
       console.error('Error removing from cart:', error)
@@ -138,22 +242,43 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      cartStorage.updateItemQuantity(itemId, quantity)
-      // Reload cart to reflect changes
-      await loadCart()
+      const existingItem = cartItems.find(item => item.id === itemId)
+      if (!existingItem) {
+        console.warn('Cart item not found:', itemId)
+        return
+      }
+
+      const newCartItems = cartItems.map(item => {
+        if (item.id === itemId) {
+          const unitPrice = {
+            omr: item.base_price_omr,
+            usd: item.base_price_usd,
+            sar: item.base_price_sar
+          }
+          return {
+            ...item,
+            quantity,
+            total_price_omr: unitPrice.omr * quantity,
+            total_price_usd: unitPrice.usd * quantity,
+            total_price_sar: unitPrice.sar * quantity,
+            updated: new Date()
+          }
+        }
+        return item
+      })
+
+      setCartItems(newCartItems)
+      saveCart(newCartItems)
     } catch (error) {
       console.error('Error updating cart:', error)
-      // Reload cart on error
-      await loadCart()
       toast.error(i18n.language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating cart')
     }
   }
 
   const clearCart = async () => {
     try {
-      cartStorage.clearItems()
-      // Reload cart to reflect changes
-      await loadCart()
+      setCartItems([])
+      localStorage.removeItem(CART_STORAGE_KEY)
       toast.success(i18n.language === 'ar' ? 'تم مسح السلة' : 'Cart cleared')
     } catch (error) {
       console.error('Error clearing cart:', error)
@@ -162,9 +287,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const getTotalPrice = () => {
-    // Simple conversion rates - you may want to import this from your currency module
-    const conversionRates = { 'OMR': 1, 'USD': 2.6, 'SAR': 9.75 }
-    
     return cartItems.reduce((total, item) => {
       if (!item.product) return total
       
@@ -230,7 +352,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      const price = finalPrice * conversionRates[currency as keyof typeof conversionRates]
+      const price = finalPrice * conversionRates[currency]
       return total + (price * item.quantity)
     }, 0)
   }
@@ -244,7 +366,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       cart,
       cartItems,
       loading,
-      addToCart: addToCart as any,
+      addToCart,
       removeFromCart,
       updateQuantity,
       clearCart,

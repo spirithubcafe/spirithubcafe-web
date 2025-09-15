@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ShoppingCart, Heart, Eye, ZoomIn } from 'lucide-react'
+import { ShoppingCart, Heart, Eye } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,13 +11,11 @@ import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
 import { useWishlist } from '@/hooks/useWishlist'
-import type { Product } from '@/types'
+import type { Product } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { HTMLContent } from '@/components/ui/html-content'
-import { jsonProductsService, jsonCategoriesDataService } from '@/services/jsonSettingsService'
+import { useProducts, useCategories } from '@/contexts/enhanced-data-provider'
 import { ProductQuickView } from '@/components/product-quick-view'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-
 export function ShopPage() {
   const { i18n } = useTranslation()
   const { formatPrice, currency } = useCurrency()
@@ -27,79 +25,23 @@ export function ShopPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('name')
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<any[]>([])
-
-  // Load data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productsData, categoriesData] = await Promise.all([
-          jsonProductsService.getProducts(),
-          jsonCategoriesDataService.getActiveCategories()
-        ])
-        setProducts(productsData)
-        setCategories(categoriesData)
-        
-        // Check for category parameter in URL after data is loaded
-        const categoryParam = searchParams.get('category')
-        if (categoryParam) {
-          setSelectedCategory(categoryParam)
-        }
-      } catch (error) {
-        console.error('Error loading shop data:', error)
-      }
-    }
-
-    loadData()
-  }, [searchParams])
+  
+  const { products, loading } = useProducts()
+  const { categories } = useCategories()
 
   // Smooth scroll to top when page loads
   useScrollToTopOnRouteChange()
   
   const isArabic = i18n.language === 'ar'
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Sanitize image URLs: allow internal relative paths (starting with '/') or external https URLs only.
-  const sanitizeImageUrl = (raw: string | undefined): string | null => {
-    if (!raw) return null
-    try {
-      if (raw.startsWith('/')) return raw // internal asset
-      const url = new URL(raw)
-      if (url.protocol === 'https:') return url.toString()
-      return null
-    } catch (err) {
-      return null
+
+  // Check for category parameter in URL
+  useEffect(() => {
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      setSelectedCategory(categoryParam)
     }
-  }
-
-  const openImageModal = (imageSrc: string) => {
-    const safe = sanitizeImageUrl(imageSrc)
-    if (safe) {
-      setSelectedImage(safe)
-      setIsModalOpen(true)
-    }
-  }
-
-  const closeImageModal = () => {
-    setSelectedImage(null)
-    setIsModalOpen(false)
-  }
-
-  // Shared handlers to avoid inline arrow handlers in JSX
-  const handleGalleryClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const src = e.currentTarget.getAttribute('data-src') || ''
-    openImageModal(src)
-  }
-
-  const handleGalleryKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault()
-      const src = (e.currentTarget as HTMLDivElement).getAttribute('data-src') || ''
-      openImageModal(src)
-    }
-  }
+  }, [searchParams])
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
@@ -123,7 +65,7 @@ export function ShopPage() {
 
   // Get sale price if on sale
   const getSalePrice = (product: Product) => {
-    if (!product.on_sale) return null
+    if (!product.is_on_sale) return null
     
     switch (currency) {
       case 'OMR':
@@ -145,7 +87,7 @@ export function ShopPage() {
       (product.name_ar && product.name_ar.includes(searchQuery))
     
     const matchesCategory = selectedCategory === 'all' || 
-      product.category_id === parseInt(selectedCategory)
+      product.category_id === selectedCategory
 
     return matchesSearch && matchesCategory
   }).sort((a, b) => {
@@ -155,11 +97,11 @@ export function ShopPage() {
       case 'price-high':
         return (getProductPrice(b) ?? 0) - (getProductPrice(a) ?? 0)
       case 'featured':
-        return Number(b.featured) - Number(a.featured)
+        return Number(b.is_featured) - Number(a.is_featured)
       case 'bestseller':
-        return Number(b.bestseller) - Number(a.bestseller)
+        return Number(b.is_bestseller) - Number(a.is_bestseller)
       case 'new':
-        return Number(b.new_arrival) - Number(a.new_arrival)
+        return Number(b.is_new_arrival) - Number(a.is_new_arrival)
       case 'name':
       default: {
         const nameA = isArabic ? (a.name_ar || a.name) : a.name
@@ -179,14 +121,14 @@ export function ShopPage() {
 
   const getProductBadges = (product: Product) => {
     const badges = []
-    if (product.featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
-    if (product.bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
-    if (product.new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
+    if (product.is_featured) badges.push({ text: isArabic ? 'مميز' : 'Featured', color: 'bg-blue-500' })
+    if (product.is_bestseller) badges.push({ text: isArabic ? 'الأكثر مبيعاً' : 'Bestseller', color: 'bg-green-500' })
+    if (product.is_new_arrival) badges.push({ text: isArabic ? 'وصل حديثاً' : 'New', color: 'bg-purple-500' })
     
     // Only show sale badge if product is on sale AND has a valid sale price that's less than regular price
     const salePrice = getSalePrice(product)
     const regularPrice = getProductPrice(product)
-    if (product.on_sale && salePrice && salePrice < regularPrice) {
+    if (product.is_on_sale && salePrice && salePrice < regularPrice) {
       badges.push({ text: isArabic ? 'تخفيض' : 'Sale', color: 'bg-red-500' })
     }
     
@@ -229,6 +171,69 @@ export function ShopPage() {
       return `SpiritHub Roastery, operated by an all-OMANI TEAM, is deeply committed to honoring the hard work of coffee farmers and preserving the authenticity of each origin. Our approach blends precision roasting, seasonal sourcing, and scientific understanding of coffee to deliver a cup that reflects its terroir and story. At SpiritHub, every cup is more than a drink, it’s a connection to heritage, craftsmanship, and the spirit of coffee.`
     }
   })()
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header Skeleton */}
+        <div className="mb-8 space-y-4">
+          <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+          <div className="flex flex-col lg:flex-row gap-4">
+            <div className="flex-1 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
+            <div className="w-full lg:w-48 h-10 bg-muted rounded animate-pulse"></div>
+          </div>
+        </div>
+        
+        {/* Products Grid Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+          {[...Array(9)].map((_, i) => (
+            <Card key={i} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+              {/* Image Skeleton */}
+              <div className="relative aspect-square bg-muted animate-pulse">
+                <div className="absolute top-2 left-2 space-y-1">
+                  <div className="h-5 w-12 bg-background/80 rounded animate-pulse"></div>
+                  <div className="h-5 w-10 bg-background/80 rounded animate-pulse"></div>
+                </div>
+                <div className="absolute top-2 right-2 space-y-2">
+                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
+                  <div className="h-8 w-8 bg-background/80 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              
+              <CardContent className="p-4 space-y-3 flex flex-col h-40">
+                {/* Category Badge */}
+                <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                
+                {/* Product Name */}
+                <div className="space-y-2">
+                  <div className="h-4 bg-muted rounded animate-pulse"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                </div>
+                
+                {/* Notes */}
+                <div className="space-y-1">
+                  <div className="h-3 bg-muted rounded w-full animate-pulse"></div>
+                  <div className="h-3 bg-muted rounded w-2/3 animate-pulse"></div>
+                </div>
+                
+                {/* Price & Stock */}
+                <div className="mt-auto space-y-2">
+                  <div className="flex justify-between items-center">
+                    <div className="h-5 bg-muted rounded w-20 animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                  </div>
+                  
+                  {/* Add to Cart Button */}
+                  <div className="h-9 bg-muted rounded animate-pulse"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -404,7 +409,7 @@ export function ShopPage() {
             const salePrice = getSalePrice(product)
             const badges = getProductBadges(product)
             const productName = isArabic ? (product.name_ar || product.name) : product.name
-            const categoryName = getCategoryName(product.category_id?.toString() || '')
+            const categoryName = getCategoryName(product.category_id)
 
             return (
               <div key={product.id} className="group">
@@ -413,11 +418,13 @@ export function ShopPage() {
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">
-                        {(product.image || product.image_url || product.gallery_images?.[0]) ? (
+                        {(product.image_url || product.image || product.images?.[0] || product.gallery?.[0] || product.gallery_images?.[0]) ? (
                           <img
                             src={
-                              product.image || 
                               product.image_url || 
+                              product.image || 
+                              product.images?.[0] || 
+                              product.gallery?.[0] || 
                               product.gallery_images?.[0] || 
                               '/images/logo.png'
                             }
@@ -451,7 +458,7 @@ export function ShopPage() {
                       </div>
 
                       {/* Out of Stock Overlay */}
-                      {product.stock <= 0 && (
+                      {product.stock_quantity <= 0 && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm">
                           <Badge variant="destructive" className="text-sm py-2 px-4">
                             {isArabic ? 'نفذت الكمية' : 'Out of Stock'}
@@ -514,7 +521,7 @@ export function ShopPage() {
                             )}
                           </div>
                           <StockIndicator 
-                            stock={product.stock || 0} 
+                            stock={product.stock_quantity || product.stock || 0} 
                             variant="compact"
                             lowStockThreshold={5}
                           />
@@ -527,11 +534,11 @@ export function ShopPage() {
                     <div className="flex gap-1">
                       <Button
                         onClick={() => {
-                          if (product.stock > 0) {
-                            addToCart(product as any, 1)
+                          if (product.stock_quantity > 0) {
+                            addToCart(product, 1)
                           }
                         }}
-                        disabled={product.stock <= 0}
+                        disabled={product.stock_quantity <= 0}
                         className="flex-1 btn-coffee text-xs h-7 lg:h-8"
                         size="sm"
                       >
@@ -539,7 +546,7 @@ export function ShopPage() {
                         <span className="hidden sm:inline">{isArabic ? 'أضف للسلة' : 'Add to Cart'}</span>
                         <span className="sm:hidden">{isArabic ? 'أضف' : 'Add'}</span>
                       </Button>
-                      <ProductQuickView product={product as any}>
+                      <ProductQuickView product={product}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -552,11 +559,11 @@ export function ShopPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toggleWishlist(product.id.toString())}
-                        className={`px-2 h-7 lg:h-8 ${isInWishlist(product.id.toString()) ? 'text-red-500 border-red-500' : ''}`}
+                        onClick={() => toggleWishlist(product.id)}
+                        className={`px-2 h-7 lg:h-8 ${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
                         title={isArabic ? 'إضافة إلى المفضلة' : 'Add to Wishlist'}
                       >
-                        <Heart className={`h-3 w-3 ${isInWishlist(product.id.toString()) ? 'fill-current' : ''}`} />
+                        <Heart className={`h-3 w-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                       </Button>
                     </div>
                   </div>
@@ -566,75 +573,7 @@ export function ShopPage() {
           })}
         </div>
       )}
-
-      {/* Spirithub Apparel gallery - show 3 photos below products when apparel category selected */}
-      {String(headerTitle).toLowerCase().includes('spirithub apparel') && (
-        <div className="mt-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-0 justify-items-center">
-            {([
-              { src: '/images/spirithub-apparel-1.jpg', caption: 'World Brewers Cup Tee' },
-              { src: '/images/spirithub-apparel-2.jpg', caption: 'Archers Coffee Tee' },
-              { src: '/images/spirithub-apparel-3.jpg', caption: 'Archers Back Print Tee' },
-              { src: '/images/spirithub-apparel-4.jpg', caption: 'Ultimate Panama Collection Tee' }
-            ] as { src: string; caption?: string }[]).map((item, i) => {
-              const safeSrc = sanitizeImageUrl(item.src) || '/images/logo.png'
-              return (
-                <div key={i} className="overflow-hidden rounded-lg shadow-sm">
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    data-src={safeSrc}
-                    onClick={handleGalleryClick}
-                    onKeyDown={handleGalleryKeyDown}
-                    className="group w-[160px] h-[156px] sm:w-[220px] sm:h-[215px] md:w-[266px] md:h-[263px] cursor-pointer select-none flex items-center justify-center overflow-hidden relative"
-                  >
-                    <img
-                      src={safeSrc}
-                      alt={item.caption || `Spirithub Apparel ${i + 1}`}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/logo.png' }}
-                    />
-
-                    {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                      <div className="p-2 rounded-full bg-white/20 backdrop-blur-sm">
-                        <ZoomIn className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Image Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl w-full p-0 bg-transparent border-none [&>button]:hidden">
-          <div className="relative">
-            <button
-              onClick={closeImageModal}
-              className="absolute top-4 right-4 z-50 bg-black/30 hover:bg-black/50 text-white rounded-full p-3 transition-colors duration-200 backdrop-blur-sm border border-white/20"
-              aria-label={isArabic ? 'إغلاق' : 'Close'}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt={isArabic ? 'صورة مكبرة' : 'Enlarged image'}
-                className="w-full h-auto max-h-[90vh] object-contain rounded-lg"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/logo.png'
-                }}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+ 
 
     </div>
   )

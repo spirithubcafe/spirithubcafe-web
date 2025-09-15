@@ -69,7 +69,7 @@ export function ContactManagement() {
       setLoading(true)
       const result = await contactService.getMessages()
       setMessages(result.items)
-      setUnreadCount(result.items.filter((msg: any) => !msg.is_read).length)
+      setUnreadCount(result.items.filter(msg => !msg.is_read).length)
     } catch (error) {
       console.error('Error loading messages:', error)
       console.error(t('common.error.load'))

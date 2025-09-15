@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
+import { Loader } from '@/components/ui/loader'
 import type { HeroSettings, HeroSlide } from '@/types'
 import { heroService } from '@/services/hero'
 import './hero-slider.css'
@@ -383,7 +384,21 @@ export function HeroSlider({ className = '' }: HeroSliderProps) {
   }
 
   if (!settings || activeSlides.length === 0) {
-    return null // Don't show anything while loading
+    return (
+      <div className="w-full min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="relative mx-auto mb-8 w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 flex items-center justify-center">
+            <Loader size="lg" />
+          </div>
+          <h3 className="text-foreground font-semibold text-xl mb-2">
+            {t('common.loading', 'Loading...')}
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            {isRTL ? 'جاري تحضير تجربتك المميزة...' : 'Preparing your premium experience...'}
+          </p>
+        </div>
+      </div>
+    )
   }
 
   const currentSlideData = activeSlides[currentSlide]

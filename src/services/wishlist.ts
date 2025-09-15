@@ -1,25 +1,51 @@
-import { wishlistStorage } from '@/utils/localStorage'
 import type { Wishlist } from '@/types'
 
+// Local storage key for wishlist data
+const WISHLIST_STORAGE_KEY = 'spirithub_wishlist'
+
 export class WishlistService {
-  private listeners: Set<(wishlist: Wishlist[]) => void> = new Set()
+  // Get wishlist from localStorage
+  private getLocalWishlist(): Wishlist[] {
+    try {
+      const savedWishlist = localStorage.getItem(WISHLIST_STORAGE_KEY)
+      if (!savedWishlist) return []
+      
+      const wishlistData = JSON.parse(savedWishlist)
+      return Array.isArray(wishlistData) ? wishlistData : []
+    } catch (error) {
+      console.error('Error reading wishlist from localStorage:', error)
+      return []
+    }
+  }
+
+  // Save wishlist to localStorage
+  private saveLocalWishlist(wishlist: Wishlist[]): void {
+    try {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist))
+    } catch (error) {
+      console.error('Error saving wishlist to localStorage:', error)
+    }
+  }
 
   // Add product to wishlist
-  async addToWishlist(_userId: string, productId: string): Promise<void> {
+  async addToWishlist(userId: string, productId: string): Promise<void> {
     try {
       // Check if product is already in wishlist
-      const existing = await this.isInWishlist(_userId, productId)
+      const existing = await this.isInWishlist(userId, productId)
       if (existing) {
         throw new Error('Product already in wishlist')
       }
 
-      const newItem = wishlistStorage.addItem(productId)
-      if (!newItem) {
-        throw new Error('Product already in wishlist')
+      const wishlist = this.getLocalWishlist()
+      const newWishlistItem: Wishlist = {
+        id: `${productId}_${Date.now()}_${Math.random()}`,
+        user_id: userId,
+        product_id: productId,
+        created_at: new Date().toISOString()
       }
 
-      // Notify listeners
-      this.notifyListeners()
+      wishlist.push(newWishlistItem)
+      this.saveLocalWishlist(wishlist)
     } catch (error) {
       console.error('Error adding to wishlist:', error)
       throw error
@@ -29,13 +55,12 @@ export class WishlistService {
   // Remove product from wishlist
   async removeFromWishlist(_userId: string, productId: string): Promise<void> {
     try {
-      const removed = wishlistStorage.removeItem(productId)
-      if (!removed) {
-        console.warn('Product not found in wishlist:', productId)
-      }
-
-      // Notify listeners
-      this.notifyListeners()
+      const wishlist = this.getLocalWishlist()
+      const filteredWishlist = wishlist.filter(item => 
+        !(item.product_id === productId)
+      )
+      
+      this.saveLocalWishlist(filteredWishlist)
     } catch (error) {
       console.error('Error removing from wishlist:', error)
       throw error
@@ -45,7 +70,8 @@ export class WishlistService {
   // Check if product is in wishlist
   async isInWishlist(_userId: string, productId: string): Promise<boolean> {
     try {
-      return wishlistStorage.isInWishlist(productId)
+      const wishlist = this.getLocalWishlist()
+      return wishlist.some(item => item.product_id === productId)
     } catch (error) {
       console.error('Error checking wishlist:', error)
       return false
@@ -53,74 +79,29 @@ export class WishlistService {
   }
 
   // Get user's wishlist
-  async getUserWishlist(userId: string): Promise<Wishlist[]> {
+  async getUserWishlist(_userId: string): Promise<Wishlist[]> {
     try {
-      const localItems = wishlistStorage.getItems()
-      return localItems.map(item => ({
-        id: item.id,
-        user_id: userId,
-        product_id: item.productId,
-        created_at: item.addedAt
-      } as Wishlist))
+      return this.getLocalWishlist()
     } catch (error) {
       console.error('Error getting wishlist:', error)
       return []
     }
   }
 
-  // Subscribe to wishlist changes
-  subscribeToWishlist(userId: string, callback: (wishlist: Wishlist[]) => void): () => void {
-    try {
-      // Add listener
-      this.listeners.add(callback)
-      
-      // Initial call with current data
-      this.getUserWishlist(userId).then(callback)
-
-      // Return unsubscribe function
-      return () => {
-        this.listeners.delete(callback)
-      }
-    } catch (error) {
-      console.error('Error subscribing to wishlist:', error)
-      return () => {}
-    }
-  }
-
   // Toggle wishlist status
-  async toggleWishlist(_userId: string, productId: string): Promise<boolean> {
+  async toggleWishlist(userId: string, productId: string): Promise<boolean> {
     try {
-      const isAdded = wishlistStorage.toggleItem(productId)
+      const isInWishlist = await this.isInWishlist(userId, productId)
       
-      // Notify listeners
-      this.notifyListeners()
-      
-      return isAdded
+      if (isInWishlist) {
+        await this.removeFromWishlist(userId, productId)
+        return false
+      } else {
+        await this.addToWishlist(userId, productId)
+        return true
+      }
     } catch (error) {
       console.error('Error toggling wishlist:', error)
-      throw error
-    }
-  }
-
-  // Private method to notify all listeners
-  private notifyListeners(): void {
-    this.listeners.forEach(async (callback) => {
-      try {
-        const wishlist = await this.getUserWishlist('') // userId not needed for localStorage
-        callback(wishlist)
-      } catch (error) {
-        console.error('Error notifying wishlist listener:', error)
-      }
-    })
-  }
-
-  // Clear all wishlist items (utility method)
-  async clearWishlist(): Promise<void> {
-    try {
-      wishlistStorage.clearItems()
-      this.notifyListeners()
-    } catch (error) {
-      console.error('Error clearing wishlist:', error)
       throw error
     }
   }

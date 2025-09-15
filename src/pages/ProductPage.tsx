@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Star, ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -9,9 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTranslation } from 'react-i18next'
 import { useCurrency } from '@/hooks/useCurrency'
 import { useCart } from '@/hooks/useCart'
-import { useAuth } from '@/hooks/useAuth'
-import { jsonProductsService } from '@/services/jsonSettingsService'
-import type { Product, ProductReview } from '@/types'
+import { firestoreService, type Product, type ProductReview, getProductPriceDetails } from '@/lib/firebase'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { ProductReviews } from '@/components/product-reviews'
 import CoffeeInfoDisplay from '@/components/product/CoffeeInfoDisplay'
@@ -23,8 +21,6 @@ export default function ProductPage() {
   const { t, i18n } = useTranslation()
   const { currency, formatPrice } = useCurrency()
   const { addToCart } = useCart()
-  const auth = useAuth() as any
-  const currentUser = auth?.currentUser
   const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
@@ -36,41 +32,34 @@ export default function ProductPage() {
 
   const isArabic = i18n.language === 'ar'
 
-  const loadReviews = useCallback(async (_productId: string) => {
+  const loadReviews = useCallback(async (productId: string) => {
     try {
       console.time('Load Reviews');
-      // For now, reviews will be handled differently since we don't have them in JSON yet
-      // This will be updated when we implement JSON-based reviews
-      setReviews([])
+      // Load approved reviews for this product
+      const approvedReviews = await firestoreService.reviews.getApprovedByProduct(productId)
+      setReviews(approvedReviews)
       console.timeEnd('Load Reviews');
+      
+      // Update product rating (debounced to avoid excessive updates)
+      if (approvedReviews.length > 0) {
+        const { average, count } = await firestoreService.reviews.getAverageRating(productId)
+        // Update the product in Firebase with new rating
+        await firestoreService.products.update(productId, {
+          average_rating: average,
+          total_reviews: count
+        })
+        
+        // Update local product state
+        setProduct(prev => prev ? {
+          ...prev,
+          average_rating: average,
+          total_reviews: count
+        } : null)
+      }
     } catch (error) {
       console.error('Error loading reviews:', error)
+      // Fallback to empty array
       setReviews([])
-    }
-  }, [])
-
-  // Helper function to get product price details
-  const getProductPriceDetails = useCallback((product: Product, _selectedProperties: Record<string, string>, currencyKey: string) => {
-    const basePriceMap = {
-      USD: product.price_usd,
-      OMR: product.price_omr || product.price_usd * 0.385,
-      SAR: product.price_sar || product.price_usd * 3.75
-    }
-    
-    const baseSalePriceMap = {
-      USD: product.sale_price_usd,
-      OMR: product.sale_price_omr,
-      SAR: product.sale_price_sar
-    }
-
-    const basePrice = basePriceMap[currencyKey as keyof typeof basePriceMap] || product.price_usd
-    const salePrice = baseSalePriceMap[currencyKey as keyof typeof baseSalePriceMap]
-    
-    return {
-      basePrice,
-      salePrice: salePrice || null,
-      finalPrice: salePrice || basePrice,
-      isOnSale: product.on_sale && !!salePrice
     }
   }, [])
 
@@ -81,14 +70,14 @@ export default function ProductPage() {
     try {
       console.time('Load Product');
       
-      // First try to get by ID 
-      let foundProduct = await jsonProductsService.getProduct(slug)
+      // First try to get by ID (most efficient)
+      let foundProduct = await firestoreService.products.get(slug)
       
-      // If not found by ID, search by slug
+      // If not found by ID, search by slug (requires listing - less efficient)
       if (!foundProduct) {
         console.log('Product not found by ID, searching by slug...');
-        const allProducts = await jsonProductsService.getProducts()
-        foundProduct = allProducts.find((p: Product) => p.slug === slug)
+        const result = await firestoreService.products.list()
+        foundProduct = result.items.find((p: Product) => p.slug === slug)
       }
       
       console.timeEnd('Load Product');
@@ -101,7 +90,7 @@ export default function ProductPage() {
       setProduct(foundProduct)
       
       // Load reviews in parallel (non-blocking)
-      loadReviews(foundProduct.id.toString()).catch(console.error)
+      loadReviews(foundProduct.id).catch(console.error)
       
     } catch (error) {
       console.error('Error loading product:', error)
@@ -198,14 +187,8 @@ export default function ProductPage() {
   const handleAddToCart = async () => {
     if (!product) return
     
-    // Check if user is logged in
-    if (!currentUser) {
-      toast.error(t('auth.pleaseLoginToAddToCart') || 'Please log in to add items to cart')
-      return
-    }
-    
     try {
-      await addToCart(product as any, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
+      await addToCart(product, quantity, Object.keys(selectedProperties).length > 0 ? selectedProperties : undefined)
       toast.success(t('product.addedToCart'))
     } catch (error) {
       console.error('Error adding to cart:', error)
@@ -216,17 +199,18 @@ export default function ProductPage() {
   // Get detailed pricing information including sale status
   const priceDetails = useMemo(() => {
     if (!product) return {
-      basePrice: 0,
-      salePrice: null,
       finalPrice: 0,
-      isOnSale: false
+      originalPrice: 0,
+      isOnSale: false,
+      discountAmount: 0,
+      discountPercentage: 0
     }
 
     // Get currency mapping
-    const currencyKey = currency === 'OMR' ? 'OMR' : currency === 'SAR' ? 'SAR' : 'USD'
+    const currencyKey = currency === 'OMR' ? 'omr' : currency === 'SAR' ? 'sar' : 'usd'
     
     return getProductPriceDetails(product, selectedProperties, currencyKey)
-  }, [product, selectedProperties, currency, getProductPriceDetails])
+  }, [product, selectedProperties, currency])
 
 
   const getProductPrice = (): number => {
@@ -238,9 +222,9 @@ export default function ProductPage() {
     
     const badges: Array<{ text: string; color: string }> = []
     
-    if (product.featured) badges.push({ text: t('product.featured'), color: 'bg-blue-500' })
-    if (product.bestseller) badges.push({ text: t('product.bestseller'), color: 'bg-green-500' })
-    if (product.new_arrival) badges.push({ text: t('product.newArrival'), color: 'bg-purple-500' })
+    if (product.is_featured) badges.push({ text: t('product.featured'), color: 'bg-blue-500' })
+    if (product.is_bestseller) badges.push({ text: t('product.bestseller'), color: 'bg-green-500' })
+    if (product.is_new_arrival) badges.push({ text: t('product.newArrival'), color: 'bg-purple-500' })
     
     return badges
   }
@@ -252,7 +236,7 @@ export default function ProductPage() {
       ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
       : 0
   
-  const totalReviews = product?.review_count || reviews.length
+  const totalReviews = product?.total_reviews || reviews.length
 
   if (loading) {
     return (
@@ -325,10 +309,12 @@ export default function ProductPage() {
               const availableImages = []
               
               // Add main image first (highest priority)
-              if (product.image) availableImages.push(product.image)
               if (product.image_url) availableImages.push(product.image_url)
+              if (product.image) availableImages.push(product.image)
               
               // Then add gallery images
+              if (product.images) availableImages.push(...product.images)
+              if (product.gallery) availableImages.push(...product.gallery)
               if (product.gallery_images) availableImages.push(...product.gallery_images)
               
               // Remove duplicates and empty strings
@@ -406,7 +392,7 @@ export default function ProductPage() {
 
             {/* Coffee Information */}
             <CoffeeInfoDisplay
-              roastLevel={typeof product.roast_level === 'object' ? product.roast_level?.name : product.roast_level}
+              roastLevel={product.roast_level}
               roastLevel_ar={product.roast_level_ar}
               process={product.processing_method}
               process_ar={product.processing_method_ar}
@@ -432,16 +418,16 @@ export default function ProductPage() {
             {/* Price and Quantity Section */}
             <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-2">
-                {priceDetails.isOnSale && priceDetails.salePrice ? (
+                {priceDetails.isOnSale && priceDetails.discountAmount > 0 ? (
                   <>
                     <span className="text-xl font-bold text-primary">
                       {formatPrice(priceDetails.finalPrice)}
                     </span>
                     <span className="text-sm text-muted-foreground line-through">
-                      {formatPrice(priceDetails.basePrice)}
+                      {formatPrice(priceDetails.originalPrice)}
                     </span>
                     <Badge variant="destructive" className="text-xs">
-                      SALE
+                      -{priceDetails.discountPercentage}%
                     </Badge>
                   </>
                 ) : (
@@ -453,7 +439,7 @@ export default function ProductPage() {
               
               {/* Quantity Controls and Stock */}
               <div className="flex items-center gap-3">
-                {product.stock > 0 && (
+                {product.stock_quantity > 0 && (
                   <div className="flex items-center ltr">
                     <Button
                       variant="outline"
@@ -478,7 +464,7 @@ export default function ProductPage() {
                   </div>
                 )}
                 <StockIndicator 
-                  stock={product.stock || 0} 
+                  stock={product.stock_quantity || product.stock || 0} 
                   variant="compact"
                   lowStockThreshold={10}
                   className="text-green-400"
@@ -655,7 +641,7 @@ export default function ProductPage() {
               <div className="space-y-6">
                 {/* Coffee Information */}
                 <CoffeeInfoDisplay
-                  roastLevel={typeof product.roast_level === 'object' ? product.roast_level?.name : product.roast_level}
+                  roastLevel={product.roast_level}
                   roastLevel_ar={product.roast_level_ar}
                   process={product.processing_method}
                   process_ar={product.processing_method_ar}
@@ -730,8 +716,8 @@ export default function ProductPage() {
 
             <TabsContent value="reviews" className="mt-6">
               <ProductReviews
-                productId={product.id.toString()}
-                reviews={reviews as any}
+                productId={product.id}
+                reviews={reviews}
                 averageRating={averageRating}
                 onReviewAdded={handleReviewAdded}
               />

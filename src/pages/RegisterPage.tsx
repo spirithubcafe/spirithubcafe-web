@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
-import toast from 'react-hot-toast'
 
 export function RegisterPage() {
   useScrollToTopOnRouteChange()
@@ -60,20 +59,25 @@ export function RegisterPage() {
 
     try {
       const result = await register(formData.email, formData.password, {
-        name: formData.name,
+        full_name: formData.name,
         phone: formData.phone
       })
       
       console.log('Registration result received:', result)
       
       if (result.success) {
-        console.log('Registration successful, navigating to login')
-        // Show success message
-        toast.success(isArabic 
-          ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.'
-          : 'Account created successfully! You can now log in.'
-        )
-        navigate('/login')
+        if (result.requiresEmailVerification) {
+          console.log('Registration successful, showing email verification message')
+          // Show success message with email verification instructions
+          alert(isArabic 
+            ? 'تم إنشاء الحساب بنجاح! تم إرسال رابط تأكيد البريد الإلكتروني. يرجى تحقق من بريدك الإلكتروني وتأكيد عنوانك قبل تسجيل الدخول.'
+            : 'Account created successfully! A verification email has been sent. Please check your email and verify your address before logging in.'
+          )
+          navigate('/login')
+        } else {
+          console.log('Registration successful, navigating to dashboard')
+          navigate('/dashboard')
+        }
       } else {
         console.log('Registration failed:', result.error)
         setError(result.error || t('auth.register.failed'))

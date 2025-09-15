@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { CheckCircle, ShoppingCart, MapPin, Loader2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { CheckCircle, ShoppingCart, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,17 +14,20 @@ import { useTranslation } from 'react-i18next'
 import { useScrollToTopOnRouteChange } from '@/hooks/useSmoothScrollToTop'
 import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
+import { firestoreService, type Order, type OrderItem, type Product } from '@/lib/firebase'
 import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
 import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
+import { ShippingService, type ShippingCalculationRequest } from '@/services/shipping'
+import { calculateProductWeight } from '@/utils/productWeightUtils'
 import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
   useScrollToTopOnRouteChange()
+  const navigate = useNavigate()
   const { i18n } = useTranslation()
   const { cart, clearCart, getTotalPrice } = useCart()
   const { formatPrice, currency } = useCurrency()
-  const auth = useAuth() as any
-  const currentUser = auth?.currentUser
+  const { currentUser } = useAuth()
   const { settings: checkoutSettings } = useCheckoutSettings()
 
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -34,6 +37,17 @@ export default function CheckoutPage() {
   const [isCalculatingAramex, setIsCalculatingAramex] = useState(false)
 
   const isArabic = i18n.language === 'ar'
+
+  // Authentication check - redirect to login if not authenticated
+  useEffect(() => {
+    if (!currentUser) {
+      toast.error(isArabic ? 'يرجى تسجيل الدخول للوصول إلى صفحة الدفع' : 'Please log in to access checkout')
+      navigate('/login', { 
+        replace: true,
+        state: { from: '/checkout' } // Save the intended destination
+      })
+    }
+  }, [currentUser, navigate, isArabic])
 
   // Helper: get item unit price in CURRENT currency (no base+modifier sums)
   const getProductPrice = (product: any, selectedProperties?: Record<string, string>): number => {
@@ -283,9 +297,19 @@ export default function CheckoutPage() {
   }
 
   // Helper function to determine tax rate for a product
-  const getProductTaxRate = (): number => {
+  const getProductTaxRate = (product: Product): number => {
+    // Use category-based tax rates from settings
+    if (checkoutSettings?.category_tax_rates && product.category_id) {
+      const categoryTaxRate = checkoutSettings.category_tax_rates.find(
+        rate => rate.category_id === product.category_id && rate.enabled
+      )
+      if (categoryTaxRate) {
+        return categoryTaxRate.tax_rate
+      }
+    }
+    
     // Fallback to legacy global tax rate
-    return checkoutSettings?.taxRate || 0
+    return checkoutSettings?.tax_rate || 0
   }
 
   // Calculate Aramex shipping cost (independent of method selection)
@@ -298,14 +322,72 @@ export default function CheckoutPage() {
     try {
       setIsCalculatingAramex(true)
       
-      // Use simple default shipping cost for all orders
-      const shippingRate = { cost: 5.0 } // Default shipping cost
-      setAramexShippingCost(shippingRate.cost)
+      const packages = cart.items.map(item => {
+        const product = item.product
+        if (!product) {
+          return {
+            weight: 0.5,
+            length: 20,
+            width: 15,
+            height: 10,
+            value: 0
+          }
+        }
+        
+        const weight = calculateProductWeight(product as any, item.selectedProperties)
+        const value = getProductPrice(product, item.selectedProperties) * item.quantity
+        
+        return {
+          weight: weight * item.quantity,
+          length: 20,
+          width: 15,
+          height: 10,
+          value
+        }
+      })
+
+      const shippingRequest: ShippingCalculationRequest = {
+        origin: {
+          country: 'OM',
+          city: 'Muscat',
+          postal_code: '111'
+        },
+        destination: {
+          country: formData.country,
+          city: formData.city,
+          postal_code: formData.zipCode || '111'
+        },
+        packages,
+        currency: currency as 'OMR' | 'USD' | 'SAR'
+      }
+
+      // Find Aramex method from settings for API configuration
+      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
+      if (aramexMethod) {
+        const shippingRate = await ShippingService.calculateAramexRate(shippingRequest, aramexMethod)
+        setAramexShippingCost(shippingRate.cost)
+      }
     } catch (error) {
       console.error('Error calculating Aramex shipping:', error)
       // Fallback to base cost
-      let fallbackCost = 5.0 // Default fallback cost
-      setAramexShippingCost(fallbackCost)
+      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
+      if (aramexMethod) {
+        let fallbackCost = 0
+        switch (currency) {
+          case 'OMR':
+            fallbackCost = aramexMethod.base_cost_omr || 1.73
+            break
+          case 'SAR':
+            fallbackCost = aramexMethod.base_cost_sar || 16.86
+            break
+          case 'USD':
+            fallbackCost = aramexMethod.base_cost_usd || 4.5
+            break
+          default:
+            fallbackCost = 1.73
+        }
+        setAramexShippingCost(fallbackCost)
+      }
     } finally {
       setIsCalculatingAramex(false)
     }
@@ -318,14 +400,40 @@ export default function CheckoutPage() {
       return aramexShippingCost
     }
 
-    // Simple flat rates for standard methods
-    switch (formData.shippingMethod) {
-      case 'standard':
-        return 2.0
-      case 'express':
-        return 5.0
+    // For other methods, calculate on the fly
+    if (!checkoutSettings?.shipping_methods) return 0
+    
+    const selectedMethod = checkoutSettings.shipping_methods.find(
+      method => method.id === formData.shippingMethod && method.enabled
+    )
+    
+    if (!selectedMethod || selectedMethod.is_free) return 0
+
+    // Special handling for Nool Oman delivery
+    if (formData.shippingMethod === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
+      const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
+      if (stateCities) {
+        const selectedCity = stateCities.find(city => city.value === formData.city)
+        if (selectedCity) {
+          let cost = selectedCity.price
+          if (currency !== 'OMR') {
+            cost = cost * conversionRates[currency as keyof typeof conversionRates]
+          }
+          return cost
+        }
+      }
+    }
+
+    // Regular flat rate pricing for other methods
+    switch (currency) {
+      case 'OMR':
+        return selectedMethod.base_cost_omr || 0
+      case 'SAR':
+        return selectedMethod.base_cost_sar || 0
+      case 'USD':
+        return selectedMethod.base_cost_usd || 0
       default:
-        return 0
+        return selectedMethod.base_cost_omr || 0
     }
   }
 
@@ -351,7 +459,7 @@ export default function CheckoutPage() {
         const itemTotal = itemPrice * cartItem.quantity
         
         // Determine tax rate based on category
-        const taxRate = getProductTaxRate()
+        const taxRate = getProductTaxRate(cartItem.product)
         
         const itemTax = itemTotal * taxRate
         taxAmount += itemTax
@@ -369,6 +477,12 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async () => {
+    // Check authentication before proceeding to checkout
+    if (!currentUser) {
+      toast.error(isArabic ? 'يرجى تسجيل الدخول للمتابعة إلى الدفع' : 'Please log in to proceed to checkout')
+      return
+    }
+
     // Validate required fields
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
       toast.error(isArabic ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields')
@@ -392,8 +506,6 @@ export default function CheckoutPage() {
       
       // Generate order number
       const orderNumber = `ORD-${Date.now()}`
-      const orderId = `order_${Date.now()}`
-      
       // Helper to format phone with selected country dial code
       const formatPhone = (dialCode: string | undefined, localNumber: string | undefined) => {
         const num = (localNumber || '').toString().trim()
@@ -404,16 +516,15 @@ export default function CheckoutPage() {
 
       const formattedPhone = formatPhone(formData.phoneCountry, formData.phone)
       
-      // Store order data in localStorage (for local development)
-      const orderData = {
-        id: orderId,
+      // Create order data
+      const orderData: Omit<Order, 'id' | 'created' | 'updated'> = {
         order_number: orderNumber,
-        user_id: currentUser?.id,
+        user_id: currentUser.id, // Now guaranteed to exist due to auth check
         customer_email: formData.email,
         customer_phone: formattedPhone,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         
-        // Address data
+        // Address data (we'll create proper address records later)
         shipping_address: {
           recipient_name: `${formData.firstName} ${formData.lastName}`,
           phone: formattedPhone,
@@ -447,62 +558,82 @@ export default function CheckoutPage() {
         
         currency: currency as 'USD' | 'OMR' | 'SAR',
         status: 'pending',
-        payment_status: 'unpaid',
-        payment_method: 'card',
+        payment_status: 'unpaid', // Will be handled by payment gateway
+        payment_method: 'card' as 'card' | 'cash' | 'paypal' | 'bank_transfer', // Using payment gateway
         notes: formData.notes,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        items: cart.items.map(cartItem => ({
-          product_id: String(cartItem.product?.id),
-          product_name: cartItem.product?.name || '',
-          product_name_ar: cartItem.product?.name_ar || '',
-          product_image: cartItem.product?.image || '',
+        updated_at: new Date().toISOString()
+      }
+
+      // Create the order
+      const order = await firestoreService.orders.create(orderData)
+      
+      // Create order items
+      for (const cartItem of cart.items) {
+        if (!cartItem.product) continue
+        
+        const itemPrice = getProductPrice(cartItem.product, cartItem.selectedProperties)
+        const itemTotal = itemPrice * cartItem.quantity
+        
+        const orderItemData: Omit<OrderItem, 'id' | 'created' | 'updated'> = {
+          order_id: order.id,
+          product_id: cartItem.product.id,
+          product_name: cartItem.product.name,
+          product_name_ar: cartItem.product.name_ar || '',
+          product_image: cartItem.product.image || '',
           quantity: cartItem.quantity,
-          unit_price_omr: currency === 'OMR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.OMR,
-          unit_price_usd: currency === 'USD' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.USD,
-          unit_price_sar: currency === 'SAR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) : getProductPrice(cartItem.product!, cartItem.selectedProperties) / conversionRates.SAR,
-          total_price_omr: currency === 'OMR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.OMR,
-          total_price_usd: currency === 'USD' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.USD,
-          total_price_sar: currency === 'SAR' ? getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity : (getProductPrice(cartItem.product!, cartItem.selectedProperties) * cartItem.quantity) / conversionRates.SAR,
+          unit_price_omr: currency === 'OMR' ? itemPrice : itemPrice / conversionRates.OMR,
+          unit_price_usd: currency === 'USD' ? itemPrice : itemPrice / conversionRates.USD,
+          unit_price_sar: currency === 'SAR' ? itemPrice : itemPrice / conversionRates.SAR,
+          total_price_omr: currency === 'OMR' ? itemTotal : itemTotal / conversionRates.OMR,
+          total_price_usd: currency === 'USD' ? itemTotal : itemTotal / conversionRates.USD,
+          total_price_sar: currency === 'SAR' ? itemTotal : itemTotal / conversionRates.SAR,
           selected_properties: cartItem.selectedProperties || {},
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        }))
+        }
+        
+        await firestoreService.orderItems.create(orderItemData)
       }
-      
-      // Store in localStorage for development (in production this would go to a backend)
-      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
-      existingOrders.push(orderData)
-      localStorage.setItem('orders', JSON.stringify(existingOrders))
       
       // Create payment request
       const paymentRequest: PaymentRequest = {
-        order_id: orderId,
+        order_id: order.id,
         amount: totals.total,
         currency: currency as 'OMR' | 'USD' | 'SAR',
         customer_email: formData.email,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         customer_phone: formattedPhone,
-        return_url: `${window.location.origin}/checkout-success?order_id=${orderId}`,
-        cancel_url: `${window.location.origin}/checkout-success?order_id=${orderId}`
+        return_url: `${window.location.origin}/checkout-success?order_id=${order.id}`,
+        cancel_url: `${window.location.origin}/checkout-success?order_id=${order.id}`
       }
 
       // Process payment
       const paymentResponse = await bankMuscatPaymentService.createPayment(paymentRequest)
       
       if (paymentResponse.success && paymentResponse.payment_url) {
+        // Update order with payment info
+        await firestoreService.orders.update(order.id, {
+          payment_status: 'unpaid', // Will be updated when payment is confirmed
+          transaction_id: paymentResponse.transaction_id
+        })
+        
         // Clear cart before redirecting to payment
         clearCart()
         
         // Show processing message
         toast.success(isArabic ? 'جاري تحويلك إلى بوابة الدفع...' : 'Redirecting to payment gateway...')
         
+        // Redirect to payment gateway will happen automatically in the service
+        // The form submission will redirect the user
+        
       } else {
-        // Payment initiation failed - still show success for order creation
+        // Payment initiation failed
         toast.error(isArabic ? 'فشل في بدء عملية الدفع' : 'Failed to initiate payment')
         console.error('Payment error:', paymentResponse.error)
         
-        setCreatedOrderId(orderId)
+        // Still show success for order creation but inform about payment issue
+        setCreatedOrderId(order.id)
         setOrderSuccess(true)
         clearCart()
       }
@@ -513,6 +644,11 @@ export default function CheckoutPage() {
     } finally {
       setOrderLoading(false)
     }
+  }
+
+  // Prevent access if user is not authenticated
+  if (!currentUser) {
+    return null // Component will redirect in useEffect, so return null to prevent flash
   }
 
   if (!cart || !cart.items || cart.items.length === 0 && !orderSuccess) {
@@ -717,7 +853,7 @@ export default function CheckoutPage() {
                           <SelectValue placeholder={isArabic ? 'اختر البلد' : 'Select country'} />
                         </SelectTrigger>
                         <SelectContent>
-                          {checkoutSettings?.supportedCountries?.map((countryCode: string) => {
+                          {checkoutSettings?.enabled_countries?.map((countryCode) => {
                             const countryNames: Record<string, {name: string, name_ar: string}> = {
                               'OM': {name: 'Oman', name_ar: 'عمان'},
                               'AE': {name: 'UAE', name_ar: 'الإمارات العربية المتحدة'},
@@ -896,51 +1032,100 @@ export default function CheckoutPage() {
                       value={formData.shippingMethod} 
                       onValueChange={(value: string) => handleInputChange('shippingMethod', value)}
                     >
-                      {/* Standard Shipping */}
-                      <div className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <RadioGroupItem value="standard" id="standard" />
-                          <Label htmlFor="standard" className="text-sm">
-                            {isArabic ? 'شحن عادي' : 'Standard Shipping'}
-                          </Label>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {formatPrice(2.0)}
-                        </span>
-                      </div>
+                      {checkoutSettings?.shipping_methods?.filter(method => {
+                        // Only show enabled methods
+                        if (!method.enabled) return false
+                        
+                        // Only show nool_oman for Oman
+                        if (method.id === 'nool_oman' && formData.country !== 'OM') return false
+                        
+                        return true
+                      }).map((method) => {
+                        let cost = 0
+                        if (!method.is_free) {
+                          // For Aramex, use the pre-calculated cost
+                          if (method.id === 'aramex') {
+                            cost = aramexShippingCost
+                          }
+                          // Special handling for nool_oman with city-specific pricing
+                          else if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
+                            const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
+                            if (stateCities) {
+                              const selectedCity = stateCities.find(city => city.value === formData.city)
+                              if (selectedCity) {
+                                cost = selectedCity.price
+                                // Convert to current currency if needed
+                                if (currency !== 'OMR') {
+                                  cost = cost * conversionRates[currency as keyof typeof conversionRates]
+                                }
+                              }
+                            }
+                          } 
+                          // Regular flat rate pricing for other methods
+                          else {
+                            switch (currency) {
+                              case 'OMR':
+                                cost = method.base_cost_omr || 0
+                                break
+                              case 'SAR':
+                                cost = method.base_cost_sar || 0
+                                break
+                              case 'USD':
+                                cost = method.base_cost_usd || 0
+                                break
+                              default:
+                                cost = method.base_cost_omr || 0
+                            }
+                          }
+                        }
 
-                      {/* Express Shipping */}
-                      <div className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <RadioGroupItem value="express" id="express" />
-                          <Label htmlFor="express" className="text-sm">
-                            {isArabic ? 'شحن سريع' : 'Express Shipping'}
-                          </Label>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {formatPrice(5.0)}
-                        </span>
-                      </div>
-
-                      {/* Aramex Shipping */}
-                      <div className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <RadioGroupItem value="aramex" id="aramex" />
-                          <Label htmlFor="aramex" className="text-sm">
-                            {isArabic ? 'شحن أرامكس' : 'Aramex Shipping'}
-                          </Label>
-                        </div>
-                        <span className="text-sm font-medium">
-                          {isCalculatingAramex ? (
-                            <span className="text-muted-foreground flex items-center">
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              {isArabic ? 'جاري الحساب...' : 'Calculating...'}
+                        return (
+                          <div key={method.id} className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
+                            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                              <RadioGroupItem 
+                                value={method.id} 
+                                id={method.id}
+                                disabled={method.id === 'nool_oman' && (!formData.city || !formData.state || formData.country !== 'OM')}
+                              />
+                              <Label 
+                                htmlFor={method.id} 
+                                className={`text-sm ${method.id === 'nool_oman' && (!formData.city || !formData.state || formData.country !== 'OM') ? 'text-muted-foreground' : ''}`}
+                              >
+                                {isArabic ? method.name_ar : method.name}
+                                {method.id === 'nool_oman' && formData.country === 'OM' && (!formData.city || !formData.state) && (
+                                  <span className="text-xs text-muted-foreground block">
+                                    {isArabic ? 'يرجى اختيار المحافظة والمدينة أولاً' : 'Please select state and city first'}
+                                  </span>
+                                )}
+                              </Label>
+                            </div>
+                            <span className={`text-sm font-medium ${method.is_free ? 'text-green-600' : ''}`}>
+                              {method.is_free ? (
+                                isArabic ? 'مجاناً' : 'Free'
+                              ) : method.id === 'aramex' && isCalculatingAramex ? (
+                                <span className="text-muted-foreground">
+                                  {isArabic ? 'جاري الحساب...' : 'Calculating...'}
+                                </span>
+                              ) : (
+                                formatPrice(cost)
+                              )}
                             </span>
-                          ) : (
-                            formatPrice(aramexShippingCost)
-                          )}
-                        </span>
-                      </div>
+                          </div>
+                        )
+                      }) || [
+                        // Fallback options if settings not loaded
+                        <div key="pickup" className="flex items-center justify-between space-x-2 rtl:space-x-reverse">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <RadioGroupItem value="pickup" id="pickup" />
+                            <Label htmlFor="pickup" className="text-sm">
+                              {isArabic ? 'الاستلام من المقهى' : 'Pickup from our Cafe'}
+                            </Label>
+                          </div>
+                          <span className="text-sm font-medium text-green-600">
+                            {isArabic ? 'مجاناً' : 'Free'}
+                          </span>
+                        </div>
+                      ]}
                     </RadioGroup>
                   </div>
 

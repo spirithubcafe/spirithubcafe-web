@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
+import { firestoreService } from '@/lib/firebase'
 import { useGlobalNewsletterSettings } from '@/contexts/enhanced-data-provider'
 import toast from 'react-hot-toast'
 
@@ -46,9 +47,7 @@ export function NewsletterSection() {
 
     try {
       // Check if email already exists
-      // TODO: Connect to Google Sheets API for newsletter subscriptions
-      // For now, store in localStorage
-      const existingSubscriptions = JSON.parse(localStorage.getItem('newsletter_subscriptions') || '[]')
+      const existingSubscriptions = await firestoreService.newsletters.list()
       const emailExists = existingSubscriptions.items.some(
         (sub: any) => sub.email.toLowerCase() === email.toLowerCase()
       )
@@ -68,12 +67,7 @@ export function NewsletterSection() {
       }
       
       logger.log('Creating newsletter subscription with data:', subscriptionData)
-      // TODO: Connect to Google Sheets API for newsletter subscriptions
-      // For now, store in localStorage
-      const subscriptions = JSON.parse(localStorage.getItem('newsletter_subscriptions') || '[]')
-      subscriptions.push({ ...subscriptionData, id: Date.now().toString() })
-      localStorage.setItem('newsletter_subscriptions', JSON.stringify(subscriptions))
-      const result = { id: Date.now().toString() }
+      const result = await firestoreService.newsletters.create(subscriptionData)
       logger.log('Newsletter subscription result:', result)
 
       setIsSubscribed(true)

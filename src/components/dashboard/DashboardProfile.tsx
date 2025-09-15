@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { KeyRound, Eye, EyeOff } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { UserProfile } from '@/types/dashboard'
+import type { UserProfile } from '@/lib/firebase'
+import { authService } from '@/lib/firebase'
 
 interface DashboardProfileProps {
   user: UserProfile
@@ -47,13 +48,16 @@ export default function DashboardProfile({ user }: DashboardProfileProps) {
     try {
       setPasswordLoading(true)
       
-      // TODO: Implement password change functionality
-      console.log('Password change would be implemented here')
+      const result = await authService.changePassword(passwordData.currentPassword, passwordData.newPassword)
       
-      setChangePasswordOpen(false)
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
-      // You might want to add a success toast here
-      console.log('Password changed successfully')
+      if (result.success) {
+        setChangePasswordOpen(false)
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        // You might want to add a success toast here
+        console.log('Password changed successfully')
+      } else {
+        setPasswordError(result.error || 'Password change failed')
+      }
     } catch (error) {
       setPasswordError('An error occurred while changing password')
       console.error('Password change error:', error)
@@ -74,19 +78,19 @@ export default function DashboardProfile({ user }: DashboardProfileProps) {
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user.avatar || ''} alt={user.name} />
+              <AvatarImage src={user.avatar} alt={user.full_name} />
               <AvatarFallback className="text-lg">
-                {user.name.split(' ').map((n: string) => n[0]).join('')}
+                {user.full_name.split(' ').map((n: string) => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-2xl font-bold">{user.name}</h3>
+              <h3 className="text-2xl font-bold">{user.full_name}</h3>
               <p className="text-muted-foreground">{user.email}</p>
               <Badge variant="outline" className="mt-1">
                 {user.role === 'admin' 
                   ? (isArabic ? 'مدير' : 'Admin')
-                  : user.role === 'manager'
-                  ? (isArabic ? 'مدير' : 'Manager')
+                  : user.role === 'employee'
+                  ? (isArabic ? 'موظف' : 'Employee')
                   : (isArabic ? 'عضو' : 'Member')
                 }
               </Badge>
@@ -96,7 +100,7 @@ export default function DashboardProfile({ user }: DashboardProfileProps) {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="full-name">{isArabic ? 'الاسم الكامل' : 'Full Name'}</Label>
-              <Input id="full-name" value={user.name} readOnly />
+              <Input id="full-name" value={user.full_name} readOnly />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{isArabic ? 'البريد الإلكتروني' : 'Email'}</Label>

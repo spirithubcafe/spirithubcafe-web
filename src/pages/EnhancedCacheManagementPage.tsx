@@ -72,21 +72,21 @@ export default function EnhancedCacheManagementPage() {
     }
   }, [swRegistered, getSWCacheStats])
 
-  // Auto refresh
-  useEffect(() => {
-    if (!autoRefresh) return
+  // Remove auto refresh functionality
+  // useEffect(() => {
+  //   if (!autoRefresh) return
 
-    const interval = setInterval(() => {
-      refreshStats()
-      if (swRegistered) {
-        getSWCacheStats()
-          .then(stats => setSWCacheStats(stats))
-          .catch(() => setSWCacheStats(null))
-      }
-    }, 5000)
+  //   const interval = setInterval(() => {
+  //     refreshStats()
+  //     if (swRegistered) {
+  //       getSWCacheStats()
+  //         .then(stats => setSWCacheStats(stats))
+  //         .catch(() => setSWCacheStats(null))
+  //     }
+  //   }, 5000)
 
-    return () => clearInterval(interval)
-  }, [autoRefresh, refreshStats, swRegistered, getSWCacheStats])
+  //   return () => clearInterval(interval)
+  // }, [autoRefresh, refreshStats, swRegistered, getSWCacheStats])
 
   const handleClearAllCaches = async () => {
     if (!confirm('This will remove all cached data including offline resources. Are you sure?')) {
