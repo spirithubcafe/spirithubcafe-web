@@ -272,7 +272,7 @@ export default function ProductManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="py-0">
         <CardContent className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -366,7 +366,7 @@ export default function ProductManagement() {
           ))}
         </div>
       ) : filteredProducts.length === 0 ? (
-        <Card>
+        <Card className="py-0">
           <CardContent className="text-center py-12">
             <Package2 className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground mb-4">
@@ -500,7 +500,7 @@ export default function ProductManagement() {
           /* List View */
           <div className="space-y-4">
             {filteredProducts.map((product) => (
-              <Card key={product.id} className="hover:shadow-lg transition-shadow">
+              <Card key={product.id} className="hover:shadow-lg transition-shadow py-0">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-4">
                     {/* Product Image */}

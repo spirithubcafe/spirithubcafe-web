@@ -66,8 +66,8 @@ export default function DashboardOrders({ orders }: DashboardOrdersProps) {
           ) : (
             <div className="space-y-4">
               {orders.map((order: any) => (
-                <Card key={order.id}>
-                  <CardContent className="pt-6">
+                <Card key={order.id} className="py-0">
+                  <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="font-semibold">#{order.id}</h3>
