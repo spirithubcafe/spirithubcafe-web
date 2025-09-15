@@ -8,9 +8,8 @@ import { DataProvider } from '@/contexts/enhanced-data-provider'
 import { Navigation } from '@/components/navigation'
 import { Footer } from '@/components/footer'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Suspense, lazy, memo } from 'react'
+import { memo } from 'react'
 import { ErrorBoundary } from '@/components/ui/error-boundary'
-import { AdvancedLoading } from '@/components/ui/advanced-loading'
 import './App.css'
 
 // Debug utilities (development only - disabled to reduce console noise)
@@ -19,36 +18,25 @@ import './App.css'
 //   import('./utils/firebase-emulator')
 // }
 
-// Lazy load pages for better performance
-const HomePage = lazy(() => import('@/pages/HomePage').then(module => ({ default: module.HomePage })))
-const ShopPage = lazy(() => import('@/pages/ShopPage').then(module => ({ default: module.ShopPage })))
-const ProductPage = lazy(() => import('@/pages/ProductPage'))
-const EnhancedCacheManagementPage = lazy(() => import('@/pages/EnhancedCacheManagementPage'))
-const AboutPage = lazy(() => import('@/pages/AboutPage').then(module => ({ default: module.AboutPage })))
-const ContactPage = lazy(() => import('@/pages/ContactPage').then(module => ({ default: module.ContactPage })))
-const LoginPage = lazy(() => import('@/pages/LoginPage').then(module => ({ default: module.LoginPage })))
-const RegisterPage = lazy(() => import('@/pages/RegisterPage').then(module => ({ default: module.RegisterPage })))
-const ForgotPasswordPage = lazy(() => import('@/pages/ForgotPasswordPage'))
-const CheckoutPage = lazy(() => import('@/pages/CheckoutPage'))
-const CheckoutSuccessPage = lazy(() => import('@/pages/CheckoutSuccessPage'))
-const CheckoutSettingsPage = lazy(() => import('@/pages/CheckoutSettingsPage'))
-const DashboardPage = lazy(() => import('@/pages/DashboardPage'))
-const WishlistPage = lazy(() => import('@/pages/WishlistPage').then(module => ({ default: module.WishlistPage })))
-const HeroSlidePage = lazy(() => import('@/pages/HeroSlidePage').then(module => ({ default: module.HeroSlidePage })))
-const PageDisplayPage = lazy(() => import('@/pages/PageDisplayPage'))
-const InitializeAramexPage = lazy(() => import('@/pages/InitializeAramexPage'))
-const AramexTrackingPage = lazy(() => import('@/pages/AramexTrackingPage'))
-
-// Loading component
-const PageLoader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <AdvancedLoading
-      size="lg"
-      message="Loading page..."
-      animated
-    />
-  </div>
-)
+// Regular imports for all pages
+import { HomePage } from '@/pages/HomePage'
+import { ShopPage } from '@/pages/ShopPage'
+import ProductPage from '@/pages/ProductPage'
+import EnhancedCacheManagementPage from '@/pages/EnhancedCacheManagementPage'
+import { AboutPage } from '@/pages/AboutPage'
+import { ContactPage } from '@/pages/ContactPage'
+import { LoginPage } from '@/pages/LoginPage'
+import { RegisterPage } from '@/pages/RegisterPage'
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage'
+import CheckoutPage from '@/pages/CheckoutPage'
+import CheckoutSuccessPage from '@/pages/CheckoutSuccessPage'
+import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
+import DashboardPage from '@/pages/DashboardPage'
+import { WishlistPage } from '@/pages/WishlistPage'
+import { HeroSlidePage } from '@/pages/HeroSlidePage'
+import PageDisplayPage from '@/pages/PageDisplayPage'
+import InitializeAramexPage from '@/pages/InitializeAramexPage'
+import AramexTrackingPage from '@/pages/AramexTrackingPage'
 
 // Component to conditionally show navigation and footer
 const ConditionalNavigation = memo(() => {
@@ -86,85 +74,83 @@ function AppContent() {
                 <div className="min-h-screen flex flex-col bg-background">
                   <ConditionalNavigation />
                   <main className="flex-1 relative">
-                    <Suspense fallback={<PageLoader />}>
-                      <Routes>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/shop" element={<ShopPage />} />
-                      <Route path="/product/:slug" element={<ProductPage />} />
-                      <Route path="/about" element={<AboutPage />} />
-                      <Route path="/contact" element={<ContactPage />} />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/checkout" element={<CheckoutPage />} />
-                      <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
-                      <Route 
-                        path="/wishlist" 
-                        element={
-                          <ProtectedRoute>
-                            <WishlistPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <DashboardPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/cache-management" 
-                        element={
-                          <ProtectedRoute>
-                            <EnhancedCacheManagementPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/dashboard/checkout-settings" 
-                        element={
-                          <ProtectedRoute>
-                            <CheckoutSettingsPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/admin/initialize-aramex" 
-                        element={
-                          <ProtectedRoute>
-                            <InitializeAramexPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route path="/track/:trackingNumber" element={<AramexTrackingPage />} />
-                      <Route 
-                        path="/hero-slide/add" 
-                        element={
-                          <ProtectedRoute>
-                            <HeroSlidePage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route 
-                        path="/hero-slide/edit/:id" 
-                        element={
-                          <ProtectedRoute>
-                            <HeroSlidePage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      {/* Dynamic Page Routes */}
-                      <Route path="/page/:slug" element={<PageDisplayPage />} />
-                      {/* Fallback routes for direct access */}
-                      <Route path="/privacy-policy" element={<PageDisplayPage />} />
-                      <Route path="/terms-and-conditions" element={<PageDisplayPage />} />
-                      <Route path="/refund-policy" element={<PageDisplayPage />} />
-                      <Route path="/delivery-policy" element={<PageDisplayPage />} />
-                      <Route path="/faq" element={<PageDisplayPage />} />
-                    </Routes>
-                  </Suspense>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/product/:slug" element={<ProductPage />} />
+                    <Route path="/about" element={<AboutPage />} />
+                    <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/checkout-success" element={<CheckoutSuccessPage />} />
+                    <Route 
+                      path="/wishlist" 
+                      element={
+                        <ProtectedRoute>
+                          <WishlistPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/cache-management" 
+                      element={
+                        <ProtectedRoute>
+                          <EnhancedCacheManagementPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/dashboard/checkout-settings" 
+                      element={
+                        <ProtectedRoute>
+                          <CheckoutSettingsPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/initialize-aramex" 
+                      element={
+                        <ProtectedRoute>
+                          <InitializeAramexPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route path="/track/:trackingNumber" element={<AramexTrackingPage />} />
+                    <Route 
+                      path="/hero-slide/add" 
+                      element={
+                        <ProtectedRoute>
+                          <HeroSlidePage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/hero-slide/edit/:id" 
+                      element={
+                        <ProtectedRoute>
+                          <HeroSlidePage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    {/* Dynamic Page Routes */}
+                    <Route path="/page/:slug" element={<PageDisplayPage />} />
+                    {/* Fallback routes for direct access */}
+                    <Route path="/privacy-policy" element={<PageDisplayPage />} />
+                    <Route path="/terms-and-conditions" element={<PageDisplayPage />} />
+                    <Route path="/refund-policy" element={<PageDisplayPage />} />
+                    <Route path="/delivery-policy" element={<PageDisplayPage />} />
+                    <Route path="/faq" element={<PageDisplayPage />} />
+                  </Routes>
                 </main>
                 <ConditionalFooter />
                 <Toaster
