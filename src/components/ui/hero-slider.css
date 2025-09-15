@@ -13,6 +13,27 @@
 /* Custom Navigation Cursors */
 .hero-slider-container {
   cursor: default;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Prevent text selection */
+}
+
+/* Prevent text selection for all text elements in slider */
+.hero-slider-container * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow selection for links/buttons */
+.hero-slider-container a,
+.hero-slider-container button {
+  -webkit-user-select: auto;
+  -moz-user-select: auto;
+  -ms-user-select: auto;
+  user-select: auto;
 }
 
 .hero-slider-container.cursor-left {
