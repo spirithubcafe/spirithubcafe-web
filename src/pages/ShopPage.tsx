@@ -438,7 +438,13 @@ export function ShopPage() {
             return (
               <div key={product.id} className="group">
                 <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col py-0">
-                  <Link to={`/product/${product.slug || product.id}`} className="flex-1 flex flex-col">
+                  <Link 
+                    to={selectedCategory !== 'all' 
+                      ? `/product/${product.slug || product.id}?category=${selectedCategory}` 
+                      : `/product/${product.slug || product.id}`
+                    } 
+                    className="flex-1 flex flex-col"
+                  >
                     <div className="relative overflow-hidden">
                       {/* Product Image */}
                       <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950 relative overflow-hidden">

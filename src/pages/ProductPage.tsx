@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useSearchParams } from 'react-router-dom'
 import { Star, ShoppingCart, ArrowLeft, Plus, Minus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ import toast from 'react-hot-toast'
 
 export default function ProductPage() {
   const { slug } = useParams<{ slug: string }>()
+  const [searchParams] = useSearchParams()
   const { t, i18n } = useTranslation()
   const { currency, formatPrice } = useCurrency()
   const { addToCart } = useCart()
@@ -31,6 +32,10 @@ export default function ProductPage() {
   useScrollToTopOnRouteChange()
 
   const isArabic = i18n.language === 'ar'
+
+  // Get category parameter from URL to preserve category selection when going back
+  const categoryParam = searchParams.get('category')
+  const backToShopUrl = categoryParam ? `/shop?category=${categoryParam}` : '/shop'
 
   const loadReviews = useCallback(async (productId: string) => {
     try {
@@ -276,7 +281,7 @@ export default function ProductPage() {
           <h1 className="text-2xl font-bold mb-4">
             {t('product.productNotFound')}
           </h1>
-          <Link to="/shop">
+          <Link to={backToShopUrl}>
             <Button>
               {t('product.backToShop')}
             </Button>
@@ -294,7 +299,7 @@ export default function ProductPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <Link 
-          to="/shop" 
+          to={backToShopUrl} 
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
