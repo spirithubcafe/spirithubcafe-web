@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X, User, LogOut, ShoppingCart, Heart, Crown, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,7 @@ const NavigationComponent = memo(() => {
   const { wishlistCount } = useWishlist()
   const { pendingCount } = usePendingOrders()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [loadingCategories, setLoadingCategories] = useState(true)
@@ -202,6 +203,11 @@ const NavigationComponent = memo(() => {
                         "dropdown-item block px-3 py-2 text-sm rounded-md hover:bg-[#1a0e0d] hover:text-white transition-colors text-gray-800 dark:text-gray-200 dark:hover:bg-[#1a0e0d] dark:hover:text-white",
                         isArabic ? "text-right" : "text-left"
                       )}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        // Navigate to shop page and clear all URL parameters
+                        navigate('/shop?reset=true', { replace: true })
+                      }}
                     >
                       <div className="font-medium">
                         {isArabic ? 'جميع المنتجات' : 'All Products'}
@@ -245,6 +251,11 @@ const NavigationComponent = memo(() => {
                             "block px-3 py-2 text-sm rounded-md hover:bg-[#2a1812] hover:text-white transition-colors text-[#8B4513] dark:text-[#D2691E] font-medium dark:hover:bg-[#2a1812] dark:hover:text-white",
                             isArabic ? "text-right" : "text-left"
                           )}
+                          onClick={(e) => {
+                            e.preventDefault()
+                            // Navigate to shop page and clear all URL parameters
+                            navigate('/shop?reset=true', { replace: true })
+                          }}
                         >
                           {isArabic ? `عرض جميع الفئات (${categories.length})` : `View all categories (${categories.length})`}
                         </Link>
@@ -478,10 +489,19 @@ const NavigationComponent = memo(() => {
                           )}
                           style={{ animationDelay: `50ms` }}
                         >
-                          <Link to="/shop" onClick={() => setMobileMenuOpen(false)} className={cn(
-                            "w-full flex",
-                            isArabic ? "text-right justify-end" : "text-left justify-start"
-                          )}>
+                          <Link 
+                            to="/shop" 
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setMobileMenuOpen(false)
+                              // Navigate to shop page and clear all URL parameters
+                              navigate('/shop?reset=true', { replace: true })
+                            }} 
+                            className={cn(
+                              "w-full flex",
+                              isArabic ? "text-right justify-end" : "text-left justify-start"
+                            )}
+                          >
                             {t('navigation.shop')}
                           </Link>
                         </Button>
@@ -539,7 +559,12 @@ const NavigationComponent = memo(() => {
                               >
                                 <Link 
                                   to="/shop" 
-                                  onClick={() => setMobileMenuOpen(false)} 
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    setMobileMenuOpen(false)
+                                    // Navigate to shop page and clear all URL parameters
+                                    navigate('/shop?reset=true', { replace: true })
+                                  }} 
                                   className={cn(
                                     "w-full flex",
                                     isArabic ? "text-right justify-end" : "text-left justify-start"

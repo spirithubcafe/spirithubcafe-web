@@ -43,6 +43,20 @@ export function ShopPage() {
     }
   }, [searchParams])
 
+  // Check for reset parameter to clear all filters
+  useEffect(() => {
+    const resetParam = searchParams.get('reset')
+    if (resetParam === 'true') {
+      setSearchQuery('')
+      setSelectedCategory('all')
+      setSortBy('name')
+      // Remove the reset parameter from URL without page refresh
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('reset')
+      window.history.replaceState({}, '', newUrl.pathname + newUrl.search)
+    }
+  }, [searchParams])
+
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId)
@@ -282,7 +296,17 @@ export function ShopPage() {
               <label className="block text-sm font-medium text-muted-foreground mb-2">
                 {isArabic ? 'التصنيف' : 'Category'}
               </label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select 
+                value={selectedCategory} 
+                onValueChange={(value) => {
+                  setSelectedCategory(value)
+                  // Clear all filters when "All Categories" is selected to show all products
+                  if (value === 'all') {
+                    setSearchQuery('')
+                    setSortBy('name')
+                  }
+                }}
+              >
                 <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
                   <SelectValue placeholder={isArabic ? 'اختر التصنيف' : 'Select Category'} />
                 </SelectTrigger>
