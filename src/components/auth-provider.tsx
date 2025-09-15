@@ -49,76 +49,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [firebaseUser])
 
-  // Initialize auth state with manual checking
+  // Initialize auth state with Firebase Auth listener
   useEffect(() => {
-    const checkAuthState = async () => {
-      const user = await authService.checkAuthState()
-      setFirebaseUser(user)
-      
-      if (user) {
-        // Get user profile from Firestore
-        const userProfile = await authService.getUserProfile(user.uid)
-        if (userProfile) {
-          // Update email verification status in profile with latest status from Firebase Auth
-          userProfile.email_verified = user.emailVerified
+    let unsubscribe: (() => void) | null = null;
+
+    const setupAuthListener = async () => {
+      try {
+        // Import onAuthStateChanged and auth
+        const { onAuthStateChanged } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
+        
+        unsubscribe = onAuthStateChanged(auth, async (user) => {
+          console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+          setFirebaseUser(user);
           
-          // If email was just verified, update Firestore as well
-          if (user.emailVerified && !userProfile.email_verified) {
-            await authService.checkEmailVerification()
+          if (user) {
+            // Get user profile from Firestore
+            const userProfile = await authService.getUserProfile(user.uid);
+            if (userProfile) {
+              // Update email verification status in profile with latest status from Firebase Auth
+              userProfile.email_verified = user.emailVerified;
+              
+              // If email was just verified, update Firestore as well
+              if (user.emailVerified && !userProfile.email_verified) {
+                await authService.checkEmailVerification();
+              }
+              setCurrentUser(userProfile);
+            } else {
+              // If no user profile exists, try to ensure user document is created
+              console.log('No user profile found, ensuring user document exists...');
+              await ensureUserDocument();
+              
+              // Try to get user profile again after ensuring document exists
+              const newUserProfile = await authService.getUserProfile(user.uid);
+              if (newUserProfile) {
+                newUserProfile.email_verified = user.emailVerified;
+              }
+              setCurrentUser(newUserProfile);
+            }
+          } else {
+            setCurrentUser(null);
           }
-        } else {
-          // If no user profile exists, try to ensure user document is created
-          console.log('No user profile found, ensuring user document exists...');
-          await ensureUserDocument();
           
-          // Try to get user profile again after ensuring document exists
-          const newUserProfile = await authService.getUserProfile(user.uid);
-          if (newUserProfile) {
-            newUserProfile.email_verified = user.emailVerified;
-          }
-          setCurrentUser(newUserProfile);
-          setLoading(false)
-          return; // Early return to avoid setting current user twice
-        }
-        setCurrentUser(userProfile)
-      } else {
-        setCurrentUser(null)
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Error setting up auth listener:', error);
+        setLoading(false);
       }
-      
-      setLoading(false)
-    }
+    };
 
-    // Initial auth check
-    checkAuthState()
-
-    // Manual check every 30 seconds instead of real-time listener
-    const interval = setInterval(checkAuthState, 30000)
+    setupAuthListener();
 
     // Listen for window focus to check verification status when user returns
     const handleWindowFocus = async () => {
-      await checkAuthState()
-    }
+      if (firebaseUser) {
+        await refreshUser();
+      }
+    };
 
     window.addEventListener('focus', handleWindowFocus)
 
     return () => {
-      clearInterval(interval)
-      window.removeEventListener('focus', handleWindowFocus)
-    }
-  }, [])
-
-  // Manual refresh function that other components can call
-  const manualRefreshAuth = useCallback(async () => {
-    const user = await authService.checkAuthState()
-    setFirebaseUser(user)
-    if (user) {
-      const userProfile = await authService.getUserProfile(user.uid)
-      if (userProfile) {
-        userProfile.email_verified = user.emailVerified
+      if (unsubscribe) {
+        unsubscribe();
       }
-      setCurrentUser(userProfile)
-    } else {
-      setCurrentUser(null)
+      window.removeEventListener('focus', handleWindowFocus)
     }
   }, [])
 
@@ -132,12 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('Login response:', result)
       
-      if (result.success && result.user) {
-        setCurrentUser(result.user)
-      }
-
-      // Manual refresh after login
-      await manualRefreshAuth()
+      // The onAuthStateChanged listener will automatically update the state
+      // No need for manual refresh
 
       setLoading(false)
       return result
@@ -158,12 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('Registration response:', result)
       
-      if (result.success && result.user) {
-        setCurrentUser(result.user)
-      }
-
-      // Manual refresh after registration
-      await manualRefreshAuth()
+      // The onAuthStateChanged listener will automatically update the state
 
       setLoading(false)
       return result
@@ -177,8 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sendEmailVerification = async () => {
     try {
       const result = await authService.sendEmailVerification()
-      // Manual refresh after sending verification email
-      await manualRefreshAuth()
+      // The onAuthStateChanged listener will automatically update the state
       return result
     } catch (error: any) {
       console.error('Send email verification error:', error)
@@ -196,8 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email_verified: true
         })
       }
-      // Manual refresh after email verification check
-      await manualRefreshAuth()
+      // The onAuthStateChanged listener will automatically update the state
       return result
     } catch (error: any) {
       console.error('Check email verification error:', error)
@@ -208,10 +193,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await authService.logout()
-      setCurrentUser(null)
-      setFirebaseUser(null)
-      // Manual refresh after logout to ensure state is cleared
-      await manualRefreshAuth()
+      // The onAuthStateChanged listener will automatically clear the state
+      // when the user logs out
     } catch (error: any) {
       console.error('Logout error:', error)
     }
