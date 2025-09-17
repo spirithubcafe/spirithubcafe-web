@@ -77,32 +77,6 @@ const setCachedData = (key: string, data: any, ttlMs: number = 5 * 60 * 1000) =>
   });
 };
 
-// Firebase error handler (for future use)
-/*
-const handleFirebaseError = (error: any, operation: string) => {
-  logger.warn(`⚠️ Firebase ${operation} error:`, error.message);
-  
-  // Handle specific Firebase errors
-  if (error.code === 'permission-denied') {
-    logger.warn('Permission denied - continuing with limited functionality');
-    return null;
-  }
-  
-  if (error.code === 'unavailable' || error.message?.includes('400')) {
-    logger.warn('Firebase service unavailable - continuing offline');
-    return null;
-  }
-  
-  if (error.code === 'not-found') {
-    logger.warn('Document not found - returning null');
-    return null;
-  }
-  
-  // For other errors, still log but don't throw
-  logger.warn('Continuing with limited functionality due to Firebase error');
-  return null;
-};
-*/
 
 // Safe Firebase operation wrapper (for future use)
 /*
@@ -809,7 +783,27 @@ async function safeFirestoreOperation<T>(
   
   try {
     return await operation();
-  } catch (error) {
+  } catch (error: any) {
+    // Handle quota exceeded errors gracefully
+    if (error?.code === 'resource-exhausted' || 
+        error?.message?.includes('Quota exceeded') ||
+        error?.message?.includes('quota')) {
+      logger.warn(`⚠️ Firebase quota exceeded for ${operationName}, using fallback`);
+      return fallbackValue;
+    }
+    
+    // Handle other specific errors
+    if (error?.code === 'permission-denied') {
+      logger.warn(`⚠️ Permission denied for ${operationName}, using fallback`);
+      return fallbackValue;
+    }
+    
+    if (error?.code === 'unavailable') {
+      logger.warn(`⚠️ Firebase unavailable for ${operationName}, using fallback`);
+      return fallbackValue;
+    }
+    
+    // For other errors, log as error but still return fallback
     logger.error(`❌ Firestore operation failed (${operationName}):`, error);
     return fallbackValue;
   }
@@ -1286,7 +1280,18 @@ export const firestoreService = {
           items: categories,
           totalItems: categories.length
         };
-      } catch (error) {
+      } catch (error: any) {
+        // Handle quota exceeded errors gracefully
+        if (error?.code === 'resource-exhausted' || 
+            error?.message?.includes('Quota exceeded') ||
+            error?.message?.includes('quota')) {
+          logger.warn('⚠️ Firebase quota exceeded for categories, returning empty list');
+          return {
+            items: [],
+            totalItems: 0
+          };
+        }
+        
         logger.error('Error getting categories:', error);
         throw error;
       }
@@ -1299,7 +1304,15 @@ export const firestoreService = {
           return { id: docSnap.id, ...docSnap.data() } as Category;
         }
         return null;
-      } catch (error) {
+      } catch (error: any) {
+        // Handle quota exceeded errors gracefully
+        if (error?.code === 'resource-exhausted' || 
+            error?.message?.includes('Quota exceeded') ||
+            error?.message?.includes('quota')) {
+          logger.warn(`⚠️ Firebase quota exceeded for category: ${id}`);
+          return null;
+        }
+        
         logger.error('Error getting category:', error);
         throw error;
       }
@@ -1424,18 +1437,40 @@ export const firestoreService = {
           totalItems: products.length
         };
 
-        // Cache the result for 3 minutes
-        setCachedData(cacheKey, result, 3 * 60 * 1000);
+        // Cache the result for 10 minutes (increased from 3 minutes)
+        setCachedData(cacheKey, result, 10 * 60 * 1000);
         
         return result;
-      } catch (error) {
+      } catch (error: any) {
+        // Handle quota exceeded errors gracefully
+        if (error?.code === 'resource-exhausted' || 
+            error?.message?.includes('Quota exceeded') ||
+            error?.message?.includes('quota')) {
+          logger.warn('⚠️ Firebase quota exceeded, using cached data');
+          
+          // Try to return cached results even if expired
+          const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
+          const staleCache = cache.get(cacheKey);
+          if (staleCache) {
+            logger.info('📦 Returning stale cached data due to quota limit');
+            return staleCache.data;
+          }
+          
+          // If no cache available, return empty results with a warning
+          logger.warn('⚠️ No cached data available, returning empty results');
+          return {
+            items: [],
+            totalItems: 0
+          };
+        }
+        
         logger.error('Error getting products:', error);
         
-        // Try to return cached results even if expired
+        // Try to return cached results for other errors
         const cacheKey = `products_list_${JSON.stringify(filters || {})}`;
         const staleCache = cache.get(cacheKey);
         if (staleCache) {
-          logger.warn('⚠️ Returning stale cached data due to network error');
+          logger.warn('⚠️ Returning stale cached data due to error');
           return staleCache.data;
         }
         
@@ -1456,15 +1491,34 @@ export const firestoreService = {
         
         if (docSnap.exists()) {
           const product = { id: docSnap.id, ...docSnap.data() } as Product;
-          // Cache for 5 minutes
-          setCachedData(cacheKey, product, 5 * 60 * 1000);
+          // Cache for 10 minutes (increased from 5 minutes)
+          setCachedData(cacheKey, product, 10 * 60 * 1000);
           return product;
         }
         return null;
-      } catch (error) {
+      } catch (error: any) {
+        // Handle quota exceeded errors gracefully
+        if (error?.code === 'resource-exhausted' || 
+            error?.message?.includes('Quota exceeded') ||
+            error?.message?.includes('quota')) {
+          logger.warn(`⚠️ Firebase quota exceeded for product: ${id}`);
+          
+          // Try to return cached result even if expired
+          const cacheKey = `product_${id}`;
+          const staleCache = cache.get(cacheKey);
+          if (staleCache) {
+            logger.info(`📦 Returning stale cached product: ${id}`);
+            return staleCache.data;
+          }
+          
+          // Return null if no cache available
+          logger.warn(`⚠️ No cached data available for product: ${id}`);
+          return null;
+        }
+        
         logger.error('Error getting product:', error);
         
-        // Try to return cached result even if expired
+        // Try to return cached result for other errors
         const cacheKey = `product_${id}`;
         const staleCache = cache.get(cacheKey);
         if (staleCache) {

@@ -27,12 +27,15 @@ if (import.meta.env.DEV) {
   }
   
   console.warn = (...args) => {
-    // Filter out quota warnings and preload warnings
+    // Filter out quota warnings, preload warnings, and Firebase warnings
     if (args[0] && typeof args[0] === 'string') {
       const warnText = args[0]
       if (warnText.includes('Failed to persist cache item') ||
           warnText.includes('Failed to preload') ||
-          warnText.includes('QuotaExceededError')) {
+          warnText.includes('QuotaExceededError') ||
+          warnText.includes('⚠️ Firebase quota exceeded') ||
+          warnText.includes('⚠️ Permission denied') ||
+          warnText.includes('⚠️ Firebase unavailable')) {
         return
       }
     }
@@ -40,29 +43,22 @@ if (import.meta.env.DEV) {
   }
   
   console.error = (...args) => {
-    // Filter out non-critical 404s
+    // Filter out non-critical 404s and quota errors
     if (args[0] && typeof args[0] === 'string') {
       const errorText = args[0]
       if (errorText.includes('api/analytics/performance') ||
           errorText.includes('api/categories') ||
           errorText.includes('api/products') ||
-          errorText.includes('api/settings/homepage')) {
+          errorText.includes('api/settings/homepage') ||
+          errorText.includes('Quota exceeded') ||
+          errorText.includes('resource-exhausted') ||
+          errorText.includes('❌ Firestore operation failed (getFooterPages)') ||
+          errorText.includes('❌ Firestore operation failed (getDocument)') ||
+          errorText.includes('Error getting hero settings')) {
         return
       }
     }
     originalError.apply(console, args)
-  }
-  
-  console.warn = (...args) => {
-    // Filter out quota exceeded warnings
-    if (args[0] && typeof args[0] === 'string') {
-      const warnText = args[0]
-      if (warnText.includes('Failed to persist cache item') ||
-          warnText.includes('QuotaExceededError')) {
-        return
-      }
-    }
-    originalWarn.apply(console, args)
   }
 }
 

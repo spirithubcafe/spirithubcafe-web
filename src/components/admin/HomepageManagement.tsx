@@ -24,7 +24,6 @@ import {
 import { useHomepageSettings } from '@/hooks/useHomepageSettings'
 import { storageService, auth } from '@/lib/firebase'
 import { settingsService } from '@/services/settings'
-import { firestoreService } from '@/lib/firebase'
 import toast from 'react-hot-toast'
 
 export default function HomepageManagement() {
@@ -173,27 +172,8 @@ export default function HomepageManagement() {
     }
   }, [settings])
 
-  // Load available categories for admin selection
-  const [availableCategories, setAvailableCategories] = useState<any[]>([])
-  const [loadingCategoriesForAdmin, setLoadingCategoriesForAdmin] = useState(false)
 
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      try {
-        setLoadingCategoriesForAdmin(true)
-        const res = await firestoreService.categories.list()
-        if (!mounted) return
-        setAvailableCategories(res.items || [])
-      } catch (error) {
-        console.error('Failed to load categories for homepage selection:', error)
-      } finally {
-        setLoadingCategoriesForAdmin(false)
-      }
-    })()
 
-    return () => { mounted = false }
-  }, [])
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

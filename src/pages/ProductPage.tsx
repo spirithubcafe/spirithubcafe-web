@@ -92,7 +92,7 @@ export default function ProductPage() {
         return
       }
       
-      setProduct(foundProduct)
+      setProduct(foundProduct || null)
       
       // Load reviews in parallel (non-blocking)
       loadReviews(foundProduct.id).catch(console.error)
