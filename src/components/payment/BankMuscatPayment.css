@@ -1,0 +1,368 @@
+/* Bank Muscat Payment Components Styles */
+
+/* Spinner animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Payment Form Styles */
+.payment-form {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background-color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.payment-form__header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-form__title {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.payment-form__amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.payment-form__currency {
+  color: #666;
+  font-size: 16px;
+}
+
+.payment-form__amount-value {
+  color: #8B4513;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.payment-form__form {
+  margin-bottom: 24px;
+}
+
+.payment-form__field {
+  margin-bottom: 16px;
+}
+
+.payment-form__label {
+  display: block;
+  margin-bottom: 6px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.payment-form__input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.payment-form__input:focus {
+  outline: none;
+  border-color: #8B4513;
+}
+
+.payment-form__input--error {
+  border-color: #f44336;
+}
+
+.payment-form__error {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+.payment-form__description {
+  color: #666;
+  font-size: 14px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+.payment-form__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.payment-form__pay-button {
+  flex: 1;
+  padding: 14px 24px;
+  background-color: #8B4513;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.payment-form__pay-button:hover:not(:disabled) {
+  background-color: #6d2f0a;
+}
+
+.payment-form__pay-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.payment-form__cancel-button {
+  padding: 14px 24px;
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.payment-form__cancel-button:hover {
+  background-color: #f5f5f5;
+}
+
+.payment-form__footer {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.payment-form__security-note {
+  color: #666;
+  font-size: 12px;
+  margin: 0;
+}
+
+.payment-form__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Payment Status Styles */
+.payment-status {
+  max-width: 500px;
+  margin: 50px auto;
+  padding: 24px;
+}
+
+.payment-status__card {
+  text-align: center;
+  padding: 40px 24px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.payment-status__icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.payment-status__title {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.payment-status__title--success {
+  color: #4CAF50;
+}
+
+.payment-status__title--failed {
+  color: #f44336;
+}
+
+.payment-status__title--pending {
+  color: #ff9800;
+}
+
+.payment-status__message {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.payment-status__details {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.payment-status__detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.payment-status__detail-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.payment-status__detail-value {
+  color: #666;
+}
+
+.payment-status__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.payment-status__retry-button {
+  padding: 12px 24px;
+  background-color: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.payment-status__retry-button:hover {
+  background-color: #e68900;
+}
+
+.payment-status__home-button {
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.payment-status__home-button:hover {
+  background-color: #0056b3;
+}
+
+/* Loading spinner */
+.payment-status__spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8B4513;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .payment-form {
+    margin: 16px;
+    padding: 20px 16px;
+  }
+  
+  .payment-form__actions {
+    flex-direction: column;
+  }
+  
+  .payment-form__cancel-button {
+    order: 2;
+  }
+  
+  .payment-status {
+    margin: 20px 16px;
+  }
+  
+  .payment-status__card {
+    padding: 30px 20px;
+  }
+  
+  .payment-status__title {
+    font-size: 24px;
+  }
+  
+  .payment-status__actions {
+    flex-direction: column;
+  }
+}
+
+/* Accessibility */
+.payment-form__input:focus,
+.payment-form__pay-button:focus,
+.payment-form__cancel-button:focus,
+.payment-status__retry-button:focus,
+.payment-status__home-button:focus {
+  outline: 2px solid #8B4513;
+  outline-offset: 2px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .payment-form {
+    background-color: #1a1a1a;
+    border-color: #333;
+    color: #fff;
+  }
+  
+  .payment-form__title {
+    color: #fff;
+  }
+  
+  .payment-form__label {
+    color: #fff;
+  }
+  
+  .payment-form__input {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #fff;
+  }
+  
+  .payment-form__description {
+    background-color: #2a2a2a;
+    color: #ccc;
+  }
+  
+  .payment-status__card {
+    background-color: #1a1a1a;
+    color: #fff;
+  }
+  
+  .payment-status__details {
+    background-color: #2a2a2a;
+  }
+  
+  .payment-status__detail-label {
+    color: #fff;
+  }
+}

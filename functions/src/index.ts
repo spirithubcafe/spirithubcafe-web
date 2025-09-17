@@ -9,6 +9,9 @@ import {setGlobalOptions} from "firebase-functions";
 // Import API functions
 export * from './api';
 
+// Import Payment API functions
+export * from './api/payments';
+
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
 
