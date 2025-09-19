@@ -1,5 +1,4 @@
-import React from 'react'
-import { Helmet } from 'react-helmet-async'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { SEOMeta, SchemaOrg } from '@/types/seo'
 
@@ -42,143 +41,136 @@ export function SEOHead({ meta = {}, schema = [], children }: SEOHeadProps) {
     lastModified: meta.lastModified
   }
 
-  return (
-    <Helmet>
-      {/* Basic Meta Tags */}
-      {(completeMeta.title || completeMeta.titleAr) && (
-        <title>
-          {isArabic 
-            ? (completeMeta.titleAr || completeMeta.title) 
-            : (completeMeta.title || completeMeta.titleAr)
-          }
-        </title>
-      )}
+  useEffect(() => {
+    // Update document title
+    if (completeMeta.title || completeMeta.titleAr) {
+      document.title = isArabic 
+        ? (completeMeta.titleAr || completeMeta.title || '')
+        : (completeMeta.title || completeMeta.titleAr || '')
+    }
+
+    // Update document language and direction
+    const htmlElement = document.documentElement
+    htmlElement.lang = isArabic ? 'ar' : 'en'
+    htmlElement.dir = isArabic ? 'rtl' : 'ltr'
+
+    // Helper function to set or remove meta tag
+    const setMetaTag = (name: string, content?: string, property?: boolean) => {
+      if (!content) return
+
+      const selector = property ? `meta[property="${name}"]` : `meta[name="${name}"]`
+      let existingTag = document.querySelector(selector) as HTMLMetaElement
       
-      {(completeMeta.description || completeMeta.descriptionAr) && (
-        <meta 
-          name="description" 
-          content={isArabic 
-            ? (completeMeta.descriptionAr || completeMeta.description || '') 
-            : (completeMeta.description || completeMeta.descriptionAr || '')
-          } 
-        />
-      )}
+      if (existingTag) {
+        existingTag.content = content
+      } else {
+        const newTag = document.createElement('meta')
+        if (property) {
+          newTag.setAttribute('property', name)
+        } else {
+          newTag.setAttribute('name', name)
+        }
+        newTag.content = content
+        document.head.appendChild(newTag)
+      }
+    }
 
-      {(completeMeta.keywords || completeMeta.keywordsAr) && (
-        <meta 
-          name="keywords" 
-          content={isArabic 
-            ? (completeMeta.keywordsAr || completeMeta.keywords || '') 
-            : (completeMeta.keywords || completeMeta.keywordsAr || '')
-          } 
-        />
-      )}
+    // Helper function to set link tag
+    const setLinkTag = (rel: string, href?: string) => {
+      if (!href) return
 
-      {completeMeta.author && (
-        <meta name="author" content={completeMeta.author} />
-      )}
+      let existingTag = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement
+      
+      if (existingTag) {
+        existingTag.href = href
+      } else {
+        const newTag = document.createElement('link')
+        newTag.rel = rel
+        newTag.href = href
+        document.head.appendChild(newTag)
+      }
+    }
 
-      {completeMeta.canonicalUrl && (
-        <link rel="canonical" href={completeMeta.canonicalUrl} />
-      )}
+    // Basic meta tags
+    setMetaTag('description', isArabic 
+      ? (completeMeta.descriptionAr || completeMeta.description) 
+      : (completeMeta.description || completeMeta.descriptionAr)
+    )
 
-      {/* Robots */}
-      <meta 
-        name="robots" 
-        content={generateRobotsContent(completeMeta)} 
-      />
+    setMetaTag('keywords', isArabic 
+      ? (completeMeta.keywordsAr || completeMeta.keywords) 
+      : (completeMeta.keywords || completeMeta.keywordsAr)
+    )
 
-      {/* Open Graph */}
-      {(completeMeta.ogTitle || completeMeta.ogTitleAr) && (
-        <meta 
-          property="og:title" 
-          content={isArabic 
-            ? (completeMeta.ogTitleAr || completeMeta.ogTitle || '') 
-            : (completeMeta.ogTitle || completeMeta.ogTitleAr || '')
-          } 
-        />
-      )}
+    setMetaTag('author', completeMeta.author)
+    setMetaTag('robots', generateRobotsContent(completeMeta))
+    setMetaTag('format-detection', 'telephone=no')
+    setMetaTag('last-modified', completeMeta.lastModified)
 
-      {(completeMeta.ogDescription || completeMeta.ogDescriptionAr) && (
-        <meta 
-          property="og:description" 
-          content={isArabic 
-            ? (completeMeta.ogDescriptionAr || completeMeta.ogDescription || '') 
-            : (completeMeta.ogDescription || completeMeta.ogDescriptionAr || '')
-          } 
-        />
-      )}
+    // Open Graph tags
+    setMetaTag('og:title', isArabic 
+      ? (completeMeta.ogTitleAr || completeMeta.ogTitle) 
+      : (completeMeta.ogTitle || completeMeta.ogTitleAr), true
+    )
 
-      {completeMeta.ogImage && (
-        <meta property="og:image" content={completeMeta.ogImage} />
-      )}
+    setMetaTag('og:description', isArabic 
+      ? (completeMeta.ogDescriptionAr || completeMeta.ogDescription) 
+      : (completeMeta.ogDescription || completeMeta.ogDescriptionAr), true
+    )
 
-      {completeMeta.ogType && (
-        <meta property="og:type" content={completeMeta.ogType} />
-      )}
+    setMetaTag('og:image', completeMeta.ogImage, true)
+    setMetaTag('og:type', completeMeta.ogType, true)
+    setMetaTag('og:url', completeMeta.ogUrl, true)
+    setMetaTag('og:locale', isArabic ? 'ar_OM' : 'en_US', true)
+    setMetaTag('og:locale:alternate', isArabic ? 'en_US' : 'ar_OM', true)
 
-      {completeMeta.ogUrl && (
-        <meta property="og:url" content={completeMeta.ogUrl} />
-      )}
+    // Twitter Card tags
+    setMetaTag('twitter:card', completeMeta.twitterCard)
+    setMetaTag('twitter:title', isArabic 
+      ? (completeMeta.twitterTitleAr || completeMeta.twitterTitle) 
+      : (completeMeta.twitterTitle || completeMeta.twitterTitleAr)
+    )
 
-      <meta property="og:locale" content={isArabic ? 'ar_OM' : 'en_US'} />
-      {isArabic && <meta property="og:locale:alternate" content="en_US" />}
-      {!isArabic && <meta property="og:locale:alternate" content="ar_OM" />}
+    setMetaTag('twitter:description', isArabic 
+      ? (completeMeta.twitterDescriptionAr || completeMeta.twitterDescription) 
+      : (completeMeta.twitterDescription || completeMeta.twitterDescriptionAr)
+    )
 
-      {/* Twitter Cards */}
-      {completeMeta.twitterCard && (
-        <meta name="twitter:card" content={completeMeta.twitterCard} />
-      )}
+    setMetaTag('twitter:image', completeMeta.twitterImage)
 
-      {(completeMeta.twitterTitle || completeMeta.twitterTitleAr) && (
-        <meta 
-          name="twitter:title" 
-          content={isArabic 
-            ? (completeMeta.twitterTitleAr || completeMeta.twitterTitle || '') 
-            : (completeMeta.twitterTitle || completeMeta.twitterTitleAr || '')
-          } 
-        />
-      )}
+    // Canonical URL
+    setLinkTag('canonical', completeMeta.canonicalUrl)
 
-      {(completeMeta.twitterDescription || completeMeta.twitterDescriptionAr) && (
-        <meta 
-          name="twitter:description" 
-          content={isArabic 
-            ? (completeMeta.twitterDescriptionAr || completeMeta.twitterDescription || '') 
-            : (completeMeta.twitterDescription || completeMeta.twitterDescriptionAr || '')
-          } 
-        />
-      )}
+    // Schema.org JSON-LD
+    schema.forEach((schemaItem, index) => {
+      const scriptId = `schema-${index}`
+      let existingScript = document.getElementById(scriptId)
+      
+      if (existingScript) {
+        existingScript.textContent = JSON.stringify(schemaItem)
+      } else {
+        const script = document.createElement('script')
+        script.id = scriptId
+        script.type = 'application/ld+json'
+        script.textContent = JSON.stringify(schemaItem)
+        document.head.appendChild(script)
+      }
+    })
 
-      {completeMeta.twitterImage && (
-        <meta name="twitter:image" content={completeMeta.twitterImage} />
-      )}
+    // Cleanup function to remove old schema scripts if needed
+    return () => {
+      // Remove schema scripts that are no longer needed
+      const existingSchemas = document.querySelectorAll('script[id^="schema-"]')
+      existingSchemas.forEach((script, index) => {
+        if (index >= schema.length) {
+          script.remove()
+        }
+      })
+    }
+  }, [completeMeta, schema, isArabic])
 
-      {/* Language */}
-      <html lang={isArabic ? 'ar' : 'en'} dir={isArabic ? 'rtl' : 'ltr'} />
-
-      {/* Schema.org JSON-LD */}
-      {schema.map((schemaItem, index) => (
-        <script 
-          key={index}
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(schemaItem)
-          }}
-        />
-      ))}
-
-      {/* Additional meta tags */}
-      {completeMeta.lastModified && (
-        <meta name="last-modified" content={completeMeta.lastModified} />
-      )}
-
-      <meta name="format-detection" content="telephone=no" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-      {children}
-    </Helmet>
-  )
+  // Render any additional children (for manual meta tags)
+  return children ? <>{children}</> : null
 }
 
 // Helper function
