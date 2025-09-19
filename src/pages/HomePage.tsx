@@ -367,7 +367,7 @@ export function HomePage() {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center space-y-4 mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-foreground">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-900">
                 {t('homepage.categories.title', 'SpiritHub Categories')}
               </h2>
               <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
@@ -414,7 +414,7 @@ export function HomePage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <h3 className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" title={categoryName}>
+                              <h3 className="font-semibold text-base text-gray-900 dark:text-gray-900 hover:text-primary transition-colors category-name-truncate" title={categoryName}>
                                 {categoryName}
                               </h3>
                             </div>
@@ -448,7 +448,7 @@ export function HomePage() {
                         
                         <div className="space-y-1">
                           <h3 
-                            className="font-semibold text-base text-foreground hover:text-primary transition-colors category-name-truncate" 
+                            className="font-semibold text-base text-gray-900 dark:text-gray-900 hover:text-primary transition-colors category-name-truncate" 
                             title={categoryName}
                           >
                             {categoryName}
@@ -461,7 +461,7 @@ export function HomePage() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">
+                <p className="text-gray-700 dark:text-gray-700 text-lg">
                   {t('homepage.categories.noCategories', 'No categories available at the moment')}
                 </p>
               </div>
