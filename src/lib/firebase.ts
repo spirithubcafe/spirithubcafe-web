@@ -1778,11 +1778,34 @@ export const firestoreService = {
     create: async (data: any): Promise<string> => {
       return await safeFirestoreOperation(
         async () => {
+          // First check if email already exists
+          const normalizedEmail = data.email?.toLowerCase().trim()
+          if (!normalizedEmail) {
+            throw new Error('Email is required')
+          }
+
+          logger.log('🔍 Server-side duplicate check for email:', normalizedEmail)
+          
+          const q = query(
+            collection(db, 'newsletters'),
+            where('email', '==', normalizedEmail)
+          );
+          const existingDocs = await getDocs(q);
+          
+          if (!existingDocs.empty) {
+            logger.log('❌ Duplicate email found on server:', normalizedEmail)
+            throw new Error('Email already exists')
+          }
+
+          logger.log('✅ No duplicates found, creating subscription')
+          
           const docRef = await addDoc(collection(db, 'newsletters'), {
             ...data,
+            email: normalizedEmail,
             subscribed_at: data.subscribed_at || new Date().toISOString(),
             status: data.status || 'active'
           });
+          
           logger.log('✅ Newsletter subscription created:', docRef.id);
           return docRef.id;
         },

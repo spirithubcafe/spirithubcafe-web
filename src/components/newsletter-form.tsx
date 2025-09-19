@@ -35,11 +35,22 @@ export function NewsletterForm() {
     setIsLoading(true)
 
     try {
+      logger.log('🔍 Checking for duplicate email:', email.toLowerCase().trim())
+      
       // Check if email already exists
       const existingSubscriptions = await firestoreService.newsletters.list()
+      logger.log('📋 Existing subscriptions found:', existingSubscriptions.items.length)
+      
+      const normalizedEmail = email.toLowerCase().trim()
       const emailExists = existingSubscriptions.items.some(
-        (sub: any) => sub.email.toLowerCase() === email.toLowerCase()
+        (sub: any) => {
+          const existingEmail = sub.email?.toLowerCase().trim()
+          logger.log('🔍 Comparing:', normalizedEmail, 'vs', existingEmail)
+          return existingEmail === normalizedEmail
+        }
       )
+
+      logger.log('✅ Email exists check result:', emailExists)
 
       if (emailExists) {
         toast.error(isArabic ? 'هذا البريد الإلكتروني مشترك بالفعل' : 'This email is already subscribed')
@@ -49,15 +60,19 @@ export function NewsletterForm() {
 
       // Add new subscription
       const subscriptionData = {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         subscribed_at: new Date().toISOString(),
         status: 'active',
         source: 'homepage'
       }
       
-      logger.log('Creating newsletter subscription with data:', subscriptionData)
+      logger.log('📧 Creating newsletter subscription with data:', subscriptionData)
       const result = await firestoreService.newsletters.create(subscriptionData)
-      logger.log('Newsletter subscription result:', result)
+      logger.log('✅ Newsletter subscription result:', result)
+
+      if (!result) {
+        throw new Error('Failed to create subscription - no result returned')
+      }
 
       setIsSubscribed(true)
       setEmail('')
@@ -69,8 +84,14 @@ export function NewsletterForm() {
       }, 3000)
 
     } catch (error) {
-      logger.error('Newsletter subscription error:', error)
-      toast.error(isArabic ? 'حدث خطأ، يرجى المحاولة مرة أخرى' : 'An error occurred, please try again')
+      logger.error('❌ Newsletter subscription error:', error)
+      
+      // Check if it's a duplicate error from Firestore
+      if (error instanceof Error && error.message.includes('already exists')) {
+        toast.error(isArabic ? 'هذا البريد الإلكتروني مشترك بالفعل' : 'This email is already subscribed')
+      } else {
+        toast.error(isArabic ? 'حدث خطأ، يرجى المحاولة مرة أخرى' : 'An error occurred, please try again')
+      }
     } finally {
       setIsLoading(false)
     }

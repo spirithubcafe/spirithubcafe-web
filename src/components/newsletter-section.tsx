@@ -2,7 +2,6 @@ import { logger } from "@/utils/logger";
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Mail, CheckCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/components/theme-provider'
@@ -15,7 +14,6 @@ export function NewsletterSection() {
   const { resolvedTheme } = useTheme()
   const { settings: newsletterSettings } = useGlobalNewsletterSettings()
   const [email, setEmail] = useState('')
-  const [acceptTerms, setAcceptTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const isArabic = i18n.language === 'ar'
@@ -38,19 +36,25 @@ export function NewsletterSection() {
       return
     }
 
-    if (!acceptTerms) {
-      toast.error(isArabic ? 'يرجى الموافقة على الشروط والأحكام' : 'Please agree to the terms and conditions')
-      return
-    }
-
     setIsLoading(true)
 
     try {
+      logger.log('🔍 Checking for duplicate email:', email.toLowerCase().trim())
+      
       // Check if email already exists
       const existingSubscriptions = await firestoreService.newsletters.list()
+      logger.log('📋 Existing subscriptions found:', existingSubscriptions.items.length)
+      
+      const normalizedEmail = email.toLowerCase().trim()
       const emailExists = existingSubscriptions.items.some(
-        (sub: any) => sub.email.toLowerCase() === email.toLowerCase()
+        (sub: any) => {
+          const existingEmail = sub.email?.toLowerCase().trim()
+          logger.log('🔍 Comparing:', normalizedEmail, 'vs', existingEmail)
+          return existingEmail === normalizedEmail
+        }
       )
+
+      logger.log('✅ Email exists check result:', emailExists)
 
       if (emailExists) {
         toast.error(isArabic ? 'هذا البريد الإلكتروني مشترك بالفعل' : 'This email is already subscribed')
@@ -60,29 +64,39 @@ export function NewsletterSection() {
 
       // Add new subscription
       const subscriptionData = {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         subscribed_at: new Date().toISOString(),
         status: 'active',
         source: 'homepage'
       }
       
-      logger.log('Creating newsletter subscription with data:', subscriptionData)
+      logger.log('📧 Creating newsletter subscription with data:', subscriptionData)
       const result = await firestoreService.newsletters.create(subscriptionData)
-      logger.log('Newsletter subscription result:', result)
+      logger.log('✅ Newsletter subscription result:', result)
+
+      if (!result) {
+        throw new Error('Failed to create subscription - no result returned')
+      }
 
       setIsSubscribed(true)
       setEmail('')
-      setAcceptTerms(false)
       toast.success(isArabic ? 'تم الاشتراك بنجاح!' : 'Successfully subscribed!')
       
-      // Reset success state after 3 seconds
+      // Reset form after 3 seconds
       setTimeout(() => {
+        setEmail('')
         setIsSubscribed(false)
       }, 3000)
 
     } catch (error) {
-      logger.error('Newsletter subscription error:', error)
-      toast.error(isArabic ? 'حدث خطأ، يرجى المحاولة مرة أخرى' : 'An error occurred, please try again')
+      logger.error('❌ Newsletter subscription error:', error)
+      
+      // Check if it's a duplicate error from Firestore
+      if (error instanceof Error && error.message.includes('already exists')) {
+        toast.error(isArabic ? 'هذا البريد الإلكتروني مشترك بالفعل' : 'This email is already subscribed')
+      } else {
+        toast.error(isArabic ? 'حدث خطأ، يرجى المحاولة مرة أخرى' : 'An error occurred, please try again')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -212,22 +226,20 @@ export function NewsletterSection() {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1">
-                    <Input
-                      type="email"
-                      placeholder={isArabic ? 'عنوان بريدك الإلكتروني' : 'Your email address'}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-12 text-base"
-                      disabled={isLoading}
-                      dir={isArabic ? 'rtl' : 'ltr'}
-                    />
-                  </div>
+                <div className="space-y-3">
+                  <Input
+                    type="email"
+                    placeholder={isArabic ? 'عنوان بريدك الإلكتروني' : 'Your email address'}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 text-base w-full"
+                    disabled={isLoading}
+                    dir={isArabic ? 'rtl' : 'ltr'}
+                  />
                   <Button 
                     type="submit" 
-                    disabled={isLoading || !acceptTerms}
-                    className="h-12 px-6 font-semibold whitespace-nowrap transition-all duration-200"
+                    disabled={isLoading}
+                    className="h-12 px-6 font-semibold w-full transition-all duration-200"
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
@@ -241,21 +253,6 @@ export function NewsletterSection() {
                       </div>
                     )}
                   </Button>
-                </div>
-                
-                <div className="flex items-start space-x-3 rtl:space-x-reverse">
-                  <Checkbox
-                    id="accept-terms"
-                    checked={acceptTerms}
-                    onCheckedChange={(checked: boolean) => setAcceptTerms(checked)}
-                    className="mt-0.5"
-                  />
-                  <label htmlFor="accept-terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                    {isArabic 
-                      ? 'أوافق على الشروط والأحكام وسياسة الخصوصية'
-                      : 'I agree to the terms and conditions and privacy policy'
-                    }
-                  </label>
                 </div>
               </form>
             </div>
