@@ -238,6 +238,24 @@
     "backToShop": "Back to Shop",
     "orderSuccess": "Order Successful!",
     "orderSuccessMessage": "Thank you! We will contact you soon.",
+    "fields": {
+      "country": "Country",
+      "state": "State/Province", 
+      "city": "City"
+    },
+    "placeholders": {
+      "selectCountry": "Select country",
+      "selectState": "Select state/province",
+      "selectCity": "Select city"
+    },
+    "info": {
+      "aramexDelivery": "Delivery available via Aramex",
+      "currency": "Currency:"
+    },
+    "validation": {
+      "invalidDestination": "Invalid destination for Aramex delivery",
+      "selectLocation": "Please select your delivery location"
+    },
     "continueShoppingButton": "Continue Shopping",
     "backToHome": "Back to Home"
   },
@@ -686,5 +704,75 @@
     "generatingAll": "Generating SEO for all items...",
     "errorGeneral": "General error occurred",
     "errorPreview": "Error generating preview"
+  },
+  "aramex": {
+    "settings": {
+      "title": "Aramex Service Settings",
+      "description": "Configure Aramex shipping service for order fulfillment"
+    },
+    "tabs": {
+      "account": "Account Info",
+      "sender": "Sender Info", 
+      "pickup": "Pickup Settings"
+    },
+    "fields": {
+      "environment": "Environment",
+      "countryCode": "Country Code",
+      "accountNumber": "Account Number",
+      "accountPin": "Account PIN",
+      "username": "Username",
+      "password": "Password",
+      "accountEntity": "Account Entity",
+      "companyName": "Company Name",
+      "contactPerson": "Contact Person",
+      "address": "Address",
+      "city": "City",
+      "phoneNumber": "Phone Number",
+      "email": "Email",
+      "readyTime": "Ready Time",
+      "lastPickupTime": "Last Pickup Time",
+      "closingTime": "Closing Time",
+      "selectEnvironment": "Select environment"
+    },
+    "placeholders": {
+      "accountNumber": "Aramex account number",
+      "accountPin": "Aramex account PIN",
+      "username": "API username",
+      "password": "API password",
+      "accountEntity": "Aramex account entity",
+      "companyName": "Sender company name",
+      "contactPerson": "Contact person name",
+      "address": "Complete sender address",
+      "city": "Sender city",
+      "phoneNumber": "Phone number",
+      "email": "Email address"
+    },
+    "options": {
+      "test": "Test",
+      "production": "Production"
+    },
+    "buttons": {
+      "saveSettings": "Save Settings",
+      "testConnection": "Test Connection"
+    },
+    "messages": {
+      "settingsSaved": "Aramex settings saved successfully",
+      "connectionSuccessful": "Aramex connection successful",
+      "connectionSuccess": "Connection successful! Sample rate: {{rate}} {{currency}}",
+      "shipmentCreated": "Aramex shipment created: {{awb}}",
+      "pickupScheduled": "Pickup scheduled successfully"
+    },
+    "errors": {
+      "loadingSettings": "Error loading Aramex settings",
+      "savingSettings": "Error saving Aramex settings",
+      "enableFirst": "Please enable Aramex service first",
+      "connectionError": "Error connecting to Aramex",
+      "unexpectedError": "Unexpected error",
+      "testingConnection": "Error testing connection",
+      "gettingLabel": "Error getting label",
+      "downloadingLabel": "Error downloading label",
+      "viewingLabel": "Error viewing label",
+      "serviceNotAvailable": "Aramex service is not available"
+    }
   }
 }

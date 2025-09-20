@@ -1,4 +1,37 @@
-// Aramex API Types
+// Aramex shipping service types for frontend
+
+export interface AramexSettings {
+  enabled: boolean;
+  environment?: 'test' | 'production';
+  testMode?: boolean;
+  enableLogging?: boolean;
+  autoCreateShipment?: boolean;
+  accountNumber?: string;
+  accountPin?: string;
+  accountEntity?: string;
+  accountCountryCode?: string;
+  username?: string;
+  password?: string;
+  credentials?: AramexCredentials;
+  shipperInfo?: AramexShipperInfo;
+  services?: AramexService[];
+  senderInfo?: {
+    companyName: string;
+    contactPerson: string;
+    addressLine: string;
+    city: string;
+    countryCode: string;
+    phoneNumber: string;
+    emailAddress: string;
+  };
+  pickupInfo?: {
+    readyTime: string;
+    lastPickupTime: string;
+    closingTime: string;
+  };
+}
+
+// Legacy - keeping for backward compatibility
 export interface AramexCredentials {
   username: string
   password: string
@@ -8,6 +41,95 @@ export interface AramexCredentials {
   accountCountryCode: string
   apiVersion: string
   source: string
+}
+
+export interface ShippingRateRequest {
+  originCity: string;
+  originCountry: string;
+  destCity: string;
+  destCountry: string;
+  weight: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface ShippingRateResponse {
+  success: boolean;
+  rate?: number;
+  currency?: string;
+  error?: string;
+}
+
+export interface CreateShipmentRequest {
+  orderId: string;
+  weight: number;
+  originCity: string;
+  originCountry: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  customerAddressLine: string;
+  customerCity: string;
+  customerCountry: string;
+  descriptionOfGoods: string;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface CreateShipmentResponse {
+  success: boolean;
+  awb?: string;
+  labelURL?: string;
+  error?: string;
+}
+
+export interface GetLabelRequest {
+  awb: string;
+}
+
+export interface GetLabelResponse {
+  success: boolean;
+  label?: string;
+  error?: string;
+}
+
+export interface SchedulePickupRequest {
+  awb: string;
+  weight: number;
+  pickupCity?: string;
+  pickupCountry?: string;
+  pickupDate?: string;
+}
+
+export interface SchedulePickupResponse {
+  success: boolean;
+  pickupReference?: string;
+  error?: string;
+}
+
+export interface AramexShipment {
+  id: string;
+  orderId: string;
+  awb?: string;
+  status: 'pending' | 'created' | 'picked_up' | 'in_transit' | 'delivered' | 'failed';
+  customerName: string;
+  customerAddress: string;
+  weight: number;
+  createdAt: Date;
+  updatedAt: Date;
+  labelURL?: string;
+  pickupReference?: string;
+  trackingInfo?: {
+    status: string;
+    location: string;
+    timestamp: Date;
+  }[];
 }
 
 // SOAP/WSDL Rate Calculator Types
@@ -122,16 +244,6 @@ export interface AramexService {
   customLabel: string
   type: 'domestic' | 'international'
   enabled: boolean
-}
-
-export interface AramexSettings {
-  credentials: AramexCredentials
-  shipperInfo: AramexShipperInfo
-  services: AramexService[]
-  autoCreateShipment: boolean
-  enabled: boolean
-  testMode?: boolean
-  enableLogging?: boolean
 }
 
 export interface AramexRateRequest {

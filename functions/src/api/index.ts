@@ -10,7 +10,10 @@ export {
   confirmPayment
 } from './payments';
 
-// Add other API endpoints here as needed
-// export * from './products';
-// export * from './orders';
-// export * from './users';
+// Aramex Shipping Endpoints (temporarily disabled due to SOAP issues)
+// export {
+//   calculateAramexRate,
+//   createAramexShipment,
+//   getAramexLabel,
+//   scheduleAramexPickup
+// } from './aramex';

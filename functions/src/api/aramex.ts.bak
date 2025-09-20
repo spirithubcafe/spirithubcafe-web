@@ -1,0 +1,187 @@
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { logger } from "firebase-functions/v2";
+import { aramexService } from "../services/aramex";
+import {
+  CreateShipmentRequest,
+  GetLabelRequest,
+  SchedulePickupRequest,
+} from "../types/aramex";
+
+// Calculate shipping rate
+export const calculateAramexRate = onCall(
+  { 
+    region: "us-central1",
+    cors: true,
+    timeoutSeconds: 60,
+    memory: "512MiB"
+  },
+  async (request) => {
+    try {
+      const { originInfo, destinationInfo, shipmentDetails } = request.data;
+
+      // Validate required fields
+      if (!originInfo?.city || !originInfo?.countryCode || 
+          !destinationInfo?.city || !destinationInfo?.countryCode || 
+          !shipmentDetails?.weight) {
+        throw new HttpsError(
+          "invalid-argument", 
+          "Missing required fields: originInfo, destinationInfo, shipmentDetails with proper structure"
+        );
+      }
+
+      if (shipmentDetails.weight <= 0) {
+        throw new HttpsError("invalid-argument", "Weight must be greater than 0");
+      }
+
+      logger.info("Calculating Aramex shipping rate", { 
+        origin: originInfo,
+        destination: destinationInfo,
+        shipment: shipmentDetails
+      });
+
+      // Transform data to expected format
+      const aramexData = {
+        originCity: originInfo.city,
+        originCountry: originInfo.countryCode,
+        destCity: destinationInfo.city,
+        destCountry: destinationInfo.countryCode,
+        weight: shipmentDetails.weight,
+        dimensions: {
+          length: shipmentDetails.length || 0,
+          width: shipmentDetails.width || 0,
+          height: shipmentDetails.height || 0
+        }
+      };
+
+      const result = await aramexService.calculateShippingRate(aramexData);
+      return result;
+    } catch (error) {
+      logger.error("Error in calculateAramexRate:", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", "Failed to calculate shipping rate");
+    }
+  }
+);
+
+// Create shipment
+export const createAramexShipment = onCall(
+  { 
+    region: "us-central1",
+    cors: true,
+    timeoutSeconds: 60,
+    memory: "512MiB"
+  },
+  async (request) => {
+    try {
+      const data = request.data as CreateShipmentRequest;
+
+      // Validate required fields
+      const requiredFields = [
+        "orderId",
+        "weight",
+        "originCity",
+        "originCountry",
+        "customerName",
+        "customerPhone",
+        "customerEmail",
+        "customerAddressLine",
+        "customerCity",
+        "customerCountry",
+        "descriptionOfGoods",
+      ];
+
+      for (const field of requiredFields) {
+        if (!data[field as keyof CreateShipmentRequest]) {
+          throw new HttpsError(
+            "invalid-argument",
+            `Missing required field: ${field}`
+          );
+        }
+      }
+
+      if (data.weight <= 0) {
+        throw new HttpsError("invalid-argument", "Weight must be greater than 0");
+      }
+
+      logger.info("Creating Aramex shipment", { orderId: data.orderId });
+
+      const result = await aramexService.createShipment(data);
+      return result;
+    } catch (error) {
+      logger.error("Error in createAramexShipment:", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", "Failed to create shipment");
+    }
+  }
+);
+
+// Get shipment label
+export const getAramexLabel = onCall(
+  { 
+    region: "us-central1",
+    cors: true,
+    timeoutSeconds: 60,
+    memory: "512MiB"
+  },
+  async (request) => {
+    try {
+      const data = request.data as GetLabelRequest;
+
+      if (!data.awb) {
+        throw new HttpsError("invalid-argument", "AWB number is required");
+      }
+
+      logger.info("Getting Aramex label", { awb: data.awb });
+
+      const result = await aramexService.getShipmentLabel(data);
+      return result;
+    } catch (error) {
+      logger.error("Error in getAramexLabel:", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", "Failed to get shipment label");
+    }
+  }
+);
+
+// Schedule pickup
+export const scheduleAramexPickup = onCall(
+  { 
+    region: "us-central1",
+    cors: true,
+    timeoutSeconds: 60,
+    memory: "512MiB"
+  },
+  async (request) => {
+    try {
+      const data = request.data as SchedulePickupRequest;
+
+      if (!data.awb || !data.weight) {
+        throw new HttpsError(
+          "invalid-argument",
+          "AWB number and weight are required"
+        );
+      }
+
+      if (data.weight <= 0) {
+        throw new HttpsError("invalid-argument", "Weight must be greater than 0");
+      }
+
+      logger.info("Scheduling Aramex pickup", { awb: data.awb });
+
+      const result = await aramexService.schedulePickup(data);
+      return result;
+    } catch (error) {
+      logger.error("Error in scheduleAramexPickup:", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", "Failed to schedule pickup");
+    }
+  }
+);

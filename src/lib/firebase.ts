@@ -5,6 +5,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import type { User } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, serverTimestamp } from "firebase/firestore/lite";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 import { logger } from "@/utils/logger";
 
 // Your web app's Firebase configuration
@@ -25,6 +26,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 const auth = getAuth(app);
 const storage = getStorage(app);
+const functions = getFunctions(app);
 
 // Initialize Firestore with error handling and offline persistence
 let db: any = null;
@@ -2896,5 +2898,5 @@ export const storageService = {
   }
 };
 
-export { auth, db, storage, analytics };
+export { auth, db, storage, functions, analytics };
 export default app;

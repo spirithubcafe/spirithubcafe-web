@@ -270,7 +270,25 @@
     "orderSuccess": "تم الطلب بنجاح!",
     "orderSuccessMessage": "شكراً لك! سيتم التواصل معك قريباً.",
     "continueShoppingButton": "متابعة التسوق",
-    "backToHome": "العودة للرئيسية"
+    "backToHome": "العودة للرئيسية",
+    "fields": {
+      "country": "البلد",
+      "state": "المحافظة/الولاية", 
+      "city": "المدينة"
+    },
+    "placeholders": {
+      "selectCountry": "اختر البلد",
+      "selectState": "اختر المحافظة/الولاية",
+      "selectCity": "اختر المدينة"
+    },
+    "info": {
+      "aramexDelivery": "التوصيل متاح عبر آرامكس",
+      "currency": "العملة:"
+    },
+    "validation": {
+      "invalidDestination": "وجهة غير صالحة لتوصيل آرامكس",
+      "selectLocation": "يرجى اختيار موقع التوصيل"
+    }
   },
   "dashboard": {
     "welcome": "مرحباً",
@@ -718,5 +736,75 @@
     "generatingAll": "جاري تحديث السيو لجميع العناصر...",
     "errorGeneral": "حدث خطأ عام",
     "errorPreview": "خطأ في إنشاء المعاينة"
+  },
+  "aramex": {
+    "settings": {
+      "title": "إعدادات خدمة آرامكس",
+      "description": "تكوين خدمة الشحن آرامكس لتنفيذ الطلبات"
+    },
+    "tabs": {
+      "account": "معلومات الحساب",
+      "sender": "معلومات المرسل",
+      "pickup": "إعدادات الاستلام"
+    },
+    "fields": {
+      "environment": "البيئة",
+      "countryCode": "رمز البلد",
+      "accountNumber": "رقم الحساب",
+      "accountPin": "رقم التعريف الشخصي للحساب",
+      "username": "اسم المستخدم",
+      "password": "كلمة المرور",
+      "accountEntity": "كيان الحساب",
+      "companyName": "اسم الشركة",
+      "contactPerson": "شخص الاتصال",
+      "address": "العنوان",
+      "city": "المدينة",
+      "phoneNumber": "رقم الهاتف",
+      "email": "البريد الإلكتروني",
+      "readyTime": "وقت الاستعداد",
+      "lastPickupTime": "آخر وقت للاستلام",
+      "closingTime": "وقت الإغلاق",
+      "selectEnvironment": "اختر البيئة"
+    },
+    "placeholders": {
+      "accountNumber": "رقم حساب آرامكس",
+      "accountPin": "رقم التعريف الشخصي لحساب آرامكس",
+      "username": "اسم مستخدم API",
+      "password": "كلمة مرور API",
+      "accountEntity": "كيان حساب آرامكس",
+      "companyName": "اسم شركة المرسل",
+      "contactPerson": "اسم شخص الاتصال",
+      "address": "عنوان المرسل الكامل",
+      "city": "مدينة المرسل",
+      "phoneNumber": "رقم الهاتف",
+      "email": "عنوان البريد الإلكتروني"
+    },
+    "options": {
+      "test": "اختبار",
+      "production": "إنتاج"
+    },
+    "buttons": {
+      "saveSettings": "حفظ الإعدادات",
+      "testConnection": "اختبار الاتصال"
+    },
+    "messages": {
+      "settingsSaved": "تم حفظ إعدادات آرامكس بنجاح",
+      "connectionSuccessful": "اتصال آرامكس ناجح",
+      "connectionSuccess": "الاتصال ناجح! معدل العينة: {{rate}} {{currency}}",
+      "shipmentCreated": "تم إنشاء شحنة آرامكس: {{awb}}",
+      "pickupScheduled": "تم جدولة الاستلام بنجاح"
+    },
+    "errors": {
+      "loadingSettings": "خطأ في تحميل إعدادات آرامكس",
+      "savingSettings": "خطأ في حفظ إعدادات آرامكس",
+      "enableFirst": "يرجى تفعيل خدمة آرامكس أولاً",
+      "connectionError": "خطأ في الاتصال بآرامكس",
+      "unexpectedError": "خطأ غير متوقع",
+      "testingConnection": "خطأ في اختبار الاتصال",
+      "gettingLabel": "خطأ في الحصول على التسمية",
+      "downloadingLabel": "خطأ في تحميل التسمية",
+      "viewingLabel": "خطأ في عرض التسمية",
+      "serviceNotAvailable": "خدمة آرامكس غير متاحة"
+    }
   }
 }
