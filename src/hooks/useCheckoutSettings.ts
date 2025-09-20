@@ -6,7 +6,6 @@ export interface CheckoutSettings {
   category_tax_rates: CategoryTaxRate[] // New category-based tax rates
   enabled_countries: string[]
   shipping_methods: ShippingMethod[]
-  payment_gateway: PaymentGateway
 }
 
 export interface CategoryTaxRate {
@@ -36,21 +35,6 @@ export interface ShippingMethod {
     username?: string
     password?: string
     account_number?: string
-  }
-}
-
-export interface PaymentGateway {
-  provider: string
-  enabled: boolean
-  test_mode: boolean
-  merchant_id: string
-  access_code: string
-  working_key: string
-  supported_currencies: string[]
-  additional_settings: {
-    return_url: string
-    cancel_url: string
-    webhook_url: string
   }
 }
 

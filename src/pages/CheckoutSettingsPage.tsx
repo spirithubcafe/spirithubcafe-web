@@ -224,18 +224,6 @@ export default function CheckoutSettingsPage() {
     }
   }
 
-  const updatePaymentGateway = (updates: any) => {
-    if (localSettings) {
-      setLocalSettings({
-        ...localSettings,
-        payment_gateway: {
-          ...localSettings.payment_gateway,
-          ...updates
-        }
-      })
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -706,107 +694,6 @@ export default function CheckoutSettingsPage() {
                   ))}
                 </div>
               </div>
-            </TabsContent>
-
-            {/* Payment Settings */}
-            <TabsContent value="payment">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{isArabic ? 'إعدادات بوابة الدفع' : 'Payment Gateway Settings'}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Switch
-                      id="payment-enabled"
-                      checked={localSettings.payment_gateway.enabled}
-                      onCheckedChange={(checked) => updatePaymentGateway({ enabled: checked })}
-                    />
-                    <Label htmlFor="payment-enabled">
-                      {isArabic ? 'تفعیل بوابة الدفع' : 'Enable Payment Gateway'}
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                    <Switch
-                      id="test-mode"
-                      checked={localSettings.payment_gateway.test_mode}
-                      onCheckedChange={(checked) => updatePaymentGateway({ test_mode: checked })}
-                    />
-                    <Label htmlFor="test-mode">
-                      {isArabic ? 'الوضع التجریبي' : 'Test Mode'}
-                    </Label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>{isArabic ? 'نوع البوابة' : 'Gateway Provider'}</Label>
-                    <Select
-                      value={localSettings.payment_gateway.provider}
-                      onValueChange={(value: any) => updatePaymentGateway({ provider: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bank_muscat">{isArabic ? 'بنك مسقط' : 'Bank Muscat'}</SelectItem>
-                        <SelectItem value="stripe">Stripe</SelectItem>
-                        <SelectItem value="paypal">PayPal</SelectItem>
-                        <SelectItem value="custom">{isArabic ? 'مخصص' : 'Custom'}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {localSettings.payment_gateway.provider === 'bank_muscat' && (
-                    <div className="space-y-4 p-4 border rounded-lg">
-                      <h4 className="font-medium">{isArabic ? 'إعدادات بنك مسقط' : 'Bank Muscat Settings'}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label>{isArabic ? 'معرف التاجر' : 'Merchant ID'}</Label>
-                          <Input
-                            value={localSettings.payment_gateway.merchant_id || ''}
-                            onChange={(e) => updatePaymentGateway({ merchant_id: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>{isArabic ? 'رمز الوصول' : 'Access Code'}</Label>
-                          <Input
-                            value={localSettings.payment_gateway.access_code || ''}
-                            onChange={(e) => updatePaymentGateway({ access_code: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2 md:col-span-2">
-                          <Label>{isArabic ? 'مفتاح العمل' : 'Working Key'}</Label>
-                          <Input
-                            type="password"
-                            value={localSettings.payment_gateway.working_key || ''}
-                            onChange={(e) => updatePaymentGateway({ working_key: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label>{isArabic ? 'العملات المدعومة' : 'Supported Currencies'}</Label>
-                    <div className="flex gap-4">
-                      {['OMR', 'USD', 'SAR'].map((curr) => (
-                        <div key={curr} className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <Switch
-                            id={`currency-${curr}`}
-                            checked={localSettings.payment_gateway.supported_currencies.includes(curr)}
-                            onCheckedChange={(checked) => {
-                              const newCurrencies = checked
-                                ? [...localSettings.payment_gateway.supported_currencies, curr]
-                                : localSettings.payment_gateway.supported_currencies.filter(c => c !== curr)
-                              updatePaymentGateway({ supported_currencies: newCurrencies })
-                            }}
-                          />
-                          <Label htmlFor={`currency-${curr}`}>{curr}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>

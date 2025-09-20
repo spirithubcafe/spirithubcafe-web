@@ -10,6 +10,100 @@ export interface AramexCredentials {
   source: string
 }
 
+// SOAP/WSDL Rate Calculator Types
+export interface AramexClientInfo {
+  UserName: string
+  Password: string
+  Version: string
+  AccountNumber: string
+  AccountPin: string
+  AccountEntity: string
+  AccountCountryCode: string
+}
+
+export interface AramexTransaction {
+  Reference1: string
+  Reference2?: string
+  Reference3?: string
+  Reference4?: string
+  Reference5?: string
+}
+
+export interface AramexAddress {
+  Line1: string
+  Line2?: string
+  Line3?: string
+  City: string
+  StateOrProvinceCode?: string
+  PostCode: string
+  CountryCode: string
+}
+
+export interface AramexDimensions {
+  Length: number
+  Width: number
+  Height: number
+  Unit: string
+}
+
+export interface AramexWeight {
+  Unit: string
+  Value: number
+}
+
+export interface AramexMoney {
+  CurrencyCode: string
+  Value: number
+}
+
+export interface AramexShipmentItem {
+  PackageType: string
+  Quantity: number
+  Weight: AramexWeight
+  Comments?: string
+  Reference?: string
+}
+
+export interface AramexShipmentDetails {
+  Dimensions: AramexDimensions
+  ActualWeight: AramexWeight
+  ChargeableWeight: AramexWeight
+  DescriptionOfGoods: string
+  GoodsOriginCountry: string
+  NumberOfPieces: number
+  ProductGroup: string
+  ProductType: string
+  PaymentType: string
+  PaymentOptions: string
+  CustomsValueAmount?: AramexMoney
+  CashOnDeliveryAmount?: AramexMoney
+  InsuranceAmount?: AramexMoney
+  CashAdditionalAmount?: AramexMoney
+  CollectAmount?: AramexMoney
+  Services?: string
+  Items?: AramexShipmentItem[]
+}
+
+export interface AramexRateCalculatorRequest {
+  ClientInfo: AramexClientInfo
+  Transaction: AramexTransaction
+  OriginAddress: AramexAddress
+  DestinationAddress: AramexAddress
+  ShipmentDetails: AramexShipmentDetails
+}
+
+export interface AramexNotification {
+  Code: string
+  Message: string
+}
+
+export interface AramexRateCalculatorResponse {
+  Transaction: AramexTransaction
+  Notifications: AramexNotification[]
+  HasErrors: boolean
+  TotalAmount: AramexMoney
+}
+
 export interface AramexShipperInfo {
   companyName: string
   contactName: string

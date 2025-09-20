@@ -22,7 +22,6 @@ import {
   Home,
   Shield,
   Palette,
-  Truck,
   Cog
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -57,7 +56,6 @@ import NewsletterSettingsManagement from '@/components/admin/NewsletterSettingsM
 import CheckoutSettingsPage from '@/pages/CheckoutSettingsPage'
 import CacheManagementPage from '@/pages/CacheManagementPage'
 import SEOManagementPage from '@/pages/SEOManagementPage'
-import AramexSettingsPage from '@/components/admin/AramexSettingsPage'
 
 export default function DashboardPage() {
   const { logout, currentUser } = useAuth()
@@ -317,12 +315,6 @@ export default function DashboardPage() {
             show: true
           },
           {
-            id: 'aramex-settings',
-            label: isArabic ? 'إعدادات أرامكس' : 'Aramex Settings',
-            icon: Truck,
-            show: true
-          },
-          {
             id: 'newsletter',
             label: isArabic ? 'النشرة الإخبارية' : 'Newsletter',
             icon: Mail,
@@ -389,8 +381,6 @@ export default function DashboardPage() {
         return user?.role === 'admin' && <PagesManagement />
       case 'checkout-settings':
         return user?.role === 'admin' && <CheckoutSettingsPage />
-      case 'aramex-settings':
-        return user?.role === 'admin' && <AramexSettingsPage />
       case 'cache-management':
         return user?.role === 'admin' && <CacheManagementPage />
       case 'contact':

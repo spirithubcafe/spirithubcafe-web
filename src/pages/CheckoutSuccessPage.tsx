@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useTranslation } from 'react-i18next'
 import { firestoreService } from '@/lib/firebase'
-import { bankMuscatPaymentService } from '@/services/bankMuscatPayment'
 
 export default function CheckoutSuccessPage() {
   const { i18n } = useTranslation()
@@ -29,26 +28,10 @@ export default function CheckoutSuccessPage() {
         const order = await firestoreService.orders.get(orderId)
         setOrderDetails(order)
 
-        if (transactionId) {
-          // Verify payment with Bank Muscat
-          const verification = await bankMuscatPaymentService.verifyPayment(transactionId, orderId)
-          
-          if (verification.success) {
-            // Update order status to paid
-            await firestoreService.orders.update(orderId, {
-              payment_status: 'paid',
-              status: 'confirmed'
-            })
-            setVerificationStatus('success')
-          } else {
-            setVerificationStatus('failed')
-          }
-        } else {
-          // No transaction ID - payment might have failed
-          setVerificationStatus('failed')
-        }
+        // Order exists and was created successfully
+        setVerificationStatus('success')
       } catch (error) {
-        console.error('Payment verification error:', error)
+        console.error('Order verification error:', error)
         setVerificationStatus('failed')
       }
     }

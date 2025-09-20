@@ -1,4 +1,18 @@
-import { type PaymentGateway } from '@/hooks/useCheckoutSettings'
+// Payment interfaces and types
+export interface PaymentGateway {
+  provider: string
+  enabled: boolean
+  test_mode: boolean
+  merchant_id: string
+  access_code: string
+  working_key: string
+  supported_currencies: string[]
+  additional_settings: {
+    return_url: string
+    cancel_url: string
+    webhook_url: string
+  }
+}
 
 export interface PaymentRequest {
   order_id: string

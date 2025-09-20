@@ -16,9 +16,6 @@ import { useAuth } from '@/hooks/useAuth'
 import { conversionRates } from '@/lib/currency'
 import { firestoreService, type Order, type OrderItem, type Product } from '@/lib/firebase'
 import { useCheckoutSettings } from '@/hooks/useCheckoutSettings'
-import { bankMuscatPaymentService, type PaymentRequest } from '@/services/bankMuscatPayment'
-import { ShippingService, type ShippingCalculationRequest } from '@/services/shipping'
-import { calculateProductWeight } from '@/utils/productWeightUtils'
 import toast from 'react-hot-toast'
 
 export default function CheckoutPage() {
@@ -29,12 +26,10 @@ export default function CheckoutPage() {
   const { formatPrice, currency } = useCurrency()
   const { currentUser } = useAuth()
   const { settings: checkoutSettings } = useCheckoutSettings()
-
+  
   const [orderSuccess, setOrderSuccess] = useState(false)
   const [orderLoading, setOrderLoading] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null)
-  const [aramexShippingCost, setAramexShippingCost] = useState(0)
-  const [isCalculatingAramex, setIsCalculatingAramex] = useState(false)
 
   const isArabic = i18n.language === 'ar'
 
@@ -155,7 +150,7 @@ export default function CheckoutPage() {
     zipCode: '',
     
     // Shipping
-    shippingMethod: 'pickup', // pickup, nool_oman, aramex
+    shippingMethod: 'pickup', // pickup, nool_oman
     
     // Order Notes
     notes: ''
@@ -305,94 +300,8 @@ export default function CheckoutPage() {
     return checkoutSettings?.tax_rate || 0
   }
 
-  // Calculate Aramex shipping cost (independent of method selection)
-  const calculateAramexShippingCost = async () => {
-    if (!cart?.items || cart.items.length === 0) {
-      setAramexShippingCost(0)
-      return
-    }
-
-    try {
-      setIsCalculatingAramex(true)
-      
-      const packages = cart.items.map(item => {
-        const product = item.product
-        if (!product) {
-          return {
-            weight: 0.5,
-            length: 20,
-            width: 15,
-            height: 10,
-            value: 0
-          }
-        }
-        
-        const weight = calculateProductWeight(product as any, item.selectedProperties)
-        const value = getProductPrice(product, item.selectedProperties) * item.quantity
-        
-        return {
-          weight: weight * item.quantity,
-          length: 20,
-          width: 15,
-          height: 10,
-          value
-        }
-      })
-
-      const shippingRequest: ShippingCalculationRequest = {
-        origin: {
-          country: 'OM',
-          city: 'Muscat',
-          postal_code: '111'
-        },
-        destination: {
-          country: formData.country,
-          city: formData.city,
-          postal_code: formData.zipCode || '111'
-        },
-        packages,
-        currency: currency as 'OMR' | 'USD' | 'SAR'
-      }
-
-      // Find Aramex method from settings for API configuration
-      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
-      if (aramexMethod) {
-        const shippingRate = await ShippingService.calculateAramexRate(shippingRequest, aramexMethod)
-        setAramexShippingCost(shippingRate.cost)
-      }
-    } catch (error) {
-      console.error('Error calculating Aramex shipping:', error)
-      // Fallback to base cost
-      const aramexMethod = checkoutSettings?.shipping_methods?.find(method => method.id === 'aramex')
-      if (aramexMethod) {
-        let fallbackCost = 0
-        switch (currency) {
-          case 'OMR':
-            fallbackCost = aramexMethod.base_cost_omr || 1.73
-            break
-          case 'SAR':
-            fallbackCost = aramexMethod.base_cost_sar || 16.86
-            break
-          case 'USD':
-            fallbackCost = aramexMethod.base_cost_usd || 4.5
-            break
-          default:
-            fallbackCost = 1.73
-        }
-        setAramexShippingCost(fallbackCost)
-      }
-    } finally {
-      setIsCalculatingAramex(false)
-    }
-  }
-
   // Calculate shipping cost for current selected method
   const getCurrentShippingCost = () => {
-    // If Aramex is selected, return pre-calculated cost
-    if (formData.shippingMethod === 'aramex') {
-      return aramexShippingCost
-    }
-
     // For other methods, calculate on the fly
     if (!checkoutSettings?.shipping_methods) return 0
     
@@ -430,16 +339,18 @@ export default function CheckoutPage() {
     }
   }
 
-  // Calculate Aramex shipping cost when cart or destination changes
-  useEffect(() => {
-    calculateAramexShippingCost()
-  }, [formData.country, formData.city, formData.zipCode, currency, cart?.items, checkoutSettings])
-
   const calculateTotals = () => {
     const subtotal = getTotalPrice()
     
     // Use the current shipping cost based on selected method
     const calculatedShippingCost = getCurrentShippingCost()
+    
+    console.log('🧮 Calculating totals:', {
+      subtotal,
+      selectedShippingMethod: formData.shippingMethod,
+      calculatedShippingCost,
+      currency
+    })
     
     // Calculate tax based on product categories
     let taxAmount = 0
@@ -460,6 +371,14 @@ export default function CheckoutPage() {
     }
     
     const total = subtotal + calculatedShippingCost + taxAmount
+
+    console.log('💰 Final totals:', {
+      subtotal,
+      shipping: calculatedShippingCost,
+      tax: taxAmount,
+      total,
+      currency
+    })
 
     return {
       subtotal,
@@ -589,47 +508,13 @@ export default function CheckoutPage() {
         await firestoreService.orderItems.create(orderItemData)
       }
       
-      // Create payment request
-      const paymentRequest: PaymentRequest = {
-        order_id: order.id,
-        amount: totals.total,
-        currency: currency as 'OMR' | 'USD' | 'SAR',
-        customer_email: formData.email,
-        customer_name: `${formData.firstName} ${formData.lastName}`,
-        customer_phone: formattedPhone,
-        return_url: `${window.location.origin}/checkout-success?order_id=${order.id}`,
-        cancel_url: `${window.location.origin}/checkout-success?order_id=${order.id}`
-      }
-
-      // Process payment
-      const paymentResponse = await bankMuscatPaymentService.createPayment(paymentRequest)
+      // Order created successfully
+      toast.success(isArabic ? 'تم إنشاء الطلب بنجاح' : 'Order created successfully')
       
-      if (paymentResponse.success && paymentResponse.payment_url) {
-        // Update order with payment info
-        await firestoreService.orders.update(order.id, {
-          payment_status: 'unpaid', // Will be updated when payment is confirmed
-          transaction_id: paymentResponse.transaction_id
-        })
-        
-        // Clear cart before redirecting to payment
-        clearCart()
-        
-        // Show processing message
-        toast.success(isArabic ? 'جاري تحويلك إلى بوابة الدفع...' : 'Redirecting to payment gateway...')
-        
-        // Redirect to payment gateway will happen automatically in the service
-        // The form submission will redirect the user
-        
-      } else {
-        // Payment initiation failed
-        toast.error(isArabic ? 'فشل في بدء عملية الدفع' : 'Failed to initiate payment')
-        console.error('Payment error:', paymentResponse.error)
-        
-        // Still show success for order creation but inform about payment issue
-        setCreatedOrderId(order.id)
-        setOrderSuccess(true)
-        clearCart()
-      }
+      // Show success page
+      setCreatedOrderId(order.id)
+      setOrderSuccess(true)
+      clearCart()
       
     } catch (error) {
       console.error('Error creating order:', error)
@@ -1029,6 +914,9 @@ export default function CheckoutPage() {
                         // Only show enabled methods
                         if (!method.enabled) return false
                         
+                        // Exclude Aramex
+                        if (method.id === 'aramex') return false
+                        
                         // Only show nool_oman for Oman
                         if (method.id === 'nool_oman' && formData.country !== 'OM') return false
                         
@@ -1036,12 +924,8 @@ export default function CheckoutPage() {
                       }).map((method) => {
                         let cost = 0
                         if (!method.is_free) {
-                          // For Aramex, use the pre-calculated cost
-                          if (method.id === 'aramex') {
-                            cost = aramexShippingCost
-                          }
                           // Special handling for nool_oman with city-specific pricing
-                          else if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
+                          if (method.id === 'nool_oman' && formData.country === 'OM' && formData.city && formData.state) {
                             const stateCities = omanCitiesByState[formData.state as keyof typeof omanCitiesByState]
                             if (stateCities) {
                               const selectedCity = stateCities.find(city => city.value === formData.city)
@@ -1095,10 +979,6 @@ export default function CheckoutPage() {
                             <span className={`text-sm font-medium ${method.is_free ? 'text-green-600' : ''}`}>
                               {method.is_free ? (
                                 isArabic ? 'مجاناً' : 'Free'
-                              ) : method.id === 'aramex' && isCalculatingAramex ? (
-                                <span className="text-muted-foreground">
-                                  {isArabic ? 'جاري الحساب...' : 'Calculating...'}
-                                </span>
                               ) : (
                                 formatPrice(cost)
                               )}
@@ -1128,13 +1008,7 @@ export default function CheckoutPage() {
                     <div className="flex justify-between text-sm">
                       <span>{isArabic ? 'الشحن' : 'Shipping'}</span>
                       <span>
-                        {formData.shippingMethod === 'aramex' && isCalculatingAramex ? (
-                          <span className="text-muted-foreground text-xs">
-                            {isArabic ? 'جاري الحساب...' : 'Calculating...'}
-                          </span>
-                        ) : (
-                          formatPrice(calculateTotals().shipping)
-                        )}
+                        {formatPrice(calculateTotals().shipping)}
                       </span>
                     </div>
                   </div>
