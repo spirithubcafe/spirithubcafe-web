@@ -276,13 +276,10 @@ export function ShopPage() {
         </div>
         
         {/* Enhanced Filters */}
-        <div className="bg-card border rounded-lg p-4 lg:p-6 shadow-sm">
+        <div className="p-2 lg:p-3">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {isArabic ? 'البحث' : 'Search'}
-              </label>
               <Input
                 placeholder={isArabic ? 'ابحث عن اسم المنتج، النوع، أو الوصف...' : 'Search by name, type, or description...'}
                 value={searchQuery}
@@ -293,9 +290,6 @@ export function ShopPage() {
             
             {/* Category Filter */}
             <div className="lg:w-56">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {isArabic ? 'التصنيف' : 'Category'}
-              </label>
               <Select 
                 value={selectedCategory} 
                 onValueChange={(value) => {
@@ -322,9 +316,6 @@ export function ShopPage() {
 
             {/* Sort Filter */}
             <div className="lg:w-56">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                {isArabic ? 'ترتيب حسب' : 'Sort By'}
-              </label>
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
                   <SelectValue placeholder={isArabic ? 'اختر الترتيب' : 'Select Sort'} />
@@ -340,56 +331,6 @@ export function ShopPage() {
               </Select>
             </div>
           </div>
-
-          {/* Active Filters Summary */}
-          {(searchQuery || selectedCategory !== 'all') && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  {isArabic ? 'الفلاتر النشطة:' : 'Active Filters:'}
-                </span>
-                {searchQuery && (
-                  <Badge variant="secondary" className="gap-2 bg-amber-100 text-amber-800 border-amber-200">
-                    <span className="text-xs">{isArabic ? 'البحث:' : 'Search:'}</span>
-                    <span className="font-medium">"{searchQuery}"</span>
-                    <button 
-                      onClick={() => setSearchQuery('')}
-                      className="ml-1 hover:text-destructive transition-colors"
-                      title={isArabic ? 'إزالة' : 'Remove'}
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {selectedCategory !== 'all' && (
-                  <Badge variant="secondary" className="gap-2 bg-blue-100 text-blue-800 border-blue-200">
-                    <span className="text-xs">{isArabic ? 'التصنيف:' : 'Category:'}</span>
-                    <span className="font-medium">{categoryOptions.find(c => c.value === selectedCategory)?.label}</span>
-                    <button 
-                      onClick={() => setSelectedCategory('all')}
-                      className="ml-1 hover:text-destructive transition-colors"
-                      title={isArabic ? 'إزالة' : 'Remove'}
-                    >
-                      ×
-                    </button>
-                  </Badge>
-                )}
-                {(searchQuery || selectedCategory !== 'all') && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchQuery('')
-                      setSelectedCategory('all')
-                    }}
-                    className="text-xs h-7 text-muted-foreground hover:text-destructive"
-                  >
-                    {isArabic ? 'مسح جميع الفلاتر' : 'Clear All Filters'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
