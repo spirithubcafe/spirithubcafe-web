@@ -329,8 +329,6 @@ export function OrderManagementProfessional() {
     switch (method) {
       case 'nool_oman':
         return isArabic ? 'نول عمان - توصيل محلي' : 'Nool Oman - Local Delivery'
-      case 'aramex':
-        return isArabic ? 'أراميكس - شحن دولي' : 'Aramex - International Shipping'
       case 'dhl':
         return isArabic ? 'DHL - شحن سريع' : 'DHL - Express Shipping'
       default:

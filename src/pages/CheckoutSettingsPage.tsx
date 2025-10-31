@@ -634,7 +634,6 @@ export default function CheckoutSettingsPage() {
                                     <SelectValue />
                                   </SelectTrigger>
                                   <SelectContent>
-                                    <SelectItem value="aramex">Aramex</SelectItem>
                                     <SelectItem value="nool_oman">NOOL Oman</SelectItem>
                                     <SelectItem value="custom">{isArabic ? 'مخصص' : 'Custom'}</SelectItem>
                                   </SelectContent>
