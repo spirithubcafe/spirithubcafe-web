@@ -217,8 +217,69 @@ export function Footer() {
               />
             </div>
 
-            {/* Quick Links - Smaller column with top margin to align with description */}
-            <div className="space-y-4 lg:mt-24">
+            {/* Quick Links and Legal Pages - Side by side on mobile, separate columns on desktop */}
+            <div className="lg:hidden">
+              <div className="grid grid-cols-2 gap-6">
+                {/* Quick Links - Mobile */}
+                <div className="space-y-4">
+                  <h3 
+                    className="text-base font-semibold"
+                    style={{ color: footerStyles.headingColor }}
+                  >
+                    {t('footer.quickLinks')}
+                  </h3>
+                  <nav className="flex flex-col space-y-3">
+                    <StyledLink to="/">{t('navigation.home')}</StyledLink>
+                    <StyledLink to="/shop">{t('navigation.shop')}</StyledLink>
+                    <StyledLink to="/about">{t('navigation.about')}</StyledLink>
+                    <StyledLink to="/contact">{t('navigation.contact')}</StyledLink>
+                  </nav>
+                </div>
+
+                {/* Legal Pages - Mobile */}
+                <div className="space-y-4">
+                  <h3 
+                    className="text-base font-semibold"
+                    style={{ color: footerStyles.headingColor }}
+                  >
+                    {isArabic ? 'الصفحات القانونية' : 'Legal Pages'}
+                  </h3>
+                  <nav className="flex flex-col space-y-3">
+                    {footerPages.map((page) => (
+                      <StyledLink 
+                        key={page.id}
+                        to={`/page/${page.slug}`}
+                      >
+                        {isArabic ? page.title_ar : page.title}
+                      </StyledLink>
+                    ))}
+                    {/* Fallback links if no pages are loaded */}
+                    {footerPages.length === 0 && (
+                      <>
+                        <StyledLink to="/privacy-policy">
+                          {isArabic ? 'سياسة الخصوصية' : 'Privacy Policy'}
+                        </StyledLink>
+                        <StyledLink to="/terms-and-conditions">
+                          {isArabic ? 'الشروط والأحكام' : 'Terms & Conditions'}
+                        </StyledLink>
+                        <StyledLink to="/refund-policy">
+                          {isArabic ? 'سياسة الاستبدال والإرجاع' : 'Refund Policy'}
+                        </StyledLink>
+                        <StyledLink to="/delivery-policy">
+                          {isArabic ? 'سياسة التوصيل' : 'Delivery Policy'}
+                        </StyledLink>
+                        <StyledLink to="/faq">
+                          {isArabic ? 'الأسئلة الشائعة' : 'FAQ'}
+                        </StyledLink>
+                      </>
+                    )}
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Links - Desktop only */}
+            <div className="hidden lg:block space-y-4 lg:mt-24">
               <h3 
                 className="text-base font-semibold"
                 style={{ color: footerStyles.headingColor }}
@@ -233,8 +294,8 @@ export function Footer() {
               </nav>
             </div>
 
-            {/* Legal Pages - Smaller column with top margin to align with description */}
-            <div className="space-y-4 lg:mt-24">
+            {/* Legal Pages - Desktop only */}
+            <div className="hidden lg:block space-y-4 lg:mt-24">
               <h3 
                 className="text-base font-semibold"
                 style={{ color: footerStyles.headingColor }}
