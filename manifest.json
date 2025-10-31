@@ -1,0 +1,26 @@
+{
+  "name": "SPIRITHUB ROASTERY",
+  "short_name": "SpiritHub",
+  "description": "Premium Coffee Roastery - Quality Coffee Beans & Brewing Equipment",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F59E0B",
+  "icons": [
+    {
+      "src": "/images/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/adaptive-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
