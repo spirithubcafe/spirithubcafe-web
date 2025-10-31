@@ -62,31 +62,10 @@ export const checkoutSettingsService = {
                 api_url: 'https://api.nool.om',
                 account_number: '71925275'
               }
-            },
-            {
-              id: 'aramex',
-              name: 'Aramex',
-              name_ar: 'أرامكس',
-              enabled: true,
-              is_free: false,
-              pricing_type: 'api_calculated',
-              base_cost_omr: 1.73,
-              base_cost_usd: 4.5,
-              base_cost_sar: 16.86,
-              estimated_delivery_days: '2-3 days',
-              description: 'International shipping via Aramex',
-              description_ar: 'شحن دولي عبر أرامكس',
-              api_settings: {
-                provider: 'aramex',
-                api_url: 'https://ws.aramex.net/ShippingAPI.V2/RateCalculator/Service_1_0.svc',
-                username: 'aramex_username',
-                password: 'aramex_password',
-                account_number: 'aramex_account'
-              }
             }
           ],
           payment_gateway: {
-            provider: 'bank_muscat',
+            provider: 'stripe',
             enabled: true,
             test_mode: false,
             merchant_id: '224',

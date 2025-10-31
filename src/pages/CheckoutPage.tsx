@@ -914,9 +914,6 @@ export default function CheckoutPage() {
                         // Only show enabled methods
                         if (!method.enabled) return false
                         
-                        // Exclude Aramex
-                        if (method.id === 'aramex') return false
-                        
                         // Only show nool_oman for Oman
                         if (method.id === 'nool_oman' && formData.country !== 'OM') return false
                         

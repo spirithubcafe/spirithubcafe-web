@@ -51,7 +51,7 @@ export interface OrderTier {
 }
 
 export interface ShippingApiSettings {
-  provider: 'aramex' | 'nool_oman' | 'custom'
+  provider: 'nool_oman' | 'custom'
   api_url?: string
   api_key?: string
   username?: string
@@ -61,14 +61,9 @@ export interface ShippingApiSettings {
 }
 
 export interface PaymentGateway {
-  provider: 'bank_muscat' | 'stripe' | 'paypal' | 'custom'
+  provider: 'stripe' | 'paypal' | 'custom'
   enabled: boolean
   test_mode: boolean
-  
-  // Bank Muscat specific
-  merchant_id?: string
-  access_code?: string
-  working_key?: string
   
   // Other gateway settings
   api_key?: string
