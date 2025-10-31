@@ -277,19 +277,10 @@ export function ShopPage() {
         
         {/* Enhanced Filters */}
         <div className="p-2 lg:p-3">
-          <div className="flex flex-col lg:flex-row gap-4">
-            {/* Search Input */}
-            <div className="flex-1">
-              <Input
-                placeholder={isArabic ? 'ابحث عن اسم المنتج، النوع، أو الوصف...' : 'Search by name, type, or description...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center px-3"
-              />
-            </div>
-            
+          {/* Mobile Layout - Only Category and Sort side by side */}
+          <div className="flex gap-2 lg:hidden">
             {/* Category Filter */}
-            <div className="lg:w-56">
+            <div className="flex-1">
               <Select 
                 value={selectedCategory} 
                 onValueChange={(value) => {
@@ -301,7 +292,7 @@ export function ShopPage() {
                   }
                 }}
               >
-                <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
+                <SelectTrigger className="w-full h-9 border-2 focus:border-amber-400 rounded-lg flex items-center">
                   <SelectValue placeholder={isArabic ? 'اختر التصنيف' : 'Select Category'} />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,9 +306,65 @@ export function ShopPage() {
             </div>
 
             {/* Sort Filter */}
-            <div className="lg:w-56">
+            <div className="flex-1">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-full min-h-[48px] h-12 border-2 focus:border-amber-400 rounded-lg flex items-center">
+                <SelectTrigger className="w-full h-9 border-2 focus:border-amber-400 rounded-lg flex items-center">
+                  <SelectValue placeholder={isArabic ? 'اختر الترتيب' : 'Select Sort'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">{isArabic ? 'الاسم (أ-ي)' : 'Name (A-Z)'}</SelectItem>
+                  <SelectItem value="price-low">{isArabic ? 'السعر: الأقل إلى الأعلى' : 'Price: Low to High'}</SelectItem>
+                  <SelectItem value="price-high">{isArabic ? 'السعر: الأعلى إلى الأقل' : 'Price: High to Low'}</SelectItem>
+                  <SelectItem value="featured">{isArabic ? 'المنتجات المميزة' : 'Featured Products'}</SelectItem>
+                  <SelectItem value="bestseller">{isArabic ? 'الأكثر مبيعاً' : 'Best Sellers'}</SelectItem>
+                  <SelectItem value="new">{isArabic ? 'وصل حديثاً' : 'New Arrivals'}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Desktop Layout - Search, Category, and Sort in one line */}
+          <div className="hidden lg:flex gap-4 items-center">
+            {/* Search Input */}
+            <div className="flex-1">
+              <Input
+                placeholder={isArabic ? 'ابحث عن اسم المنتج، النوع، أو الوصف...' : 'Search by name, type, or description...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full h-12 border-2 focus:border-amber-400 rounded-lg px-3"
+              />
+            </div>
+            
+            {/* Category Filter */}
+            <div className="w-56">
+              <Select 
+                value={selectedCategory} 
+                onValueChange={(value) => {
+                  setSelectedCategory(value)
+                  // Clear all filters when "All Categories" is selected to show all products
+                  if (value === 'all') {
+                    setSearchQuery('')
+                    setSortBy('name')
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full h-12 border-2 focus:border-amber-400 rounded-lg">
+                  <SelectValue placeholder={isArabic ? 'اختر التصنيف' : 'Select Category'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Filter */}
+            <div className="w-56">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full h-12 border-2 focus:border-amber-400 rounded-lg">
                   <SelectValue placeholder={isArabic ? 'اختر الترتيب' : 'Select Sort'} />
                 </SelectTrigger>
                 <SelectContent>
